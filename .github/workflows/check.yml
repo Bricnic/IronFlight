@@ -17,4 +17,6 @@ jobs:
         if: failure()
         with:
           name: browser-evidence
-          path: test-results/
+          path: |
+            test-results/
+            artifacts/e2e-report.json

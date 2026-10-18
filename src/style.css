@@ -1,7 +1,432 @@
-@import '@fontsource/barlow/latin-400.css';
-@import '@fontsource/barlow/latin-500.css';
-@import '@fontsource/barlow/latin-700.css';
-@import '@fontsource/barlow-condensed/latin-600.css';
-@import '@fontsource/barlow-condensed/latin-800.css';
-@import '@fontsource/barlow-condensed/latin-900.css';
-:root{font-family:'Barlow',Arial,sans-serif;color:#f5f3e9;background:#182126;font-synthesis:none}*{box-sizing:border-box}body{margin:0;overflow:hidden}button,select{font:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible{outline:2px solid #f4a351;outline-offset:4px}#viewport{position:fixed;inset:0}canvas{display:block}header{position:absolute;inset:0 0 auto;height:91px;background:linear-gradient(#111c24f2,#152129dc);border-bottom:1px solid #ffffff24;display:flex;align-items:center;padding:0 34px;gap:42px}.brand{font-family:'Barlow Condensed',Impact,sans-serif;font-size:31px;line-height:.85;font-weight:900;letter-spacing:-.8px;text-decoration:none;color:#f5f3e9}.brand span{color:#ff874e}.brand i{display:block;font:9px 'Barlow',sans-serif;letter-spacing:3.3px;margin-top:9px;font-style:normal;color:#a7b5bc}.series{font-size:10px;letter-spacing:2px;color:#acb6bc;border-left:1px solid #ffffff33;padding-left:30px}.series b{display:block;margin-top:7px;color:#eef0e9;font-size:12px}.online{margin-left:auto;font-size:10px;letter-spacing:1.8px;color:#d0dbbe}aside{position:absolute;left:34px;top:119px;width:255px;text-shadow:0 1px 12px #13212a55}.eyebrow{font-size:9px;letter-spacing:2px;font-weight:700;color:#f3a369}h1{font-family:'Barlow Condensed',Impact,sans-serif;font-size:48px;line-height:.94;letter-spacing:-.4px;margin:12px 0;font-weight:800}aside .intro{font-size:11px;color:#e2e9e4;margin-bottom:22px}.route{display:block;width:100%;color:#f8f4eb;text-align:left;background:#17232ae8;border:1px solid #ffffff24;border-left:3px solid #586368;padding:13px 15px;margin-bottom:8px;transition:.18s}.route:hover{background:#293840}.route.selected{border-left-color:var(--route);background:#1d2b30f5}.route small{display:block;font-size:8px;letter-spacing:1.7px;color:var(--route)}.route strong{display:block;font-family:'Barlow Condensed',Impact,sans-serif;font-size:24px;font-weight:600;line-height:1.4}.route strong span{float:right;font:19px Arial;color:var(--route)}.route em{font-size:10px;font-style:normal;color:#aab9be}.route em span{padding:0 7px}.lab-toggle{color:#f3e6d5;border:1px solid #ffffff55;background:#17232ac7;width:100%;padding:12px 15px;text-align:left;font-size:11px}.lab-toggle span{float:right;color:#f1a364}#lab{background:#17232af2;padding:18px 15px;margin-top:10px;border:1px solid #ffffff33}#lab label{display:block;font-size:11px;margin:15px 0 7px}select{background:#203039;color:#eee8da;padding:9px 7px;border:1px solid #ffffff3c;font-size:11px;max-width:100%}#target{width:100%}.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.tool-grid button{background:#34454b;color:#fff1dd;border:1px solid #ffffff25;padding:11px 4px;font-size:10px}.tool-grid button:hover{background:#98522d}#lab p{font-size:10px;line-height:1.6;color:#b7c7cc}footer{position:absolute;bottom:0;left:0;right:0;height:62px;display:flex;align-items:center;padding:0 34px;background:#111c24e8;border-top:1px solid #ffffff22;gap:15px}.controls{display:flex;gap:22px;font-size:9px;letter-spacing:1px;color:#c1cbcd}.controls span{display:flex;align-items:center;gap:6px}kbd{border:1px solid #ffffff44;min-width:22px;text-align:center;padding:5px;color:#f1eee3;font:10px 'Barlow',Arial}.playback{margin-left:auto;font-size:8px;letter-spacing:1.2px;color:#acb8ba;display:flex;align-items:center;gap:12px}.playback select{font-size:9px;letter-spacing:1px;background:#1d2b31}#status{position:absolute;bottom:98px;left:50%;transform:translateX(-50%);width:270px;text-align:center;text-shadow:0 2px 9px #000}#state-label{display:block;color:#ffbc7e;font-size:10px;letter-spacing:2px;font-weight:700}#state-copy{display:block;font-size:13px;margin:9px 0 14px;font-weight:500}.progress{height:3px;background:#ffffff40;width:100%}.progress i{height:100%;display:block;background:#ffa162}#telemetry{position:absolute;right:35px;bottom:99px;width:155px;background:#14232bdb;padding:15px 18px;border-top:2px solid #fda46c}.speed{display:flex;align-items:baseline;gap:8px}.speed strong{font:800 65px/.95 'Barlow Condensed',Impact,sans-serif;letter-spacing:-2px}.speed span{font-size:9px;color:#acbcc2}.stats{border-top:1px solid #ffffff22;margin-top:14px;padding-top:10px}.stats>span{display:block;font-size:8px;color:#a4b7bb;letter-spacing:1px;line-height:2}.stats b{float:right;color:#f6edde;font-weight:500}#loading{position:fixed;inset:0;background:#16232b;display:grid;place-items:center;font-size:20px;z-index:10}@media(max-width:850px){header{height:70px;padding:0 18px}.series{display:none}aside{left:18px;top:90px;width:190px}h1{font-size:35px}.route{padding:9px 12px}.route strong{font-size:21px}.intro{display:none}footer{padding:0 14px}.controls{gap:9px}.playback>select{width:80px}.playback{font-size:0}#telemetry{right:18px;width:125px;bottom:82px}#status{bottom:95px;width:220px;left:48%}#lab{padding:10px}.online{font-size:8px}}@media(max-height:700px){aside{top:100px}h1{font-size:34px}.intro{display:none}.route{padding:8px 13px}.route strong{font-size:22px}.route em{font-size:9px}.route small{font-size:7px}.lab-toggle{padding:9px}#lab p{display:none}}
+@import "@fontsource/barlow/latin-400.css";
+@import "@fontsource/barlow/latin-500.css";
+@import "@fontsource/barlow/latin-700.css";
+@import "@fontsource/barlow-condensed/latin-600.css";
+@import "@fontsource/barlow-condensed/latin-800.css";
+@import "@fontsource/barlow-condensed/latin-900.css";
+:root {
+  font-family: "Barlow", Arial, sans-serif;
+  color: #f5f3e9;
+  background: #182126;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+button,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid #f4a351;
+  outline-offset: 4px;
+}
+#viewport {
+  position: fixed;
+  inset: 0;
+}
+canvas {
+  display: block;
+}
+header {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 91px;
+  background: linear-gradient(#111c24f2, #152129dc);
+  border-bottom: 1px solid #ffffff24;
+  display: flex;
+  align-items: center;
+  padding: 0 34px;
+  gap: 42px;
+}
+.brand {
+  font-family: "Barlow Condensed", Impact, sans-serif;
+  font-size: 31px;
+  line-height: 0.85;
+  font-weight: 900;
+  letter-spacing: -0.8px;
+  text-decoration: none;
+  color: #f5f3e9;
+}
+.brand span {
+  color: #ff874e;
+}
+.brand i {
+  display: block;
+  font:
+    9px "Barlow",
+    sans-serif;
+  letter-spacing: 3.3px;
+  margin-top: 9px;
+  font-style: normal;
+  color: #a7b5bc;
+}
+.series {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #acb6bc;
+  border-left: 1px solid #ffffff33;
+  padding-left: 30px;
+}
+.series b {
+  display: block;
+  margin-top: 7px;
+  color: #eef0e9;
+  font-size: 12px;
+}
+.online {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  color: #d0dbbe;
+}
+aside {
+  position: absolute;
+  left: 34px;
+  top: 119px;
+  width: 255px;
+  text-shadow: 0 1px 12px #13212a55;
+}
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #f3a369;
+}
+h1 {
+  font-family: "Barlow Condensed", Impact, sans-serif;
+  font-size: 48px;
+  line-height: 0.94;
+  letter-spacing: -0.4px;
+  margin: 12px 0;
+  font-weight: 800;
+}
+aside .intro {
+  font-size: 11px;
+  color: #e2e9e4;
+  margin-bottom: 22px;
+}
+.route {
+  display: block;
+  width: 100%;
+  color: #f8f4eb;
+  text-align: left;
+  background: #17232ae8;
+  border: 1px solid #ffffff24;
+  border-left: 3px solid #586368;
+  padding: 13px 15px;
+  margin-bottom: 8px;
+  transition: 0.18s;
+}
+.route:hover {
+  background: #293840;
+}
+.route.selected {
+  border-left-color: var(--route);
+  background: #1d2b30f5;
+}
+.route small {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 1.7px;
+  color: var(--route);
+}
+.route strong {
+  display: block;
+  font-family: "Barlow Condensed", Impact, sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.route strong span {
+  float: right;
+  font: 19px Arial;
+  color: var(--route);
+}
+.route em {
+  font-size: 10px;
+  font-style: normal;
+  color: #aab9be;
+}
+.route em span {
+  padding: 0 7px;
+}
+.lab-toggle {
+  color: #f3e6d5;
+  border: 1px solid #ffffff55;
+  background: #17232ac7;
+  width: 100%;
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 11px;
+}
+.lab-toggle span {
+  float: right;
+  color: #f1a364;
+}
+#lab {
+  background: #17232af2;
+  padding: 18px 15px;
+  margin-top: 10px;
+  border: 1px solid #ffffff33;
+}
+#lab label {
+  display: block;
+  font-size: 11px;
+  margin: 15px 0 7px;
+}
+select {
+  background: #203039;
+  color: #eee8da;
+  padding: 9px 7px;
+  border: 1px solid #ffffff3c;
+  font-size: 11px;
+  max-width: 100%;
+}
+#target {
+  width: 100%;
+}
+.tool-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 12px;
+}
+.tool-grid button {
+  background: #34454b;
+  color: #fff1dd;
+  border: 1px solid #ffffff25;
+  padding: 11px 4px;
+  font-size: 10px;
+}
+.tool-grid button:hover {
+  background: #98522d;
+}
+#lab p {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #b7c7cc;
+}
+footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  padding: 0 34px;
+  background: #111c24e8;
+  border-top: 1px solid #ffffff22;
+  gap: 15px;
+}
+.controls {
+  display: flex;
+  gap: 22px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #c1cbcd;
+}
+.controls span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+kbd {
+  border: 1px solid #ffffff44;
+  min-width: 22px;
+  text-align: center;
+  padding: 5px;
+  color: #f1eee3;
+  font:
+    10px "Barlow",
+    Arial;
+}
+.playback {
+  margin-left: auto;
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  color: #acb8ba;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.playback select {
+  font-size: 9px;
+  letter-spacing: 1px;
+  background: #1d2b31;
+}
+#status {
+  position: absolute;
+  bottom: 98px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 270px;
+  text-align: center;
+  text-shadow: 0 2px 9px #000;
+}
+#state-label {
+  display: block;
+  color: #ffbc7e;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+#state-copy {
+  display: block;
+  font-size: 13px;
+  margin: 9px 0 14px;
+  font-weight: 500;
+}
+.progress {
+  height: 3px;
+  background: #ffffff40;
+  width: 100%;
+}
+.progress i {
+  height: 100%;
+  display: block;
+  background: #ffa162;
+}
+#telemetry {
+  position: absolute;
+  right: 35px;
+  bottom: 99px;
+  width: 155px;
+  background: #14232bdb;
+  padding: 15px 18px;
+  border-top: 2px solid #fda46c;
+}
+.speed {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.speed strong {
+  font:
+    800 65px/0.95 "Barlow Condensed",
+    Impact,
+    sans-serif;
+  letter-spacing: -2px;
+}
+.speed span {
+  font-size: 9px;
+  color: #acbcc2;
+}
+.stats {
+  border-top: 1px solid #ffffff22;
+  margin-top: 14px;
+  padding-top: 10px;
+}
+.stats > span {
+  display: block;
+  font-size: 8px;
+  color: #a4b7bb;
+  letter-spacing: 1px;
+  line-height: 2;
+}
+.stats b {
+  float: right;
+  color: #f6edde;
+  font-weight: 500;
+}
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #16232b;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  z-index: 10;
+}
+@media (max-width: 850px) {
+  header {
+    height: 70px;
+    padding: 0 18px;
+  }
+  .series {
+    display: none;
+  }
+  aside {
+    left: 18px;
+    top: 90px;
+    width: 190px;
+  }
+  h1 {
+    font-size: 35px;
+  }
+  .route {
+    padding: 9px 12px;
+  }
+  .route strong {
+    font-size: 21px;
+  }
+  .intro {
+    display: none;
+  }
+  footer {
+    padding: 0 14px;
+  }
+  .controls {
+    gap: 9px;
+  }
+  .playback > select {
+    width: 80px;
+  }
+  .playback {
+    font-size: 0;
+  }
+  #telemetry {
+    right: 18px;
+    width: 125px;
+    bottom: 82px;
+  }
+  #status {
+    bottom: 95px;
+    width: 220px;
+    left: 48%;
+  }
+  #lab {
+    padding: 10px;
+  }
+  .online {
+    font-size: 8px;
+  }
+}
+@media (max-height: 700px) {
+  aside {
+    top: 100px;
+  }
+  h1 {
+    font-size: 34px;
+  }
+  .intro {
+    display: none;
+  }
+  .route {
+    padding: 8px 13px;
+  }
+  .route strong {
+    font-size: 22px;
+  }
+  .route em {
+    font-size: 9px;
+  }
+  .route small {
+    font-size: 7px;
+  }
+  .lab-toggle {
+    padding: 9px;
+  }
+  #lab p {
+    display: none;
+  }
+}

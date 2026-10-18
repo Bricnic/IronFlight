@@ -1,118 +1,357 @@
-import RAPIER from '@dimforge/rapier3d-compat';
-import { Quaternion, Vector3 } from 'three';
-import { DT } from './clock';
-import { ROUTES,routeSolids } from './routes';
-import { PARTS, type PartState } from './damage';
-import {HAZARDS,hammerAngle,type Hazard} from './hazards';
-export type Stage = 'easy' | 'medium' | 'hard' | 'lab';
-export type Input = {throttle?:number;brake?:number;steer?:number};
-export const wheelPositions = [new Vector3(-1.65,-.35,1.65),new Vector3(1.65,-.35,1.65),new Vector3(-1.65,-.35,-1.65),new Vector3(1.65,-.35,-1.65)];
+import RAPIER from "@dimforge/rapier3d-compat";
+import { Quaternion, Vector3 } from "three";
+import { DT } from "./clock";
+import { ROUTES, routeSolids } from "./routes";
+import { PARTS, type PartState } from "./damage";
+import { HAZARDS, hammerAngle, type Hazard } from "./hazards";
+export type Stage = "easy" | "medium" | "hard" | "lab";
+export type Input = { throttle?: number; brake?: number; steer?: number };
+export const wheelPositions = [
+  new Vector3(-1.65, -0.35, 1.65),
+  new Vector3(1.65, -0.35, 1.65),
+  new Vector3(-1.65, -0.35, -1.65),
+  new Vector3(1.65, -0.35, -1.65),
+];
 let ready: Promise<void> | undefined;
-export function initPhysics(){return ready ??= RAPIER.init();}
+export function initPhysics() {
+  return (ready ??= RAPIER.init());
+}
 export class Simulation {
   world!: RAPIER.World;
   body!: RAPIER.RigidBody;
   vehicle!: RAPIER.DynamicRayCastVehicleController;
   stage: Stage;
-  time=0;
-  ticks=0;
-  airborneTicks=0;
-  landed=false;
-  status:'driving'|'finished'|'wrecked'='driving';
-  parts=new Map<string,PartState>();
-  private lastImpact=-1;
-  damageEvents:{source:string;part:string;time:number}[]=[];
-  private cooldown=new Map<string,number>();
-  hazardBodies=new Map<string,RAPIER.RigidBody>();
-  constructor(stage:Stage='lab'){this.stage=stage;this.reset(stage);}
-  reset(stage:Stage=this.stage){
-    this.world?.free();this.stage=stage;this.time=0;this.ticks=0;this.airborneTicks=0;this.landed=false;this.status='driving';
-    this.world=new RAPIER.World({x:0,y:-9.81,z:0});this.world.timestep=DT;
-    this.parts.clear();this.lastImpact=-1;
-    this.damageEvents=[];this.cooldown.clear();this.hazardBodies.clear();
-    if(stage==='lab')this.world.createCollider(RAPIER.ColliderDesc.cuboid(200,.5,300).setTranslation(0,-.5,0).setFriction(1));
-    else for(const s of routeSolids()) this.world.createCollider(RAPIER.ColliderDesc.cuboid(s.w/2,s.h/2,s.d/2).setTranslation(s.x,s.y,s.z).setRotation(new Quaternion().setFromAxisAngle(new Vector3(1,0,0),s.angle??0)).setFriction(1));
-    const route=ROUTES.find(r=>r.id===stage);
-    this.body=this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(route?.x??0,2.1,stage==='lab'?0:-65).setLinearDamping(.08).setAngularDamping(1.2).setCcdEnabled(true));
-    for(const def of PARTS){
-      const state:PartState={health:def.hp,dents:[]};this.parts.set(def.id,state);
-      if(!def.id.startsWith('wheel'))state.collider=this.world.createCollider(RAPIER.ColliderDesc.cuboid(def.size[0]/2,def.size[1]/2,def.size[2]/2).setTranslation(def.pos[0],def.pos[1],def.pos[2]).setMass(def.mass).setFriction(.3),this.body);
+  time = 0;
+  ticks = 0;
+  airborneTicks = 0;
+  landed = false;
+  status: "driving" | "finished" | "wrecked" = "driving";
+  parts = new Map<string, PartState>();
+  private lastImpact = -1;
+  damageEvents: { source: string; part: string; time: number }[] = [];
+  private cooldown = new Map<string, number>();
+  hazardBodies = new Map<string, RAPIER.RigidBody>();
+  constructor(stage: Stage = "lab") {
+    this.stage = stage;
+    this.reset(stage);
+  }
+  reset(stage: Stage = this.stage) {
+    this.world?.free();
+    this.stage = stage;
+    this.time = 0;
+    this.ticks = 0;
+    this.airborneTicks = 0;
+    this.landed = false;
+    this.status = "driving";
+    this.world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
+    this.world.timestep = DT;
+    this.parts.clear();
+    this.lastImpact = -1;
+    this.damageEvents = [];
+    this.cooldown.clear();
+    this.hazardBodies.clear();
+    if (stage === "lab")
+      this.world.createCollider(
+        RAPIER.ColliderDesc.cuboid(200, 0.5, 300)
+          .setTranslation(0, -0.5, 0)
+          .setFriction(1),
+      );
+    else
+      for (const s of routeSolids())
+        this.world.createCollider(
+          RAPIER.ColliderDesc.cuboid(s.w / 2, s.h / 2, s.d / 2)
+            .setTranslation(s.x, s.y, s.z)
+            .setRotation(
+              new Quaternion().setFromAxisAngle(
+                new Vector3(1, 0, 0),
+                s.angle ?? 0,
+              ),
+            )
+            .setFriction(1),
+        );
+    const route = ROUTES.find((r) => r.id === stage);
+    this.body = this.world.createRigidBody(
+      RAPIER.RigidBodyDesc.dynamic()
+        .setTranslation(route?.x ?? 0, 2.1, stage === "lab" ? 0 : -65)
+        .setLinearDamping(0.08)
+        .setAngularDamping(1.2)
+        .setCcdEnabled(true),
+    );
+    for (const def of PARTS) {
+      const state: PartState = { health: def.hp, dents: [] };
+      this.parts.set(def.id, state);
+      if (!def.id.startsWith("wheel"))
+        state.collider = this.world.createCollider(
+          RAPIER.ColliderDesc.cuboid(
+            def.size[0] / 2,
+            def.size[1] / 2,
+            def.size[2] / 2,
+          )
+            .setTranslation(def.pos[0], def.pos[1], def.pos[2])
+            .setMass(def.mass)
+            .setFriction(0.3),
+          this.body,
+        );
     }
-    this.vehicle=this.world.createVehicleController(this.body);this.vehicle.indexUpAxis=1;this.vehicle.setIndexForwardAxis=2;
-    wheelPositions.forEach((p,i)=>{
-      this.vehicle.addWheel(p,{x:0,y:-1,z:0},{x:-1,y:0,z:0},.6,1.05);
-      this.vehicle.setWheelSuspensionStiffness(i,35);this.vehicle.setWheelSuspensionCompression(i,12);this.vehicle.setWheelSuspensionRelaxation(i,14);
-      this.vehicle.setWheelMaxSuspensionForce(i,80000);this.vehicle.setWheelMaxSuspensionTravel(i,.45);
-      this.vehicle.setWheelFrictionSlip(i,2.5);this.vehicle.setWheelSideFrictionStiffness(i,1.1);
+    this.vehicle = this.world.createVehicleController(this.body);
+    this.vehicle.indexUpAxis = 1;
+    this.vehicle.setIndexForwardAxis = 2;
+    wheelPositions.forEach((p, i) => {
+      this.vehicle.addWheel(
+        p,
+        { x: 0, y: -1, z: 0 },
+        { x: -1, y: 0, z: 0 },
+        0.6,
+        1.05,
+      );
+      this.vehicle.setWheelSuspensionStiffness(i, 35);
+      this.vehicle.setWheelSuspensionCompression(i, 12);
+      this.vehicle.setWheelSuspensionRelaxation(i, 14);
+      this.vehicle.setWheelMaxSuspensionForce(i, 80000);
+      this.vehicle.setWheelMaxSuspensionTravel(i, 0.45);
+      this.vehicle.setWheelFrictionSlip(i, 2.5);
+      this.vehicle.setWheelSideFrictionStiffness(i, 1.1);
     });
-    if(stage!=='lab')for(const h of HAZARDS){
-      if(h.kind==='hammer'){
-        const b=this.world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(h.x,h.y,h.z));this.hazardBodies.set(h.id,b);
-        this.world.createCollider(RAPIER.ColliderDesc.cuboid(3.6,.3,.45),b);
-        for(const side of [-1,1])this.world.createCollider(RAPIER.ColliderDesc.cuboid(.8,.8,.75).setTranslation(side*3.6,0,0),b);
+    if (stage !== "lab")
+      for (const h of HAZARDS) {
+        if (h.kind === "hammer") {
+          const b = this.world.createRigidBody(
+            RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(
+              h.x,
+              h.y,
+              h.z,
+            ),
+          );
+          this.hazardBodies.set(h.id, b);
+          this.world.createCollider(
+            RAPIER.ColliderDesc.cuboid(3.6, 0.3, 0.45),
+            b,
+          );
+          for (const side of [-1, 1])
+            this.world.createCollider(
+              RAPIER.ColliderDesc.cuboid(0.8, 0.8, 0.75).setTranslation(
+                side * 3.6,
+                0,
+                0,
+              ),
+              b,
+            );
+        }
+        if (h.kind === "spikes")
+          for (let x = -5; x <= 5; x += 2)
+            this.world.createCollider(
+              RAPIER.ColliderDesc.cone(1.2, 0.45).setTranslation(
+                h.x + x,
+                h.y,
+                h.z,
+              ),
+            );
       }
-      if(h.kind==='spikes')for(let x=-5;x<=5;x+=2)this.world.createCollider(RAPIER.ColliderDesc.cone(1.2,.45).setTranslation(h.x+x,h.y,h.z));
+  }
+  step(input: Input = {}) {
+    if (this.status === "finished") input = { brake: 1 };
+    const throttle = Math.max(-1, Math.min(1, input.throttle ?? 0)),
+      brake = Math.max(0, Math.min(1, input.brake ?? 0)),
+      steer = Math.max(-1, Math.min(1, input.steer ?? 0));
+    const speed = this.body.linvel();
+    const forward = new Vector3(0, 0, 1).applyQuaternion(
+      new Quaternion().copy(this.body.rotation()),
+    );
+    const longitudinal = forward.dot(speed);
+    for (let i = 0; i < 4; i++) {
+      const attached = !this.parts.get(PARTS[i + 2].id)!.body;
+      const powered =
+        this.parts.get("chassis-rear")!.health > 0 &&
+        this.parts.get("chassis-front")!.health > 0;
+      this.vehicle.setWheelEngineForce(
+        i,
+        attached && powered
+          ? throttle * 11000 * Math.max(0, 1 - Math.abs(longitudinal) / 25)
+          : 0,
+      );
+      this.vehicle.setWheelBrake(i, attached ? brake * 220 : 0);
+      this.vehicle.setWheelSteering(i, i < 2 ? -steer * 0.35 : 0);
+    }
+    // Suspension only uses fixed surfaces. A rotating hammer must not become
+    // driveable ground and inject suspension impulses into a passing tire.
+    this.vehicle.updateVehicle(
+      DT,
+      RAPIER.QueryFilterFlags.EXCLUDE_DYNAMIC |
+        RAPIER.QueryFilterFlags.EXCLUDE_KINEMATIC,
+    );
+    for (const b of this.hazardBodies.values())
+      b.setNextKinematicRotation(
+        new Quaternion().setFromAxisAngle(
+          new Vector3(0, 0, 1),
+          hammerAngle(this.time + DT),
+        ),
+      );
+    const before = new Vector3().copy(this.body.linvel());
+    this.world.step();
+    this.ticks++;
+    this.time = this.ticks * DT;
+    const impact = before.sub(this.body.linvel()).length();
+    if (impact > 10 && this.time - this.lastImpact > 0.2) {
+      this.lastImpact = this.time;
+      this.damage("bumper-front", (impact - 10) * 4, new Vector3(0, 0, 0.15));
+      this.damage("hood", (impact - 10) * 2, new Vector3(0, 0.2, 0.6));
+      this.damageEvents.push({
+        source: "collision",
+        part: "hood",
+        time: this.time,
+      });
+    }
+    if (this.stage !== "lab")
+      for (const h of HAZARDS)
+        if (
+          this.touches(h) &&
+          this.time - (this.cooldown.get(h.id) ?? -1) > 0.15
+        ) {
+          this.cooldown.set(h.id, this.time);
+          const targets =
+            h.kind === "spikes"
+              ? ["wheel-fl", "wheel-fr", "chassis-front"]
+              : h.kind === "lava"
+                ? PARTS.map((p) => p.id)
+                : h.kind === "hammer"
+                  ? ["door-left", "hood", "bumper-front"]
+                  : ["hood", "roof", "door-left", "door-right"];
+          for (const part of targets)
+            this.damage(
+              part,
+              h.kind === "fire" ? 18 : h.kind === "lava" ? 80 : 120,
+            );
+          this.damageEvents.push({
+            source: h.kind,
+            part: targets[0],
+            time: this.time,
+          });
+        }
+    if (this.damageEvents.length > 64)
+      this.damageEvents.splice(0, this.damageEvents.length - 64);
+    const route = ROUTES.find((r) => r.id === this.stage),
+      p = this.body.translation();
+    if (route) {
+      const contacts = wheelPositions.filter((_, i) =>
+        this.vehicle.wheelIsInContact(i),
+      ).length;
+      if (p.z > 13 && p.z < route.gapEnd && contacts === 0)
+        this.airborneTicks++;
+      if (p.z > route.gapEnd + 3 && contacts >= 2 && this.airborneTicks > 20)
+        this.landed = true;
+      if (
+        this.status === "driving" &&
+        this.landed &&
+        p.z >= route.finish &&
+        Math.abs(p.x - route.x) < 6 &&
+        contacts >= 2
+      )
+        this.status = "finished";
+      if (
+        this.status === "driving" &&
+        (p.y < -7 || Math.abs(p.x - route.x) > 12)
+      )
+        this.status = "wrecked";
     }
   }
-  step(input:Input={}){
-    if(this.status==='finished')input={brake:1};
-    const throttle=Math.max(-1,Math.min(1,input.throttle??0)),brake=Math.max(0,Math.min(1,input.brake??0)),steer=Math.max(-1,Math.min(1,input.steer??0));
-    const speed=this.body.linvel();const forward=new Vector3(0,0,1).applyQuaternion(new Quaternion().copy(this.body.rotation()));
-    const longitudinal=forward.dot(speed);
-    for(let i=0;i<4;i++){
-      const attached=!this.parts.get(PARTS[i+2].id)!.body;
-      const powered=this.parts.get('chassis-rear')!.health>0&&this.parts.get('chassis-front')!.health>0;
-      this.vehicle.setWheelEngineForce(i,attached&&powered?throttle*11000*Math.max(0,1-Math.abs(longitudinal)/25):0);
-      this.vehicle.setWheelBrake(i,brake*220);
-      this.vehicle.setWheelSteering(i,i<2?steer*.35:0);
-    }
-    this.vehicle.updateVehicle(DT,RAPIER.QueryFilterFlags.EXCLUDE_DYNAMIC);
-    for(const b of this.hazardBodies.values())b.setNextKinematicRotation(new Quaternion().setFromAxisAngle(new Vector3(0,0,1),hammerAngle(this.time+DT)));
-    const before=new Vector3().copy(this.body.linvel());
-    this.world.step();this.ticks++;this.time=this.ticks*DT;
-    const impact=before.sub(this.body.linvel()).length();
-    if(impact>10&&this.time-this.lastImpact>.2){this.lastImpact=this.time;this.damage('bumper-front',(impact-10)*4,new Vector3(0,0,.15));this.damage('hood',(impact-10)*2,new Vector3(0,.2,.6));this.damageEvents.push({source:'collision',part:'hood',time:this.time});}
-    if(this.stage!=='lab')for(const h of HAZARDS)if(this.touches(h)&&this.time-(this.cooldown.get(h.id)??-1)>.15){
-      this.cooldown.set(h.id,this.time);const targets=h.kind==='spikes'?['wheel-fl','wheel-fr','chassis-front']:h.kind==='lava'?PARTS.map(p=>p.id):h.kind==='hammer'?['door-left','hood','bumper-front']:['hood','roof','door-left','door-right'];
-      for(const part of targets)this.damage(part,h.kind==='fire'?18:h.kind==='lava'?80:120);
-      this.damageEvents.push({source:h.kind,part:targets[0],time:this.time});
-    }
-    if(this.damageEvents.length>64)this.damageEvents.splice(0,this.damageEvents.length-64);
-    const route=ROUTES.find(r=>r.id===this.stage),p=this.body.translation();
-    if(route){
-      const contacts=wheelPositions.filter((_,i)=>this.vehicle.wheelIsInContact(i)).length;
-      if(p.z>13&&p.z<route.gapEnd&&contacts===0)this.airborneTicks++;
-      if(p.z>route.gapEnd+3&&contacts>=2&&this.airborneTicks>20)this.landed=true;
-      if(this.status==='driving'&&this.landed&&p.z>=route.finish&&Math.abs(p.x-route.x)<6&&contacts>=2)this.status='finished';
-      if(this.status==='driving'&&(p.y< -7||Math.abs(p.x-route.x)>12))this.status='wrecked';
-    }
+  run(seconds: number, input: Input = {}) {
+    for (let i = 0; i < Math.round(seconds / DT); i++) this.step(input);
   }
-  run(seconds:number,input:Input={}){for(let i=0;i<Math.round(seconds/DT);i++)this.step(input);}
-  private touches(h:Hazard){
-    const p=new Vector3().copy(this.body.translation()).sub(new Vector3(h.x,h.y,h.z));
-    if(h.kind==='hammer'){p.applyAxisAngle(new Vector3(0,0,1),-hammerAngle(this.time));return Math.abs(p.x)<5&&Math.abs(p.y)<1.8&&Math.abs(p.z)<2;}
-    return Math.abs(p.x)<6&&Math.abs(p.z)<(h.kind==='lava'?3:1.5)&&Math.abs(p.y)<(h.kind==='fire'?2.4:2);
+  private touches(h: Hazard) {
+    const p = new Vector3()
+      .copy(this.body.translation())
+      .sub(new Vector3(h.x, h.y, h.z));
+    if (h.kind === "hammer") {
+      p.applyAxisAngle(new Vector3(0, 0, 1), -hammerAngle(this.time));
+      return Math.abs(p.x) < 5 && Math.abs(p.y) < 1.8 && Math.abs(p.z) < 2;
+    }
+    return (
+      Math.abs(p.x) < 6 &&
+      Math.abs(p.z) < (h.kind === "lava" ? 3 : 1.5) &&
+      Math.abs(p.y) < (h.kind === "fire" ? 2.4 : 2)
+    );
   }
-  damage(id:string,amount:number,point=new Vector3(.2,.2,.2)){
-    const state=this.parts.get(id);if(!state||!Number.isFinite(amount)||amount<0)throw new RangeError('Invalid part or damage');
-    if(state.health===0||amount===0)return;
-    state.health=Math.max(0,state.health-amount);state.dents.push({point:point.clone(),strength:Math.min(.5,amount/200)});
-    if(state.dents.length>8)state.dents.shift();
-    if(state.health>0)return;
-    const def=PARTS.find(p=>p.id===id)!;
-    const q=new Quaternion().copy(this.body.rotation());const pos=new Vector3(...def.pos).applyQuaternion(q).add(this.body.translation());
-    const velocity=this.body.velocityAtPoint(pos);
-    if(state.collider)this.world.removeCollider(state.collider,true);state.collider=undefined;
-    state.body=this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(pos.x,pos.y,pos.z).setRotation(q).setLinvel(velocity.x,velocity.y,velocity.z).setAngvel(this.body.angvel()).setCcdEnabled(true));
-    const shape=id.startsWith('wheel')?RAPIER.ColliderDesc.ball(1):RAPIER.ColliderDesc.cuboid(def.size[0]/2,def.size[1]/2,def.size[2]/2);
-    this.world.createCollider(shape.setMass(def.mass).setFriction(.7),state.body);
-    const wheel=PARTS.slice(2,6).findIndex(p=>p.id===id);
-    if(wheel>=0){this.vehicle.setWheelMaxSuspensionForce(wheel,0);this.vehicle.setWheelSuspensionStiffness(wheel,0);this.vehicle.setWheelFrictionSlip(wheel,0);this.vehicle.setWheelBrake(wheel,0);}
-    if(id==='chassis-front'){for(const p of PARTS)if(p.id!==id)this.damage(p.id,10000);this.status='wrecked';}
-    if(id==='chassis-rear')for(const p of PARTS)if('parent'in p&&p.parent===id)this.damage(p.id,10000);
+  damage(id: string, amount: number, point = new Vector3(0.2, 0.2, 0.2)) {
+    const state = this.parts.get(id);
+    if (!state || !Number.isFinite(amount) || amount < 0)
+      throw new RangeError("Invalid part or damage");
+    if (state.health === 0 || amount === 0) return;
+    state.health = Math.max(0, state.health - amount);
+    const budget = Math.max(
+      0,
+      0.65 - state.dents.reduce((sum, d) => sum + d.strength, 0),
+    );
+    if (budget > 0 && state.dents.length < 8)
+      state.dents.push({
+        point: point.clone(),
+        strength: Math.min(0.5, amount / 200, budget),
+      });
+    if (state.health > 0) return;
+    const def = PARTS.find((p) => p.id === id)!;
+    const q = new Quaternion().copy(this.body.rotation());
+    const pos = new Vector3(...def.pos)
+      .applyQuaternion(q)
+      .add(this.body.translation());
+    const velocity = this.body.velocityAtPoint(pos);
+    if (state.collider) this.world.removeCollider(state.collider, true);
+    state.collider = undefined;
+    state.body = this.world.createRigidBody(
+      RAPIER.RigidBodyDesc.dynamic()
+        .setTranslation(pos.x, pos.y, pos.z)
+        .setRotation(q)
+        .setLinvel(velocity.x, velocity.y, velocity.z)
+        .setAngvel(this.body.angvel())
+        .setCcdEnabled(true),
+    );
+    const shape = id.startsWith("wheel")
+      ? RAPIER.ColliderDesc.ball(1)
+      : RAPIER.ColliderDesc.cuboid(
+          def.size[0] / 2,
+          def.size[1] / 2,
+          def.size[2] / 2,
+        );
+    this.world.createCollider(
+      shape.setMass(def.mass).setFriction(0.7),
+      state.body,
+    );
+    const wheel = PARTS.slice(2, 6).findIndex((p) => p.id === id);
+    if (wheel >= 0) {
+      this.vehicle.setWheelMaxSuspensionForce(wheel, 0);
+      this.vehicle.setWheelSuspensionStiffness(wheel, 0);
+      this.vehicle.setWheelFrictionSlip(wheel, 0);
+      this.vehicle.setWheelBrake(wheel, 0);
+    }
+    if (id === "chassis-front") {
+      for (const p of PARTS) if (p.id !== id) this.damage(p.id, 10000);
+      this.status = "wrecked";
+    }
+    if (id === "chassis-rear")
+      for (const p of PARTS)
+        if ("parent" in p && p.parent === id) this.damage(p.id, 10000);
   }
-  snapshot(){const p=this.body.translation(),v=this.body.linvel();return {position:{x:p.x,y:p.y,z:p.z},velocity:{x:v.x,y:v.y,z:v.z},speed:Math.hypot(v.x,v.z),time:this.time,ticks:this.ticks,stage:this.stage,airborneTicks:this.airborneTicks,landed:this.landed,status:this.status,damageEvents:[...this.damageEvents],parts:Object.fromEntries([...this.parts].map(([id,s])=>[id,{health:s.health,detached:!!s.body,dents:s.dents.length}]))};}
-  dispose(){this.world.free();}
+  snapshot() {
+    const p = this.body.translation(),
+      v = this.body.linvel();
+    return {
+      position: { x: p.x, y: p.y, z: p.z },
+      velocity: { x: v.x, y: v.y, z: v.z },
+      speed: Math.hypot(v.x, v.z),
+      time: this.time,
+      ticks: this.ticks,
+      stage: this.stage,
+      airborneTicks: this.airborneTicks,
+      landed: this.landed,
+      status: this.status,
+      damageEvents: [...this.damageEvents],
+      parts: Object.fromEntries(
+        [...this.parts].map(([id, s]) => [
+          id,
+          { health: s.health, detached: !!s.body, dents: s.dents.length },
+        ]),
+      ),
+    };
+  }
+  dispose() {
+    this.world.free();
+  }
 }
-
-

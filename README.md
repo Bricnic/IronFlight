@@ -25,7 +25,9 @@ npm run test:e2e
 
 Unit and integration tests exercise real Rapier physics without rendering. Browser tests exercise the running game, keyboard input, route success and failure, all independent part detachments, actual mesh dents, asset loads and repeated rebuild cleanup. CI runs both suites.
 
-The development-only `window.__game` bridge supports stage selection, pause, frame stepping, inputs, telemetry, geometry signatures and render statistics. `advanceFrames(720, 1, {throttle: 1})` and `advanceFrames(45, 16, {throttle: 1})` each run 12 simulated seconds at the same 120 Hz physics timestep. These deterministic tests bypass wall-clock waiting, but use the same clock and physics as the game. A separate live playback test drives with the real animation loop. JSON results and telemetry attachments are saved in `artifacts/e2e-report.json`; screenshots and failure traces are in `test-results/`. The bridge is absent from production builds.
+For a packaged-game check, run `npm run build` and `npx vite preview --host 127.0.0.1 --port 4173` in one terminal, then `node scripts/smoke-production.mjs` in another. It verifies that the development bridge is absent and completes an easy jump at 1x plus all three routes at 16x using keyboard input and visible controls. Reports and screenshots go to `artifacts/`.
+
+The development-only `window.__game` bridge supports stage selection, pause, frame stepping, inputs, telemetry, geometry signatures and render statistics. `advanceFrames(720, 1, {throttle: 1})` and `advanceFrames(45, 16, {throttle: 1})` each run 12 simulated seconds at the same 120 Hz physics timestep. These deterministic tests bypass wall-clock waiting, but use the same clock and physics as the game. Separate live playback tests drive complete jumps using keyboard input at real time and 16x. JSON results and telemetry attachments are saved in `artifacts/e2e-report.json`; screenshots and failure traces are in `test-results/`. The bridge is absent from production builds.
 
 ## Design
 
@@ -36,6 +38,6 @@ The development-only `window.__game` bridge supports stage selection, pause, fra
 
 ## Assets and limits
 
-All material maps and fonts ship locally. `public/textures/manifest.json` records the four Poly Haven CC0 sources, twelve original map URLs, sizes and SHA256 hashes. Run `node scripts/fetch-textures.mjs` to reproduce the cache. Hero geometry is authored procedurally and does not require paid asset or generation services.
+All material maps and fonts ship locally. `public/textures/manifest.json` records the four Poly Haven [CC0](https://polyhaven.com/license) sources, twelve original map URLs, sizes and SHA256 hashes. Run `node scripts/fetch-textures.mjs` to reproduce the cache. The hero truck has 103,884 triangles and 320 instanced tread blocks. Its geometry is authored procedurally and does not require paid asset or generation services.
 
 This is a desktop keyboard prototype with one jump per route, bounded visual dents and rigid body breakage. It has no soft body simulation, multiplayer, audio or career progression. GPU performance needs measurement on target devices; software-rendered browser tests establish correctness rather than a 60 fps guarantee. Rapier's embedded WebAssembly makes the initial JavaScript bundle relatively large.
