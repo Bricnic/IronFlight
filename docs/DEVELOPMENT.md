@@ -19,3 +19,6 @@ Red: damage tests failed before part model existed. Green: 29 tests and build pa
 
 ## Chunk 5 Destruction lab tools
 Red: lab tests failed before tools module. Green: 31 tests and build passed. Dent, destroy, sever and reset tools use the production damage path. Unknown targets rejected; unrelated panels remain intact.
+
+## Chunk 6 First playable and browser harness
+Red: browser tests failed waiting for absent bridge. First live keyboard run additionally caught a negative initial requestAnimationFrame delta; elapsed time is now clamped to zero at startup. Playback dropdown releases focus for driving input. Green: 31 unit/integration tests, build and 10 browser tests passed. Includes six route playthroughs (1x and 16x), negative jumps, all 13 physical and rendered detachments through lab UI, keyboard driving/restart and live 16x playback. Browser screenshots and telemetry are written under test-results. Harness is dev-only.
