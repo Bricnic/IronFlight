@@ -2,6 +2,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import { Quaternion, Vector3 } from 'three';
 import { DT } from './clock';
 import { ROUTES,routeSolids } from './routes';
+import { PARTS, type PartState } from './damage';
 export type Stage = 'easy' | 'medium' | 'hard' | 'lab';
 export type Input = {throttle?:number;brake?:number;steer?:number};
 export const wheelPositions = [new Vector3(-1.65,-.35,1.65),new Vector3(1.65,-.35,1.65),new Vector3(-1.65,-.35,-1.65),new Vector3(1.65,-.35,-1.65)];
@@ -17,15 +18,21 @@ export class Simulation {
   airborneTicks=0;
   landed=false;
   status:'driving'|'finished'|'wrecked'='driving';
+  parts=new Map<string,PartState>();
+  private lastImpact=-1;
   constructor(stage:Stage='lab'){this.stage=stage;this.reset(stage);}
   reset(stage:Stage=this.stage){
     this.world?.free();this.stage=stage;this.time=0;this.ticks=0;this.airborneTicks=0;this.landed=false;this.status='driving';
     this.world=new RAPIER.World({x:0,y:-9.81,z:0});this.world.timestep=DT;
+    this.parts.clear();this.lastImpact=-1;
     if(stage==='lab')this.world.createCollider(RAPIER.ColliderDesc.cuboid(200,.5,300).setTranslation(0,-.5,0).setFriction(1));
     else for(const s of routeSolids()) this.world.createCollider(RAPIER.ColliderDesc.cuboid(s.w/2,s.h/2,s.d/2).setTranslation(s.x,s.y,s.z).setRotation(new Quaternion().setFromAxisAngle(new Vector3(1,0,0),s.angle??0)).setFriction(1));
     const route=ROUTES.find(r=>r.id===stage);
     this.body=this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(route?.x??0,2.1,stage==='lab'?0:-65).setLinearDamping(.08).setAngularDamping(1.2).setCcdEnabled(true));
-    this.world.createCollider(RAPIER.ColliderDesc.cuboid(1.1,.45,2.5).setMass(3200).setFriction(.3),this.body);
+    for(const def of PARTS){
+      const state:PartState={health:def.hp,dents:[]};this.parts.set(def.id,state);
+      if(!def.id.startsWith('wheel'))state.collider=this.world.createCollider(RAPIER.ColliderDesc.cuboid(def.size[0]/2,def.size[1]/2,def.size[2]/2).setTranslation(def.pos[0],def.pos[1],def.pos[2]).setMass(def.mass).setFriction(.3),this.body);
+    }
     this.vehicle=this.world.createVehicleController(this.body);this.vehicle.indexUpAxis=1;this.vehicle.setIndexForwardAxis=2;
     wheelPositions.forEach((p,i)=>{
       this.vehicle.addWheel(p,{x:0,y:-1,z:0},{x:-1,y:0,z:0},.6,1.05);
@@ -40,12 +47,17 @@ export class Simulation {
     const speed=this.body.linvel();const forward=new Vector3(0,0,1).applyQuaternion(new Quaternion().copy(this.body.rotation()));
     const longitudinal=forward.dot(speed);
     for(let i=0;i<4;i++){
-      this.vehicle.setWheelEngineForce(i,throttle*11000*Math.max(0,1-Math.abs(longitudinal)/25));
+      const attached=!this.parts.get(PARTS[i+2].id)!.body;
+      const powered=this.parts.get('chassis-rear')!.health>0&&this.parts.get('chassis-front')!.health>0;
+      this.vehicle.setWheelEngineForce(i,attached&&powered?throttle*11000*Math.max(0,1-Math.abs(longitudinal)/25):0);
       this.vehicle.setWheelBrake(i,brake*220);
       this.vehicle.setWheelSteering(i,i<2?steer*.35:0);
     }
     this.vehicle.updateVehicle(DT,RAPIER.QueryFilterFlags.EXCLUDE_DYNAMIC);
+    const before=new Vector3().copy(this.body.linvel());
     this.world.step();this.ticks++;this.time=this.ticks*DT;
+    const impact=before.sub(this.body.linvel()).length();
+    if(impact>10&&this.time-this.lastImpact>.2){this.lastImpact=this.time;this.damage('bumper-front',(impact-10)*4,new Vector3(0,0,.15));this.damage('hood',(impact-10)*2,new Vector3(0,.2,.6));}
     const route=ROUTES.find(r=>r.id===this.stage),p=this.body.translation();
     if(route){
       const contacts=wheelPositions.filter((_,i)=>this.vehicle.wheelIsInContact(i)).length;
@@ -56,7 +68,25 @@ export class Simulation {
     }
   }
   run(seconds:number,input:Input={}){for(let i=0;i<Math.round(seconds/DT);i++)this.step(input);}
-  snapshot(){const p=this.body.translation(),v=this.body.linvel();return {position:{x:p.x,y:p.y,z:p.z},velocity:{x:v.x,y:v.y,z:v.z},speed:Math.hypot(v.x,v.z),time:this.time,ticks:this.ticks,stage:this.stage,airborneTicks:this.airborneTicks,landed:this.landed,status:this.status};}
+  damage(id:string,amount:number,point=new Vector3(.2,.2,.2)){
+    const state=this.parts.get(id);if(!state||!Number.isFinite(amount)||amount<0)throw new RangeError('Invalid part or damage');
+    if(state.health===0||amount===0)return;
+    state.health=Math.max(0,state.health-amount);state.dents.push({point:point.clone(),strength:Math.min(.5,amount/200)});
+    if(state.dents.length>8)state.dents.shift();
+    if(state.health>0)return;
+    const def=PARTS.find(p=>p.id===id)!;
+    const q=new Quaternion().copy(this.body.rotation());const pos=new Vector3(...def.pos).applyQuaternion(q).add(this.body.translation());
+    const velocity=this.body.velocityAtPoint(pos);
+    if(state.collider)this.world.removeCollider(state.collider,true);state.collider=undefined;
+    state.body=this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(pos.x,pos.y,pos.z).setRotation(q).setLinvel(velocity.x,velocity.y,velocity.z).setAngvel(this.body.angvel()).setCcdEnabled(true));
+    const shape=id.startsWith('wheel')?RAPIER.ColliderDesc.ball(1):RAPIER.ColliderDesc.cuboid(def.size[0]/2,def.size[1]/2,def.size[2]/2);
+    this.world.createCollider(shape.setMass(def.mass).setFriction(.7),state.body);
+    const wheel=PARTS.slice(2,6).findIndex(p=>p.id===id);
+    if(wheel>=0){this.vehicle.setWheelMaxSuspensionForce(wheel,0);this.vehicle.setWheelSuspensionStiffness(wheel,0);this.vehicle.setWheelFrictionSlip(wheel,0);this.vehicle.setWheelBrake(wheel,0);}
+    if(id==='chassis-front'){for(const p of PARTS)if(p.id!==id)this.damage(p.id,10000);this.status='wrecked';}
+    if(id==='chassis-rear')for(const p of PARTS)if('parent'in p&&p.parent===id)this.damage(p.id,10000);
+  }
+  snapshot(){const p=this.body.translation(),v=this.body.linvel();return {position:{x:p.x,y:p.y,z:p.z},velocity:{x:v.x,y:v.y,z:v.z},speed:Math.hypot(v.x,v.z),time:this.time,ticks:this.ticks,stage:this.stage,airborneTicks:this.airborneTicks,landed:this.landed,status:this.status,parts:Object.fromEntries([...this.parts].map(([id,s])=>[id,{health:s.health,detached:!!s.body,dents:s.dents.length}]))};}
   dispose(){this.world.free();}
 }
 
