@@ -4,6 +4,7 @@ export interface GameHarness {
   pause(value: boolean): void;
   advanceFrames(frames: number, rate: number, input: Input): void;
   snapshot(): ReturnType<Simulation["snapshot"]>;
+  place(position: { x: number; y: number; z: number }, yaw: number): void;
   visualPart(id: string): {
     detached: boolean;
     visible: boolean;

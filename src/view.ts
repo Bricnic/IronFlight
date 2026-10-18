@@ -7,6 +7,7 @@ import { HAZARDS, hammerAngle } from "./hazards";
 import { createTruck, truckStats } from "./truck";
 import { pbr, flameMaterial } from "./materials";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { arenaSolids } from "./arena";
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
@@ -55,13 +56,10 @@ export class GameView {
     this.scene.add(sun);
     const grass = pbr("grass_ground", 1, { color: 0xc7dfb2, roughness: 1 });
     grass.userData.tile = 3;
-    const ground = this.box(340, 1, 400, grass);
-    ground.position.set(0, -9.2, 25);
-    ground.receiveShadow = true;
-    const fieldA = this.box(300, 0.2, 125, grass);
-    fieldA.position.set(0, -0.22, -62.5);
-    const fieldB = this.box(300, 0.2, 150, grass);
-    fieldB.position.set(0, -0.22, 110);
+    for (const s of arenaSolids().filter((s) => s.kind === "grass")) {
+      const m = this.box(s.w, s.h, s.d, grass);
+      m.position.set(s.x, s.y, s.z);
+    }
     const road = pbr("asphalt_02", 1, { color: 0xc3c4c5, roughness: 0.95 });
     road.userData.tile = 3;
     const courseStart = this.scene.children.length;
@@ -137,8 +135,9 @@ export class GameView {
           "#include <emissivemap_fragment>\nfloat crack = smoothstep(0.88, 0.98, abs(sin(vMapUv.x * 35.0 + sin(vMapUv.y * 26.0)*2.0))); totalEmissiveRadiance *= crack;",
         );
       };
-      const pit = this.box(13, 0.15, r.gapEnd - 12, lava);
-      pit.position.set(r.x, -6, (r.gapEnd + 12) / 2);
+      const s = arenaSolids().find((s) => s.id === `lava-${r.id}`)!;
+      const pit = this.box(s.w, s.h, s.d, lava);
+      pit.position.set(s.x, s.y, s.z);
     }
     for (const item of this.scene.children.slice(courseStart))
       this.course.add(item);
@@ -149,11 +148,10 @@ export class GameView {
         roughness: 0.9,
       }),
       seat = new T.MeshStandardMaterial({ color: 0x50626b, roughness: 0.8 });
-    for (const side of [-1, 1])
-      for (let row = 0; row < 7; row++) {
-        const stand = this.box(5, 1.2, 240, row % 2 ? seat : concrete);
-        stand.position.set(side * (65 + row * 3), row * 1.6 - 1, 10);
-      }
+    for (const s of arenaSolids().filter((s) => s.kind === "grandstand")) {
+      const m = this.box(s.w, s.h, s.d, s.row! % 2 ? seat : concrete);
+      m.position.set(s.x, s.y, s.z);
+    }
     for (const x of [-57, 57])
       for (const z of [-90, 0, 95]) {
         const pole = this.box(0.3, 25, 0.3, concrete);

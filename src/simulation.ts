@@ -4,6 +4,7 @@ import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
 import { PARTS, type PartState } from "./damage";
 import { HAZARDS, hammerAngle, type Hazard } from "./hazards";
+import { arenaSolids } from "./arena";
 export type Stage = "easy" | "medium" | "hard" | "lab";
 export type Input = { throttle?: number; brake?: number; steer?: number };
 export const wheelPositions = [
@@ -31,6 +32,8 @@ export class Simulation {
   damageEvents: { source: string; part: string; time: number }[] = [];
   private cooldown = new Map<string, number>();
   hazardBodies = new Map<string, RAPIER.RigidBody>();
+  private surfaceKinds = new Map<number, string>();
+  private visitedSurfaces = new Set<string>();
   constructor(stage: Stage = "lab") {
     this.stage = stage;
     this.reset(stage);
@@ -50,6 +53,8 @@ export class Simulation {
     this.damageEvents = [];
     this.cooldown.clear();
     this.hazardBodies.clear();
+    this.surfaceKinds.clear();
+    this.visitedSurfaces.clear();
     if (stage === "lab")
       this.world.createCollider(
         RAPIER.ColliderDesc.cuboid(200, 0.5, 300)
@@ -57,8 +62,8 @@ export class Simulation {
           .setFriction(1),
       );
     else
-      for (const s of routeSolids())
-        this.world.createCollider(
+      for (const s of [...routeSolids(), ...arenaSolids()]) {
+        const collider = this.world.createCollider(
           RAPIER.ColliderDesc.cuboid(s.w / 2, s.h / 2, s.d / 2)
             .setTranslation(s.x, s.y, s.z)
             .setRotation(
@@ -69,6 +74,8 @@ export class Simulation {
             )
             .setFriction(1),
         );
+        this.surfaceKinds.set(collider.handle, s.kind);
+      }
     const route = ROUTES.find((r) => r.id === stage);
     this.body = this.world.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic()
@@ -188,6 +195,11 @@ export class Simulation {
       );
     const before = new Vector3().copy(this.body.linvel());
     this.world.step();
+    for (let i = 0; i < 4; i++) {
+      const ground = this.vehicle.wheelGroundObject(i);
+      const kind = ground && this.surfaceKinds.get(ground.handle);
+      if (kind) this.visitedSurfaces.add(kind);
+    }
     this.ticks++;
     this.time = this.ticks * DT;
     const impact = before.sub(this.body.linvel()).length();
@@ -227,6 +239,24 @@ export class Simulation {
             time: this.time,
           });
         }
+    if (this.stage !== "lab")
+      for (const lava of arenaSolids().filter((s) => s.kind === "lava")) {
+        const p = this.body.translation();
+        if (
+          Math.abs(p.x - lava.x) < lava.w / 2 + 1 &&
+          Math.abs(p.z - lava.z) < lava.d / 2 + 1 &&
+          p.y < -3.5 &&
+          this.time - (this.cooldown.get(lava.id) ?? -1) > 0.15
+        ) {
+          this.cooldown.set(lava.id, this.time);
+          for (const part of PARTS) this.damage(part.id, 80);
+          this.damageEvents.push({
+            source: "lava",
+            part: "chassis-front",
+            time: this.time,
+          });
+        }
+      }
     if (this.damageEvents.length > 64)
       this.damageEvents.splice(0, this.damageEvents.length - 64);
     const route = ROUTES.find((r) => r.id === this.stage),
@@ -247,11 +277,7 @@ export class Simulation {
         contacts >= 2
       )
         this.status = "finished";
-      if (
-        this.status === "driving" &&
-        (p.y < -7 || Math.abs(p.x - route.x) > 12)
-      )
-        this.status = "wrecked";
+      if (this.status === "driving" && p.y < -7) this.status = "wrecked";
     }
   }
   run(seconds: number, input: Input = {}) {
@@ -343,10 +369,16 @@ export class Simulation {
       landed: this.landed,
       status: this.status,
       damageEvents: [...this.damageEvents],
+      surfaces: [...this.visitedSurfaces],
       parts: Object.fromEntries(
         [...this.parts].map(([id, s]) => [
           id,
-          { health: s.health, detached: !!s.body, dents: s.dents.length },
+          {
+            health: s.health,
+            detached: !!s.body,
+            dents: s.dents.length,
+            position: s.body ? { ...s.body.translation() } : null,
+          },
         ]),
       ),
     };

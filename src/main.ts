@@ -134,6 +134,16 @@ async function boot() {
         hud();
       },
       snapshot: () => sim.snapshot(),
+      place: (position, yaw) => {
+        sim.body.setTranslation(position, true);
+        sim.body.setRotation(
+          { x: 0, y: Math.sin(yaw / 2), z: 0, w: Math.cos(yaw / 2) },
+          true,
+        );
+        sim.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        sim.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        view.render(true);
+      },
       stats: () => view.stats(),
       visualPart: (id) => {
         const m = view.meshes.get(id);
