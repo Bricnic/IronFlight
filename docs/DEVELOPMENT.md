@@ -16,3 +16,6 @@ Red: route tests failed before route data and finish telemetry existed. Green: a
 
 ## Chunk 4 Physical destruction
 Red: damage tests failed before part model existed. Green: 29 tests and build passed. Tests destroy all 13 named parts on fresh vehicles, verify dynamic debris and reset, wheel force removal, rear assembly cascade, inherited velocity, and local mesh deformation. Corrected test expectation for rear assembly to five pieces (rear chassis, two wheels, bed and bumper). Panels use compound colliders while attached and independent bodies when detached. Normal collision velocity changes trigger the same damage path.
+
+## Chunk 5 Destruction lab tools
+Red: lab tests failed before tools module. Green: 31 tests and build passed. Dent, destroy, sever and reset tools use the production damage path. Unknown targets rejected; unrelated panels remain intact.
