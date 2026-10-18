@@ -25,3 +25,6 @@ Red: browser tests failed waiting for absent bridge. First live keyboard run add
 
 ## Chunk 7 Hazards
 Red: hazard tests failed before hazard definitions. Green: 38 unit/integration tests, build and 10 browser tests passed with all hazards enabled. Fire has timed exposure and stops damaging after escape. Rotating hammer collision shapes are kinematic Rapier bodies; spikes have cone colliders. Lava damages all structural parts. Hazards use bounded cooldowns and the shared damage path; high speed impact state stays finite.
+
+## Chunk 8 Hero art and local materials
+Red: asset tests failed before truck builder; browser art tests failed before render statistics bridge. Green: 40 unit/integration tests, strict typecheck, production build and all 13 browser tests passed (4.5 minutes with software WebGL). Hero truck meets 60k to 125k triangle budget and has 320 instanced tread blocks. Twelve 1K PBR maps from four Poly Haven assets are cached with hashes; fonts are local. Fire uses animated billboards and rock-map noise; lava uses emissive fissures over rock. Visual review corrected dark metallic paint using environment lighting. Browser tests verify real dents, texture loading and eight rebuilds without renderer memory growth. All three final-art routes finish at 1x and 16x, and all 13 lab pieces detach.

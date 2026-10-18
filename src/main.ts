@@ -31,9 +31,10 @@ async function boot(){
  window.addEventListener('keydown',e=>{if(e.target instanceof HTMLSelectElement)return;const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='r')select(sim.stage);else keys.add(k);});
  window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
  const input=():Input=>({throttle:Number(keys.has('w')||keys.has('arrowup')),brake:Number(keys.has('s')||keys.has('arrowdown')||keys.has(' ')),steer:Number(keys.has('a')||keys.has('arrowleft'))-Number(keys.has('d')||keys.has('arrowright'))});
- if(import.meta.env.DEV)window.__game={select,pause:v=>paused=v,advanceFrames:(frames,r,i)=>{for(let f=0;f<frames;f++)clock.advance(1/60,r,()=>sim.step(i));view.render();hud();},snapshot:()=>sim.snapshot(),visualPart:id=>{const m=view.meshes.get(id);return {detached:!!m?.userData.detached,visible:!!m?.visible};}};
+ if(import.meta.env.DEV)window.__game={select,pause:v=>paused=v,advanceFrames:(frames,r,i)=>{for(let f=0;f<frames;f++)clock.advance(1/60,r,()=>sim.step(i));view.render(true);hud();},snapshot:()=>sim.snapshot(),stats:()=>view.stats(),visualPart:id=>{const m=view.meshes.get(id);return {detached:!!m?.userData.detached,visible:!!m?.visible,vertices:m?Array.from(((m.children[0] as import('three').Mesh).geometry.attributes.position.array)).reduce((a,b)=>a+b,0):0};}};
  let last=performance.now();function frame(now:number){const dt=Math.max(0,(now-last)/1000);last=now;if(!paused)clock.advance(dt,rate,()=>sim.step(input()));view.render();hud();requestAnimationFrame(frame);}select('easy');$('loading').remove();requestAnimationFrame(frame);
 }
 boot().catch(e=>{document.getElementById('loading')!.textContent=`Unable to start: ${e.message}`;console.error(e);});
+
 
 

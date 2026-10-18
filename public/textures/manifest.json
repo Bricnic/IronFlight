@@ -1,0 +1,105 @@
+{
+  "provider": "Poly Haven",
+  "assets": [
+    {
+      "id": "asphalt_02",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "license": "CC0",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/asphalt_02_diffuse.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_diff_1k.jpg",
+          "sha256": "1aa5ce99f58a625c71d48cfc3e68b65ca85ccb00f39e045c0a928608a0ea25ed",
+          "bytes": 731707
+        },
+        "normal": {
+          "file": "/textures/asphalt_02_normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_nor_gl_1k.jpg",
+          "sha256": "42a1c381b53204e83a982db2864479a30bc127bbdeebb1006f8ee51bff099df3",
+          "bytes": 1240122
+        },
+        "roughness": {
+          "file": "/textures/asphalt_02_roughness.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_rough_1k.jpg",
+          "sha256": "70ba3edc65525eb4dc366cf010ca7ae0bd34e0251ff0225c2dad627a873d0712",
+          "bytes": 544032
+        }
+      }
+    },
+    {
+      "id": "grass_ground",
+      "source": "https://polyhaven.com/a/grass_ground",
+      "license": "CC0",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/grass_ground_diffuse.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_diff_1k.jpg",
+          "sha256": "a79cc5ed65af0f80261b39a383b64a8c5272c5144d724deb43dbc29f0e4cd19b",
+          "bytes": 876584
+        },
+        "normal": {
+          "file": "/textures/grass_ground_normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_nor_gl_1k.jpg",
+          "sha256": "7000e2ccd479bb7b66dcdf4faef7b47554324566886314ca620cbf03e274e826",
+          "bytes": 1310516
+        },
+        "roughness": {
+          "file": "/textures/grass_ground_roughness.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_rough_1k.jpg",
+          "sha256": "111341f948b7e073edf7ac6add8777e1bf10df8959400df3863243e89bbc8c08",
+          "bytes": 328190
+        }
+      }
+    },
+    {
+      "id": "green_metal_rust",
+      "source": "https://polyhaven.com/a/green_metal_rust",
+      "license": "CC0",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/green_metal_rust_diffuse.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/green_metal_rust/green_metal_rust_diff_1k.jpg",
+          "sha256": "4509ab0cb1cf6bf9b9f970450a41f83ebd9bff178006deae568ff34b404856fc",
+          "bytes": 212088
+        },
+        "normal": {
+          "file": "/textures/green_metal_rust_normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/green_metal_rust/green_metal_rust_nor_gl_1k.jpg",
+          "sha256": "8ecb28b0ea4026b740ce492e3f606f61a76bdce1f78cb2e29287bf9a56c54a80",
+          "bytes": 121379
+        },
+        "roughness": {
+          "file": "/textures/green_metal_rust_roughness.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/green_metal_rust/green_metal_rust_rough_1k.jpg",
+          "sha256": "f214f22608dd75aa3e7b4da8bffac97c344cbacbc50f49ba0beb0236701a622c",
+          "bytes": 124360
+        }
+      }
+    },
+    {
+      "id": "rock_06",
+      "source": "https://polyhaven.com/a/rock_06",
+      "license": "CC0",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/rock_06_diffuse.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_06/rock_06_diff_1k.jpg",
+          "sha256": "0f9f0fc0438f99cdd9e33cfadc9ba01c527f74c1085fdac425e06e6a808a7736",
+          "bytes": 913680
+        },
+        "normal": {
+          "file": "/textures/rock_06_normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_06/rock_06_nor_gl_1k.jpg",
+          "sha256": "e48374ac46351f6e3c45385074cc95bb936612ce9820bf78827b0d846de24869",
+          "bytes": 703275
+        },
+        "roughness": {
+          "file": "/textures/rock_06_roughness.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_06/rock_06_rough_1k.jpg",
+          "sha256": "7ff234224bb9ad113951279a06890c017215804e49653bd085f8eb511bb7630c",
+          "bytes": 216165
+        }
+      }
+    }
+  ]
+}
