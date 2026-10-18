@@ -21,7 +21,8 @@ it("positive steering input turns left", () => {
   const s = new Simulation();
   s.run(2, { throttle: 1 });
   s.run(1, { throttle: 1, steer: 0.4 });
-  expect(s.snapshot().position.x).toBeLessThan(0);
+  // Facing +Z, the camera's screen-left corresponds to world +X.
+  expect(s.snapshot().position.x).toBeGreaterThan(0);
   s.dispose();
 });
 it("regular and accelerated clocks produce identical complete driving outcomes", () => {

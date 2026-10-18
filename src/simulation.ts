@@ -156,7 +156,6 @@ export class Simulation {
       }
   }
   step(input: Input = {}) {
-    if (this.status === "finished") input = { brake: 1 };
     const throttle = Math.max(-1, Math.min(1, input.throttle ?? 0)),
       brake = Math.max(0, Math.min(1, input.brake ?? 0)),
       steer = Math.max(-1, Math.min(1, input.steer ?? 0));
@@ -173,11 +172,13 @@ export class Simulation {
       this.vehicle.setWheelEngineForce(
         i,
         attached && powered
-          ? throttle * 11000 * Math.max(0, 1 - Math.abs(longitudinal) / 25)
+          ? throttle *
+              (throttle < 0 ? 6500 : 11000) *
+              Math.max(0, 1 - Math.abs(longitudinal) / (throttle < 0 ? 8 : 25))
           : 0,
       );
-      this.vehicle.setWheelBrake(i, attached ? brake * 220 : 0);
-      this.vehicle.setWheelSteering(i, i < 2 ? -steer * 0.35 : 0);
+      this.vehicle.setWheelBrake(i, attached ? brake * 30 : 0);
+      this.vehicle.setWheelSteering(i, i < 2 ? steer * 0.35 : 0);
     }
     // Suspension only uses fixed surfaces. A rotating hammer must not become
     // driveable ground and inject suspension impulses into a passing tire.
@@ -362,6 +363,12 @@ export class Simulation {
       position: { x: p.x, y: p.y, z: p.z },
       velocity: { x: v.x, y: v.y, z: v.z },
       speed: Math.hypot(v.x, v.z),
+      signedSpeed: new Vector3(0, 0, 1)
+        .applyQuaternion(new Quaternion().copy(this.body.rotation()))
+        .dot(v),
+      upDot: new Vector3(0, 1, 0).applyQuaternion(
+        new Quaternion().copy(this.body.rotation()),
+      ).y,
       time: this.time,
       ticks: this.ticks,
       stage: this.stage,

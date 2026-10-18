@@ -6,6 +6,7 @@ import { PARTS } from "./damage";
 import { DestructionLab } from "./lab";
 import { GameView } from "./view";
 import "./harness";
+import { drivingInput } from "./controls";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
 <aside><div class="eyebrow">THE ARENA IS YOURS</div><h1>BIG TRUCK.<br>BAD IDEAS.</h1><p class="intro">Three ways across. One way to find out.</p><div id="routes">${ROUTES.map((r) => `<button class="route" data-stage="${r.id}" style="--route:#${r.color.toString(16)}"><small>${r.difficulty}</small><strong>${r.name}<span>↗</span></strong><em>${r.gapEnd - 12}m gap <span>·</span> ${r.hazards} hazard${r.hazards > 1 ? "s" : ""}</em></button>`).join("")}</div><button id="lab-toggle" class="lab-toggle">Destruction lab <span>⚒</span></button>
@@ -116,20 +117,14 @@ async function boot() {
   });
   window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => keys.clear());
-  const input = (): Input => ({
-    throttle: Number(keys.has("w") || keys.has("arrowup")),
-    brake: Number(keys.has("s") || keys.has("arrowdown") || keys.has(" ")),
-    steer:
-      Number(keys.has("a") || keys.has("arrowleft")) -
-      Number(keys.has("d") || keys.has("arrowright")),
-  });
+  const input = (): Input => drivingInput(keys, sim.snapshot().signedSpeed);
   if (import.meta.env.DEV)
     window.__game = {
       select,
       pause: (v) => (paused = v),
       advanceFrames: (frames, r, i) => {
         for (let f = 0; f < frames; f++)
-          clock.advance(1 / 60, r, () => sim.step(i));
+          clock.advance(1 / 60, r, () => sim.step(i ?? input()));
         view.render(true);
         hud();
       },

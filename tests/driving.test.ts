@@ -14,7 +14,7 @@ describe("monster truck physics", () => {
     s.run(3, { throttle: 1 });
     expect(s.snapshot().speed).toBeGreaterThan(8);
     const speed = s.snapshot().speed;
-    s.run(2, { brake: 1 });
+    s.run(3, { brake: 1 });
     expect(s.snapshot().speed).toBeLessThan(speed * 0.5);
     s.reset("lab");
     expect(s.snapshot().speed).toBe(0);

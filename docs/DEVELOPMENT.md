@@ -41,3 +41,6 @@ The packaged-game smoke test then passed all four scenarios through visible cont
 
 ## Review fix 1 Solid arena
 Red: grass and lava support tests failed with the truck falling through; grandstand contact telemetry was absent. Shared arena dimensions now drive both render meshes and fixed Rapier colliders. Off-road driving no longer triggers a lane-boundary wreck. Green: 55 unit/integration tests, build and a browser scenario driving off the road, into grandstand steps and onto damaging solid lava passed.
+
+## Review fix 2 Driving and finish stability
+Corrected steering against the actual driver's rear-view screen axes, replacing the incorrect world-X assumption in the earlier regression. S brakes forward travel and then selects reverse; Space only brakes. Brake impulse reduced from 220 to 30 per wheel. Removed the forced full brake at finish. Green: 61 unit/integration tests and build; three browser scenarios use actual keyboard events for A/D and brake-to-reverse, and verify upright travel through all finish lines.
