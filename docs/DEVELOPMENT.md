@@ -22,3 +22,6 @@ Red: lab tests failed before tools module. Green: 31 tests and build passed. Den
 
 ## Chunk 6 First playable and browser harness
 Red: browser tests failed waiting for absent bridge. First live keyboard run additionally caught a negative initial requestAnimationFrame delta; elapsed time is now clamped to zero at startup. Playback dropdown releases focus for driving input. Green: 31 unit/integration tests, build and 10 browser tests passed. Includes six route playthroughs (1x and 16x), negative jumps, all 13 physical and rendered detachments through lab UI, keyboard driving/restart and live 16x playback. Browser screenshots and telemetry are written under test-results. Harness is dev-only.
+
+## Chunk 7 Hazards
+Red: hazard tests failed before hazard definitions. Green: 38 unit/integration tests, build and 10 browser tests passed with all hazards enabled. Fire has timed exposure and stops damaging after escape. Rotating hammer collision shapes are kinematic Rapier bodies; spikes have cone colliders. Lava damages all structural parts. Hazards use bounded cooldowns and the shared damage path; high speed impact state stays finite.
