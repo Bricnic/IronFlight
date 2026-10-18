@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:5173. W or Up accelerates; A/D or Left/Right steers; S, Down or Space brakes; R rebuilds and restarts. Route buttons reset the truck onto the selected lane. Hold W and keep a straight line to clear each route. The playback selector offers 1x, 4x and 16x. The lab's selector targets one of 13 parts; its tools apply the same damage system as collisions and hazards.
+Open http://127.0.0.1:5173. W or Up accelerates; A/D or Left/Right steers relative to the driver's view. Hold S or Down to brake, then reverse once slowed; Space brakes without selecting reverse. R rebuilds, restarts and recenters the camera. Click and drag inside the canvas to orbit the truck. Route selection occupies the header outside the playable canvas. Hold W and keep a straight line to clear each route. Crossing the finish leaves the player in control rather than automatically applying full brakes. The playback selector offers 1x, 4x and 16x. The lab's selector targets one of 13 parts; its tools apply the same damage system as collisions and hazards.
 
 ## Verify
 
@@ -32,6 +32,7 @@ The development-only `window.__game` bridge supports stage selection, pause, fra
 ## Design
 
 - `simulation.ts` owns dynamic bodies, suspension, collision geometry, hazards and finish detection. `routes.ts` supplies the shared render and collision definitions.
+- `arena.ts` supplies shared geometry for collidable grass, grandstand steps, lamp posts and damaging solid lava. Off-roading is allowed. `camera.ts` follows interpolated vehicle poses with a rear-centered view and pointer orbit; its position and aim share one anchor to avoid background jolts.
 - `damage.ts` defines the named assembly: two chassis sections, four wheels, hood, roof, doors, bed and bumpers. Attached panels contribute colliders and mass. Destroying a part removes its collider and creates physical debris with inherited velocity. Wheels lose suspension and drive force; chassis severing releases the rear pieces and cuts propulsion.
 - `truck.ts` deterministically builds the detailed hero truck. High polygon visual geometry stays separate from low cost colliders. Deformation is localized mesh displacement, not a soft body solver.
 - `view.ts` renders PBR surfaces, lighting, chase camera, debris and effects. Poly Haven metal textures supply weathering and normals; lava uses a rock base with emissive fissures, and fire uses animated shader billboards with a rock roughness map as noise.
@@ -41,3 +42,5 @@ The development-only `window.__game` bridge supports stage selection, pause, fra
 All material maps and fonts ship locally. `public/textures/manifest.json` records the four Poly Haven [CC0](https://polyhaven.com/license) sources, twelve original map URLs, sizes and SHA256 hashes. Run `node scripts/fetch-textures.mjs` to reproduce the cache. The hero truck has 103,884 triangles and 320 instanced tread blocks. Its geometry is authored procedurally and does not require paid asset or generation services.
 
 This is a desktop keyboard prototype with one jump per route, bounded visual dents and rigid body breakage. It has no soft body simulation, multiplayer, audio or career progression. GPU performance needs measurement on target devices; software-rendered browser tests establish correctness rather than a 60 fps guarantee. Rapier's embedded WebAssembly makes the initial JavaScript bundle relatively large.
+
+Camera regression evidence includes projected coordinates of actual lamp-post landmarks across every route and a live normal-speed keyboard run. The tests reject backward parallax steps above 0.004 NDC and save the complete traces. Additional browser cases cover driving off the road onto grass, approaching grandstand steps, solid damaging lava, A/D direction, gentle braking and reverse, finish stability, mouse orbit, readable finish signs, and navigation outside the canvas at desktop and narrow widths.

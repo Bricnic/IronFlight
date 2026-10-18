@@ -13,6 +13,9 @@
 * {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 body {
   margin: 0;
   overflow: hidden;
@@ -27,34 +30,40 @@ button {
 button:focus-visible,
 select:focus-visible {
   outline: 2px solid #f4a351;
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 #viewport {
   position: fixed;
-  inset: 0;
+  inset: 84px 0 62px;
 }
 canvas {
   display: block;
+  touch-action: none;
+  cursor: grab;
+}
+canvas:active {
+  cursor: grabbing;
 }
 header {
   position: absolute;
   inset: 0 0 auto;
-  height: 91px;
-  background: linear-gradient(#111c24f2, #152129dc);
+  height: 84px;
+  background: #14212a;
   border-bottom: 1px solid #ffffff24;
   display: flex;
   align-items: center;
-  padding: 0 34px;
-  gap: 42px;
+  padding: 0 24px;
+  gap: 22px;
 }
 .brand {
   font-family: "Barlow Condensed", Impact, sans-serif;
-  font-size: 31px;
+  font-size: 29px;
   line-height: 0.85;
   font-weight: 900;
   letter-spacing: -0.8px;
   text-decoration: none;
   color: #f5f3e9;
+  flex-shrink: 0;
 }
 .brand span {
   color: #ff874e;
@@ -62,38 +71,91 @@ header {
 .brand i {
   display: block;
   font:
-    9px "Barlow",
+    8px "Barlow",
     sans-serif;
-  letter-spacing: 3.3px;
+  letter-spacing: 2.8px;
   margin-top: 9px;
   font-style: normal;
   color: #a7b5bc;
 }
 .series {
-  font-size: 10px;
-  letter-spacing: 2px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
   color: #acb6bc;
   border-left: 1px solid #ffffff33;
-  padding-left: 30px;
+  padding-left: 22px;
 }
 .series b {
   display: block;
   margin-top: 7px;
   color: #eef0e9;
-  font-size: 12px;
+  font-size: 11px;
 }
 .online {
+  display: none;
+}
+#routes {
+  display: flex;
+  gap: 8px;
   margin-left: auto;
+}
+.route {
+  display: block;
+  width: 128px;
+  color: #f8f4eb;
+  text-align: left;
+  background: #1e2c34;
+  border: 1px solid #ffffff24;
+  border-bottom: 3px solid #586368;
+  padding: 7px 11px;
+}
+.route:hover {
+  background: #293d45;
+}
+.route.selected {
+  border-bottom-color: var(--route);
+  background: #29373b;
+}
+.route small {
+  display: block;
+  font-size: 7px;
+  letter-spacing: 1.4px;
+  color: var(--route);
+}
+.route strong {
+  display: block;
+  font:
+    600 20px/1.3 "Barlow Condensed",
+    Impact,
+    sans-serif;
+}
+.route strong span {
+  float: right;
+  font: 15px Arial;
+  color: var(--route);
+}
+.route em {
+  display: none;
+}
+.lab-toggle {
+  color: #f3e6d5;
+  border: 1px solid #ffffff44;
+  background: #20313b;
+  width: 145px;
+  flex-shrink: 0;
+  padding: 12px 10px;
+  text-align: left;
   font-size: 10px;
-  letter-spacing: 1.8px;
-  color: #d0dbbe;
+}
+.lab-toggle span {
+  float: right;
+  color: #f1a364;
 }
 aside {
   position: absolute;
-  left: 34px;
-  top: 119px;
-  width: 255px;
-  text-shadow: 0 1px 12px #13212a55;
+  left: 20px;
+  top: 104px;
+  width: 235px;
 }
 .eyebrow {
   font-size: 9px;
@@ -101,81 +163,9 @@ aside {
   font-weight: 700;
   color: #f3a369;
 }
-h1 {
-  font-family: "Barlow Condensed", Impact, sans-serif;
-  font-size: 48px;
-  line-height: 0.94;
-  letter-spacing: -0.4px;
-  margin: 12px 0;
-  font-weight: 800;
-}
-aside .intro {
-  font-size: 11px;
-  color: #e2e9e4;
-  margin-bottom: 22px;
-}
-.route {
-  display: block;
-  width: 100%;
-  color: #f8f4eb;
-  text-align: left;
-  background: #17232ae8;
-  border: 1px solid #ffffff24;
-  border-left: 3px solid #586368;
-  padding: 13px 15px;
-  margin-bottom: 8px;
-  transition: 0.18s;
-}
-.route:hover {
-  background: #293840;
-}
-.route.selected {
-  border-left-color: var(--route);
-  background: #1d2b30f5;
-}
-.route small {
-  display: block;
-  font-size: 8px;
-  letter-spacing: 1.7px;
-  color: var(--route);
-}
-.route strong {
-  display: block;
-  font-family: "Barlow Condensed", Impact, sans-serif;
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.4;
-}
-.route strong span {
-  float: right;
-  font: 19px Arial;
-  color: var(--route);
-}
-.route em {
-  font-size: 10px;
-  font-style: normal;
-  color: #aab9be;
-}
-.route em span {
-  padding: 0 7px;
-}
-.lab-toggle {
-  color: #f3e6d5;
-  border: 1px solid #ffffff55;
-  background: #17232ac7;
-  width: 100%;
-  padding: 12px 15px;
-  text-align: left;
-  font-size: 11px;
-}
-.lab-toggle span {
-  float: right;
-  color: #f1a364;
-}
 #lab {
-  background: #17232af2;
+  background: #17232aee;
   padding: 18px 15px;
-  margin-top: 10px;
   border: 1px solid #ffffff33;
 }
 #lab label {
@@ -223,16 +213,16 @@ footer {
   height: 62px;
   display: flex;
   align-items: center;
-  padding: 0 34px;
-  background: #111c24e8;
+  padding: 0 24px;
+  background: #111c24;
   border-top: 1px solid #ffffff22;
   gap: 15px;
 }
 .controls {
   display: flex;
-  gap: 22px;
+  gap: 18px;
   font-size: 9px;
-  letter-spacing: 1px;
+  letter-spacing: 0.7px;
   color: #c1cbcd;
 }
 .controls span {
@@ -253,23 +243,22 @@ kbd {
 .playback {
   margin-left: auto;
   font-size: 8px;
-  letter-spacing: 1.2px;
+  letter-spacing: 1px;
   color: #acb8ba;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .playback select {
   font-size: 9px;
   letter-spacing: 1px;
-  background: #1d2b31;
 }
 #status {
   position: absolute;
-  bottom: 98px;
+  bottom: 85px;
   left: 50%;
   transform: translateX(-50%);
-  width: 270px;
+  width: 260px;
   text-align: center;
   text-shadow: 0 2px 9px #000;
 }
@@ -282,8 +271,8 @@ kbd {
 }
 #state-copy {
   display: block;
-  font-size: 13px;
-  margin: 9px 0 14px;
+  font-size: 12px;
+  margin: 9px 0 12px;
   font-weight: 500;
 }
 .progress {
@@ -298,11 +287,11 @@ kbd {
 }
 #telemetry {
   position: absolute;
-  right: 35px;
-  bottom: 99px;
-  width: 155px;
+  right: 22px;
+  bottom: 85px;
+  width: 140px;
   background: #14232bdb;
-  padding: 15px 18px;
+  padding: 12px 15px;
   border-top: 2px solid #fda46c;
 }
 .speed {
@@ -312,7 +301,7 @@ kbd {
 }
 .speed strong {
   font:
-    800 65px/0.95 "Barlow Condensed",
+    800 58px/0.95 "Barlow Condensed",
     Impact,
     sans-serif;
   letter-spacing: -2px;
@@ -323,8 +312,8 @@ kbd {
 }
 .stats {
   border-top: 1px solid #ffffff22;
-  margin-top: 14px;
-  padding-top: 10px;
+  margin-top: 12px;
+  padding-top: 8px;
 }
 .stats > span {
   display: block;
@@ -347,86 +336,95 @@ kbd {
   font-size: 20px;
   z-index: 10;
 }
-@media (max-width: 850px) {
-  header {
-    height: 70px;
-    padding: 0 18px;
-  }
+@media (max-width: 1100px) {
   .series {
     display: none;
   }
-  aside {
-    left: 18px;
-    top: 90px;
-    width: 190px;
-  }
-  h1 {
-    font-size: 35px;
+}
+@media (max-width: 850px) {
+  header {
+    padding: 0 14px;
+    gap: 12px;
   }
   .route {
-    padding: 9px 12px;
+    width: 110px;
+    padding: 7px 8px;
   }
   .route strong {
-    font-size: 21px;
+    font-size: 18px;
   }
-  .intro {
-    display: none;
+  .lab-toggle {
+    width: 130px;
+    font-size: 9px;
+  }
+  .brand {
+    font-size: 25px;
+  }
+  .brand i {
+    font-size: 7px;
+    letter-spacing: 2px;
   }
   footer {
     padding: 0 14px;
   }
   .controls {
     gap: 9px;
-  }
-  .playback > select {
-    width: 80px;
+    font-size: 8px;
   }
   .playback {
     font-size: 0;
   }
+  .playback select {
+    width: 95px;
+  }
+  .camera-hint {
+    display: none !important;
+  }
   #telemetry {
-    right: 18px;
-    width: 125px;
-    bottom: 82px;
+    width: 120px;
+    right: 14px;
   }
   #status {
-    bottom: 95px;
     width: 220px;
-    left: 48%;
-  }
-  #lab {
-    padding: 10px;
-  }
-  .online {
-    font-size: 8px;
   }
 }
-@media (max-height: 700px) {
-  aside {
-    top: 100px;
+@media (max-width: 650px) {
+  header {
+    height: 120px;
+    flex-wrap: wrap;
+    align-content: center;
+    gap: 8px 12px;
   }
-  h1 {
-    font-size: 34px;
+  .brand {
+    margin-right: auto;
   }
-  .intro {
-    display: none;
+  #routes {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin: 0;
   }
   .route {
-    padding: 8px 13px;
-  }
-  .route strong {
-    font-size: 22px;
-  }
-  .route em {
-    font-size: 9px;
-  }
-  .route small {
-    font-size: 7px;
+    width: 30%;
+    max-width: 160px;
   }
   .lab-toggle {
-    padding: 9px;
+    width: 140px;
   }
-  #lab p {
-    display: none;
+  #viewport {
+    top: 120px;
+  }
+  aside {
+    top: 138px;
+  }
+  .controls {
+    gap: 6px;
+  }
+  .controls kbd {
+    padding: 4px;
+    min-width: 16px;
+  }
+  .playback select {
+    width: 70px;
   }
 }

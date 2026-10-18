@@ -10,6 +10,7 @@ export interface GameHarness {
   snapshot(): ReturnType<Simulation["snapshot"]>;
   place(position: { x: number; y: number; z: number }, yaw: number): void;
   camera(): ReturnType<GameView["inspectCamera"]>;
+  signs(): ReturnType<GameView["inspectSigns"]>;
   traceFrames(frames: number, rate: number, input: Input): CameraSample[];
   startCameraTrace(): void;
   stopCameraTrace(): CameraSample[];

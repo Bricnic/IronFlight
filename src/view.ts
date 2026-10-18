@@ -149,7 +149,15 @@ export class GameView {
       );
       sign.scale.set(10, 1.55, 1);
       sign.position.set(r.x, 7.9, r.finish + 2.8);
+      sign.name = `finish-sign-${r.id}-front`;
+      sign.rotation.y = Math.PI;
+      (sign.material as T.MeshBasicMaterial).side = T.FrontSide;
       this.scene.add(sign);
+      const reverseSign = sign.clone();
+      reverseSign.name = `finish-sign-${r.id}-back`;
+      reverseSign.rotation.y = 0;
+      reverseSign.position.z = r.finish + 3.2;
+      this.scene.add(reverseSign);
       const lava = pbr("rock_06", 4, {
         color: 0x352821,
         emissive: 0xff4d05,
@@ -458,5 +466,24 @@ export class GameView {
         }),
       ),
     };
+  }
+  inspectSigns() {
+    return ROUTES.map((r) => {
+      const sign = this.scene.getObjectByName(`finish-sign-${r.id}-front`)!;
+      sign.updateWorldMatrix(true, false);
+      const camera = new T.PerspectiveCamera(55, 1, 0.1, 100);
+      camera.position.set(r.x, 5, r.finish - 15);
+      camera.lookAt(sign.position);
+      camera.updateMatrixWorld();
+      const a = sign.localToWorld(new T.Vector3(-0.5, 0, 0)).project(camera),
+        b = sign.localToWorld(new T.Vector3(0.5, 0, 0)).project(camera);
+      const normal = new T.Vector3(0, 0, 1).applyQuaternion(sign.quaternion);
+      return {
+        name: r.name,
+        facingApproach:
+          normal.dot(camera.position.clone().sub(sign.position)) > 0,
+        textRunsLeftToRight: b.x > a.x,
+      };
+    });
   }
 }
