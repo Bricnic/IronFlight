@@ -6,6 +6,7 @@ import { PARTS } from "./damage";
 import { DestructionLab } from "./lab";
 import { GameView } from "./view";
 import "./harness";
+import type { CameraSample } from "./harness";
 import { drivingInput } from "./controls";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
@@ -23,12 +24,19 @@ async function boot() {
   let rate = 1,
     paused = false;
   const keys = new Set<string>();
+  let cameraTrace: CameraSample[] = [],
+    captureCamera = false;
+  const cameraSample = (): CameraSample => ({
+    ...view.inspectCamera(),
+    state: sim.snapshot(),
+  });
   const $ = (id: string) => document.getElementById(id)!;
   ($("target") as HTMLSelectElement).value = lab.selected;
   function select(stage: Stage) {
     sim.reset(stage);
     view.resetTruck();
     clock.reset();
+    cameraTrace = [];
     keys.clear();
     $("lab").hidden = stage !== "lab";
     $("routes").hidden = stage === "lab";
@@ -129,6 +137,26 @@ async function boot() {
         hud();
       },
       snapshot: () => sim.snapshot(),
+      camera: () => view.inspectCamera(),
+      traceFrames: (frames, r, i) => {
+        const samples: CameraSample[] = [];
+        for (let f = 0; f < frames; f++) {
+          clock.advance(1 / 60, r, () => sim.step(i));
+          view.render(false, clock.alpha, false);
+          samples.push(cameraSample());
+        }
+        view.render(false, clock.alpha);
+        hud();
+        return samples;
+      },
+      startCameraTrace: () => {
+        cameraTrace = [];
+        captureCamera = true;
+      },
+      stopCameraTrace: () => {
+        captureCamera = false;
+        return cameraTrace;
+      },
       place: (position, yaw) => {
         sim.body.setTranslation(position, true);
         sim.body.setRotation(
@@ -159,7 +187,9 @@ async function boot() {
     const dt = Math.max(0, (now - last) / 1000);
     last = now;
     if (!paused) clock.advance(dt, rate, () => sim.step(input()));
-    view.render();
+    view.render(false, clock.alpha);
+    if (captureCamera && cameraTrace.length < 2000)
+      cameraTrace.push(cameraSample());
     hud();
     requestAnimationFrame(frame);
   }

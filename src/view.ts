@@ -8,10 +8,14 @@ import { createTruck, truckStats } from "./truck";
 import { pbr, flameMaterial } from "./materials";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { arenaSolids } from "./arena";
+import { ChaseCamera } from "./camera";
+import { DT } from "./clock";
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
   readonly renderer: T.WebGLRenderer;
+  readonly chase = new ChaseCamera(this.camera);
+  private lastCameraTime = 0;
   readonly meshes = new Map<string, T.Group>();
   private dentCounts = new Map<string, number>();
   private truck = new T.Group();
@@ -25,6 +29,28 @@ export class GameView {
   ) {
     this.renderer = new T.WebGLRenderer({ antialias: true });
     host.append(this.renderer.domElement);
+    let dragging = false,
+      lastX = 0,
+      lastY = 0;
+    const canvas = this.renderer.domElement;
+    canvas.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      this.chase.drag(e.clientX - lastX, e.clientY - lastY);
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+    const release = () => {
+      dragging = false;
+    };
+    canvas.addEventListener("pointerup", release);
+    canvas.addEventListener("pointercancel", release);
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = T.PCFSoftShadowMap;
@@ -323,6 +349,8 @@ export class GameView {
     this.meshes.clear();
     this.dentCounts.clear();
     this.snapCamera = true;
+    this.chase.reset();
+    this.lastCameraTime = 0;
     for (const def of PARTS)
       this.meshes.set(def.id, this.truck.getObjectByName(def.id) as T.Group);
     for (const side of [-1, 1]) {
@@ -344,16 +372,19 @@ export class GameView {
     };
   }
   resize() {
-    const w = innerWidth,
-      h = innerHeight;
+    const host = this.renderer.domElement.parentElement!;
+    const w = host.clientWidth,
+      h = host.clientHeight;
     this.renderer.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
   }
-  render(snap = false) {
+  render(snap = false, alpha = 1, draw = true) {
     const s = this.simulation,
-      root = new T.Vector3().copy(s.body.translation()),
-      q = new T.Quaternion().copy(s.body.rotation());
+      root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
+      q = s.previousRotation
+        .clone()
+        .slerp(new T.Quaternion().copy(s.body.rotation()), alpha);
     this.labFloor.visible = s.stage === "lab";
     this.course.visible = s.stage !== "lab";
     this.hazards.visible = s.stage !== "lab";
@@ -402,22 +433,30 @@ export class GameView {
       }
       this.dentCounts.set(def.id, state.dents.length);
     }
-    const desired = root
-      .clone()
-      .add(
-        new T.Vector3(
-          s.stage === "lab" ? 10 : 9,
-          s.stage === "lab" ? 6 : 5.5,
-          -12,
-        ),
-      );
-    if (this.snapCamera || snap) {
-      this.camera.position.copy(desired);
-      this.snapCamera = false;
-    } else this.camera.position.lerp(desired, 0.12);
-    this.camera.lookAt(
-      root.clone().add(new T.Vector3(0, 0.5, s.stage === "lab" ? 0 : 5)),
+    const renderTime = Math.max(0, (s.ticks - 1 + alpha) * DT),
+      elapsed = Math.max(0, renderTime - this.lastCameraTime);
+    this.lastCameraTime = renderTime;
+    const debris = s.parts.get("chassis-front")?.body;
+    this.chase.update(
+      debris ? new T.Vector3().copy(debris.translation()) : root,
+      q,
+      elapsed,
+      this.snapCamera || snap,
     );
-    this.renderer.render(this.scene, this.camera);
+    this.snapCamera = false;
+    if (draw) this.renderer.render(this.scene, this.camera);
+  }
+  inspectCamera() {
+    const p = this.camera.position;
+    return {
+      position: { x: p.x, y: p.y, z: p.z },
+      orbit: { yaw: this.chase.yaw, pitch: this.chase.pitch },
+      landmarks: [-57, 57].flatMap((x) =>
+        [-90, 0, 95].map((z) => {
+          const p = new T.Vector3(x, 11, z).project(this.camera);
+          return { id: `pole-${x}-${z}`, x: p.x, y: p.y, z: p.z };
+        }),
+      ),
+    };
   }
 }

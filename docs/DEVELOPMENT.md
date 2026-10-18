@@ -44,3 +44,6 @@ Red: grass and lava support tests failed with the truck falling through; grandst
 
 ## Review fix 2 Driving and finish stability
 Corrected steering against the actual driver's rear-view screen axes, replacing the incorrect world-X assumption in the earlier regression. S brakes forward travel and then selects reverse; Space only brakes. Brake impulse reduced from 220 to 30 per wheel. Removed the forced full brake at finish. Green: 61 unit/integration tests and build; three browser scenarios use actual keyboard events for A/D and brake-to-reverse, and verify upright travel through all finish lines.
+
+## Review fix 3 Camera tracking
+Added fixed-step pose interpolation, a rear-centered camera with a shared position/aim anchor, time-based height and heading smoothing, and pointer-drag orbit with pitch limits. Red: camera unit tests failed before the rig existed. Green: 63 unit tests, build and three browser camera tests passed. Browser evidence records projected positions of real lamp-post landmarks for all three accelerate-jump-finish cycles and a live normal-speed keyboard run; reversals are bounded below 0.004 NDC (about 2 pixels on the test viewport). Mouse dragging is tested with actual pointer events.

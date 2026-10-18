@@ -2,6 +2,9 @@ export const DT = 1 / 120;
 /** Playback changes tick count, never the integration interval. */
 export class FixedClock {
   private remainder = 0;
+  get alpha() {
+    return Math.max(0, Math.min(1, this.remainder / DT));
+  }
   advance(elapsed: number, rate: number, tick: () => void) {
     if (
       !Number.isFinite(elapsed) ||

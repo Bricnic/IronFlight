@@ -34,6 +34,8 @@ export class Simulation {
   hazardBodies = new Map<string, RAPIER.RigidBody>();
   private surfaceKinds = new Map<number, string>();
   private visitedSurfaces = new Set<string>();
+  previousPosition = new Vector3();
+  previousRotation = new Quaternion();
   constructor(stage: Stage = "lab") {
     this.stage = stage;
     this.reset(stage);
@@ -84,6 +86,8 @@ export class Simulation {
         .setAngularDamping(1.2)
         .setCcdEnabled(true),
     );
+    this.previousPosition.copy(this.body.translation());
+    this.previousRotation.copy(this.body.rotation());
     for (const def of PARTS) {
       const state: PartState = { health: def.hp, dents: [] };
       this.parts.set(def.id, state);
@@ -156,6 +160,8 @@ export class Simulation {
       }
   }
   step(input: Input = {}) {
+    this.previousPosition.copy(this.body.translation());
+    this.previousRotation.copy(this.body.rotation());
     const throttle = Math.max(-1, Math.min(1, input.throttle ?? 0)),
       brake = Math.max(0, Math.min(1, input.brake ?? 0)),
       steer = Math.max(-1, Math.min(1, input.steer ?? 0));
