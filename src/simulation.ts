@@ -154,6 +154,18 @@ export class Simulation {
               ),
               b,
             );
+          for (const side of [-1, 1])
+            this.world.createCollider(
+              RAPIER.ColliderDesc.cone(0.9, 0.65)
+                .setTranslation(side * 5.1, 0, 0)
+                .setRotation(
+                  new Quaternion().setFromAxisAngle(
+                    new Vector3(0, 0, 1),
+                    (-side * Math.PI) / 2,
+                  ),
+                ),
+              b,
+            );
         }
         if (h.kind === "spikes")
           for (let x = -5; x <= 5; x += 2)
@@ -356,7 +368,7 @@ export class Simulation {
       .sub(new Vector3(h.x, h.y, h.z));
     if (h.kind === "hammer") {
       p.applyAxisAngle(new Vector3(0, 0, 1), -hammerAngle(this.time));
-      return Math.abs(p.x) < 5 && Math.abs(p.y) < 1.8 && Math.abs(p.z) < 2;
+      return Math.abs(p.x) < 6.8 && Math.abs(p.y) < 1.8 && Math.abs(p.z) < 2;
     }
     return (
       Math.abs(p.x) < 6 &&
