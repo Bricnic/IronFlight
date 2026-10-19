@@ -95,6 +95,27 @@ async function boot() {
               : "Build speed. Hold your line.";
     $("progress").style.width =
       `${r ? Math.max(0, Math.min(100, ((s.position.z + 65) / (r.finish + 65)) * 100)) : 0}%`;
+    if (s.stage !== "lab" && s.status === "finished") {
+      if (s.loopCompleted) {
+        $("state-label").textContent = "LOOP CLEARED";
+        $("state-copy").textContent =
+          "Full circle. Keep rolling or press R to run again.";
+      } else if (s.position.z > 245 || s.position.y > 10) {
+        $("state-label").textContent = "DRAGON LOOP";
+        $("state-copy").textContent =
+          "Hold gas. Follow the track as it curves sideways.";
+      } else if (s.position.z > 130) {
+        $("state-label").textContent = s.dragonFiring
+          ? "DRAGONS FIRING"
+          : "DRAGON PASS CLEAR";
+        const phase = s.time % 8;
+        $("state-copy").textContent = s.dragonFiring
+          ? `Jets stop in ${(3 - phase).toFixed(1)}s. Time your boost approach.`
+          : `Jets restart in ${(8 - phase).toFixed(1)}s. Boost toward the loop.`;
+      } else
+        $("state-copy").textContent =
+          "Jump cleared. Keep going for the dragon loop.";
+    }
   }
   document
     .querySelectorAll<HTMLButtonElement>("[data-stage]")
@@ -156,6 +177,14 @@ async function boot() {
         hud();
       },
       snapshot: () => sim.snapshot(),
+      driveFrames: (frames, r, driver, draw = true) => {
+        for (let f = 0; f < frames; f++) {
+          clock.advance(1 / 60, r, () => sim.step(driver(sim.snapshot())));
+          view.render(false, clock.alpha, false);
+        }
+        if (draw) view.render(false, clock.alpha);
+        hud();
+      },
       camera: () => view.inspectCamera(),
       signs: () => view.inspectSigns(),
       traceFrames: (frames, r, i) => {

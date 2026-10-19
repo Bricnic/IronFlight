@@ -27,6 +27,24 @@ try {
     "undefined",
     "Production must not expose the dev harness",
   );
+  await page.keyboard.press("Backquote");
+  assert.equal(await page.locator("#debug-menu").isVisible(), true);
+  for (const key of [
+    "acceleration",
+    "topSpeed",
+    "boostPower",
+    "friction",
+    "steeringRate",
+  ]) {
+    const slider = page.locator(`#tune-${key}`);
+    assert.equal(await slider.getAttribute("min"), "1");
+    assert.equal(await slider.getAttribute("max"), "10");
+    assert.equal(await slider.getAttribute("step"), "0.1");
+  }
+  assert.equal(await page.locator("#tune-boostPower").inputValue(), "3");
+  await page.screenshot({ path: "artifacts/production-tuning.png" });
+  await page.keyboard.press("Backquote");
+  assert.equal(await page.locator("#debug-menu").isVisible(), false);
   for (const [stage, rate] of [
     ["easy", 1],
     ["easy", 16],
@@ -60,10 +78,18 @@ try {
   assert.deepEqual(errors, []);
   await writeFile(
     "artifacts/production-report.json",
-    JSON.stringify({ runs, errors }, null, 2),
+    JSON.stringify(
+      { productionHarnessAbsent: true, tuningMenuVerified: true, runs, errors },
+      null,
+      2,
+    ),
   );
   console.log(
-    JSON.stringify({ productionHarnessAbsent: true, runs, errors }, null, 2),
+    JSON.stringify(
+      { productionHarnessAbsent: true, tuningMenuVerified: true, runs, errors },
+      null,
+      2,
+    ),
   );
 } catch (error) {
   await page.screenshot({ path: "artifacts/production-failed.png" });

@@ -10,6 +10,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { arenaSolids } from "./arena";
 import { ChaseCamera } from "./camera";
 import { DT } from "./clock";
+import { LoopView } from "./loop-view";
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
@@ -23,6 +24,7 @@ export class GameView {
   private snapCamera = true;
   private hazards = new T.Group();
   private course = new T.Group();
+  private loop = new LoopView();
   constructor(
     host: HTMLElement,
     readonly simulation: Simulation,
@@ -176,6 +178,20 @@ export class GameView {
     for (const item of this.scene.children.slice(courseStart))
       this.course.add(item);
     this.scene.add(this.course);
+    this.course.add(this.loop);
+    for (const r of ROUTES) {
+      const sign = this.label(
+        "DRAGON LOOP  /  3X BOOST",
+        "#102c2d",
+        "#94fff0",
+        1024,
+        128,
+      );
+      sign.rotation.y = Math.PI;
+      sign.scale.set(12, 1.5, 1);
+      sign.position.set(r.x, 6.4, 145);
+      this.course.add(sign);
+    }
     // Arena seating and light towers give the jumps an arena scale.
     const concrete = new T.MeshStandardMaterial({
         color: 0x767c76,
@@ -378,6 +394,7 @@ export class GameView {
   stats() {
     return {
       ...truckStats(this.truck),
+      ...this.loop.stats(),
       courseVisible: this.course.visible,
       drawCalls: this.renderer.info.render.calls,
       renderTriangles: this.renderer.info.render.triangles,
@@ -402,6 +419,7 @@ export class GameView {
     this.labFloor.visible = s.stage === "lab";
     this.course.visible = s.stage !== "lab";
     this.hazards.visible = s.stage !== "lab";
+    this.loop.update(s.time);
     for (const g of this.hazards.children) {
       const h = g.userData.hazard;
       if (h.kind === "hammer") g.children[0].rotation.z = hammerAngle(s.time);

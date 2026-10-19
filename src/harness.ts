@@ -7,6 +7,12 @@ export interface GameHarness {
   select(stage: Stage): void;
   pause(value: boolean): void;
   advanceFrames(frames: number, rate: number, input?: Input): void;
+  driveFrames(
+    frames: number,
+    rate: number,
+    driver: (state: ReturnType<Simulation["snapshot"]>) => Input,
+    draw?: boolean,
+  ): void;
   snapshot(): ReturnType<Simulation["snapshot"]>;
   place(position: { x: number; y: number; z: number }, yaw: number): void;
   camera(): ReturnType<GameView["inspectCamera"]>;
@@ -20,6 +26,9 @@ export interface GameHarness {
     vertices: number;
   };
   stats(): {
+    dragonStatues: number;
+    loopSegments: number;
+    jetsVisible: number;
     triangles: number;
     treadBlocks: number;
     meshes: number;
