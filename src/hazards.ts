@@ -38,5 +38,6 @@ export const HAZARDS: Hazard[] = ROUTES.flatMap((r) => {
   return all;
 });
 export function hammerAngle(time: number) {
-  return time * 1.7 * 1.5;
+  return time * HAMMER_SPEED;
 }
+export const HAMMER_SPEED = 1.7 * 1.5;

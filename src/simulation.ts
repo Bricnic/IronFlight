@@ -7,6 +7,7 @@ import { HAZARDS, hammerAngle, type Hazard } from "./hazards";
 import { arenaSolids } from "./arena";
 import { DEFAULT_TUNING, validateTuning, type Tuning } from "./tuning";
 import { LOOP, dragonFiring, loopSolids, loopScenerySolids } from "./loop";
+import { hammerStrike, type HammerImpact } from "./hammer-impact";
 export type Stage = "easy" | "medium" | "hard" | "lab";
 export type Input = { throttle?: number; brake?: number; steer?: number };
 export const wheelPositions = [
@@ -34,6 +35,8 @@ export class Simulation {
   damageEvents: { source: string; part: string; time: number }[] = [];
   private cooldown = new Map<string, number>();
   hazardBodies = new Map<string, RAPIER.RigidBody>();
+  hammerImpacts: HammerImpact[] = [];
+  private hammerContacts = new Set<string>();
   private surfaceKinds = new Map<number, string>();
   private visitedSurfaces = new Set<string>();
   previousPosition = new Vector3();
@@ -69,6 +72,8 @@ export class Simulation {
     this.damageEvents = [];
     this.cooldown.clear();
     this.hazardBodies.clear();
+    this.hammerImpacts = [];
+    this.hammerContacts.clear();
     this.surfaceKinds.clear();
     this.visitedSurfaces.clear();
     if (stage === "lab")
@@ -369,8 +374,9 @@ export class Simulation {
     }
     this.ticks++;
     this.time = this.ticks * DT;
-    const impact = before.sub(this.body.linvel()).length();
-    if (impact > 10 && this.time - this.lastImpact > 0.2) {
+    const impact = before.distanceTo(this.body.linvel());
+    const hammerHit = this.resolveHammerImpacts(before);
+    if (!hammerHit && impact > 10 && this.time - this.lastImpact > 0.2) {
       this.lastImpact = this.time;
       this.damage("bumper-front", (impact - 10) * 4, new Vector3(0, 0, 0.15));
       this.damage("hood", (impact - 10) * 2, new Vector3(0, 0.2, 0.6));
@@ -383,6 +389,7 @@ export class Simulation {
     if (this.stage !== "lab")
       for (const h of HAZARDS)
         if (
+          h.kind !== "hammer" &&
           this.touches(h) &&
           this.time - (this.cooldown.get(h.id) ?? -1) > 0.15
         ) {
@@ -392,9 +399,7 @@ export class Simulation {
               ? ["wheel-fl", "wheel-fr", "chassis-front"]
               : h.kind === "lava"
                 ? PARTS.map((p) => p.id)
-                : h.kind === "hammer"
-                  ? ["door-left", "hood", "bumper-front"]
-                  : ["hood", "roof", "door-left", "door-right"];
+                : ["hood", "roof", "door-left", "door-right"];
           for (const part of targets)
             this.damage(
               part,
@@ -450,14 +455,115 @@ export class Simulation {
   run(seconds: number, input: Input = {}) {
     for (let i = 0; i < Math.round(seconds / DT); i++) this.step(input);
   }
+  private resolveHammerImpacts(incoming: Vector3) {
+    const attached = new Map(
+      [...this.parts]
+        .filter(([, p]) => !!p.collider)
+        .map(([id, p]) => [p.collider!.handle, id]),
+    );
+    const contacts = new Set<string>();
+    const strikes: {
+      id: string;
+      part: string;
+      point: Vector3;
+      normal: Vector3;
+      radius: Vector3;
+    }[] = [];
+    for (const [id, rotor] of this.hazardBodies) {
+      let best: (typeof strikes)[number] | undefined;
+      for (let i = 0; i < rotor.numColliders(); i++) {
+        const hammer = rotor.collider(i);
+        this.world.contactPairsWith(hammer, (other) => {
+          const part = attached.get(other.handle);
+          if (!part) return;
+          this.world.contactPair(hammer, other, (manifold, flipped) => {
+            for (let j = 0; j < manifold.numContacts(); j++) {
+              if (manifold.contactDist(j) > 0.005) continue;
+              const local = flipped
+                ? manifold.localContactPoint2(j)
+                : manifold.localContactPoint1(j);
+              if (!local) continue;
+              const point = new Vector3()
+                .copy(local)
+                .applyQuaternion(new Quaternion().copy(hammer.rotation()))
+                .add(hammer.translation());
+              const radius = point.clone().sub(rotor.translation());
+              const normal = new Vector3()
+                .copy(manifold.normal())
+                .multiplyScalar(flipped ? -1 : 1);
+              if (!best || radius.lengthSq() > best.radius.lengthSq())
+                best = { id, part, point, radius, normal };
+            }
+          });
+        });
+      }
+      if (best) {
+        contacts.add(id);
+        if (
+          !this.hammerContacts.has(id) &&
+          this.time - (this.cooldown.get(id) ?? -1) > 0.45
+        )
+          strikes.push(best);
+      }
+    }
+    this.hammerContacts = contacts;
+    for (const hit of strikes) {
+      if (this.parts.get("chassis-front")!.health <= 0) continue;
+      this.cooldown.set(hit.id, this.time);
+      const strike = hammerStrike(hit.radius, hit.normal, incoming);
+      // Apply before breakage so newly freed parts inherit the launch and spin.
+      this.body.applyImpulseAtPoint(
+        strike.deltaVelocity.clone().multiplyScalar(this.body.mass()),
+        hit.point,
+        true,
+      );
+      const q = new Quaternion().copy(this.body.rotation()).invert();
+      const local = hit.point
+        .clone()
+        .sub(this.body.translation())
+        .applyQuaternion(q);
+      const nearby = PARTS.filter(
+        (p) => p.id !== hit.part && !this.parts.get(p.id)!.body,
+      )
+        .map((p) => ({ p, distance: new Vector3(...p.pos).distanceTo(local) }))
+        .filter((p) => p.distance < 3.5)
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 2);
+      for (const [id, amount] of [
+        [hit.part, strike.damage],
+        ...nearby.map(({ p }) => [p.id, strike.damage * 0.65]),
+      ] as [string, number][]) {
+        const def = PARTS.find((p) => p.id === id)!;
+        const dent = local
+          .clone()
+          .sub(new Vector3(...def.pos))
+          .clamp(
+            new Vector3(...def.size).multiplyScalar(-0.5),
+            new Vector3(...def.size).multiplyScalar(0.5),
+          );
+        this.damage(id, amount, dent);
+      }
+      this.damageEvents.push({
+        source: "hammer",
+        part: hit.part,
+        time: this.time,
+      });
+      this.hammerImpacts.push({
+        id: hit.id,
+        part: hit.part,
+        time: this.time,
+        point: hit.point.toArray(),
+        deltaVelocity: strike.deltaVelocity.toArray(),
+        damage: strike.damage,
+      });
+      if (this.hammerImpacts.length > 16) this.hammerImpacts.shift();
+    }
+    return strikes.length > 0;
+  }
   private touches(h: Hazard) {
     const p = new Vector3()
       .copy(this.body.translation())
       .sub(new Vector3(h.x, h.y, h.z));
-    if (h.kind === "hammer") {
-      p.applyAxisAngle(new Vector3(0, 0, 1), -hammerAngle(this.time));
-      return Math.abs(p.x) < 6.8 && Math.abs(p.y) < 1.8 && Math.abs(p.z) < 2;
-    }
     return (
       Math.abs(p.x) < 6 &&
       Math.abs(p.z) < (h.kind === "lava" ? 3 : 1.5) &&
@@ -557,6 +663,11 @@ export class Simulation {
       landed: this.landed,
       status: this.status,
       damageEvents: [...this.damageEvents],
+      hammerImpacts: this.hammerImpacts.map((hit) => ({
+        ...hit,
+        point: [...hit.point],
+        deltaVelocity: [...hit.deltaVelocity],
+      })),
       surfaces: [...this.visitedSurfaces],
       parts: Object.fromEntries(
         [...this.parts].map(([id, s]) => [

@@ -21,6 +21,8 @@ Press the backtick key (\`) to open or close **Playtest tuning**. Acceleration, 
 
 The boost pad targets three times the selected nominal top speed. Its **3.0x power default** was selected through a physics sweep; power changes acceleration toward that target. At default tuning it reaches approximately 75 m/s and keeps all four tires contacting the loop at the apex. See [boost measurements](docs/BOOST_TUNING.md). Other slider combinations are available for experimentation; loop feasibility is tested at the defaults.
 
+Hammer impacts use actual collision contacts. A heavy hit damages the struck part and nearby pieces, then throws the truck into the air with an impulse based on the rotor's tangential motion. The impulse is applied before breakage so detached panels and wheels inherit the launch and spin. One strike is registered per contact episode, and near misses cause no hammer damage. Browser tests verify launches and visible detachments at both 1x and 16x.
+
 ## Verify
 
 ```sh
