@@ -17,7 +17,7 @@ export const HAZARDS: Hazard[] = ROUTES.flatMap((r) => {
         id: `${r.id}-hammer`,
         route: r.id,
         kind: "hammer",
-        x: r.x + 3.8,
+        x: r.x + 8.3,
         y: 3.5,
         z: 26,
       },
@@ -38,5 +38,5 @@ export const HAZARDS: Hazard[] = ROUTES.flatMap((r) => {
   return all;
 });
 export function hammerAngle(time: number) {
-  return time * 1.7;
+  return time * 1.7 * 1.5;
 }

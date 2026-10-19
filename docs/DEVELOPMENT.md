@@ -56,3 +56,6 @@ Final combined validation: all 63 unit/integration tests, strict typecheck, prod
 
 ## Playtest chunk 1 Live driving tuning
 Red: four physics tests failed before tuning and steering slew existed; the browser test failed before the debug menu existed. Green: 67 unit/physics tests, strict typecheck/build, and four browser cases passed. Backtick toggles five live sliders with 1–10x ranges and 0.1x steps; browser-local values survive reload and restart. Coasting resistance increases without changing airborne drag; steering approaches and recenters at a bounded adjustable rate. Extra acceleration acts through the center of mass to avoid immediate torque-induced wheelies at high settings.
+
+## Playtest chunk 2 Spiked hammers
+Red: the speed/spike test failed at the original rotation rate; adding spikes exposed two launch-delay regressions. Moved the wider hammer assemblies outward to preserve a centered safe flight line. Green: all 16 targeted hammer, hazard and launch-delay tests passed; the combined 73-test suite and build also passed. Both cone tips have matching rendered meshes and physical colliders; hammer rotation is multiplied by 1.5.

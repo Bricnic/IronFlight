@@ -239,6 +239,12 @@ export class GameView {
         for (const side of [-1, 1]) {
           const head = this.box(1.6, 1.6, 1.5, metal, rotor);
           head.position.x = side * 3.6;
+          const tip = new T.Mesh(new T.ConeGeometry(0.65, 1.8, 24), metal);
+          tip.name = `hammer-spike-${side}`;
+          tip.position.x = side * 5.1;
+          tip.rotation.z = (-side * Math.PI) / 2;
+          tip.castShadow = true;
+          rotor.add(tip);
         }
         const support = this.box(0.6, 8, 0.6, metal, g);
         support.position.set(0, -2, 1.4);
