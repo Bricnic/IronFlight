@@ -21,7 +21,7 @@ export const ROUTES = [
   },
   {
     id: "hard" as const,
-    name: "Death Wish",
+    name: "Danger Zone",
     x: 24,
     gapEnd: 35,
     finish: 82,
