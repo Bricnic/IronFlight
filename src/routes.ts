@@ -38,7 +38,7 @@ export type Solid = {
   h: number;
   d: number;
   angle?: number;
-  kind: "road" | "ramp" | "landing";
+  kind: "road" | "ramp" | "landing" | "loop" | "scenery";
 };
 export function routeSolids(): Solid[] {
   return ROUTES.flatMap((r) => [

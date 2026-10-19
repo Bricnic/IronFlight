@@ -6,6 +6,7 @@ import { PARTS, type PartState } from "./damage";
 import { HAZARDS, hammerAngle, type Hazard } from "./hazards";
 import { arenaSolids } from "./arena";
 import { DEFAULT_TUNING, validateTuning, type Tuning } from "./tuning";
+import { LOOP, dragonFiring, loopSolids, loopScenerySolids } from "./loop";
 export type Stage = "easy" | "medium" | "hard" | "lab";
 export type Input = { throttle?: number; brake?: number; steer?: number };
 export const wheelPositions = [
@@ -39,6 +40,9 @@ export class Simulation {
   previousRotation = new Quaternion();
   tuning = { ...DEFAULT_TUNING };
   steeringAngle = 0;
+  boostTicks = 0;
+  loopApex = false;
+  loopCompleted = false;
   setTuning(values: Partial<Tuning>) {
     Object.assign(this.tuning, validateTuning(values));
   }
@@ -55,6 +59,9 @@ export class Simulation {
     this.landed = false;
     this.status = "driving";
     this.steeringAngle = 0;
+    this.boostTicks = 0;
+    this.loopApex = false;
+    this.loopCompleted = false;
     this.world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
     this.world.timestep = DT;
     this.parts.clear();
@@ -71,7 +78,12 @@ export class Simulation {
           .setFriction(1),
       );
     else
-      for (const s of [...routeSolids(), ...arenaSolids()]) {
+      for (const s of [
+        ...routeSolids(),
+        ...arenaSolids(),
+        ...loopSolids(),
+        ...loopScenerySolids(),
+      ]) {
         const collider = this.world.createCollider(
           RAPIER.ColliderDesc.cuboid(s.w / 2, s.h / 2, s.d / 2)
             .setTranslation(s.x, s.y, s.z)
@@ -189,6 +201,82 @@ export class Simulation {
       new Quaternion().copy(this.body.rotation()),
     );
     const longitudinal = forward.dot(speed);
+    const routeX = ROUTES.find((r) => r.id === this.stage)?.x;
+    const position = this.body.translation();
+    const onApproach =
+      routeX !== undefined && Math.abs(position.x - routeX) < 6;
+    const loopSuspension =
+      routeX !== undefined && position.z > LOOP.z - LOOP.radius - 5;
+    this.body.setAngularDamping(loopSuspension ? 0.25 : 1.2);
+    for (let i = 0; i < 4; i++) {
+      if (this.parts.get(PARTS[i + 2].id)!.body) continue;
+      this.vehicle.setWheelMaxSuspensionForce(
+        i,
+        loopSuspension ? 500000 : 80000,
+      );
+      this.vehicle.setWheelSuspensionStiffness(i, loopSuspension ? 120 : 35);
+    }
+    if (
+      onApproach &&
+      position.y < 4 &&
+      position.y > 0 &&
+      position.z >= LOOP.boostStart &&
+      position.z <= LOOP.boostEnd &&
+      wheelPositions.filter((_, i) => this.vehicle.wheelIsInContact(i))
+        .length >= 2 &&
+      this.parts.get("chassis-front")!.health > 0 &&
+      this.parts.get("chassis-rear")!.health > 0
+    ) {
+      const delta = Math.min(
+        25 * this.tuning.boostPower * DT,
+        Math.max(0, 75 * this.tuning.topSpeed - longitudinal),
+      );
+      this.body.applyImpulse(
+        forward.clone().multiplyScalar(delta * this.body.mass()),
+        true,
+      );
+      this.boostTicks++;
+    }
+    if (
+      onApproach &&
+      dragonFiring(this.time) &&
+      position.y < 5 &&
+      LOOP.dragonZ.some((z) => Math.abs(position.z - z) < 3)
+    ) {
+      for (const part of PARTS) this.damage(part.id, (part.hp * DT) / 3);
+      if (this.time - (this.cooldown.get("dragon-fire") ?? -1) > 0.15) {
+        this.cooldown.set("dragon-fire", this.time);
+        this.damageEvents.push({
+          source: "dragon-fire",
+          part: "chassis-front",
+          time: this.time,
+        });
+      }
+    }
+    const onLoop =
+      routeX !== undefined &&
+      Math.abs(position.x - routeX - 6) < 14 &&
+      position.y > 3 &&
+      Math.abs(position.z - LOOP.z) < LOOP.radius + 5;
+    if (
+      onLoop &&
+      position.y > LOOP.radius * 1.8 &&
+      wheelPositions.filter((_, i) => this.vehicle.wheelIsInContact(i))
+        .length >= 2 &&
+      new Vector3(0, 1, 0).applyQuaternion(
+        new Quaternion().copy(this.body.rotation()),
+      ).y < -0.7
+    )
+      this.loopApex = true;
+    if (
+      this.loopApex &&
+      position.y < 3 &&
+      longitudinal > 0 &&
+      position.z > LOOP.z - 8 &&
+      wheelPositions.filter((_, i) => this.vehicle.wheelIsInContact(i))
+        .length >= 2
+    )
+      this.loopCompleted = true;
     const grounded = wheelPositions.some((_, i) =>
       this.vehicle.wheelIsInContact(i),
     );
@@ -440,6 +528,13 @@ export class Simulation {
     return {
       position: { x: p.x, y: p.y, z: p.z },
       velocity: { x: v.x, y: v.y, z: v.z },
+      forward: new Vector3(0, 0, 1)
+        .applyQuaternion(new Quaternion().copy(this.body.rotation()))
+        .toArray(),
+      wheelContacts: wheelPositions.filter((_, i) =>
+        this.vehicle.wheelIsInContact(i),
+      ).length,
+      dragonFiring: dragonFiring(this.time),
       speed: Math.hypot(v.x, v.z),
       signedSpeed: new Vector3(0, 0, 1)
         .applyQuaternion(new Quaternion().copy(this.body.rotation()))
@@ -450,6 +545,12 @@ export class Simulation {
       time: this.time,
       tuning: { ...this.tuning },
       steeringAngle: this.steeringAngle,
+      boostTicks: this.boostTicks,
+      loopApex: this.loopApex,
+      loopCompleted: this.loopCompleted,
+      integrity:
+        [...this.parts.values()].reduce((sum, p) => sum + p.health, 0) /
+        PARTS.reduce((sum, p) => sum + p.hp, 0),
       ticks: this.ticks,
       stage: this.stage,
       airborneTicks: this.airborneTicks,

@@ -1,7 +1,7 @@
 export const DEFAULT_TUNING = {
   acceleration: 1,
   topSpeed: 1,
-  boostPower: 1,
+  boostPower: 3,
   friction: 1,
   steeringRate: 1,
 };
