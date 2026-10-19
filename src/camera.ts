@@ -2,6 +2,7 @@ import { PerspectiveCamera, Quaternion, Vector3 } from "three";
 export class ChaseCamera {
   yaw = 0;
   pitch = Math.atan2(5.5, 14);
+  distance = 15.04;
   private height = 0;
   private heading = 0;
   private initialized = false;
@@ -10,10 +11,18 @@ export class ChaseCamera {
     this.initialized = false;
     this.yaw = 0;
     this.pitch = Math.atan2(5.5, 14);
+    this.distance = 15.04;
   }
   drag(dx: number, dy: number) {
     this.yaw -= dx * 0.004;
     this.pitch = Math.max(-0.12, Math.min(1.05, this.pitch + dy * 0.004));
+  }
+  zoom(deltaPixels: number) {
+    if (!Number.isFinite(deltaPixels)) return;
+    this.distance = Math.max(
+      6,
+      Math.min(45, this.distance * Math.exp(deltaPixels * 0.001)),
+    );
   }
   update(position: Vector3, rotation: Quaternion, dt: number, snap = false) {
     const forward = new Vector3(0, 0, 1).applyQuaternion(rotation),
@@ -33,7 +42,7 @@ export class ChaseCamera {
     }
     const anchor = new Vector3(position.x, this.height, position.z),
       angle = this.heading + this.yaw,
-      distance = 15.04;
+      distance = this.distance;
     this.camera.position
       .copy(anchor)
       .add(

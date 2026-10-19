@@ -29,6 +29,63 @@ test("default camera is directly behind, and mouse drag orbits the truck", async
     )
     .toBeGreaterThan(0.2);
 });
+
+test("mouse wheel zooms the actual camera in and out with limits and restart reset", async ({
+  page,
+}) => {
+  await page.evaluate(() => window.__game!.pause(true));
+  const canvas = page.locator("canvas");
+  const box = await canvas.boundingBox();
+  await page.mouse.move(box!.x + box!.width * 0.5, box!.y + box!.height * 0.35);
+  const before = await page.evaluate(() => window.__game!.camera());
+  await page.mouse.wheel(0, -400);
+  await expect
+    .poll(() => page.evaluate(() => window.__game!.camera().distance))
+    .toBeLessThan(15.04);
+  await expect
+    .poll(() => page.evaluate(() => window.__game!.camera().position.z))
+    .toBeGreaterThan(before.position.z);
+  const near = await page.evaluate(() => window.__game!.camera());
+  expect(near.position.z).toBeGreaterThan(before.position.z);
+  expect(near.orbit).toEqual(before.orbit);
+  await page.mouse.wheel(0, 800);
+  await expect
+    .poll(() => page.evaluate(() => window.__game!.camera().distance))
+    .toBeGreaterThan(15.04);
+  await expect
+    .poll(() => page.evaluate(() => window.__game!.camera().position.z))
+    .toBeLessThan(near.position.z);
+  const far = await page.evaluate(() => window.__game!.camera());
+  expect(far.position.z).toBeLessThan(near.position.z);
+  await page.mouse.move(100, 30);
+  await page.mouse.wheel(0, -400);
+  expect(await page.evaluate(() => window.__game!.camera().distance)).toBe(
+    far.distance,
+  );
+  for (const [delta, expected] of [
+    [-10000, 6],
+    [10000, 45],
+  ]) {
+    const prevented = await page.evaluate((delta) => {
+      const e = new WheelEvent("wheel", {
+        deltaY: delta,
+        deltaMode: 1,
+        cancelable: true,
+        bubbles: true,
+      });
+      document.querySelector("canvas")!.dispatchEvent(e);
+      return e.defaultPrevented;
+    }, delta);
+    expect(prevented).toBe(true);
+    await expect
+      .poll(() => page.evaluate(() => window.__game!.camera().distance))
+      .toBe(expected);
+  }
+  await page.keyboard.press("r");
+  expect(await page.evaluate(() => window.__game!.camera().distance)).toBe(
+    15.04,
+  );
+});
 test("lamp-post motion is monotonic across accelerate jump landing and finish", async ({
   page,
 }, info) => {

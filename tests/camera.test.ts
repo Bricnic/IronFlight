@@ -1,6 +1,30 @@
 import { it, expect } from "vitest";
 import { PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { ChaseCamera } from "../src/camera";
+it("wheel zoom changes camera distance, preserves orbit, and clamps safely", () => {
+  const c = new PerspectiveCamera(),
+    rig = new ChaseCamera(c);
+  const anchor = new Vector3(4, 2, 7);
+  rig.drag(100, 40);
+  const orbit = { yaw: rig.yaw, pitch: rig.pitch };
+  rig.zoom(-240);
+  rig.update(anchor, new Quaternion(), 0, true);
+  expect(c.position.distanceTo(anchor)).toBeLessThan(15.04);
+  const near = rig.distance;
+  rig.zoom(240);
+  rig.update(anchor, new Quaternion(), 0);
+  expect(rig.distance).toBeGreaterThan(near);
+  expect(rig.yaw).toBe(orbit.yaw);
+  expect(rig.pitch).toBe(orbit.pitch);
+  rig.zoom(-1e6);
+  expect(rig.distance).toBe(6);
+  rig.zoom(1e6);
+  expect(rig.distance).toBe(45);
+  rig.zoom(NaN);
+  expect(rig.distance).toBe(45);
+  rig.reset();
+  expect(rig.distance).toBe(15.04);
+});
 it("starts directly behind the truck and supports bounded mouse orbit", () => {
   const c = new PerspectiveCamera(),
     rig = new ChaseCamera(c);

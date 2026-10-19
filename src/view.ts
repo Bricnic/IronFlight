@@ -53,6 +53,16 @@ export class GameView {
     };
     canvas.addEventListener("pointerup", release);
     canvas.addEventListener("pointercancel", release);
+    canvas.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        const units =
+          e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? canvas.clientHeight : 1;
+        this.chase.zoom(e.deltaY * units);
+      },
+      { passive: false },
+    );
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = T.PCFSoftShadowMap;
@@ -483,6 +493,7 @@ export class GameView {
     return {
       position: { x: p.x, y: p.y, z: p.z },
       orbit: { yaw: this.chase.yaw, pitch: this.chase.pitch },
+      distance: this.chase.distance,
       landmarks: [-57, 57].flatMap((x) =>
         [-90, 0, 95].map((z) => {
           const p = new T.Vector3(x, 11, z).project(this.camera);

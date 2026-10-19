@@ -33,7 +33,7 @@ async function boot() {
     clock = new FixedClock();
   const toggleDebug = createDebugMenu(sim);
   document.querySelector(".camera-hint")!.textContent =
-    "DRAG TO ORBIT · ` TUNING";
+    "DRAG TO ORBIT · WHEEL TO ZOOM · ` TUNING";
   let rate = 1,
     paused = false;
   const keys = new Set<string>();
