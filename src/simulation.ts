@@ -5,6 +5,7 @@ import { ROUTES, routeSolids } from "./routes";
 import { PARTS, type PartState } from "./damage";
 import { HAZARDS, hammerAngle, type Hazard } from "./hazards";
 import { arenaSolids } from "./arena";
+import { DEFAULT_TUNING, validateTuning, type Tuning } from "./tuning";
 export type Stage = "easy" | "medium" | "hard" | "lab";
 export type Input = { throttle?: number; brake?: number; steer?: number };
 export const wheelPositions = [
@@ -36,6 +37,11 @@ export class Simulation {
   private visitedSurfaces = new Set<string>();
   previousPosition = new Vector3();
   previousRotation = new Quaternion();
+  tuning = { ...DEFAULT_TUNING };
+  steeringAngle = 0;
+  setTuning(values: Partial<Tuning>) {
+    Object.assign(this.tuning, validateTuning(values));
+  }
   constructor(stage: Stage = "lab") {
     this.stage = stage;
     this.reset(stage);
@@ -48,6 +54,7 @@ export class Simulation {
     this.airborneTicks = 0;
     this.landed = false;
     this.status = "driving";
+    this.steeringAngle = 0;
     this.world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
     this.world.timestep = DT;
     this.parts.clear();
@@ -170,6 +177,54 @@ export class Simulation {
       new Quaternion().copy(this.body.rotation()),
     );
     const longitudinal = forward.dot(speed);
+    const grounded = wheelPositions.some((_, i) =>
+      this.vehicle.wheelIsInContact(i),
+    );
+    if (
+      grounded &&
+      brake === 0 &&
+      this.parts.get("chassis-rear")!.health > 0 &&
+      this.parts.get("chassis-front")!.health > 0
+    ) {
+      const taper = Math.max(
+        0,
+        1 -
+          Math.abs(longitudinal) /
+            ((throttle < 0 ? 8 : 25) * this.tuning.topSpeed),
+      );
+      // Extra arcade motor force acts through the center of mass to avoid a
+      // tuning slider turning increased acceleration into an instant wheelie.
+      this.body.applyImpulse(
+        forward
+          .clone()
+          .multiplyScalar(
+            throttle *
+              (this.tuning.acceleration - 1) *
+              12 *
+              taper *
+              this.body.mass() *
+              DT,
+          ),
+        true,
+      );
+    }
+    const steeringDelta = steer * 0.35 - this.steeringAngle;
+    this.steeringAngle +=
+      Math.sign(steeringDelta) *
+      Math.min(Math.abs(steeringDelta), 0.9 * this.tuning.steeringRate * DT);
+    // Rolling resistance only acts while grounded and coasting, never in flight.
+    if (throttle === 0 && brake === 0 && grounded) {
+      const delta = Math.min(
+        Math.abs(longitudinal),
+        1.8 * this.tuning.friction * DT,
+      );
+      this.body.applyImpulse(
+        forward
+          .clone()
+          .multiplyScalar(-Math.sign(longitudinal) * delta * this.body.mass()),
+        true,
+      );
+    }
     for (let i = 0; i < 4; i++) {
       const attached = !this.parts.get(PARTS[i + 2].id)!.body;
       const powered =
@@ -180,11 +235,16 @@ export class Simulation {
         attached && powered
           ? throttle *
               (throttle < 0 ? 6500 : 11000) *
-              Math.max(0, 1 - Math.abs(longitudinal) / (throttle < 0 ? 8 : 25))
+              Math.max(
+                0,
+                1 -
+                  Math.abs(longitudinal) /
+                    ((throttle < 0 ? 8 : 25) * this.tuning.topSpeed),
+              )
           : 0,
       );
       this.vehicle.setWheelBrake(i, attached ? brake * 30 : 0);
-      this.vehicle.setWheelSteering(i, i < 2 ? steer * 0.35 : 0);
+      this.vehicle.setWheelSteering(i, i < 2 ? this.steeringAngle : 0);
     }
     // Suspension only uses fixed surfaces. A rotating hammer must not become
     // driveable ground and inject suspension impulses into a passing tire.
@@ -376,6 +436,8 @@ export class Simulation {
         new Quaternion().copy(this.body.rotation()),
       ).y,
       time: this.time,
+      tuning: { ...this.tuning },
+      steeringAngle: this.steeringAngle,
       ticks: this.ticks,
       stage: this.stage,
       airborneTicks: this.airborneTicks,

@@ -10,6 +10,60 @@
   background: #182126;
   font-synthesis: none;
 }
+#debug-menu {
+  position: fixed;
+  top: 100px;
+  right: 18px;
+  width: min(310px, calc(100vw - 36px));
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  z-index: 20;
+  padding: 24px;
+  background: #14212af5;
+  border: 1px solid #ffb36b80;
+  box-shadow: 0 14px 60px #0007;
+}
+#debug-menu h2 {
+  font:
+    800 30px "Barlow Condensed",
+    sans-serif;
+  margin: 12px 0 5px;
+}
+#debug-menu p {
+  color: #a7b5bc;
+  font-size: 12px;
+  margin: 0 0 22px;
+}
+#debug-menu .eyebrow {
+  font-size: 10px;
+}
+#debug-menu .eyebrow span {
+  float: right;
+  color: #a7b5bc;
+}
+#debug-menu label {
+  display: block;
+  font-size: 13px;
+  margin: 18px 0 8px;
+}
+#debug-menu output {
+  float: right;
+  color: #ffb36b;
+  font-variant-numeric: tabular-nums;
+}
+#debug-menu input {
+  width: 100%;
+  accent-color: #ff914e;
+  cursor: pointer;
+}
+#debug-menu button {
+  width: 100%;
+  margin-top: 24px;
+  padding: 10px;
+  background: #263943;
+  color: #fff;
+  border: 1px solid #ffffff30;
+}
 * {
   box-sizing: border-box;
 }

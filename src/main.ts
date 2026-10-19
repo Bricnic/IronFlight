@@ -8,6 +8,7 @@ import { GameView } from "./view";
 import "./harness";
 import type { CameraSample } from "./harness";
 import { drivingInput } from "./controls";
+import { createDebugMenu } from "./debug-menu";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
 <aside><div class="eyebrow">THE ARENA IS YOURS</div><h1>BIG TRUCK.<br>BAD IDEAS.</h1><p class="intro">Three ways across. One way to find out.</p><div id="routes">${ROUTES.map((r) => `<button class="route" data-stage="${r.id}" style="--route:#${r.color.toString(16)}"><small>${r.difficulty}</small><strong>${r.name}<span>↗</span></strong><em>${r.gapEnd - 12}m gap <span>·</span> ${r.hazards} hazard${r.hazards > 1 ? "s" : ""}</em></button>`).join("")}</div><button id="lab-toggle" class="lab-toggle">Destruction lab <span>⚒</span></button>
@@ -30,6 +31,9 @@ async function boot() {
     lab = new DestructionLab(sim),
     view = new GameView(document.querySelector("#viewport")!, sim),
     clock = new FixedClock();
+  const toggleDebug = createDebugMenu(sim);
+  document.querySelector(".camera-hint")!.textContent =
+    "DRAG TO ORBIT · ` TUNING";
   let rate = 1,
     paused = false;
   const keys = new Set<string>();
@@ -114,6 +118,11 @@ async function boot() {
     (e.target as HTMLSelectElement).blur();
   };
   window.addEventListener("keydown", (e) => {
+    if (e.code === "Backquote") {
+      e.preventDefault();
+      if (!e.repeat) toggleDebug();
+      return;
+    }
     if (e.target instanceof HTMLSelectElement) return;
     const k = e.key.toLowerCase();
     if (
