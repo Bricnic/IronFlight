@@ -16,3 +16,7 @@ GREEN: the same command passes all 3 tests: six unique official tracks, two aren
 ## Chunk 2 — Objective state machine
 RED: `npx vitest run tests/track-run.test.ts` failed because the run-state module did not exist.
 GREEN: `npx vitest run tests/track-run.test.ts tests/tracks.test.ts` passes 8 tests. Covers swept gates, ordering, direction, height/width rejection, unique swept pickups, deadline success/failure, wreck failure, real stunt flags and inclusive medal boundaries. Completed/failed runs freeze.
+
+## Chunk 3 — Persistent personal bests
+RED: `npx vitest run tests/best-times.test.ts` failed: missing best-time adapter.
+GREEN: the adapter and run tests pass (8 tests). Faster completed attempts replace records, slower/failed/invalid attempts do not; gold/silver/bronze are derived from thresholds, Triple Loop lanes are isolated, and corrupt or blocked storage remains playable.
