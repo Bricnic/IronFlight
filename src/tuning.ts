@@ -1,23 +1,12 @@
-export const DEFAULT_TUNING = {
-  acceleration: 1,
-  topSpeed: 1,
-  boostPower: 3,
-  friction: 1,
-  steeringRate: 1,
-};
-export type Tuning = typeof DEFAULT_TUNING;
-export function validateTuning(values: Partial<Tuning>): Partial<Tuning> {
-  const result: Partial<Tuning> = {};
-  for (const key of Object.keys(values) as (keyof Tuning)[]) {
-    const value = values[key]!;
-    if (
-      !(key in DEFAULT_TUNING) ||
-      !Number.isFinite(value) ||
-      value < 1 ||
-      value > 10
-    )
-      throw new RangeError("Tuning must be between 1x and 10x");
-    result[key] = Math.round(value * 10) / 10;
-  }
-  return result;
+import { validateTuning, type Tuning } from "./tuning-schema";
+import defaults from "./tuning-defaults.json";
+export const DEFAULT_TUNING = { ...defaults };
+export { tuningRange, validateTuning } from "./tuning-schema";
+export type { Tuning } from "./tuning-schema";
+export function replaceDefaults(values: Tuning) {
+  const next = validateTuning(values);
+  if (Object.keys(next).length !== Object.keys(DEFAULT_TUNING).length)
+    throw new RangeError("A complete tuning config is required");
+  Object.assign(DEFAULT_TUNING, next);
+  return { ...DEFAULT_TUNING };
 }

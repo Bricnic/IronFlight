@@ -482,3 +482,60 @@ kbd {
     width: 70px;
   }
 }
+
+.truck-colors {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin: 20px 0 24px;
+}
+.truck-color-picker {
+  min-width: 0;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid #ffffff25;
+  border-radius: 6px;
+}
+.truck-color-picker legend {
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.truck-color-picker canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  cursor: crosshair;
+  border-radius: 50%;
+}
+.truck-color-picker canvas:focus-visible {
+  outline: 2px solid #ffb36b;
+  outline-offset: 1px;
+}
+#debug-menu .truck-color-picker label {
+  font-size: 11px;
+  margin: 6px 0 2px;
+}
+#debug-menu .truck-color-picker input[type="text"] {
+  margin-top: 5px;
+  padding: 6px 4px;
+  border: 2px solid #ffffff40;
+  border-radius: 4px;
+  background: #14212a;
+  color: white;
+  text-align: center;
+  font: 12px monospace;
+  cursor: text;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

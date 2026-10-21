@@ -23,6 +23,8 @@ export function createTruck(materials: TruckMaterials = {}) {
       metalness: 0.85,
       roughness: 0.32,
     });
+  paint.userData.truckColorSlot = "primaryColor";
+  steel.userData.truckColorSlot = "secondaryColor";
   const dark = new T.MeshStandardMaterial({
     color: 0x202a30,
     metalness: 0.65,
@@ -33,8 +35,12 @@ export function createTruck(materials: TruckMaterials = {}) {
     roughness: 0.92,
   });
   const glass = new T.MeshPhysicalMaterial({
-    color: 0x214556,
-    metalness: 0.5,
+    color: 0xa9d3dd,
+    transparent: true,
+    opacity: 0.28,
+    depthWrite: false,
+    side: T.DoubleSide,
+    metalness: 0.05,
     roughness: 0.12,
     clearcoat: 1,
   });
@@ -180,6 +186,44 @@ export function createTruck(materials: TruckMaterials = {}) {
     bed = groups.get("bed")!,
     front = groups.get("chassis-front")!,
     rear = groups.get("chassis-rear")!;
+  // Driver-left is +X when looking forward along +Z.
+  const upholstery = new T.MeshStandardMaterial({
+    color: 0x242326,
+    roughness: 0.95,
+  });
+  for (const x of [-0.57, 0.57]) {
+    const seat = new T.Group();
+    seat.name = x > 0 ? "driver-seat" : "passenger-seat";
+    front.add(seat);
+    rounded(seat, [0.78, 0.22, 0.75], [x, 0.5, -0.98], upholstery);
+    rounded(seat, [0.78, 0.73, 0.18], [x, 0.91, -1.3], upholstery);
+    rounded(seat, [0.42, 0.26, 0.18], [x, 1.38, -1.3], upholstery);
+  }
+  const steering = mesh(
+    front,
+    new T.TorusGeometry(0.23, 0.035, 12, 40),
+    rubber,
+    [0.57, 1.03, -0.35],
+  );
+  steering.name = "steering-wheel-left";
+  steering.rotation.x = -0.4;
+  bar(
+    front,
+    new T.Vector3(0.57, 1.03, -0.35),
+    new T.Vector3(0.57, 0.8, -0.05),
+    0.04,
+    dark,
+  );
+  for (let i = 0; i < 3; i++) {
+    const a = (i * Math.PI * 2) / 3;
+    bar(
+      steering,
+      new T.Vector3(),
+      new T.Vector3(Math.cos(a) * 0.21, Math.sin(a) * 0.21, 0),
+      0.018,
+      steel,
+    );
+  }
   // Sculpted raised hood, inset grille and separate round headlights.
   rounded(hood, [1.15, 0.13, 1.05], [0, 0.26, 0.04], paint, 4, 0.06);
   const grille = rounded(
@@ -266,7 +310,7 @@ export function createTruck(materials: TruckMaterials = {}) {
     steel,
   );
   for (const side of [-1, 1]) {
-    const door = groups.get(side < 0 ? "door-left" : "door-right")!;
+    const door = groups.get(side > 0 ? "door-left" : "door-right")!;
     const window = rounded(
       door,
       [0.045, 0.51, 1.23],

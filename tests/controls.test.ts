@@ -33,7 +33,8 @@ it("S brakes forward motion then drives in reverse, while Space only brakes", ()
   });
   expect(drivingInput(new Set([" "]), 0)).toMatchObject({
     throttle: 0,
-    brake: 1,
+    brake: 0,
+    handbrake: 1,
   });
   const s = new Simulation();
   for (let i = 0; i < 600; i++)
@@ -43,6 +44,7 @@ it("S brakes forward motion then drives in reverse, while Space only brakes", ()
 });
 it("braking is progressive and does not pitch the truck onto its nose", () => {
   const s = new Simulation();
+  s.setTuning({ brakePower: 1 });
   s.run(3, { throttle: 1 });
   const speed = s.snapshot().speed;
   s.run(0.25, { brake: 1 });

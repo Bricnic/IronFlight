@@ -14,8 +14,8 @@ app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON
 <aside><div class="eyebrow">THE ARENA IS YOURS</div><h1>BIG TRUCK.<br>BAD IDEAS.</h1><p class="intro">Three ways across. One way to find out.</p><div id="routes">${ROUTES.map((r) => `<button class="route" data-stage="${r.id}" style="--route:#${r.color.toString(16)}"><small>${r.difficulty}</small><strong>${r.name}<span>↗</span></strong><em>${r.gapEnd - 12}m gap <span>·</span> ${r.hazards} hazard${r.hazards > 1 ? "s" : ""}</em></button>`).join("")}</div><button id="lab-toggle" class="lab-toggle">Destruction lab <span>⚒</span></button>
 <section id="lab" hidden><div class="eyebrow">SURGICAL DAMAGE TOOLS</div><label for="target">Target part</label><select id="target">${PARTS.map((p) => `<option value="${p.id}">${p.id}</option>`).join("")}</select><div class="tool-grid"><button id="dent">Dent panel</button><button id="destroy">Destroy part</button><button id="sever">Sever chassis</button><button id="restore">Restore truck</button></div><p>Each tool applies real damage. Detached pieces keep their momentum.</p></section></aside>
 <div id="status"><span id="state-label">READY TO SEND IT</span><strong id="state-copy">Build speed. Hold your line.</strong><div class="progress"><i id="progress"></i></div></div>
-<section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>KM/H</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span></div></section>
-<footer><div class="controls"><span><kbd>W</kbd> GAS</span><span><kbd>S</kbd> BRAKE / REV</span><span><kbd>A</kbd><kbd>D</kbd> STEER</span><span><kbd>R</kbd> RESTART</span><span><kbd>SPACE</kbd> BRAKE</span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
+<section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span></div></section>
+<footer><div class="controls"><span><kbd>W / UP</kbd> GAS</span><span><kbd>S / DOWN</kbd> BRAKE / REV</span><span><kbd>A/D / LEFT/RIGHT</kbd> STEER</span><span><kbd>R</kbd> RESTART</span><span><kbd>SPACE</kbd> HANDBRAKE</span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
 async function boot() {
   // Navigation occupies the header, not the 3D viewport. Only lab tools use a drawer.
   const header = document.querySelector("header")!,
@@ -31,7 +31,7 @@ async function boot() {
     lab = new DestructionLab(sim),
     view = new GameView(document.querySelector("#viewport")!, sim),
     clock = new FixedClock();
-  const toggleDebug = createDebugMenu(sim);
+  const toggleDebug = await createDebugMenu(sim);
   document.querySelector(".camera-hint")!.textContent =
     "DRAG TO ORBIT · WHEEL TO ZOOM · ` TUNING";
   let rate = 1,
@@ -65,7 +65,7 @@ async function boot() {
     hud();
   }
   function hud() {
-    const s = sim.snapshot(),
+    const s = sim.snapshot(false),
       r = ROUTES.find((r) => r.id === s.stage);
     $("speed").textContent = Math.round(s.speed * 3.6)
       .toString()
@@ -110,7 +110,7 @@ async function boot() {
           : "DRAGON PASS CLEAR";
         const phase = s.time % 8;
         $("state-copy").textContent = s.dragonFiring
-          ? `Jets stop in ${(3 - phase).toFixed(1)}s. Time your boost approach.`
+          ? `Jets stop in ${(3.25 - phase).toFixed(1)}s. Time your boost approach.`
           : `Jets restart in ${(8 - phase).toFixed(1)}s. Boost toward the loop.`;
       } else
         $("state-copy").textContent =
@@ -144,7 +144,12 @@ async function boot() {
       if (!e.repeat) toggleDebug();
       return;
     }
-    if (e.target instanceof HTMLSelectElement) return;
+    if (
+      e.target instanceof HTMLSelectElement ||
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement
+    )
+      return;
     const k = e.key.toLowerCase();
     if (
       [
@@ -165,7 +170,8 @@ async function boot() {
   });
   window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => keys.clear());
-  const input = (): Input => drivingInput(keys, sim.snapshot().signedSpeed);
+  const input = (): Input =>
+    drivingInput(keys, sim.snapshot(false).signedSpeed);
   if (import.meta.env.DEV)
     window.__game = {
       select,
@@ -177,6 +183,7 @@ async function boot() {
         hud();
       },
       snapshot: () => sim.snapshot(),
+      setTuning: (values) => sim.setTuning(values),
       driveFrames: (frames, r, driver, draw = true) => {
         for (let f = 0; f < frames; f++) {
           clock.advance(1 / 60, r, () => sim.step(driver(sim.snapshot())));
@@ -186,6 +193,26 @@ async function boot() {
         hud();
       },
       camera: () => view.inspectCamera(),
+      burnoutOverview: (focus) => view.burnoutOverview(focus),
+      lavaOverview: () => view.lavaOverview(),
+      basinProbe: (angle) => view.basinProbe(angle),
+      dropPartInLava: (id) => {
+        const def = PARTS.find((p) => p.id === id);
+        if (!def) throw new Error("Unknown part");
+        sim.damage(id, 10000);
+        const body = sim.parts.get(id)!.body!;
+        // Center of the easy pool, clear of gantries and rims. Start above the
+        // surface so tests exercise actual gravity/contact before viscous sinking.
+        body.setTranslation(
+          { x: ROUTES[0].x, y: -3, z: (ROUTES[0].gapEnd + 12) / 2 },
+          true,
+        );
+        body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
+        body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        view.render(true);
+      },
+      environmentProbe: () => view.environmentProbe(),
       signs: () => view.inspectSigns(),
       traceFrames: (frames, r, i) => {
         const samples: CameraSample[] = [];
@@ -214,6 +241,8 @@ async function boot() {
         );
         sim.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
         sim.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        sim.previousPosition.copy(sim.body.translation());
+        sim.previousRotation.copy(sim.body.rotation());
         view.render(true);
       },
       stats: () => view.stats(),
@@ -221,6 +250,7 @@ async function boot() {
         const m = view.meshes.get(id);
         return {
           detached: !!m?.userData.detached,
+          lavaScorch: sim.parts.get(id)?.lava?.scorch ?? 0,
           visible: !!m?.visible,
           vertices: m
             ? Array.from(

@@ -1,7 +1,8 @@
+import { basinSolids, hazardSupports } from "./scenery";
 import { ROUTES, type Solid } from "./routes";
 export type ArenaSolid = Omit<Solid, "kind"> & {
   id: string;
-  kind: "grass" | "grandstand" | "lava" | "pole";
+  kind: "grass" | "grandstand" | "lava" | "pole" | "basin" | "support";
   row?: number;
 };
 /** Render and physics consume these exact same dimensions. */
@@ -41,12 +42,14 @@ export function arenaSolids(): ArenaSolid[] {
       id: `lava-${r.id}`,
       kind: "lava" as const,
       x: r.x,
-      y: -6,
+      y: -7.0125,
       z: (r.gapEnd + 12) / 2,
       w: 13,
-      h: 0.15,
+      h: 2.175,
       d: r.gapEnd - 12,
     })),
+    ...basinSolids(),
+    ...hazardSupports(),
     ...[-1, 1].flatMap((side) =>
       Array.from({ length: 7 }, (_, row) => ({
         id: `stand-${side}-${row}`,

@@ -17,21 +17,21 @@ export const PARTS = [
   },
   {
     id: "wheel-fl",
-    pos: [-1.65, -0.85, 1.65],
-    size: [1, 2.1, 2.1],
-    mass: 100,
-    hp: 100,
-  },
-  {
-    id: "wheel-fr",
     pos: [1.65, -0.85, 1.65],
     size: [1, 2.1, 2.1],
     mass: 100,
     hp: 100,
   },
   {
+    id: "wheel-fr",
+    pos: [-1.65, -0.85, 1.65],
+    size: [1, 2.1, 2.1],
+    mass: 100,
+    hp: 100,
+  },
+  {
     id: "wheel-rl",
-    pos: [-1.65, -0.85, -1.65],
+    pos: [1.65, -0.85, -1.65],
     size: [1, 2.1, 2.1],
     mass: 100,
     hp: 100,
@@ -39,7 +39,7 @@ export const PARTS = [
   },
   {
     id: "wheel-rr",
-    pos: [1.65, -0.85, -1.65],
+    pos: [-1.65, -0.85, -1.65],
     size: [1, 2.1, 2.1],
     mass: 100,
     hp: 100,
@@ -61,14 +61,14 @@ export const PARTS = [
   },
   {
     id: "door-left",
-    pos: [-1.23, 0.9, -0.1],
+    pos: [1.23, 0.9, -0.1],
     size: [0.18, 1, 1.6],
     mass: 35,
     hp: 75,
   },
   {
     id: "door-right",
-    pos: [1.23, 0.9, -0.1],
+    pos: [-1.23, 0.9, -0.1],
     size: [0.18, 1, 1.6],
     mass: 35,
     hp: 75,
@@ -99,6 +99,14 @@ export const PARTS = [
 ] as const;
 export type PartId = (typeof PARTS)[number]["id"];
 export type PartState = {
+  lava?: {
+    entered: number;
+    progress: number;
+    surface: number;
+    startY: number;
+    endY: number;
+    scorch: number;
+  };
   health: number;
   body?: RAPIER.RigidBody;
   collider?: RAPIER.Collider;

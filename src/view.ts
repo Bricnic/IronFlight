@@ -1,3 +1,5 @@
+import { LavaPartEffects } from "./lava-effects";
+import { PropView } from "./prop-view";
 import * as T from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { PARTS, deformGeometry } from "./damage";
@@ -5,17 +7,29 @@ import { ROUTES, routeSolids } from "./routes";
 import { Simulation, wheelPositions } from "./simulation";
 import { HAZARDS, hammerAngle } from "./hazards";
 import { createTruck, truckStats } from "./truck";
-import { pbr, flameMaterial } from "./materials";
+import { pbr, flameMaterial, lavaMaterial } from "./materials";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { arenaSolids } from "./arena";
 import { ChaseCamera } from "./camera";
 import { DT } from "./clock";
+import { TruckFireView } from "./truck-fire";
+import { SkidView } from "./skids";
 import { LoopView } from "./loop-view";
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
   readonly renderer: T.WebGLRenderer;
   readonly chase = new ChaseCamera(this.camera);
+  private props = new PropView();
+  private fire = new TruckFireView();
+  private lavaEffects = new LavaPartEffects();
+  private lavaInspection = false;
+  private basinInspection?: number;
+  private overview = false;
+  private overviewFocus: "all" | "start" | "end" = "all";
+  private skids = new SkidView();
+  private lava: T.MeshStandardMaterial[] = [];
+  private contactShadow: T.Mesh;
   private lastCameraTime = 0;
   readonly meshes = new Map<string, T.Group>();
   private dentCounts = new Map<string, number>();
@@ -23,12 +37,40 @@ export class GameView {
   private labFloor = new T.Group();
   private snapCamera = true;
   private hazards = new T.Group();
+  private arena = new T.Group();
   private course = new T.Group();
   private loop = new LoopView();
   constructor(
     host: HTMLElement,
     readonly simulation: Simulation,
   ) {
+    const shadowCanvas = document.createElement("canvas");
+    shadowCanvas.width = shadowCanvas.height = 128;
+    const shadowCtx = shadowCanvas.getContext("2d")!;
+    const gradient = shadowCtx.createRadialGradient(64, 64, 12, 64, 64, 64);
+    gradient.addColorStop(0, "rgba(0,0,0,0.85)");
+    gradient.addColorStop(0.55, "rgba(0,0,0,0.55)");
+    gradient.addColorStop(1, "rgba(0,0,0,0)");
+    shadowCtx.fillStyle = gradient;
+    shadowCtx.fillRect(0, 0, 128, 128);
+    this.contactShadow = new T.Mesh(
+      new T.PlaneGeometry(6, 9),
+      new T.MeshBasicMaterial({
+        map: new T.CanvasTexture(shadowCanvas),
+        transparent: true,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+      }),
+    );
+    this.contactShadow.rotation.x = -Math.PI / 2;
+    this.scene.add(
+      this.contactShadow,
+      this.skids,
+      this.fire.smoke,
+      this.props,
+      this.lavaEffects,
+    );
     this.renderer = new T.WebGLRenderer({ antialias: true });
     host.append(this.renderer.domElement);
     let dragging = false,
@@ -95,8 +137,28 @@ export class GameView {
     const grass = pbr("grass_ground", 1, { color: 0xc7dfb2, roughness: 1 });
     grass.userData.tile = 3;
     for (const s of arenaSolids().filter((s) => s.kind === "grass")) {
-      const m = this.box(s.w, s.h, s.d, grass);
+      const m = this.box(s.w, s.h, s.d, grass, this.arena);
       m.position.set(s.x, s.y, s.z);
+    }
+    const stone = pbr("rock_06", 1, { color: 0x77736b, roughness: 0.95 });
+    stone.userData.tile = 2;
+    const supportMetal = pbr("green_metal_rust", 1, {
+      color: 0x797d76,
+      metalness: 0.7,
+      roughness: 0.65,
+    });
+    supportMetal.userData.tile = 2;
+    for (const solid of arenaSolids().filter(
+      (s) => s.kind === "basin" || s.kind === "support",
+    )) {
+      const mesh = this.box(
+        solid.w,
+        solid.h,
+        solid.d,
+        solid.kind === "basin" ? stone : supportMetal,
+        this.arena,
+      );
+      mesh.position.set(solid.x, solid.y, solid.z);
     }
     const road = pbr("asphalt_02", 1, { color: 0xc3c4c5, roughness: 0.95 });
     road.userData.tile = 3;
@@ -170,17 +232,8 @@ export class GameView {
       reverseSign.rotation.y = 0;
       reverseSign.position.z = r.finish + 3.2;
       this.scene.add(reverseSign);
-      const lava = pbr("rock_06", 4, {
-        color: 0x352821,
-        emissive: 0xff4d05,
-        emissiveIntensity: 2.5,
-      });
-      lava.onBeforeCompile = (shader) => {
-        shader.fragmentShader = shader.fragmentShader.replace(
-          "#include <emissivemap_fragment>",
-          "#include <emissivemap_fragment>\nfloat crack = smoothstep(0.88, 0.98, abs(sin(vMapUv.x * 35.0 + sin(vMapUv.y * 26.0)*2.0))); totalEmissiveRadiance *= crack;",
-        );
-      };
+      const lava = lavaMaterial();
+      this.lava.push(lava);
       const s = arenaSolids().find((s) => s.id === `lava-${r.id}`)!;
       const pit = this.box(s.w, s.h, s.d, lava);
       pit.position.set(s.x, s.y, s.z);
@@ -189,19 +242,6 @@ export class GameView {
       this.course.add(item);
     this.scene.add(this.course);
     this.course.add(this.loop);
-    for (const r of ROUTES) {
-      const sign = this.label(
-        "DRAGON LOOP  /  3X BOOST",
-        "#102c2d",
-        "#94fff0",
-        1024,
-        128,
-      );
-      sign.rotation.y = Math.PI;
-      sign.scale.set(12, 1.5, 1);
-      sign.position.set(r.x, 6.4, 145);
-      this.course.add(sign);
-    }
     // Arena seating and light towers give the jumps an arena scale.
     const concrete = new T.MeshStandardMaterial({
         color: 0x767c76,
@@ -209,12 +249,18 @@ export class GameView {
       }),
       seat = new T.MeshStandardMaterial({ color: 0x50626b, roughness: 0.8 });
     for (const s of arenaSolids().filter((s) => s.kind === "grandstand")) {
-      const m = this.box(s.w, s.h, s.d, s.row! % 2 ? seat : concrete);
+      const m = this.box(
+        s.w,
+        s.h,
+        s.d,
+        s.row! % 2 ? seat : concrete,
+        this.arena,
+      );
       m.position.set(s.x, s.y, s.z);
     }
     for (const x of [-57, 57])
       for (const z of [-90, 0, 95]) {
-        const pole = this.box(0.3, 25, 0.3, concrete);
+        const pole = this.box(0.3, 25, 0.3, concrete, this.arena);
         pole.position.set(x, 11, z);
         const lamps = this.box(
           5,
@@ -225,14 +271,15 @@ export class GameView {
             emissive: 0xfff5cd,
             emissiveIntensity: 2,
           }),
+          this.arena,
         );
         lamps.position.set(x, 24, z);
       }
-    this.scene.add(this.labFloor);
+    this.scene.add(this.labFloor, this.arena);
     const floor = this.box(
-      70,
+      400,
       0.5,
-      100,
+      600,
       new T.MeshStandardMaterial({
         color: 0x52616b,
         metalness: 0.2,
@@ -271,6 +318,18 @@ export class GameView {
           tip.rotation.z = (-side * Math.PI) / 2;
           tip.castShadow = true;
           rotor.add(tip);
+          for (const dir of [
+            new T.Vector3(0, 1, 0),
+            new T.Vector3(0, -1, 0),
+            new T.Vector3(0, 0, 1),
+            new T.Vector3(0, 0, -1),
+          ]) {
+            const spike = new T.Mesh(new T.ConeGeometry(0.45, 1.3, 20), metal);
+            spike.position.set(side * 3.6, dir.y * 1.4, dir.z * 1.4);
+            spike.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir);
+            spike.castShadow = true;
+            rotor.add(spike);
+          }
         }
         const support = this.box(0.6, 8, 0.6, metal, g);
         support.position.set(0, -2, 1.4);
@@ -354,6 +413,10 @@ export class GameView {
     );
   }
   resetTruck() {
+    this.overview = false;
+    this.lavaInspection = false;
+    this.lavaEffects.reset();
+    this.basinInspection = undefined;
     this.truck.traverse((o) => {
       if (o instanceof T.Mesh) {
         o.geometry.dispose();
@@ -398,12 +461,30 @@ export class GameView {
       decal.scale.set(1.25, 0.31, 1);
       decal.rotation.y = (side * Math.PI) / 2;
       decal.position.set(side * 0.116, 0.03, 0);
-      this.meshes.get(side < 0 ? "door-left" : "door-right")!.add(decal);
+      this.meshes.get(side > 0 ? "door-left" : "door-right")!.add(decal);
     }
+    this.truck.updateMatrixWorld(true);
+    for (const def of PARTS) {
+      const bounds = new T.Box3().setFromObject(this.meshes.get(def.id)!);
+      const origin = new T.Vector3(...def.pos);
+      this.simulation.partBounds.set(def.id, {
+        min: bounds.min.sub(origin),
+        max: bounds.max.sub(origin),
+      });
+    }
+    this.fire.reset(this.truck);
   }
   stats() {
     return {
       ...truckStats(this.truck),
+      fire: this.fire.inspect(),
+      lavaParts: this.lavaEffects.inspect(),
+      shadow: {
+        visible: this.contactShadow.visible,
+        opacity: (this.contactShadow.material as T.MeshBasicMaterial).opacity,
+        y: this.contactShadow.position.y,
+      },
+      lavaOffsets: this.lava.map((m) => m.map!.offset.toArray()),
       ...this.loop.stats(),
       courseVisible: this.course.visible,
       drawCalls: this.renderer.info.render.calls,
@@ -427,12 +508,45 @@ export class GameView {
         .clone()
         .slerp(new T.Quaternion().copy(s.body.rotation()), alpha);
     this.labFloor.visible = s.stage === "lab";
+    this.arena.visible = s.stage !== "lab";
     this.course.visible = s.stage !== "lab";
     this.hazards.visible = s.stage !== "lab";
     this.loop.update(s.time);
+    this.skids.update(s.skidStrokes);
+    this.fire.update(s, root);
+    this.props.update(s.props, s.time);
+    this.lavaEffects.update(s);
+    for (const lava of this.lava) {
+      lava.userData.time.value = s.time;
+      lava.map!.offset.set((s.time * 0.035) % 1, (s.time * 0.025) % 1);
+      lava.map!.updateMatrix();
+    }
+    const ray = new T.Raycaster(
+      new T.Vector3(root.x, root.y + 0.2, root.z),
+      new T.Vector3(0, -1, 0),
+      0,
+      12,
+    );
+    const surface = ray
+      .intersectObjects(
+        s.stage === "lab"
+          ? this.labFloor.children
+          : [...this.course.children, ...this.arena.children],
+        true,
+      )
+      .find((hit) => hit.face && hit.face.normal.y > 0.3);
+    this.contactShadow.visible = !!surface;
+    if (surface) {
+      this.contactShadow.position.set(root.x, surface.point.y + 0.012, root.z);
+      this.contactShadow.rotation.z = -new T.Euler().setFromQuaternion(q, "YXZ")
+        .y;
+      (this.contactShadow.material as T.MeshBasicMaterial).opacity =
+        Math.min(0.95, s.tuning.shadowDarkness / 10) *
+        Math.max(0, 1 - (root.y - surface.point.y) / 12);
+    }
     for (const g of this.hazards.children) {
       const h = g.userData.hazard;
-      if (h.kind === "hammer") g.children[0].rotation.z = hammerAngle(s.time);
+      if (h.kind === "hammer") g.children[0].rotation.z = s.hammerPhase;
       if (h.kind === "fire")
         g.children.forEach((f, i) => {
           if (i < 18) {
@@ -447,6 +561,7 @@ export class GameView {
       const state = s.parts.get(def.id)!,
         g = this.meshes.get(def.id)!;
       g.userData.detached = !!state.body;
+      g.visible = !state.lava || state.lava.progress < 1;
       if (state.body) {
         g.position.copy(state.body.translation());
         g.quaternion.copy(state.body.rotation());
@@ -485,8 +600,111 @@ export class GameView {
       elapsed,
       this.snapCamera || snap,
     );
+    if (this.overview && s.skidStrokes.length) {
+      const bounds = new T.Box3();
+      for (const stroke of s.skidStrokes)
+        for (const p of this.overviewFocus === "start"
+          ? stroke.points.slice(0, 20)
+          : this.overviewFocus === "end"
+            ? stroke.points.slice(-20)
+            : stroke.points)
+          bounds.expandByPoint(p);
+      const center = bounds.getCenter(new T.Vector3());
+      const size = bounds.getSize(new T.Vector3());
+      const distance =
+        Math.max(size.z, size.x / this.camera.aspect) /
+          (2 * Math.tan(T.MathUtils.degToRad(this.camera.fov / 2))) +
+        12;
+      this.camera.position.copy(center).add(new T.Vector3(0, distance, 0.01));
+      this.camera.lookAt(center);
+    }
+    if (this.lavaInspection) {
+      const r = ROUTES.find((r) => r.id === s.stage) ?? ROUTES[0],
+        z = (r.gapEnd + 12) / 2;
+      this.camera.position.set(r.x + 18, 10, z + 16);
+      this.camera.lookAt(r.x, -5.925, z);
+    }
+    if (this.basinInspection !== undefined) {
+      const r = ROUTES.find((r) => r.id === s.stage) ?? ROUTES[0];
+      const z = (r.gapEnd + 12) / 2;
+      const angle = Math.PI / 4 + this.basinInspection;
+      this.camera.position.set(
+        r.x - 7.5 - Math.cos(angle) * 20,
+        -5.3,
+        z + Math.sin(angle) * 20,
+      );
+      this.camera.lookAt(r.x - 7.5, -7.3, z);
+    }
     this.snapCamera = false;
     if (draw) this.renderer.render(this.scene, this.camera);
+  }
+  /** Probe fixed points on the outer basin wall while slightly orbiting below the road. */
+  basinProbe(angle: number) {
+    this.basinInspection = angle;
+    this.render();
+    this.camera.updateMatrixWorld();
+    const size = this.renderer.getDrawingBufferSize(new T.Vector2());
+    const target = new T.WebGLRenderTarget(size.x, size.y);
+    const pixels = new Uint8Array(size.x * size.y * 4);
+    const previous = this.renderer.getRenderTarget();
+    this.renderer.setRenderTarget(target);
+    this.renderer.render(this.scene, this.camera);
+    this.renderer.readRenderTargetPixels(target, 0, 0, size.x, size.y, pixels);
+    this.renderer.setRenderTarget(previous);
+    target.dispose();
+    const r = ROUTES.find((r) => r.id === this.simulation.stage) ?? ROUTES[0];
+    const colors: number[][] = [];
+    for (let row = 0; row < 8; row++)
+      for (let column = 0; column < 24; column++) {
+        const p = new T.Vector3(
+          r.x - 7.5,
+          -8.1 + row * 0.2,
+          (r.gapEnd + 12) / 2 - 5 + column * 0.4,
+        ).project(this.camera);
+        // Reproject each world point and interpolate pixel centers, avoiding
+        // false jumps caused by rounding to a neighboring textured pixel.
+        const x = (p.x + 1) * 0.5 * size.x - 0.5;
+        const y = (p.y + 1) * 0.5 * size.y - 0.5;
+        const ix = Math.floor(x),
+          iy = Math.floor(y);
+        const fx = x - ix,
+          fy = y - iy;
+        const sample = (dx: number, dy: number, channel: number) =>
+          pixels[((iy + dy) * size.x + ix + dx) * 4 + channel];
+        colors.push(
+          [0, 1, 2].map(
+            (c) =>
+              sample(0, 0, c) * (1 - fx) * (1 - fy) +
+              sample(1, 0, c) * fx * (1 - fy) +
+              sample(0, 1, c) * (1 - fx) * fy +
+              sample(1, 1, c) * fx * fy,
+          ),
+        );
+      }
+    return colors;
+  }
+  lavaOverview() {
+    this.lavaInspection = true;
+    this.render();
+  }
+  environmentProbe() {
+    const r = ROUTES.find((r) => r.id === this.simulation.stage) ?? ROUTES[0];
+    this.camera.updateMatrixWorld();
+    const point = new T.Vector3(
+      r.x - 2,
+      -5.925,
+      (r.gapEnd + 12) / 2 + 2.5,
+    ).project(this.camera);
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    return {
+      x: rect.x + ((point.x + 1) * rect.width) / 2,
+      y: rect.y + ((1 - point.y) * rect.height) / 2,
+    };
+  }
+  burnoutOverview(focus: "all" | "start" | "end" = "all") {
+    this.overview = true;
+    this.overviewFocus = focus;
+    this.render();
   }
   inspectCamera() {
     const p = this.camera.position;

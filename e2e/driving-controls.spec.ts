@@ -5,6 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => {
     window.__game!.select("lab");
     window.__game!.pause(true);
+    window.__game!.setTuning({ brakePower: 1, handbrakePower: 1.5 });
   });
 });
 test("A steers left and D steers right using real keyboard events", async ({
@@ -57,10 +58,17 @@ test("all finish lines leave the truck upright and driving normally", async ({
     const states = await page.evaluate((stage) => {
       const g = window.__game!;
       g.select(stage);
-      g.advanceFrames(600, 1, { throttle: 1 });
+      // Sample the finish crossing itself; the faster new defaults reach the
+      // vertical loop during the old fixed ten-second wait.
+      for (
+        let frame = 0;
+        frame < 1200 && g.snapshot().status === "driving";
+        frame++
+      )
+        g.driveFrames(1, 1, () => ({ throttle: 1 }), false);
       const states = [g.snapshot()];
       for (let i = 0; i < 3; i++) {
-        g.advanceFrames(60, 1, { throttle: 1 });
+        g.advanceFrames(20, 1, { throttle: 1 });
         states.push(g.snapshot());
       }
       return states;

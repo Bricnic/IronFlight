@@ -10,6 +10,54 @@ export const LOOP = {
 export function dragonFiring(time: number) {
   return time % 8 < 3;
 }
+// Mouth front: statue offset 10 minus local mouth center 3.55 and its 0.5 radius.
+export const DRAGON_FLAME_LENGTH = 5.95;
+/** Normalized distance from the mouth: ignition advances the head; shutoff advances the tail. */
+export function dragonFlame(time: number) {
+  const phase = ((time % 8) + 8) % 8;
+  const sample = (seconds: number, values: number[]) => {
+    const tick = Math.min(values.length - 1, Math.max(0, seconds / 0.05));
+    const i = Math.min(values.length - 2, Math.floor(tick));
+    return values[i] + (values[i + 1] - values[i]) * (tick - i);
+  };
+  if (phase < 0.2)
+    return {
+      head: sample(phase, [0, 0.0625, 0.25, 0.5, 1]),
+      tail: 0,
+      opacity: phase / 0.2,
+    };
+  if (phase < 3) return { head: 1, tail: 0, opacity: 1 };
+  if (phase < 3.25)
+    return {
+      head: 1,
+      tail: sample(phase - 3, [0, 0.25, 0.5, 0.75, 0.875, 1]),
+      opacity: sample(phase - 3, [1, 1, 0.75, 0.5, 0.25, 0]),
+    };
+  return { head: 0, tail: 0, opacity: 0 };
+}
+/** Damage occupies the same moving interval as each visible mouth-to-center jet. */
+export function dragonExposure(
+  time: number,
+  lateral: number,
+  halfWidth = 1.25,
+) {
+  const flame = dragonFlame(time);
+  if (flame.opacity <= 0 || flame.head <= flame.tail) return 0;
+  const near = DRAGON_FLAME_LENGTH * (1 - flame.head);
+  const far = DRAGON_FLAME_LENGTH * (1 - flame.tail);
+  return [-1, 1].some((side) => {
+    const center = lateral * side;
+    return center + halfWidth > near && center - halfWidth < far;
+  })
+    ? flame.opacity
+    : 0;
+}
+/** One second warning and one second cooldown; cubic easing avoids abrupt tint changes. */
+export function dragonHeat(time: number) {
+  const phase = ((time % 8) + 8) % 8;
+  const t = phase < 3 ? 1 : phase < 4 ? 4 - phase : phase >= 7 ? phase - 7 : 0;
+  return t * t * (3 - 2 * t);
+}
 export function loopX(x: number, theta: number) {
   return x + (12 * (theta - Math.sin(theta))) / (2 * Math.PI);
 }

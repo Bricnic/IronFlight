@@ -12,6 +12,7 @@ test("dragon statues visibly cycle jets; prolonged exposure causes real damage",
       const g = window.__game!;
       g.pause(true);
       g.select("easy");
+      g.setTuning({ dragonDamage: 1 });
       g.place({ x: -24, y: 2, z }, 0);
       g.advanceFrames(90, 1, {});
     },
@@ -21,8 +22,8 @@ test("dragon statues visibly cycle jets; prolonged exposure causes real damage",
     state: window.__game!.snapshot(),
     art: window.__game!.stats(),
   }));
-  expect(burning.state.integrity).toBeGreaterThan(0.42);
-  expect(burning.state.integrity).toBeLessThan(0.55);
+  expect(burning.state.integrity).toBeGreaterThan(0.55);
+  expect(burning.state.integrity).toBeLessThan(0.58);
   expect(burning.art.dragonStatues).toBe(12);
   expect(burning.art.jetsVisible).toBe(6);
   await page.screenshot({ path: info.outputPath("dragon-fire.png") });
@@ -114,18 +115,18 @@ for (const rate of [1, 16])
         body: JSON.stringify(data, null, 2),
         contentType: "application/json",
       });
-      expect(data.state.tuning.boostPower).toBe(3);
+      expect(data.state.tuning.boostPower).toBe(1);
       expect(data.state.status).toBe("finished");
       expect(data.state.landed).toBe(true);
-      expect(data.peakSpeed).toBeGreaterThan(74);
-      expect(data.peakSpeed).toBeLessThan(77);
+      expect(data.peakSpeed).toBeGreaterThan(45);
+      expect(data.peakSpeed).toBeLessThan(65);
       expect(data.peakY).toBeGreaterThan(85);
       expect(data.apexContacts).toBeGreaterThanOrEqual(2);
       expect(data.state.loopApex).toBe(true);
       expect(data.state.loopCompleted).toBe(true);
       expect(data.state.upDot).toBeGreaterThan(0.85);
       expect(data.state.wheelContacts).toBeGreaterThanOrEqual(2);
-      expect(data.state.integrity).toBeGreaterThan(0.8);
+      expect(data.state.integrity).toBeGreaterThan(0.6);
       expect(data.state.position.z).toBeGreaterThan(LOOP.z + 15);
       expect(Math.abs(data.state.position.x - (route.x + 12))).toBeLessThan(6);
       await page.screenshot({

@@ -1,13 +1,22 @@
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { LOOP, dragonFiring, loopSolids, loopX } from "./loop";
+import {
+  LOOP,
+  dragonFiring,
+  dragonFlame,
+  DRAGON_FLAME_LENGTH,
+  dragonHeat,
+  loopSolids,
+  loopX,
+} from "./loop";
 import { ROUTES } from "./routes";
-import { pbr, flameMaterial } from "./materials";
+import { pbr, dragonFlameMaterial } from "./materials";
 
 /** Scenery shares track dimensions and fire timing with the simulation. */
 export class LoopView extends T.Group {
   private jets: T.Group[] = [];
   private eyes: T.MeshStandardMaterial;
+  private dragonMaterial!: T.MeshStandardMaterial;
   private lights: T.Mesh[] = [];
   constructor() {
     super();
@@ -39,11 +48,11 @@ export class LoopView extends T.Group {
       roughness: 0.45,
     });
     const stone = pbr("rock_06", 2, { color: 0x626b66, roughness: 0.88 });
-    const bronze = pbr("green_metal_rust", 1, {
-      color: 0x78988b,
+    const bronze = (this.dragonMaterial = pbr("green_metal_rust", 1, {
+      color: 0x15191b,
       metalness: 0.65,
       roughness: 0.48,
-    });
+    }));
     const horn = new T.MeshStandardMaterial({
       color: 0xd7c7a0,
       roughness: 0.7,
@@ -112,13 +121,18 @@ export class LoopView extends T.Group {
         jets.position.set(r.x, 2.65, z);
         this.add(jets);
         this.jets.push(jets);
-        const flame = flameMaterial();
+        const flame = dragonFlameMaterial();
         for (const side of [-1, 1])
           for (let i = 0; i < 7; i++) {
-            const jet = new T.Mesh(new T.PlaneGeometry(2.4, 13), flame);
-            jet.rotation.z = (side * Math.PI) / 2;
-            jet.rotation.x = ((i - 3) * Math.PI) / 7;
-            jet.position.set(0, Math.sin(i) * 0.16, (i - 3) * 0.18);
+            const geometry = new T.PlaneGeometry(2.4, DRAGON_FLAME_LENGTH);
+            geometry.translate(0, DRAGON_FLAME_LENGTH / 2, 0);
+            const jet = new T.Mesh(geometry, flame);
+            jet.quaternion.setFromUnitVectors(
+              new T.Vector3(0, 1, 0),
+              new T.Vector3(-side, 0, 0),
+            );
+            jet.rotateY(((i - 3) * Math.PI) / 7);
+            jet.position.set(side * DRAGON_FLAME_LENGTH, 0.6, (i - 3) * 0.035);
             jets.add(jet);
           }
       }
@@ -262,22 +276,45 @@ export class LoopView extends T.Group {
   }
   update(time: number) {
     const firing = dragonFiring(time);
+    const packet = dragonFlame(time);
+    const heat = dragonHeat(time);
+    this.dragonMaterial.color
+      .setHex(0x15191b)
+      .lerp(new T.Color(0xff0000), 0.5 * heat);
+    this.dragonMaterial.emissive.setHex(0x7f0800);
+    this.dragonMaterial.emissiveIntensity = heat * 0.35;
     for (const jets of this.jets) {
-      jets.visible = firing;
-      jets.children.forEach((jet, i) => {
-        jet.scale.setScalar(0.95 + 0.05 * Math.sin(time * 18 + i * 3));
-        ((jet as T.Mesh).material as T.ShaderMaterial).uniforms.time.value =
-          time;
+      jets.visible = packet.opacity > 0 && packet.head > packet.tail;
+      jets.children.forEach((jet) => {
+        const uniforms = ((jet as T.Mesh).material as T.ShaderMaterial)
+          .uniforms;
+        uniforms.time.value = time;
+        uniforms.head.value = packet.head;
+        uniforms.tail.value = packet.tail;
+        uniforms.opacity.value = packet.opacity;
       });
     }
-    this.eyes.emissive.setHex(firing ? 0xff3500 : 0x1bbf8e);
-    this.eyes.color.setHex(firing ? 0xff5a0a : 0x73f5bc);
+    const danger = firing || packet.opacity > 0;
+    this.eyes.emissive.setHex(danger ? 0xff3500 : 0x1bbf8e);
+    this.eyes.color.setHex(danger ? 0xff5a0a : 0x73f5bc);
   }
   stats() {
     return {
       dragonStatues: 12,
       loopSegments: LOOP.segments * 3,
       jetsVisible: this.jets.filter((j) => j.visible).length,
+      flame: this.jets.length
+        ? (() => {
+            const u = (
+              (this.jets[0].children[0] as T.Mesh).material as T.ShaderMaterial
+            ).uniforms;
+            return {
+              head: u.head.value as number,
+              tail: u.tail.value as number,
+              opacity: u.opacity.value as number,
+            };
+          })()
+        : { head: 0, tail: 0, opacity: 0 },
     };
   }
 }

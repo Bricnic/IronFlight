@@ -5,6 +5,7 @@ beforeAll(initPhysics);
 const hammer = HAZARDS.find((h) => h.id === "hard-hammer")!;
 it("a real spike impact tears off parts and launches the truck and debris", () => {
   const s = new Simulation("hard");
+  s.setTuning({ hammerSpeed: 1 });
   const start = { x: hammer.x + 4.7, y: hammer.y + 0.5, z: hammer.z };
   s.body.setTranslation(start, true);
   s.run(0.1);
@@ -25,6 +26,7 @@ it("a real spike impact tears off parts and launches the truck and debris", () =
 });
 it("a near miss inside the old damage volume does not damage or launch the truck", () => {
   const s = new Simulation("hard");
+  s.setTuning({ hammerSpeed: 1 });
   s.body.setTranslation(
     { x: hammer.x + 6.7, y: hammer.y + 1.7, z: hammer.z + 1.9 },
     true,
@@ -38,6 +40,7 @@ it("a near miss inside the old damage volume does not damage or launch the truck
 });
 it("rotor tangential motion changes the horizontal launch direction", () => {
   const s = new Simulation("hard");
+  s.setTuning({ hammerSpeed: 1 });
   s.run(Math.PI / (2 * 2.55));
   s.body.setTranslation(
     { x: hammer.x - 0.5, y: hammer.y + 4.7, z: hammer.z },
