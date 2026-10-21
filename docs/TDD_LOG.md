@@ -12,3 +12,7 @@ Preserve the complete existing playtest implementation and user tuning as the Tr
 ## Chunk 1 — Track catalog
 RED: `npx vitest run tests/tracks.test.ts` failed: missing `src/tracks` module.
 GREEN: the same command passes all 3 tests: six unique official tracks, two arena budgets with 25% headroom, and metadata validation.
+
+## Chunk 2 — Objective state machine
+RED: `npx vitest run tests/track-run.test.ts` failed because the run-state module did not exist.
+GREEN: `npx vitest run tests/track-run.test.ts tests/tracks.test.ts` passes 8 tests. Covers swept gates, ordering, direction, height/width rejection, unique swept pickups, deadline success/failure, wreck failure, real stunt flags and inclusive medal boundaries. Completed/failed runs freeze.
