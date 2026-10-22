@@ -36,6 +36,12 @@ export interface GameHarness {
     lavaScorch: number;
   };
   stats(): {
+    officialCourse: {
+      key: string;
+      gates: number;
+      pickups: number;
+      solids: number;
+    };
     shadow: { visible: boolean; opacity: number; y: number };
     lavaOffsets: number[][];
     lavaParts: {

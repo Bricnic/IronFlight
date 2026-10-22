@@ -194,7 +194,7 @@ async function boot() {
       setTuning: (values) => sim.setTuning(values),
       driveFrames: (frames, r, driver, draw = true) => {
         for (let f = 0; f < frames; f++) {
-          clock.advance(1 / 60, r, () => sim.step(driver(sim.snapshot())));
+          clock.advance(1 / 60, r, () => sim.step(driver(sim.snapshot(false))));
           view.render(false, clock.alpha, false);
         }
         if (draw) view.render(false, clock.alpha);

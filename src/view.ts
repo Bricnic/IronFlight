@@ -1,3 +1,4 @@
+import { CourseView } from "./course-view";
 import { LavaPartEffects } from "./lava-effects";
 import { PropView } from "./prop-view";
 import * as T from "three";
@@ -21,6 +22,7 @@ export class GameView {
   readonly renderer: T.WebGLRenderer;
   readonly chase = new ChaseCamera(this.camera);
   private props = new PropView();
+  private officialCourse = new CourseView();
   private fire = new TruckFireView();
   private lavaEffects = new LavaPartEffects();
   private lavaInspection = false;
@@ -275,7 +277,7 @@ export class GameView {
         );
         lamps.position.set(x, 24, z);
       }
-    this.scene.add(this.labFloor, this.arena);
+    this.scene.add(this.labFloor, this.arena, this.officialCourse);
     const floor = this.box(
       400,
       0.5,
@@ -477,6 +479,7 @@ export class GameView {
   stats() {
     return {
       ...truckStats(this.truck),
+      officialCourse: this.officialCourse.inspect(),
       fire: this.fire.inspect(),
       lavaParts: this.lavaEffects.inspect(),
       shadow: {
@@ -508,9 +511,10 @@ export class GameView {
         .clone()
         .slerp(new T.Quaternion().copy(s.body.rotation()), alpha);
     this.labFloor.visible = s.stage === "lab";
-    this.arena.visible = s.stage !== "lab";
-    this.course.visible = s.stage !== "lab";
-    this.hazards.visible = s.stage !== "lab";
+    this.arena.visible = s.stage !== "lab" && !s.courseTrack;
+    this.course.visible = s.stage !== "lab" && !s.courseTrack;
+    this.hazards.visible = s.stage !== "lab" && !s.courseTrack;
+    this.officialCourse.update(s);
     this.loop.update(s.time);
     this.skids.update(s.skidStrokes);
     this.fire.update(s, root);
@@ -531,7 +535,9 @@ export class GameView {
       .intersectObjects(
         s.stage === "lab"
           ? this.labFloor.children
-          : [...this.course.children, ...this.arena.children],
+          : s.courseTrack
+            ? this.officialCourse.children
+            : [...this.course.children, ...this.arena.children],
         true,
       )
       .find((hit) => hit.face && hit.face.normal.y > 0.3);

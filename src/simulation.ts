@@ -1,3 +1,4 @@
+import { courseSolids, courseHazards, courseProps } from "./course";
 import { getTrack, type TrackId } from "./tracks";
 import { TrackRun } from "./track-run";
 import { Destructibles } from "./destructibles";
@@ -17,7 +18,12 @@ import {
   loopScenerySolids,
 } from "./loop";
 import { hammerStrike, type HammerImpact } from "./hammer-impact";
-export type Stage = "easy" | "medium" | "hard" | "lab";
+export type Stage =
+  | "easy"
+  | "medium"
+  | "hard"
+  | "lab"
+  | Exclude<TrackId, "triple-loop">;
 export type Input = {
   throttle?: number;
   brake?: number;
@@ -42,6 +48,8 @@ export class Simulation {
   vehicle!: RAPIER.DynamicRayCastVehicleController;
   stage: Stage;
   trackRun?: TrackRun;
+  courseTrack?: ReturnType<typeof getTrack>;
+  activeHazards: Hazard[] = [];
   time = 0;
   ticks = 0;
   airborneTicks = 0;
@@ -100,9 +108,11 @@ export class Simulation {
   }
   startTrack(id: TrackId, lane: "easy" | "medium" | "hard" = "easy") {
     const track = getTrack(id);
-    if (!track.legacy)
-      throw new Error("Track construction is not implemented yet");
-    this.reset(lane);
+    this.reset(track.legacy ? lane : (id as Stage));
+    if (!track.legacy) {
+      this.trackRun = new TrackRun(track);
+      return;
+    }
     const x = ROUTES.find((r) => r.id === lane)!.x;
     this.trackRun = new TrackRun(
       {
@@ -114,6 +124,14 @@ export class Simulation {
   }
   reset(stage: Stage = this.stage) {
     this.trackRun = undefined;
+    this.courseTrack = ["lab", "easy", "medium", "hard"].includes(stage)
+      ? undefined
+      : getTrack(stage);
+    this.activeHazards = this.courseTrack
+      ? courseHazards(this.courseTrack)
+      : stage === "lab"
+        ? []
+        : HAZARDS;
     this.world?.free();
     this.events?.free();
     this.events = new RAPIER.EventQueue(true);
@@ -158,20 +176,26 @@ export class Simulation {
           .setFriction(1),
       );
     else
-      for (const s of [
-        ...routeSolids(),
-        ...arenaSolids(),
-        ...loopSolids(),
-        ...loopScenerySolids(),
-      ]) {
+      for (const s of this.courseTrack
+        ? courseSolids(this.courseTrack)
+        : [
+            ...routeSolids(),
+            ...arenaSolids(),
+            ...loopSolids(),
+            ...loopScenerySolids(),
+          ]) {
         const collider = this.world.createCollider(
           RAPIER.ColliderDesc.cuboid(s.w / 2, s.h / 2, s.d / 2)
             .setTranslation(s.x, s.y, s.z)
             .setRotation(
-              new Quaternion().setFromAxisAngle(
-                new Vector3(1, 0, 0),
-                s.angle ?? 0,
-              ),
+              new Quaternion()
+                .setFromAxisAngle(new Vector3(1, 0, 0), s.angle ?? 0)
+                .multiply(
+                  new Quaternion().setFromAxisAngle(
+                    new Vector3(0, 1, 0),
+                    "yaw" in s ? (s.yaw ?? 0) : 0,
+                  ),
+                ),
             )
             .setFriction(1)
             .setSensor(s.kind === "lava"),
@@ -186,6 +210,14 @@ export class Simulation {
         .setAngularDamping(1.2)
         .setCcdEnabled(true),
     );
+    if (this.courseTrack) {
+      const spawn = this.courseTrack.spawn;
+      this.body.setTranslation(spawn, true);
+      this.body.setRotation(
+        new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), spawn.yaw),
+        true,
+      );
+    }
     this.previousPosition.copy(this.body.translation());
     this.previousRotation.copy(this.body.rotation());
     for (const def of PARTS) {
@@ -223,9 +255,13 @@ export class Simulation {
       this.vehicle.setWheelFrictionSlip(i, 2.5);
       this.vehicle.setWheelSideFrictionStiffness(i, 1.1);
     });
-    this.props = new Destructibles(this.world, stage === "lab");
+    this.props = new Destructibles(
+      this.world,
+      stage === "lab",
+      this.courseTrack ? courseProps(this.courseTrack) : undefined,
+    );
     if (stage !== "lab")
-      for (const h of HAZARDS) {
+      for (const h of this.activeHazards) {
         if (h.kind === "hammer") {
           const b = this.world.createRigidBody(
             RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(
@@ -624,7 +660,7 @@ export class Simulation {
       });
     }
     if (this.stage !== "lab")
-      for (const h of HAZARDS)
+      for (const h of this.activeHazards)
         if (h.kind !== "hammer" && h.kind !== "lava" && this.touches(h)) {
           if (h.kind === "fire") this.inFlames = true;
           if (this.time - (this.cooldown.get(h.id) ?? -1) <= 0.15) continue;
@@ -690,7 +726,9 @@ export class Simulation {
   }
   private updateLava() {
     if (this.stage === "lab") return;
-    const pools = arenaSolids().filter((s) => s.kind === "lava");
+    const pools = (
+      this.courseTrack ? courseSolids(this.courseTrack) : arenaSolids()
+    ).filter((s) => s.kind === "lava");
     for (const def of PARTS) {
       const state = this.parts.get(def.id)!;
       if (!state.lava) {

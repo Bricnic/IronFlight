@@ -1,7 +1,7 @@
 import { ROUTES } from "./routes";
 export type Hazard = {
   id: string;
-  route: "easy" | "medium" | "hard";
+  route: string;
   kind: "fire" | "hammer" | "spikes" | "lava";
   x: number;
   y: number;

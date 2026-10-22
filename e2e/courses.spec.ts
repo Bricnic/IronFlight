@@ -1,0 +1,20 @@
+import { test, expect } from "@playwright/test";
+import { driveTrack } from "./course-driver";
+test("Harbor Sprint: drive every checkpoint from spawn to finish", async ({
+  page,
+}, info) => {
+  const result = await driveTrack(page, "harbor-sprint");
+  expect(result.state.run?.status, JSON.stringify(result.state.run)).toBe(
+    "completed",
+  );
+  expect(result.state.run?.checkpoint).toBe(6);
+  expect(result.state.integrity).toBeGreaterThan(0.8);
+  expect(result.initial.gates).toBe(6);
+  expect(result.art.gates).toBe(0);
+  expect(result.art.solids).toBeGreaterThan(20);
+  await info.attach("completion", {
+    body: JSON.stringify(result.state),
+    contentType: "application/json",
+  });
+  await page.screenshot({ path: info.outputPath("harbor-finish.png") });
+});

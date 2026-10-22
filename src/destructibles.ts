@@ -49,8 +49,9 @@ export class Destructibles {
   constructor(
     readonly world: RAPIER.World,
     lab: boolean,
+    definitions = propDefinitions(lab),
   ) {
-    for (const definition of propDefinitions(lab)) {
+    for (const definition of definitions) {
       const { kind, x, z, ground } = definition,
         sign = kind === "sign",
         height = sign ? 1.6 : kind === "trash" ? 0.65 : 0.7;
