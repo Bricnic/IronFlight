@@ -22,7 +22,7 @@ export type CourseSolid = {
   color: number;
 };
 export const courseAvailable = (id: TrackId) =>
-  ["harbor-sprint", "foundry-run"].includes(id);
+  ["harbor-sprint", "foundry-run", "skyline-circuit"].includes(id);
 export function courseSolids(track: Track): CourseSolid[] {
   if (!courseAvailable(track.id))
     throw new Error(`Course not implemented: ${track.id}`);
@@ -154,6 +154,53 @@ export function courseSolids(track: Track): CourseSolid[] {
         d: 6,
         color: 0x907250,
       });
+  }
+  if (track.id === "skyline-circuit") {
+    solids[0].color = 0x5a6970;
+    for (const radius of [64, 96])
+      for (let i = 0; i < 48; i++) {
+        const angle = (i * Math.PI) / 24;
+        solids.push({
+          id: `circuit-rail-${radius}-${i}`,
+          kind: "barrier",
+          x: radius * Math.sin(angle),
+          y: 0.7,
+          z: -radius * Math.cos(angle),
+          w: 1.2,
+          h: 1.4,
+          d: (radius * 2 * Math.PI) / 48 + 1,
+          yaw: Math.PI / 2 - angle,
+          color: i % 2 ? 0xd8dfe1 : track.color,
+        });
+      }
+    for (const [x, z] of [
+      [69, -8],
+      [91, 8],
+    ])
+      solids.push({
+        id: `chicane-${x}`,
+        kind: "barrier",
+        x,
+        y: 0.6,
+        z,
+        w: 5,
+        h: 1.2,
+        d: 4,
+        color: track.color,
+      });
+    for (let i = 0; i < 7; i++)
+      for (const side of [-1, 1])
+        solids.push({
+          id: `tower-${side}-${i}`,
+          kind: "container",
+          x: side * (130 + (i % 2) * 15),
+          y: 10 + i * 2,
+          z: -120 + i * 40,
+          w: 16,
+          h: 20 + i * 4,
+          d: 22,
+          color: 0x758594,
+        });
   }
   return solids;
 }
