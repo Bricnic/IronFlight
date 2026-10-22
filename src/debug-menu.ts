@@ -19,7 +19,9 @@ export async function createDebugMenu(sim: Simulation) {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) sim.setTuning(JSON.parse(saved));
   } catch {
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
   }
   const menu = document.createElement("section");
   menu.id = "debug-menu";
@@ -53,7 +55,9 @@ export async function createDebugMenu(sim: Simulation) {
           : `${sim.tuning[key].toFixed(1)}×`;
     }
     syncColors(sim.tuning);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sim.tuning));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sim.tuning));
+    } catch {}
   };
   const syncColors = createTruckColorPickers(
     menu.querySelector<HTMLElement>("#truck-colors")!,

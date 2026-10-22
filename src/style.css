@@ -539,3 +539,307 @@ kbd {
   white-space: nowrap;
   border: 0;
 }
+
+#level-select-button,
+.menu-actions button {
+  padding: 10px 14px;
+  border: 1px solid #ffffff38;
+  background: #253941;
+  color: #e8efec;
+  font:
+    600 12px "Barlow",
+    sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#level-select {
+  position: fixed;
+  inset: 84px 0 0;
+  overflow: auto;
+  z-index: 12;
+  padding: 36px max(26px, calc((100vw - 1240px) / 2)) 22px;
+  background: radial-gradient(
+    ellipse at 85% 0,
+    #2e4546 0,
+    #15242b 48%,
+    #111c22 100%
+  );
+}
+.track-select-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+.track-select-intro .eyebrow {
+  color: #ffa762;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.track-select-intro h1 {
+  font:
+    800 clamp(36px, 5vw, 60px) / 1 "Barlow Condensed",
+    sans-serif;
+  margin: 12px 0 10px;
+  letter-spacing: -0.5px;
+}
+.track-select-intro p {
+  margin: 0;
+  font-size: 14px;
+  color: #aebec0;
+}
+.menu-actions {
+  display: flex;
+  gap: 8px;
+}
+.track-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.track-card {
+  min-width: 0;
+  border: 1px solid #ffffff20;
+  border-radius: 8px;
+  background: #1d3038;
+  overflow: hidden;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+}
+.track-card:hover {
+  border-color: var(--track-accent);
+  transform: translateY(-3px);
+}
+.track-play {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  text-align: left;
+  color: inherit;
+  background: none;
+  cursor: pointer;
+}
+.track-image {
+  position: relative;
+  height: 152px;
+  overflow: hidden;
+  background: #14232a;
+}
+.track-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.track-number {
+  position: absolute;
+  right: 14px;
+  top: 10px;
+  color: #ffffff44;
+  font:
+    800 32px "Barlow Condensed",
+    sans-serif;
+}
+.track-mode {
+  position: absolute;
+  bottom: 10px;
+  left: 16px;
+  padding: 5px 7px;
+  background: #122127df;
+  color: var(--track-accent);
+  font-size: 9px;
+  letter-spacing: 1.2px;
+}
+.track-card-body {
+  padding: 16px 18px;
+}
+.track-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.track-card h2 {
+  margin: 0;
+  font:
+    700 25px "Barlow Condensed",
+    sans-serif;
+}
+.best-medal {
+  font-size: 9px;
+  letter-spacing: 0.7px;
+  color: #9faeb1;
+}
+.track-card p {
+  min-height: 34px;
+  margin: 9px 0 15px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #acbbbd;
+}
+.medal-targets {
+  display: flex;
+  gap: 18px;
+  font-size: 11px;
+}
+.gold {
+  color: #f0ca69 !important;
+}
+.silver {
+  color: #c5d4e1 !important;
+}
+.bronze {
+  color: #ce9972 !important;
+}
+.track-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #ffffff14;
+  margin-top: 15px;
+  padding-top: 13px;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+}
+.best-time {
+  color: #9fb3b7;
+}
+.play-word {
+  color: var(--track-accent);
+  font-weight: 700;
+}
+.selection-footnote {
+  text-align: center;
+  font-size: 11px;
+  color: #82999f;
+  margin: 22px 0 0;
+}
+.at-level-select #routes,
+.at-level-select #lab-toggle,
+.at-level-select #level-select-button,
+.at-level-select #telemetry,
+.at-level-select #status,
+.at-level-select footer {
+  display: none;
+}
+#run-progress {
+  margin: 8px 0;
+  color: #ffce97;
+  font-size: 13px;
+  font-weight: 600;
+}
+#track-result {
+  position: fixed;
+  inset: 84px 0 0;
+  z-index: 18;
+  display: grid;
+  place-items: center;
+  background: #101d24c9;
+  padding: 20px;
+  backdrop-filter: blur(5px);
+}
+.result-card {
+  width: min(450px, 100%);
+  padding: 38px;
+  text-align: center;
+  border: 1px solid #ffffff35;
+  border-radius: 10px;
+  background: #20333c;
+  box-shadow: 0 20px 70px #0007;
+}
+.result-card .eyebrow {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #aebfc2;
+}
+.result-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 86px;
+  min-height: 86px;
+  padding: 14px;
+  border: 3px double currentColor;
+  border-radius: 50%;
+  margin: 22px 0 0;
+  font:
+    700 17px "Barlow Condensed",
+    sans-serif;
+}
+.result-card h2 {
+  font:
+    800 42px "Barlow Condensed",
+    sans-serif;
+  margin: 15px 0 8px;
+}
+.result-card p {
+  font-size: 13px;
+  color: #b0c1c4;
+  line-height: 1.5;
+}
+#result-time {
+  font:
+    800 46px "Barlow Condensed",
+    sans-serif;
+  margin: 16px 0 5px;
+}
+#personal-best {
+  color: #ffd088;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.result-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 25px;
+}
+.result-actions button {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ffffff40;
+  background: #304850;
+  color: white;
+  cursor: pointer;
+  font:
+    600 13px "Barlow",
+    sans-serif;
+}
+#retry-track {
+  background: #ed9d57;
+  color: #16252b;
+  border-color: #ed9d57;
+}
+@media (max-width: 1100px) {
+  .track-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #level-select {
+    padding: 28px 24px;
+  }
+  header .series {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .track-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .track-select-intro {
+    align-items: start;
+    flex-direction: column;
+  }
+  #level-select {
+    top: 84px;
+    padding: 26px 18px;
+  }
+  #level-select-button {
+    font-size: 10px;
+    padding: 8px;
+  }
+  .track-image {
+    height: 175px;
+  }
+}
