@@ -27,6 +27,7 @@ export const courseAvailable = (id: TrackId) =>
     "foundry-run",
     "skyline-circuit",
     "scrapyard-sweep",
+    "inferno-vault",
   ].includes(id);
 export function courseSolids(track: Track): CourseSolid[] {
   if (!courseAvailable(track.id))
@@ -257,9 +258,129 @@ export function courseSolids(track: Track): CourseSolid[] {
       });
     }
   }
+  if (track.id === "inferno-vault") {
+    solids[0].color = 0x5e5856;
+    for (const x of [-25, 25]) {
+      solids.push({
+        id: `vault-lava-${x}`,
+        kind: "lava",
+        x,
+        y: 0.6,
+        z: 20,
+        w: 16,
+        h: 0.8,
+        d: 20,
+        color: 0xff6a20,
+      });
+      solids.push({
+        id: `vault-floor-${x}`,
+        kind: "support",
+        x,
+        y: 0.1,
+        z: 20,
+        w: 16,
+        h: 0.2,
+        d: 20,
+        color: 0x77716c,
+      });
+      for (const side of [-1, 1]) {
+        solids.push({
+          id: `vault-wall-x-${x}-${side}`,
+          kind: "support",
+          x: x + side * 8.5,
+          y: 0.65,
+          z: 20,
+          w: 1,
+          h: 1.3,
+          d: 22,
+          color: 0x77716c,
+        });
+        solids.push({
+          id: `vault-wall-z-${x}-${side}`,
+          kind: "support",
+          x,
+          y: 0.65,
+          z: 20 + side * 10.5,
+          w: 16,
+          h: 1.3,
+          d: 1,
+          color: 0x77716c,
+        });
+      }
+    }
+    for (const z of [-50, 55])
+      for (const side of [-1, 1])
+        solids.push({
+          id: `vault-pylon-${z}-${side}`,
+          kind: "support",
+          x: side * 5.4,
+          y: 0.34,
+          z,
+          w: 0.45,
+          h: 0.68,
+          d: 0.65,
+          color: 0x303b3b,
+        });
+    solids.push({
+      id: "vault-hammer-base",
+      kind: "support",
+      x: -76,
+      y: 1.5,
+      z: 0,
+      w: 1,
+      h: 3,
+      d: 1,
+      color: 0x303b3b,
+    });
+    for (const side of [-1, 1])
+      solids.push({
+        id: `vault-boundary-${side}`,
+        kind: "barrier",
+        x: side * 110,
+        y: 1,
+        z: 10,
+        w: 1,
+        h: 2,
+        d: 250,
+        color: 0x837361,
+      });
+    for (let i = 0; i < 5; i++)
+      solids.push({
+        id: `vault-store-${i}`,
+        kind: "container",
+        x: 90,
+        y: 2,
+        z: -75 + i * 42,
+        w: 10,
+        h: 4,
+        d: 16,
+        color: 0x75664d,
+      });
+  }
   return solids;
 }
 export function courseHazards(track: Track): Hazard[] {
+  if (track.id === "inferno-vault")
+    return [
+      {
+        id: "vault-hammer",
+        route: track.id,
+        kind: "hammer",
+        x: -76,
+        y: 3.5,
+        z: 0,
+      },
+      ...[-50, 55].map((z) => ({
+        id: `vault-fire-${z}`,
+        route: track.id,
+        kind: "fire" as const,
+        x: 0,
+        y: 2,
+        z,
+        period: 6,
+        duration: 3,
+      })),
+    ];
   return track.id === "foundry-run"
     ? [
         {

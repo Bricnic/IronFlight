@@ -1,11 +1,13 @@
 import * as T from "three";
 import { courseHazards } from "./course";
 import { hazardActive, type Hazard } from "./hazards";
+import { lavaMaterial } from "./materials";
 import { flameMaterial } from "./materials";
 import { courseSolids } from "./course";
 import type { Simulation } from "./simulation";
 export class CourseView extends T.Group {
   private key = "";
+  private lavaMaterials: T.MeshStandardMaterial[] = [];
   private hazards: {
     h: Hazard;
     root: T.Group;
@@ -61,15 +63,20 @@ export class CourseView extends T.Group {
       this.hazards = [];
       this.pickupModels.clear();
       this.meshes = [];
+      this.lavaMaterials = [];
       if (run) {
         const track = run.track;
         if (!track.legacy)
           for (const s of courseSolids(track)) {
-            const mat = new T.MeshStandardMaterial({
-              color: s.color,
-              roughness: s.kind === "container" ? 0.65 : 0.95,
-              metalness: s.kind === "container" ? 0.3 : 0,
-            });
+            const mat =
+              s.kind === "lava"
+                ? lavaMaterial()
+                : new T.MeshStandardMaterial({
+                    color: s.color,
+                    roughness: s.kind === "container" ? 0.65 : 0.95,
+                    metalness: s.kind === "container" ? 0.3 : 0,
+                  });
+            if (s.kind === "lava") this.lavaMaterials.push(mat);
             const mesh = new T.Mesh(new T.BoxGeometry(s.w, s.h, s.d), mat);
             mesh.position.set(s.x, s.y, s.z);
             mesh.quaternion
@@ -233,6 +240,11 @@ export class CourseView extends T.Group {
     }
     this.visible = !!run;
     if (!run) return;
+    for (const material of this.lavaMaterials) {
+      material.userData.time.value = sim.time;
+      material.map!.offset.set((sim.time * 0.035) % 1, (sim.time * 0.025) % 1);
+      material.map!.updateMatrix();
+    }
     for (const model of this.hazards) {
       if (model.rotor) model.rotor.rotation.z = sim.hammerPhase;
       if (model.flames) {
