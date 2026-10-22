@@ -1,0 +1,79 @@
+import { basinSolids, hazardSupports } from "./scenery";
+import { ROUTES, type Solid } from "./routes";
+export type ArenaSolid = Omit<Solid, "kind"> & {
+  id: string;
+  kind: "grass" | "grandstand" | "lava" | "pole" | "basin" | "support";
+  row?: number;
+};
+/** Render and physics consume these exact same dimensions. */
+export function arenaSolids(): ArenaSolid[] {
+  return [
+    {
+      id: "arena-floor",
+      kind: "grass",
+      x: 0,
+      y: -9.2,
+      z: 140,
+      w: 340,
+      h: 1,
+      d: 630,
+    },
+    {
+      id: "runup-field",
+      kind: "grass",
+      x: 0,
+      y: -0.22,
+      z: -62.5,
+      w: 300,
+      h: 0.2,
+      d: 125,
+    },
+    {
+      id: "landing-field",
+      kind: "grass",
+      x: 0,
+      y: -0.22,
+      z: 245,
+      w: 300,
+      h: 0.2,
+      d: 420,
+    },
+    ...ROUTES.map((r) => ({
+      id: `lava-${r.id}`,
+      kind: "lava" as const,
+      x: r.x,
+      y: -7.0125,
+      z: (r.gapEnd + 12) / 2,
+      w: 13,
+      h: 2.175,
+      d: r.gapEnd - 12,
+    })),
+    ...basinSolids(),
+    ...hazardSupports(),
+    ...[-1, 1].flatMap((side) =>
+      Array.from({ length: 7 }, (_, row) => ({
+        id: `stand-${side}-${row}`,
+        kind: "grandstand" as const,
+        row,
+        x: side * (65 + row * 3),
+        y: row * 1.6 - 1,
+        z: 10,
+        w: 5,
+        h: 1.2,
+        d: 240,
+      })),
+    ),
+    ...[-57, 57].flatMap((x) =>
+      [-90, 0, 95].map((z) => ({
+        id: `pole-${x}-${z}`,
+        kind: "pole" as const,
+        x,
+        y: 11,
+        z,
+        w: 0.3,
+        h: 25,
+        d: 0.3,
+      })),
+    ),
+  ];
+}
