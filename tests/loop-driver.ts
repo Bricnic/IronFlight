@@ -9,7 +9,7 @@ export function loopDriver(
   let theta = Math.atan2(p.z - LOOP.z, LOOP.radius - p.y);
   if (theta < 0) theta += 2 * Math.PI;
   const steer =
-    p.y > 3
+    p.y > 3 && p.z > LOOP.z - LOOP.radius - 5
       ? Math.max(
           -0.2,
           Math.min(

@@ -1,3 +1,5 @@
+import { getTrack, type TrackId } from "./tracks";
+import { TrackRun } from "./track-run";
 import { Destructibles } from "./destructibles";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
@@ -39,6 +41,7 @@ export class Simulation {
   body!: RAPIER.RigidBody;
   vehicle!: RAPIER.DynamicRayCastVehicleController;
   stage: Stage;
+  trackRun?: TrackRun;
   time = 0;
   ticks = 0;
   airborneTicks = 0;
@@ -95,7 +98,22 @@ export class Simulation {
     this.stage = stage;
     this.reset(stage);
   }
+  startTrack(id: TrackId, lane: "easy" | "medium" | "hard" = "easy") {
+    const track = getTrack(id);
+    if (!track.legacy)
+      throw new Error("Track construction is not implemented yet");
+    this.reset(lane);
+    const x = ROUTES.find((r) => r.id === lane)!.x;
+    this.trackRun = new TrackRun(
+      {
+        ...track,
+        checkpoints: track.checkpoints.map((g) => ({ ...g, x: g.x + x + 24 })),
+      },
+      lane,
+    );
+  }
   reset(stage: Stage = this.stage) {
+    this.trackRun = undefined;
     this.world?.free();
     this.events?.free();
     this.events = new RAPIER.EventQueue(true);
@@ -659,6 +677,13 @@ export class Simulation {
         this.status = "finished";
       if (this.status === "driving" && p.y < -7) this.status = "wrecked";
     }
+    this.trackRun?.step(
+      DT,
+      this.previousPosition,
+      this.body.translation(),
+      this.status === "wrecked" ? 0 : this.remainingHealth() / this.fullHealth,
+      { landed: this.landed, loopCompleted: this.loopCompleted },
+    );
   }
   run(seconds: number, input: Input = {}) {
     for (let i = 0; i < Math.round(seconds / DT); i++) this.step(input);
@@ -1060,6 +1085,7 @@ export class Simulation {
     const p = this.body.translation(),
       v = this.body.linvel();
     return {
+      run: this.trackRun?.snapshot() ?? null,
       position: { x: p.x, y: p.y, z: p.z },
       velocity: { x: v.x, y: v.y, z: v.z },
       forward: new Vector3(0, 0, 1)

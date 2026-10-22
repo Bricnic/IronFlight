@@ -175,6 +175,14 @@ async function boot() {
   if (import.meta.env.DEV)
     window.__game = {
       select,
+      startTrack: (id, lane) => {
+        select(lane ?? "easy");
+        sim.startTrack(id, lane);
+        view.resetTruck();
+        clock.reset();
+        view.render(true);
+        hud();
+      },
       pause: (v) => (paused = v),
       advanceFrames: (frames, r, i) => {
         for (let f = 0; f < frames; f++)

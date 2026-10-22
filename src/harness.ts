@@ -1,3 +1,4 @@
+import type { TrackId } from "./tracks";
 import type { Tuning } from "./tuning";
 import type { Simulation, Stage, Input } from "./simulation";
 import type { GameView } from "./view";
@@ -6,6 +7,7 @@ export type CameraSample = ReturnType<GameView["inspectCamera"]> & {
 };
 export interface GameHarness {
   select(stage: Stage): void;
+  startTrack(id: TrackId, lane?: "easy" | "medium" | "hard"): void;
   pause(value: boolean): void;
   advanceFrames(frames: number, rate: number, input?: Input): void;
   driveFrames(
