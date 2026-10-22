@@ -1,7 +1,7 @@
 import * as T from "three";
 import { courseHazards } from "./course";
 import { hazardActive, type Hazard } from "./hazards";
-import { lavaMaterial } from "./materials";
+import { pbr, lavaMaterial } from "./materials";
 import { flameMaterial } from "./materials";
 import { courseSolids } from "./course";
 import type { Simulation } from "./simulation";
@@ -71,13 +71,50 @@ export class CourseView extends T.Group {
             const mat =
               s.kind === "lava"
                 ? lavaMaterial()
-                : new T.MeshStandardMaterial({
-                    color: s.color,
-                    roughness: s.kind === "container" ? 0.65 : 0.95,
-                    metalness: s.kind === "container" ? 0.3 : 0,
-                  });
+                : s.kind === "road" || s.kind === "ramp"
+                  ? pbr("asphalt_02", 1, { color: 0xc3c4c5, roughness: 0.95 })
+                  : s.kind === "ground"
+                    ? pbr(
+                        ["foundry-run", "inferno-vault"].includes(track.id)
+                          ? "concrete_layers_02"
+                          : "concrete_floor_02",
+                        1,
+                        {
+                          color:
+                            track.id === "scrapyard-sweep"
+                              ? 0xb8a990
+                              : 0xc4c8c8,
+                          roughness: 0.96,
+                        },
+                      )
+                    : new T.MeshStandardMaterial({
+                        color: s.color,
+                        roughness: s.kind === "container" ? 0.65 : 0.95,
+                        metalness: s.kind === "container" ? 0.3 : 0,
+                      });
             if (s.kind === "lava") this.lavaMaterials.push(mat);
-            const mesh = new T.Mesh(new T.BoxGeometry(s.w, s.h, s.d), mat);
+            const geometry = new T.BoxGeometry(s.w, s.h, s.d);
+            if (["ground", "road", "ramp"].includes(s.kind)) {
+              const pos = geometry.attributes.position,
+                normals = geometry.attributes.normal,
+                uv = geometry.attributes.uv;
+              for (let i = 0; i < pos.count; i++) {
+                const top = Math.abs(normals.getY(i)) > 0.5;
+                uv.setXY(
+                  i,
+                  (top
+                    ? pos.getX(i) + (s.kind === "ground" ? s.x : 0)
+                    : pos.getX(i) + pos.getZ(i)) / 3,
+                  (top
+                    ? pos.getZ(i) + (s.kind === "ground" ? s.z : 0)
+                    : pos.getY(i)) / 3,
+                );
+              }
+              uv.needsUpdate = true;
+              mat.userData.surface =
+                s.kind === "ground" ? "concrete" : "asphalt_02";
+            }
+            const mesh = new T.Mesh(geometry, mat);
             mesh.position.set(s.x, s.y, s.z);
             mesh.quaternion
               .setFromAxisAngle(new T.Vector3(1, 0, 0), s.angle ?? 0)
@@ -275,6 +312,15 @@ export class CourseView extends T.Group {
       gates: this.gateModels.filter((g) => g.visible).length,
       pickups: [...this.pickupModels.values()].filter((g) => g.visible).length,
       solids: this.meshes.length,
+      surfaces: this.meshes
+        .filter(
+          (m) => m.material instanceof T.MeshStandardMaterial && m.material.map,
+        )
+        .map((m) => ({
+          id: m.name,
+          material: (m.material as T.MeshStandardMaterial).userData.surface,
+          map: (m.material as T.MeshStandardMaterial).map?.image?.src,
+        })),
     };
   }
 }

@@ -8,6 +8,8 @@ for (const id of [
   "grass_ground",
   "green_metal_rust",
   "rock_06",
+  "concrete_floor_02",
+  "concrete_layers_02",
 ]) {
   const response = await fetch(`https://api.polyhaven.com/files/${id}`);
   if (!response.ok) throw Error(`${id}: ${response.status}`);

@@ -16,7 +16,14 @@ it("local Poly Haven material maps match their recorded hashes", () => {
   const manifest = JSON.parse(
     readFileSync("public/textures/manifest.json", "utf8"),
   );
-  expect(manifest.assets).toHaveLength(4);
+  expect(manifest.assets.map((a: { id: string }) => a.id)).toEqual([
+    "asphalt_02",
+    "grass_ground",
+    "green_metal_rust",
+    "rock_06",
+    "concrete_floor_02",
+    "concrete_layers_02",
+  ]);
   for (const asset of manifest.assets) {
     expect(asset.license).toBe("CC0");
     expect(asset.source).toMatch(/^https:\/\/polyhaven.com\/a\//);
