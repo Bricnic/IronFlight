@@ -514,7 +514,7 @@ export class GameView {
     this.arena.visible = s.stage !== "lab" && !s.courseTrack;
     this.course.visible = s.stage !== "lab" && !s.courseTrack;
     this.hazards.visible = s.stage !== "lab" && !s.courseTrack;
-    this.officialCourse.update(s);
+    this.officialCourse.update(s, this.camera);
     this.loop.update(s.time);
     this.skids.update(s.skidStrokes);
     this.fire.update(s, root);

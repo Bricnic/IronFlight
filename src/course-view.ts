@@ -36,7 +36,7 @@ export class CourseView extends T.Group {
     );
     return mesh;
   }
-  update(sim: Simulation) {
+  update(sim: Simulation, camera?: T.Camera) {
     const run = sim.trackRun;
     const key = run ? `${run.track.id}:${run.variant}` : "";
     if (key !== this.key) {
@@ -202,6 +202,7 @@ export class CourseView extends T.Group {
             track.color,
           );
           label.position.y = 5.7;
+          label.rotation.y = Math.PI;
           g.add(label);
           this.add(g);
           this.gateModels.push(g);
@@ -253,6 +254,7 @@ export class CourseView extends T.Group {
       g.visible = !run.collected.has(p.id);
       g.position.y = p.y + Math.sin(sim.time * 3) * 0.2;
       g.children[0].rotation.y = sim.time;
+      if (camera) g.children[1].quaternion.copy(camera.quaternion);
     }
   }
   inspect() {

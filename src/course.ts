@@ -22,7 +22,12 @@ export type CourseSolid = {
   color: number;
 };
 export const courseAvailable = (id: TrackId) =>
-  ["harbor-sprint", "foundry-run", "skyline-circuit"].includes(id);
+  [
+    "harbor-sprint",
+    "foundry-run",
+    "skyline-circuit",
+    "scrapyard-sweep",
+  ].includes(id);
 export function courseSolids(track: Track): CourseSolid[] {
   if (!courseAvailable(track.id))
     throw new Error(`Course not implemented: ${track.id}`);
@@ -39,7 +44,7 @@ export function courseSolids(track: Track): CourseSolid[] {
       color: 0x6d817c,
     },
   ];
-  for (let i = 1; i < track.path.length; i++) {
+  for (let i = 1; track.mode === "race" && i < track.path.length; i++) {
     const a = track.path[i - 1],
       b = track.path[i];
     solids.push({
@@ -202,6 +207,56 @@ export function courseSolids(track: Track): CourseSolid[] {
           color: 0x758594,
         });
   }
+  if (track.id === "scrapyard-sweep") {
+    solids[0].color = 0x716a53;
+    for (const [i, p] of [
+      [65, -50],
+      [65, -10],
+      [65, 30],
+      [-65, -50],
+      [-65, 10],
+      [-65, 55],
+      [10, 90],
+      [-30, 85],
+      [15, -12],
+      [-35, 80],
+    ].entries())
+      solids.push({
+        id: `scrap-stack-${i}`,
+        kind: "container",
+        x: p[0],
+        y: 1.8,
+        z: p[1],
+        w: 7,
+        h: 3.6,
+        d: 8,
+        color: i % 2 ? 0x857041 : 0x5d7053,
+      });
+    for (const side of [-1, 1]) {
+      solids.push({
+        id: `fence-x-${side}`,
+        kind: "barrier",
+        x: side * 90,
+        y: 1,
+        z: 0,
+        w: 1,
+        h: 2,
+        d: 222,
+        color: 0x655d4b,
+      });
+      solids.push({
+        id: `fence-z-${side}`,
+        kind: "barrier",
+        x: 0,
+        y: 1,
+        z: side * 110,
+        w: 180,
+        h: 2,
+        d: 1,
+        color: 0x655d4b,
+      });
+    }
+  }
   return solids;
 }
 export function courseHazards(track: Track): Hazard[] {
@@ -229,6 +284,16 @@ export function courseHazards(track: Track): Hazard[] {
     : [];
 }
 export function courseProps(track: Track): PropDefinition[] {
+  if (track.id === "scrapyard-sweep")
+    return [-1, 1].flatMap((side) =>
+      [-60, -20, 20, 60].map((z, i) => ({
+        id: `scrap-prop-${side}-${i}`,
+        kind: (["sign", "trash", "barrel", "trash"] as const)[i],
+        x: side * 75,
+        z,
+        ground: 0,
+      })),
+    );
   return track.id === "harbor-sprint"
     ? [
         { id: "harbor-sign", kind: "sign", x: -19, z: -55, ground: 0 },

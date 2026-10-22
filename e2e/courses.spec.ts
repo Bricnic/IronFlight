@@ -52,3 +52,22 @@ test("Skyline Circuit: complete a full physical lap through all sectors", async 
   });
   await page.screenshot({ path: info.outputPath("skyline-finish.png") });
 });
+
+test("Scrapyard Sweep: collect all twelve tokens with 30 seconds to spare", async ({
+  page,
+}, info) => {
+  const result = await driveTrack(page, "scrapyard-sweep");
+  expect(result.state.run?.status, JSON.stringify(result.state.run)).toBe(
+    "completed",
+  );
+  expect(result.state.run?.collected).toHaveLength(12);
+  expect(result.state.run!.elapsed).toBeLessThanOrEqual(90);
+  expect(result.state.integrity).toBeGreaterThan(0.5);
+  expect(result.initial.pickups).toBe(12);
+  expect(result.art.pickups).toBe(0);
+  await info.attach("completion", {
+    body: JSON.stringify(result.state),
+    contentType: "application/json",
+  });
+  await page.screenshot({ path: info.outputPath("scrapyard-complete.png") });
+});
