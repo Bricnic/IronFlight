@@ -18,3 +18,20 @@ test("Harbor Sprint: drive every checkpoint from spawn to finish", async ({
   });
   await page.screenshot({ path: info.outputPath("harbor-finish.png") });
 });
+
+test("Foundry Run: complete ramp, machinery and timed flame sections", async ({
+  page,
+}, info) => {
+  const result = await driveTrack(page, "foundry-run");
+  expect(result.state.run?.status, JSON.stringify(result.state.run)).toBe(
+    "completed",
+  );
+  expect(result.state.run?.checkpoint).toBe(7);
+  expect(result.state.integrity).toBeGreaterThan(0.4);
+  expect(result.peakY).toBeGreaterThan(3.1);
+  await info.attach("completion", {
+    body: JSON.stringify(result.state),
+    contentType: "application/json",
+  });
+  await page.screenshot({ path: info.outputPath("foundry-finish.png") });
+});

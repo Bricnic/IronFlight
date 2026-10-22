@@ -2,6 +2,8 @@ import { ROUTES } from "./routes";
 export type Hazard = {
   id: string;
   route: string;
+  period?: number;
+  duration?: number;
   kind: "fire" | "hammer" | "spikes" | "lava";
   x: number;
   y: number;
@@ -41,3 +43,7 @@ export function hammerAngle(time: number) {
   return time * HAMMER_SPEED;
 }
 export const HAMMER_SPEED = 1.7 * 1.5;
+
+export function hazardActive(h: Hazard, time: number) {
+  return !h.period || time % h.period < (h.duration ?? h.period / 2);
+}

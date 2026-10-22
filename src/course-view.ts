@@ -1,8 +1,18 @@
 import * as T from "three";
+import { courseHazards } from "./course";
+import { hazardActive, type Hazard } from "./hazards";
+import { flameMaterial } from "./materials";
 import { courseSolids } from "./course";
 import type { Simulation } from "./simulation";
 export class CourseView extends T.Group {
   private key = "";
+  private hazards: {
+    h: Hazard;
+    root: T.Group;
+    rotor?: T.Group;
+    flames?: T.Group;
+    lamp?: T.Mesh<T.SphereGeometry, T.MeshBasicMaterial>;
+  }[] = [];
   private gateModels: T.Group[] = [];
   private pickupModels = new Map<string, T.Group>();
   private meshes: T.Mesh[] = [];
@@ -48,6 +58,7 @@ export class CourseView extends T.Group {
       this.clear();
       this.key = key;
       this.gateModels = [];
+      this.hazards = [];
       this.pickupModels.clear();
       this.meshes = [];
       if (run) {
@@ -87,6 +98,80 @@ export class CourseView extends T.Group {
                 mesh.add(rib);
               }
           }
+        for (const h of courseHazards(track)) {
+          const root = new T.Group();
+          root.position.set(h.x, h.y, h.z);
+          this.add(root);
+          const material = new T.MeshStandardMaterial({
+            color: 0x52615a,
+            metalness: 0.7,
+            roughness: 0.5,
+          });
+          const box = (
+            w: number,
+            height: number,
+            d: number,
+            x = 0,
+            y = 0,
+            z = 0,
+          ) => {
+            const m = new T.Mesh(new T.BoxGeometry(w, height, d), material);
+            m.position.set(x, y, z);
+            m.castShadow = true;
+            return m;
+          };
+          if (h.kind === "hammer") {
+            const rotor = new T.Group();
+            root.add(rotor);
+            rotor.add(box(7.2, 0.6, 0.9));
+            for (const side of [-1, 1]) {
+              rotor.add(box(1.6, 1.6, 1.5, side * 3.6));
+              const spike = new T.Mesh(
+                new T.ConeGeometry(0.65, 1.8, 16),
+                material,
+              );
+              spike.position.x = side * 5.1;
+              spike.rotation.z = (-side * Math.PI) / 2;
+              rotor.add(spike);
+              for (const dir of [
+                new T.Vector3(0, 1, 0),
+                new T.Vector3(0, -1, 0),
+                new T.Vector3(0, 0, 1),
+                new T.Vector3(0, 0, -1),
+              ]) {
+                const spike = new T.Mesh(
+                  new T.ConeGeometry(0.45, 1.3, 12),
+                  material,
+                );
+                spike.position.set(side * 3.6, dir.y * 1.4, dir.z * 1.4);
+                spike.quaternion.setFromUnitVectors(
+                  new T.Vector3(0, 1, 0),
+                  dir,
+                );
+                rotor.add(spike);
+              }
+            }
+            this.hazards.push({ h, root, rotor });
+          } else if (h.kind === "fire") {
+            root.add(box(12, 0.25, 0.6, 0, -1.2));
+            const flames = new T.Group();
+            root.add(flames);
+            const mat = flameMaterial();
+            for (let i = 0; i < 18; i++) {
+              const mesh = new T.Mesh(new T.PlaneGeometry(1.35, 3.6), mat);
+              mesh.position.set((i - 8.5) * 0.65, 0.4, 0);
+              mesh.rotation.y = -0.6;
+              flames.add(mesh);
+            }
+            const lamp = new T.Mesh(
+              new T.SphereGeometry(0.25, 12, 8),
+              new T.MeshBasicMaterial({ color: 0xff4225 }),
+            );
+            lamp.position.set(-5.4, 0.3, 0);
+            root.add(lamp);
+            this.hazards.push({ h, root, flames, lamp });
+          }
+        }
         for (const [i, gate] of track.checkpoints.entries()) {
           const g = new T.Group();
           g.name = `checkpoint-${gate.id}`;
@@ -147,6 +232,18 @@ export class CourseView extends T.Group {
     }
     this.visible = !!run;
     if (!run) return;
+    for (const model of this.hazards) {
+      if (model.rotor) model.rotor.rotation.z = sim.hammerPhase;
+      if (model.flames) {
+        model.flames.visible = hazardActive(model.h, sim.time);
+        for (const mesh of model.flames.children)
+          ((mesh as T.Mesh).material as T.ShaderMaterial).uniforms.time.value =
+            sim.time;
+        model.lamp?.material.color.setHex(
+          model.flames.visible ? 0xff4225 : 0x79e698,
+        );
+      }
+    }
     this.gateModels.forEach((g, i) => {
       g.visible = i >= run.checkpoint;
       g.scale.setScalar(1);

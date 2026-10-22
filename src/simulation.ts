@@ -7,7 +7,7 @@ import { Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
 import { PARTS, type PartState } from "./damage";
-import { HAZARDS, hammerAngle, type Hazard } from "./hazards";
+import { HAZARDS, hammerAngle, hazardActive, type Hazard } from "./hazards";
 import { arenaSolids } from "./arena";
 import { DEFAULT_TUNING, validateTuning, type Tuning } from "./tuning";
 import {
@@ -661,7 +661,12 @@ export class Simulation {
     }
     if (this.stage !== "lab")
       for (const h of this.activeHazards)
-        if (h.kind !== "hammer" && h.kind !== "lava" && this.touches(h)) {
+        if (
+          h.kind !== "hammer" &&
+          h.kind !== "lava" &&
+          hazardActive(h, this.time) &&
+          this.touches(h)
+        ) {
           if (h.kind === "fire") this.inFlames = true;
           if (this.time - (this.cooldown.get(h.id) ?? -1) <= 0.15) continue;
           this.cooldown.set(h.id, this.time);

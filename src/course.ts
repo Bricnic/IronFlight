@@ -21,7 +21,8 @@ export type CourseSolid = {
   angle?: number;
   color: number;
 };
-export const courseAvailable = (id: TrackId) => id === "harbor-sprint";
+export const courseAvailable = (id: TrackId) =>
+  ["harbor-sprint", "foundry-run"].includes(id);
 export function courseSolids(track: Track): CourseSolid[] {
   if (!courseAvailable(track.id))
     throw new Error(`Course not implemented: ${track.id}`);
@@ -87,10 +88,98 @@ export function courseSolids(track: Track): CourseSolid[] {
         color: 0xe6c16a,
       });
   }
+  if (track.id === "foundry-run") {
+    solids[0].color = 0x665d55;
+    solids.push({
+      id: "launch-ramp",
+      kind: "ramp",
+      x: 0,
+      y: 0.7,
+      z: -20,
+      w: 16,
+      h: 0.35,
+      d: 12,
+      angle: -Math.atan2(1.5, 12),
+      color: 0x8c6858,
+    });
+    for (let i = 0; i < 8; i++)
+      for (const side of [-1, 1])
+        solids.push({
+          id: `foundry-block-${side}-${i}`,
+          kind: "container",
+          x: side * 44,
+          y: 3,
+          z: -65 + i * 48,
+          w: 12,
+          h: 6,
+          d: 20,
+          color: 0x735e50,
+        });
+    solids.push({
+      id: "machinery-base",
+      kind: "support",
+      x: 24,
+      y: 1.5,
+      z: 90,
+      w: 1,
+      h: 3,
+      d: 1,
+      color: 0x323d3d,
+    });
+    for (const side of [-1, 1])
+      solids.push({
+        id: `fire-pylon-${side}`,
+        kind: "support",
+        x: side * 5.4,
+        y: 0.34,
+        z: 150,
+        w: 0.45,
+        h: 0.68,
+        d: 0.65,
+        color: 0x303b3b,
+      });
+    for (const [x, z] of [
+      [-10, 60],
+      [28, 112],
+      [-28, 205],
+    ])
+      solids.push({
+        id: `steel-block-${z}`,
+        kind: "barrier",
+        x,
+        y: 1,
+        z,
+        w: 7,
+        h: 2,
+        d: 6,
+        color: 0x907250,
+      });
+  }
   return solids;
 }
-export function courseHazards(_track: Track): Hazard[] {
-  return [];
+export function courseHazards(track: Track): Hazard[] {
+  return track.id === "foundry-run"
+    ? [
+        {
+          id: "foundry-hammer",
+          route: track.id,
+          kind: "hammer",
+          x: 24,
+          y: 3.5,
+          z: 90,
+        },
+        {
+          id: "foundry-flame",
+          route: track.id,
+          kind: "fire",
+          x: 0,
+          y: 2,
+          z: 150,
+          period: 6,
+          duration: 3,
+        },
+      ]
+    : [];
 }
 export function courseProps(track: Track): PropDefinition[] {
   return track.id === "harbor-sprint"

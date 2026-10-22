@@ -8,6 +8,7 @@ export async function driveTrack(page: Page, id: TrackId) {
     g.pause(true);
     g.startTrack(track.id);
     const initial = g.stats().officialCourse;
+    let peakY = 0;
     for (
       let frame = 0;
       frame < 650 && g.snapshot().run?.status === "running";
@@ -17,6 +18,7 @@ export async function driveTrack(page: Page, id: TrackId) {
         1,
         16,
         (s) => {
+          peakY = Math.max(peakY, s.position.y);
           const target =
             track.mode === "arena"
               ? track.collectibles.find((p) => !s.run?.collected.includes(p.id))
@@ -41,6 +43,6 @@ export async function driveTrack(page: Page, id: TrackId) {
         false,
       );
     g.advanceFrames(0, 1, {});
-    return { state: g.snapshot(), art: g.stats().officialCourse, initial };
+    return { state: g.snapshot(), art: g.stats().officialCourse, initial, peakY };
   }, getTrack(id));
 }
