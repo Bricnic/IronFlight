@@ -737,9 +737,9 @@ kbd {
   z-index: 18;
   display: grid;
   place-items: center;
-  background: #101d24c9;
+  background: #101d2460;
   padding: 20px;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(1px);
 }
 .result-card {
   width: min(450px, 100%);

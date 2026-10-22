@@ -165,6 +165,7 @@ test("an expired arena shows a timeout result and cannot save a medal", async ({
   expect(run?.status).toBe("failed");
   expect(run?.reason).toBe("timeout");
   expect(run?.medal).toBeNull();
+  await page.evaluate(() => window.__game!.advanceFrames(301, 1, {}));
   await expect(
     page.getByRole("heading", { name: "Run ended", exact: true }),
   ).toBeVisible();

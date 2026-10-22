@@ -1,3 +1,4 @@
+import { resultOpacity } from "./result-reveal";
 import { createLevelSelect } from "./level-select";
 import { BestTimes } from "./best-times";
 import { getTrack, type TrackId } from "./tracks";
@@ -42,6 +43,7 @@ async function boot() {
   let surface: "menu" | "play" | "result" = "menu";
   let screens: ReturnType<typeof createLevelSelect>;
   let recordedRun: Simulation["trackRun"];
+  let resultStartedAt = 0;
   const scores = new BestTimes({
     getItem: (key) => localStorage.getItem(key),
     setItem: (key, value) => localStorage.setItem(key, value),
@@ -209,10 +211,14 @@ async function boot() {
         recordedRun = sim.trackRun;
         const pb = scores.record(s.run);
         surface = "result";
+        resultStartedAt = sim.time;
         keys.clear();
         screens.showResult(s.run, pb);
+        if (s.run.status === "failed") screens.reveal(0);
       }
     }
+    if (surface === "result" && s.run?.status === "failed")
+      screens.reveal(resultOpacity(sim.time - resultStartedAt));
   }
   document
     .querySelectorAll<HTMLButtonElement>("[data-stage]")
@@ -287,8 +293,12 @@ async function boot() {
       startTrack: (id, lane) => startOfficial(id, lane, false),
       pause: (v) => (paused = v),
       advanceFrames: (frames, r, i) => {
-        for (let f = 0; f < frames; f++)
-          clock.advance(1 / 60, r, () => sim.step(i ?? input()));
+        for (let f = 0; f < frames; f++) {
+          clock.advance(1 / 60, r, () =>
+            sim.step(surface === "result" ? {} : (i ?? input())),
+          );
+          hud();
+        }
         view.render(true);
         hud();
       },
@@ -375,8 +385,14 @@ async function boot() {
   function frame(now: number) {
     const dt = Math.max(0, (now - last) / 1000);
     last = now;
-    if (!paused && surface === "play")
-      clock.advance(dt, rate, () => sim.step(input()));
+    if (
+      !paused &&
+      (surface === "play" ||
+        (surface === "result" && sim.trackRun?.status === "failed"))
+    )
+      clock.advance(dt, rate, () =>
+        sim.step(surface === "result" ? {} : input()),
+      );
     view.render(false, clock.alpha);
     if (captureCamera && cameraTrace.length < 2000)
       cameraTrace.push(cameraSample());

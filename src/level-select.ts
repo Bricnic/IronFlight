@@ -72,9 +72,17 @@ export function createLevelSelect(
       result.hidden = true;
       host.classList.remove("at-level-select");
     },
+    reveal(opacity: number) {
+      result.style.opacity = String(opacity);
+      result.style.pointerEvents = opacity > 0.05 ? "auto" : "none";
+      result.inert = opacity <= 0.05;
+    },
     showResult(run: ReturnType<TrackRun["snapshot"]>, personalBest: boolean) {
       screen.hidden = true;
       result.hidden = false;
+      result.style.opacity = "1";
+      result.style.pointerEvents = "auto";
+      result.inert = false;
       host.classList.remove("at-level-select");
       const completed = run.status === "completed";
       result.querySelector("#result-track")!.textContent = getTrack(
