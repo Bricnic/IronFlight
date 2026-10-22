@@ -27,6 +27,9 @@ test("a complete jump is playable with keyboard input at real time", async ({
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/?test=1");
   await page.waitForFunction(() => !!window.__game);
+  await page
+    .getByRole("button", { name: "Play Triple Loop", exact: true })
+    .click();
   await page.keyboard.down("w");
   await expect
     .poll(() => page.evaluate(() => window.__game!.snapshot().status), {

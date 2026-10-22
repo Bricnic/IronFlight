@@ -127,3 +127,52 @@ test("level selection fits narrow screens and works when storage is blocked", as
     await page.evaluate(() => window.__game!.snapshot().run?.trackId),
   ).toBe("inferno-vault");
 });
+
+test("keyboard Space starts a focused track and arrow controls then drive it", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page
+    .getByRole("button", { name: "Play Harbor Sprint", exact: true })
+    .focus();
+  await page.keyboard.press("Space");
+  await expect
+    .poll(() => page.evaluate(() => window.__game!.snapshot().run?.trackId))
+    .toBe("harbor-sprint");
+  await page.evaluate(() => window.__game!.pause(true));
+  await page.keyboard.down("ArrowUp");
+  await page.evaluate(() => window.__game!.advanceFrames(90, 1));
+  await page.keyboard.up("ArrowUp");
+  expect(
+    await page.evaluate(() => window.__game!.snapshot().speed),
+  ).toBeGreaterThan(3);
+});
+
+test("an expired arena shows a timeout result and cannot save a medal", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page
+    .getByRole("button", { name: "Play Scrapyard Sweep", exact: true })
+    .click();
+  await page.evaluate(() => {
+    window.__game!.pause(true);
+    window.__game!.advanceFrames(460, 16, {});
+  });
+  const run = await page.evaluate(() => window.__game!.snapshot().run);
+  expect(run?.status).toBe("failed");
+  expect(run?.reason).toBe("timeout");
+  expect(run?.medal).toBeNull();
+  await expect(
+    page.getByRole("heading", { name: "Run ended", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#result-description")).toContainText(
+    "Time ran out",
+  );
+  await page.locator("#result-level-select").click();
+  await expect(
+    page.locator('[data-track="scrapyard-sweep"] .best-time'),
+  ).toHaveText("NO TIME SET");
+});

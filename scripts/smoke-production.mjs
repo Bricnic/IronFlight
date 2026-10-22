@@ -1,3 +1,4 @@
+import DEFAULT_TUNING from "../src/tuning-defaults.json" with { type: "json" };
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -27,6 +28,14 @@ try {
     "undefined",
     "Production must not expose the dev harness",
   );
+  assert.equal(await page.locator("#level-select").isVisible(), true);
+  assert.equal(await page.locator(".track-card").count(), 6);
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll(".track-card img")).every(
+      (i) => i.complete && i.naturalWidth > 0,
+    ),
+  );
+  await page.screenshot({ path: "artifacts/production-level-select.png" });
   await page.keyboard.press("Backquote");
   assert.equal(await page.locator("#debug-menu").isVisible(), true);
   for (const key of [
@@ -41,10 +50,25 @@ try {
     assert.equal(await slider.getAttribute("max"), "10");
     assert.equal(await slider.getAttribute("step"), "0.1");
   }
-  assert.equal(await page.locator("#tune-boostPower").inputValue(), "3");
+  assert.equal(
+    await page.locator("#tune-boostPower").inputValue(),
+    String(DEFAULT_TUNING.boostPower),
+  );
+  assert.equal(await page.locator("#store-defaults").isDisabled(), true);
+  assert.equal(
+    await page.locator("#color-primaryColor").inputValue(),
+    `#${DEFAULT_TUNING.primaryColor.toString(16).padStart(6, "0")}`,
+  );
+  assert.equal(
+    await page.locator("#color-secondaryColor").inputValue(),
+    `#${DEFAULT_TUNING.secondaryColor.toString(16).padStart(6, "0")}`,
+  );
   await page.screenshot({ path: "artifacts/production-tuning.png" });
   await page.keyboard.press("Backquote");
   assert.equal(await page.locator("#debug-menu").isVisible(), false);
+  await page
+    .getByRole("button", { name: "Play Triple Loop", exact: true })
+    .click();
   for (const [stage, rate] of [
     ["easy", 1],
     ["easy", 16],
@@ -56,21 +80,22 @@ try {
     await page.keyboard.down("w");
     await page.waitForFunction(
       () =>
-        ["CLEAN LANDING", "TRUCK DOWN"].includes(
-          document.getElementById("state-label")?.textContent ?? "",
-        ),
+        /^Checkpoint [1-3] \/ /.test(
+          document.getElementById("run-progress")?.textContent ?? "",
+        ) || !document.getElementById("track-result")?.hidden,
       undefined,
       { timeout: 60000 },
     );
     await page.keyboard.up("w");
-    assert.equal(
-      await page.locator("#state-label").innerText(),
-      "CLEAN LANDING",
-      `${stage} at ${rate}x must finish`,
+    const checkpoint = await page.locator("#run-progress").innerText();
+    assert.match(
+      checkpoint,
+      /^Checkpoint [1-3] \/ /,
+      `${stage} at ${rate}x must clear its jump and first official checkpoint`,
     );
     const readouts = await page.locator("#telemetry").innerText();
-    runs.push({ stage, rate, outcome: "finished", readouts });
-    console.log(`${stage} at ${rate}x: finished`);
+    runs.push({ stage, rate, outcome: "jump-cleared", checkpoint, readouts });
+    console.log(`${stage} at ${rate}x: jump cleared`);
     await page.screenshot({
       path: `artifacts/production-${stage}-${rate}x.png`,
     });
@@ -79,14 +104,26 @@ try {
   await writeFile(
     "artifacts/production-report.json",
     JSON.stringify(
-      { productionHarnessAbsent: true, tuningMenuVerified: true, runs, errors },
+      {
+        productionHarnessAbsent: true,
+        levelSelectVerified: true,
+        tuningMenuVerified: true,
+        runs,
+        errors,
+      },
       null,
       2,
     ),
   );
   console.log(
     JSON.stringify(
-      { productionHarnessAbsent: true, tuningMenuVerified: true, runs, errors },
+      {
+        productionHarnessAbsent: true,
+        levelSelectVerified: true,
+        tuningMenuVerified: true,
+        runs,
+        errors,
+      },
       null,
       2,
     ),

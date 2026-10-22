@@ -14,7 +14,10 @@ test("hero art and local PBR maps load without renderer errors", async ({
   });
   await page.goto("/?test=1");
   await page.waitForFunction(() => !!window.__game);
-  await page.evaluate(() => window.__game!.pause(true));
+  await page.evaluate(() => {
+    window.__game!.select("easy");
+    window.__game!.pause(true);
+  });
   await page.waitForLoadState("networkidle");
   const stats = await page.evaluate(() => window.__game!.stats());
   expect(stats.triangles).toBeGreaterThanOrEqual(60000);

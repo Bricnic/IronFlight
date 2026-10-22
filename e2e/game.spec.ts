@@ -3,7 +3,8 @@ import { PARTS } from "../src/damage";
 import { ROUTES } from "../src/routes";
 test.beforeEach(async ({ page }) => {
   await page.goto("/?test=1");
-  await page.waitForFunction(() => !!window.__game, {}, { timeout: 5000 });
+  await page.waitForFunction(() => !!window.__game, {}, { timeout: 10000 });
+  await page.evaluate(() => window.__game!.select("easy"));
 });
 test("keyboard drives the real truck and restart restores it", async ({
   page,

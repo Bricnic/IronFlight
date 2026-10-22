@@ -1,3 +1,4 @@
+import DEFAULT_TUNING from "../src/tuning-defaults.json" with { type: "json" };
 import { test, expect } from "@playwright/test";
 import { ROUTES } from "../src/routes";
 import { LOOP } from "../src/loop";
@@ -115,11 +116,11 @@ for (const rate of [1, 16])
         body: JSON.stringify(data, null, 2),
         contentType: "application/json",
       });
-      expect(data.state.tuning.boostPower).toBe(1);
+      expect(data.state.tuning.boostPower).toBe(DEFAULT_TUNING.boostPower);
       expect(data.state.status).toBe("finished");
       expect(data.state.landed).toBe(true);
       expect(data.peakSpeed).toBeGreaterThan(45);
-      expect(data.peakSpeed).toBeLessThan(65);
+      expect(data.peakSpeed).toBeLessThan(25 * DEFAULT_TUNING.topSpeed * 3 + 5);
       expect(data.peakY).toBeGreaterThan(85);
       expect(data.apexContacts).toBeGreaterThanOrEqual(2);
       expect(data.state.loopApex).toBe(true);

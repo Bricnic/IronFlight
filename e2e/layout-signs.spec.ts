@@ -4,11 +4,12 @@ test("level navigation stays outside the playable canvas at desktop and narrow w
 }, info) => {
   await page.goto("/?test=1");
   await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => window.__game!.select("easy"));
   for (const width of [1280, 800]) {
     await page.setViewportSize({ width, height: 720 });
     const boxes = await page.evaluate(() => ({
       canvas: document
-        .querySelector("canvas")!
+        .querySelector("#viewport canvas")!
         .getBoundingClientRect()
         .toJSON(),
       buttons: Array.from(document.querySelectorAll("[data-stage]")).map((e) =>
@@ -16,6 +17,7 @@ test("level navigation stays outside the playable canvas at desktop and narrow w
       ),
     }));
     for (const b of boxes.buttons) {
+      expect(b.width).toBeGreaterThan(0);
       expect(
         Math.max(
           0,
@@ -39,6 +41,7 @@ test("Ignition and other finish signs face the approach without mirrored letteri
 }, info) => {
   await page.goto("/?test=1");
   await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => window.__game!.select("easy"));
   const signs = await page.evaluate(() => window.__game!.signs());
   expect(signs).toHaveLength(3);
   for (const sign of signs) {
@@ -52,4 +55,3 @@ test("Ignition and other finish signs face the approach without mirrored letteri
   });
   await page.screenshot({ path: info.outputPath("ignition-readable.png") });
 });
-

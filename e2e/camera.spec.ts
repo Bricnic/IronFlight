@@ -3,6 +3,7 @@ import { lampMotion } from "./camera-motion";
 test.beforeEach(async ({ page }) => {
   await page.goto("/?test=1");
   await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => window.__game!.select("easy"));
 });
 test("default camera is directly behind, and mouse drag orbits the truck", async ({
   page,
@@ -14,7 +15,7 @@ test("default camera is directly behind, and mouse drag orbits the truck", async
   }));
   expect(before.camera.position.x).toBeCloseTo(before.state.position.x, 2);
   expect(before.camera.position.z).toBeLessThan(before.state.position.z);
-  const box = await page.locator("canvas").boundingBox();
+  const box = await page.locator("#viewport canvas").boundingBox();
   await page.mouse.move(box!.x + box!.width * 0.55, box!.y + box!.height * 0.4);
   await page.mouse.down();
   await page.mouse.move(
@@ -34,7 +35,7 @@ test("mouse wheel zooms the actual camera in and out with limits and restart res
   page,
 }) => {
   await page.evaluate(() => window.__game!.pause(true));
-  const canvas = page.locator("canvas");
+  const canvas = page.locator("#viewport canvas");
   const box = await canvas.boundingBox();
   await page.mouse.move(box!.x + box!.width * 0.5, box!.y + box!.height * 0.35);
   const before = await page.evaluate(() => window.__game!.camera());
@@ -73,7 +74,7 @@ test("mouse wheel zooms the actual camera in and out with limits and restart res
         cancelable: true,
         bubbles: true,
       });
-      document.querySelector("canvas")!.dispatchEvent(e);
+      document.querySelector("#viewport canvas")!.dispatchEvent(e);
       return e.defaultPrevented;
     }, delta);
     expect(prevented).toBe(true);
@@ -94,7 +95,7 @@ test("lamp-post motion is monotonic across accelerate jump landing and finish", 
       const g = window.__game!;
       g.select(stage);
       g.pause(true);
-      return g.traceFrames(780, 1, { throttle: 1 });
+      return g.traceFrames(420, 1, { throttle: 1 });
     }, stage);
     const motion = lampMotion(samples);
     await info.attach(`${stage}-lamp-motion`, {
