@@ -84,13 +84,12 @@ export class GameView {
     blue.fragmentShader = blue.fragmentShader
       .replace("vec3(1.0,.12,.015)", "vec3(.01,.14,1.0)")
       .replace("vec3(1.0,.85,.25)", "vec3(.2,.85,1.0)");
-    for (const x of [-1.2, 1.2])
-      for (const angle of [0, Math.PI / 2]) {
-        const jet = new T.Mesh(new T.PlaneGeometry(0.9, 4), blue);
-        jet.rotation.set(-Math.PI / 2, 0, angle);
-        jet.position.set(x, 0.7, -4.4);
-        this.nitro.add(jet);
-      }
+    for (const x of [-1.2, 1.2]) {
+      const jet = new T.Mesh(new T.PlaneGeometry(0.9, 4), blue);
+      jet.rotation.x = -Math.PI / 2;
+      jet.position.set(x, 0.7, -4.4);
+      this.nitro.add(jet);
+    }
     this.renderer = new T.WebGLRenderer({ antialias: true });
     host.append(this.renderer.domElement);
     let dragging = false,

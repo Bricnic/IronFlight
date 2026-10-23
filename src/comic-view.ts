@@ -583,7 +583,7 @@ function build(h: ComicHazard): Model {
     for (let i = 0; i < 7; i++)
       for (const side of [-1, 1]) {
         const arrow = box(0.25, 0.08, 3, ivory, side * 1, 0.1, -32 + i * 1.5);
-        arrow.rotation.y = side * 0.7;
+        arrow.rotation.y = -side * 0.7;
       }
     // Heavy pipework and rivets make the water crossing a supported industrial trough.
     for (const side of [-1, 1]) {
