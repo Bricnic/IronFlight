@@ -62,6 +62,15 @@ test("Inferno pits are true holes with lava several metres below ground", () => 
       ),
     ).toBe(false);
   }
+  for (const wall of solids.filter((s) => s.id.startsWith("vault-wall")))
+    expect(
+      solids.some(
+        (s) =>
+          s.kind === "ground" &&
+          Math.abs(wall.x - s.x) < s.w / 2 &&
+          Math.abs(wall.z - s.z) < s.d / 2,
+      ),
+    ).toBe(false);
   const s = new Simulation();
   s.startTrack("inferno-vault");
   s.body.setTranslation({ x: -25, y: 2.1, z: 20 }, true);

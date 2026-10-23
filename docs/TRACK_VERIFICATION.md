@@ -1,5 +1,7 @@
 # Six-track release verification
 
+This records the original six-track release. The subsequent hazard expansion and Inferno fixes have current screenshots, full-course timings and acceptance evidence in [hazard-qa/README.md](hazard-qa/README.md).
+
 The Google Doc plan was created and read back before implementation. Each functional chunk has a recorded RED/GREEN cycle in [TDD_LOG.md](TDD_LOG.md) and its own Git commit.
 
 ## Completed tracks

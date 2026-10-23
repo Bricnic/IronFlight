@@ -1,0 +1,114 @@
+{
+  "browserCases": 36,
+  "courses": [
+    {
+      "track": "Harbor Sprint",
+      "time": 29.958333333332273,
+      "integrity": 1,
+      "limit": null,
+      "headroom": null
+    },
+    {
+      "track": "Foundry Run",
+      "time": 29.416666666665638,
+      "integrity": 1,
+      "limit": null,
+      "headroom": null
+    },
+    {
+      "track": "Skyline Circuit",
+      "time": 34.34166666666536,
+      "integrity": 1,
+      "limit": null,
+      "headroom": null
+    },
+    {
+      "track": "Scrapyard Sweep",
+      "time": 52.13333333333102,
+      "integrity": 1,
+      "limit": 120,
+      "headroom": 0.5655555555555748
+    },
+    {
+      "track": "Inferno Vault",
+      "time": 40.39999999999835,
+      "integrity": 0.7649022599580715,
+      "limit": 150,
+      "headroom": 0.7306666666666776
+    }
+  ],
+  "geometry": [
+    {
+      "id": "harbor-sprint-book-0",
+      "kind": "book",
+      "triangles": 336450,
+      "animated": true,
+      "track": "Harbor Sprint",
+      "file": "book.png"
+    },
+    {
+      "id": "foundry-run-teeth-1",
+      "kind": "teeth",
+      "triangles": 242742,
+      "animated": true,
+      "track": "Foundry Run",
+      "file": "teeth.png"
+    },
+    {
+      "id": "foundry-run-computer-2",
+      "kind": "computer",
+      "triangles": 357250,
+      "animated": true,
+      "track": "Foundry Run",
+      "file": "computer.png"
+    },
+    {
+      "id": "harbor-sprint-flippers-3",
+      "kind": "flippers",
+      "triangles": 219522,
+      "animated": true,
+      "track": "Harbor Sprint",
+      "file": "flippers.png"
+    },
+    {
+      "id": "harbor-sprint-hydrant-1",
+      "kind": "hydrant",
+      "triangles": 213758,
+      "animated": true,
+      "track": "Harbor Sprint",
+      "file": "hydrant.png"
+    },
+    {
+      "id": "foundry-run-burner-0",
+      "kind": "burner",
+      "triangles": 135338,
+      "ramp": {
+        "position": [
+          -13,
+          0.9,
+          7
+        ],
+        "angle": -0.35
+      },
+      "animated": true,
+      "track": "Foundry Run",
+      "file": "burner.png"
+    },
+    {
+      "id": "harbor-sprint-water-2",
+      "kind": "water",
+      "triangles": 334346,
+      "animated": true,
+      "track": "Harbor Sprint",
+      "file": "water.png"
+    },
+    {
+      "id": "harbor-sprint-potion-4",
+      "kind": "potion",
+      "triangles": 371550,
+      "animated": false,
+      "track": "Harbor Sprint",
+      "file": "potion.png"
+    }
+  ]
+}

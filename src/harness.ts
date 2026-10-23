@@ -43,6 +43,7 @@ export interface GameHarness {
       kind: string;
       triangles: number;
       animated: boolean;
+      ramp?: { position: number[]; angle: number };
     }[];
     officialCourse: {
       key: string;

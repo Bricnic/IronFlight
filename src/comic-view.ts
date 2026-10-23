@@ -4,6 +4,9 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { pbr, flameMaterial } from "./materials";
 import {
   comicHazards,
+  BURNER_RAMP,
+  BURNER_SUPPORTS,
+  BURNER_DRUM,
   mechanismAngle,
   POTIONS,
   type ComicHazard,
@@ -27,6 +30,7 @@ type Model = {
   jaw?: T.Group;
   flames: T.Mesh[];
   water?: T.Mesh;
+  ramp?: T.Mesh;
   jet?: T.Group;
   triangles: number;
 };
@@ -111,7 +115,22 @@ function build(h: ComicHazard): Model {
     z = 0,
     parent = root,
     r = 0.12,
-  ) => add(new RoundedBoxGeometry(w, height, d, 5, r), mat, x, y, z, parent);
+  ) => {
+    const geometry = new RoundedBoxGeometry(w, height, d, 5, r);
+    const tile = mat.userData.tile;
+    if (tile) {
+      const p = geometry.attributes.position,
+        n = geometry.attributes.normal,
+        uv = geometry.attributes.uv;
+      for (let i = 0; i < p.count; i++)
+        if (Math.abs(n.getY(i)) > 0.5)
+          uv.setXY(i, p.getX(i) / tile, p.getZ(i) / tile);
+        else if (Math.abs(n.getX(i)) > 0.5)
+          uv.setXY(i, p.getZ(i) / tile, p.getY(i) / tile);
+        else uv.setXY(i, p.getX(i) / tile, p.getY(i) / tile);
+    }
+    return add(geometry, mat, x, y, z, parent);
+  };
   const sphere = (
     r: number,
     mat: T.Material,
@@ -484,22 +503,25 @@ function build(h: ComicHazard): Model {
       metalness: 0.4,
     });
     box(12, 0.24, 10, black, 0, 0.12);
-    const ramp = box(
-      12,
-      0.4,
-      10,
-      pbr("asphalt_02", 1, { color: 0xc3c4c5 }),
-      0,
-      0.9,
-      -13,
-    );
-    ramp.rotation.x = -0.35;
+    const r = BURNER_RAMP,
+      asphalt = pbr("asphalt_02", 1, { color: 0xc3c4c5, roughness: 0.95 });
+    asphalt.userData.tile = 3;
+    const ramp = box(r.w, r.h, r.d, asphalt, r.x, r.y, r.z);
+    ramp.rotation.x = r.angle;
+    model.ramp = ramp;
     for (const side of [-1, 1]) {
       box(0.6, 1.6, 12, metal, side * 6.5, 0.8);
-      box(0.6, 2.2, 1, metal, side * 5.5, 1.1, -14.5);
     }
-    for (const x of [-4, 0, 4]) {
-      cylinder(1.1, 1.7, black, x, 0.85, 0);
+    for (const s of BURNER_SUPPORTS) box(s.w, s.h, s.d, metal, s.x, s.y, s.z);
+    for (const x of BURNER_DRUM.x) {
+      cylinder(
+        BURNER_DRUM.radius,
+        BURNER_DRUM.height,
+        black,
+        x,
+        BURNER_DRUM.y,
+        0,
+      );
       for (const y of [0.1, 0.4, 1.3, 1.65])
         cylinder(1.17, 0.12, metal, x, y, 0);
     }
@@ -524,7 +546,6 @@ function build(h: ComicHazard): Model {
     box(12, 0.6, 24, basin, 0, -4.3);
     for (const side of [-1, 1]) box(1, 0.4, 26, basin, side * 6.5, 0.2);
     for (const z of [-12.5, 12.5]) {
-      box(12, 0.2, 1, basin, 0, -0.1, z);
       box(12, 4, 1, basin, 0, -2, z);
     }
     for (const side of [-1, 1]) box(0.6, 4, 24, basin, side * 6.3, -2, 0);
@@ -653,7 +674,7 @@ function build(h: ComicHazard): Model {
     new T.MeshBasicMaterial({ map: tex, side: T.DoubleSide }),
     0,
     0.045,
-    -20,
+    h.kind === "burner" ? BURNER_RAMP.z - 8 : -20,
   );
   label.rotation.x = -Math.PI / 2;
   consolidate(root);
@@ -721,6 +742,12 @@ export class ComicView extends T.Group {
       id: m.h.id,
       kind: m.h.kind,
       triangles: m.triangles,
+      ramp: m.ramp
+        ? {
+            position: m.ramp.getWorldPosition(new T.Vector3()).toArray(),
+            angle: m.ramp.rotation.x,
+          }
+        : undefined,
       animated: !!m.jaw || !!m.water || !!m.jet || !!m.flames.length,
     }));
   }

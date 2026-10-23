@@ -31,6 +31,12 @@ test("water boosts, skims and slows a fast truck; a slow truck actually sinks", 
   const s = new Simulation();
   s.startTrack("harbor-sprint");
   const h = s.comic.mechanisms.find((m) => m.h.kind === "water")!;
+  const tops = h.colliders.map((c) => {
+    const p = c.translation(),
+      v = c.halfExtents();
+    return `${p.x}:${p.y + v.y}:${p.z}:${v.x}:${v.z}`;
+  });
+  expect(new Set(tops).size).toBe(tops.length);
   s.body.setTranslation({ x: h.h.x, y: 2.1, z: h.h.z - 30 }, true);
   s.body.setLinvel({ x: 0, y: 0, z: 25 }, true);
   let peak = 0,

@@ -37,6 +37,22 @@ for (const kind of kinds)
       h.id,
     );
     expect(art?.triangles).toBeGreaterThanOrEqual(100000);
+    if (kind === "burner") {
+      const physical = await page.evaluate(
+        (id) =>
+          window.__game!.snapshot().comic.hazards.find((h) => h.id === id)!
+            .ramp,
+        h.id,
+      );
+      expect(art!.ramp).toBeDefined();
+      art!.ramp!.position.forEach((v, i) =>
+        expect(v).toBeCloseTo(
+          [physical!.position.x, physical!.position.y, physical!.position.z][i],
+          5,
+        ),
+      );
+      expect(art!.ramp!.angle).toBeCloseTo(physical!.angle, 5);
+    }
     expect(
       await page.evaluate(
         (id) =>

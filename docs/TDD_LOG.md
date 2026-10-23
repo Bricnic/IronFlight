@@ -76,3 +76,11 @@ RED: a parked truck under the real Inferno jet stopped at 0.7924528301886793 int
 RED: the flame-envelope function was absent, smoke stopped immediately after leaving a jet, and Inferno lava remained one metre above ground. GREEN: shared 500ms grow/shrink envelopes drive actual flame mesh height, shader alpha and damage; smoke fades over three seconds without extending the capped afterburn damage; both lava pools have real ground apertures, stone-lined shafts and lava surfaces 4.2m below ground. Tests prove free fall before contact and subsequent lava sinking. Telemetry labels and values use exactly 14pt, with larger panels and a narrow-screen layout.
 
 All 185 unit tests across 37 files pass. The production build passes. Six Inferno/fire browser cases and a four-case crusher/pit follow-up pass; all original 31 hazard-release acceptance cases are resolved passing across the verification batches. Final screenshots, geometry counts and the subjective visual review are maintained in docs/hazard-qa/.
+
+## Final geometry and visual acceptance
+
+RED: basin geometry assertions found ground intersecting stone wall footprints and duplicated water end-cap top planes (only seven unique planes for nine colliders). GREEN: cut the outer rim footprint from the ground and remove redundant shallow end caps. Unit checks and the water/skim/pit browser batch pass.
+
+RED: the burning-ramp browser pose check found rendered world Z=12 versus physical Z=7. GREEN: a shared ramp/support definition supplies both renderer and physics, with support heights derived from the slope. Added solid drum cylinders matching the visible drums. The browser test now checks actual position/angle, a clean jump and destructive fire exposure; all pass. The affected 25-test unit batch and production build pass after these changes.
+
+Final unretouched captures cover all eight families, plus closed-book, active-hydrant and Inferno-pit views. The subjective five-category review is in hazard-qa/README.md. Capture console/page errors: zero. The chronological browser verifier resolves 36 unique passing cases and five complete normal-input course runs. Packaged smoke passes six-card selection, tuning and four keyboard jump runs with no browser errors. Source tuning defaults are preserved.

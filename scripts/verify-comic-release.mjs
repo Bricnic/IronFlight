@@ -22,9 +22,9 @@ for (const file of process.argv.slice(2)) {
   for (const s of r.suites ?? []) walk(s);
 }
 const failed = [...cases].filter(([, s]) => s !== "passed");
-if (cases.size !== 31 || failed.length)
+if (cases.size !== 36 || failed.length)
   throw Error(
-    `Need all 31 cases: ${cases.size}, unresolved ${JSON.stringify(failed)}`,
+    `Need all 36 cases: ${cases.size}, unresolved ${JSON.stringify(failed)}`,
   );
 if (runs.size !== 5)
   throw Error(`Need five complete course runs: ${runs.size}`);

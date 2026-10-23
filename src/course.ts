@@ -376,8 +376,10 @@ export function courseSolids(track: Track): CourseSolid[] {
   const apertures = [
     ...comicHazards(track)
       .filter((h) => h.kind === "water")
-      .map((h) => ({ x: h.x, z: h.z, w: 12, d: 24 })),
-    ...solids.filter((s) => s.kind === "lava"),
+      .map((h) => ({ x: h.x, z: h.z, w: 14, d: 26 })),
+    ...solids
+      .filter((s) => s.kind === "lava")
+      .map((s) => ({ ...s, w: s.w + 2, d: s.d + 2 })),
   ];
   for (const water of apertures) {
     result = result.flatMap((s) => {

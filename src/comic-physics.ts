@@ -5,6 +5,9 @@ import { DT } from "./clock";
 import type { Simulation } from "./simulation";
 import {
   comicHazards,
+  BURNER_RAMP,
+  BURNER_SUPPORTS,
+  BURNER_DRUM,
   mechanismAngle,
   waterMode,
   POTIONS,
@@ -21,6 +24,7 @@ type Mechanism = {
   skimming: boolean;
   sinking: number;
   contacts: number;
+  ramp?: R.Collider;
 };
 export class ComicPhysics {
   mechanisms: Mechanism[] = [];
@@ -107,24 +111,34 @@ export class ComicPhysics {
         box(0, 0.12, 0, 12, 0.24, 10);
         box(0, 2.5, 0, 12, 5, 10, true);
         // A real ramp, visibly and physically aligned with the burning section.
+        const r = BURNER_RAMP;
         const ramp = world.createCollider(
-          R.ColliderDesc.cuboid(6, 0.2, 5)
-            .setTranslation(h.x, 0.9, h.z - 18)
+          R.ColliderDesc.cuboid(r.w / 2, r.h / 2, r.d / 2)
+            .setTranslation(h.x + r.x, r.y, h.z + r.z)
             .setRotation(
-              new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -0.35),
+              new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), r.angle),
             ),
         );
         m.colliders.push(ramp);
+        m.ramp = ramp;
         for (const side of [-1, 1]) {
           box(side * 6.5, 0.8, 0, 0.6, 1.6, 12);
-          box(side * 5.5, 1.1, -14.5, 0.6, 2.2, 1);
         }
+        for (const s of BURNER_SUPPORTS) box(s.x, s.y, s.z, s.w, s.h, s.d);
+        for (const x of BURNER_DRUM.x)
+          m.colliders.push(
+            world.createCollider(
+              R.ColliderDesc.cylinder(
+                BURNER_DRUM.height / 2,
+                BURNER_DRUM.radius,
+              ).setTranslation(h.x + x, BURNER_DRUM.y, h.z),
+            ),
+          );
       } else if (h.kind === "water") {
         box(0, -4.3, 0, 12, 0.6, 24);
         box(0, -1.8, 0, 12, 9, 24, true);
         for (const side of [-1, 1]) box(side * 6.5, 0.2, 0, 1, 0.4, 26);
         for (const z of [-12.5, 12.5]) {
-          box(0, -0.1, z, 12, 0.2, 1);
           box(0, -2, z, 12, 4, 1);
         }
         for (const side of [-1, 1]) box(side * 6.3, -2, 0, 0.6, 4, 24);
@@ -335,6 +349,12 @@ export class ComicPhysics {
         colliders: m.colliders.length,
         sensors: m.sensors.length,
         contacts: m.contacts,
+        ramp: m.ramp
+          ? {
+              position: { ...m.ramp.translation() },
+              angle: 2 * Math.atan2(m.ramp.rotation().x, m.ramp.rotation().w),
+            }
+          : undefined,
         triggered: m.triggered,
         angle: mechanismAngle(m.h, this.sim.time, m.triggered),
         skimming: m.skimming,

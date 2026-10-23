@@ -98,3 +98,29 @@ export function mechanismAngle(h: ComicHazard, time: number, triggered = -100) {
   if (elapsed < 2) return 0;
   return 1.12 * ease(elapsed - 2);
 }
+
+/** These dimensions are consumed by both the collider builder and the artist. */
+export const BURNER_RAMP = {
+  w: 12,
+  h: 0.4,
+  d: 10,
+  x: 0,
+  y: 0.9,
+  z: -18,
+  angle: -0.35,
+} as const;
+const burnerSupportHeight = BURNER_RAMP.y + Math.tan(-BURNER_RAMP.angle) * 3.5;
+export const BURNER_SUPPORTS = [-1, 1].map((side) => ({
+  x: side * 5.5,
+  y: burnerSupportHeight / 2,
+  z: BURNER_RAMP.z + 3.5,
+  w: 0.6,
+  h: burnerSupportHeight,
+  d: 1,
+}));
+export const BURNER_DRUM = {
+  radius: 1.1,
+  height: 1.7,
+  y: 0.85,
+  x: [-4, 0, 4],
+} as const;
