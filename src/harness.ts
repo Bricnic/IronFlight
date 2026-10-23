@@ -20,6 +20,8 @@ export interface GameHarness {
   snapshot(): ReturnType<Simulation["snapshot"]>;
   place(position: { x: number; y: number; z: number }, yaw: number): void;
   lavaOverview(): void;
+  hazardOverview(id: string): void;
+  setVelocity(velocity:{x:number;y:number;z:number}):void;
   basinProbe(angle: number): number[][];
   dropPartInLava(id: string): void;
   environmentProbe(): { x: number; y: number };
@@ -36,6 +38,12 @@ export interface GameHarness {
     lavaScorch: number;
   };
   stats(): {
+    comicHazards: {
+      id: string;
+      kind: string;
+      triangles: number;
+      animated: boolean;
+    }[];
     officialCourse: {
       key: string;
       gates: number;

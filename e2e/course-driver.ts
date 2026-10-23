@@ -27,8 +27,28 @@ export async function driveTrack(page: Page, id: TrackId, start = true) {
                   )
                 : track.checkpoints[s.run?.checkpoint ?? 0];
             if (!target) return { brake: 1 };
-            const x = target.x + ("nx" in target ? target.nx * 5 : 0),
+            let x = target.x + ("nx" in target ? target.nx * 5 : 0),
               z = target.z + ("nz" in target ? target.nz * 5 : 0);
+            const dx = x - s.position.x,
+              dz = z - s.position.z,
+              len = Math.hypot(dx, dz),
+              fx = dx / len,
+              fz = dz / len;
+            for (const h of s.comic.hazards) {
+              const hx = h.x - s.position.x,
+                hz = h.z - s.position.z,
+                ahead = hx * fx + hz * fz,
+                side = hx * fz - hz * fx;
+              const radius =
+                h.kind === "hydrant" ? 6 : h.kind === "potion" ? 12 : 11;
+              if (ahead > 0 && ahead < 28 && Math.abs(side) < radius) {
+                const sign = side > 0 ? -1 : 1;
+                x = h.x + fz * sign * (radius + 3) + fx * 3;
+                z = h.z - fx * sign * (radius + 3) + fz * 3;
+                break;
+              }
+            }
+
             const desired = Math.atan2(x - s.position.x, z - s.position.z),
               heading = Math.atan2(s.forward[0], s.forward[2]);
             const error = Math.atan2(

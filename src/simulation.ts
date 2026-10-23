@@ -1,3 +1,4 @@
+import { ComicPhysics } from "./comic-physics";
 import { courseSolids, courseHazards, courseProps } from "./course";
 import { getTrack, type TrackId } from "./tracks";
 import { TrackRun } from "./track-run";
@@ -42,6 +43,7 @@ export function initPhysics() {
 }
 export class Simulation {
   world!: RAPIER.World;
+  comic!: ComicPhysics;
   props!: Destructibles;
   private events!: RAPIER.EventQueue;
   body!: RAPIER.RigidBody;
@@ -260,6 +262,7 @@ export class Simulation {
       stage === "lab",
       this.courseTrack ? courseProps(this.courseTrack) : undefined,
     );
+    this.comic = new ComicPhysics(this);
     if (stage !== "lab")
       for (const h of this.activeHazards) {
         if (h.kind === "hammer") {
@@ -465,7 +468,9 @@ export class Simulation {
         0,
         1 -
           Math.max(0, longitudinal * Math.sign(throttle)) /
-            ((throttle < 0 ? 8 : 25) * this.tuning.topSpeed),
+            ((throttle < 0 ? 8 : 25) *
+              this.tuning.topSpeed *
+              (this.comic.effect === "nitro" ? 2 : 1)),
       );
       // Extra arcade motor force acts through the center of mass to avoid a
       // tuning slider turning increased acceleration into an instant wheelie.
@@ -594,7 +599,9 @@ export class Simulation {
                 0,
                 1 -
                   Math.max(0, longitudinal * Math.sign(throttle)) /
-                    ((throttle < 0 ? 8 : 25) * this.tuning.topSpeed),
+                    ((throttle < 0 ? 8 : 25) *
+                      this.tuning.topSpeed *
+                      (this.comic.effect === "nitro" ? 2 : 1)),
               )
           : 0,
       );
@@ -637,7 +644,9 @@ export class Simulation {
       }
     this.updateLava();
     this.props.captureVelocities();
+    this.comic.before();
     this.world.step(this.events, this.hammerHooks);
+    this.comic.after();
     for (let i = 0; i < 4; i++) {
       const ground = this.vehicle.wheelGroundObject(i);
       const kind = ground && this.surfaceKinds.get(ground.handle);
@@ -1128,6 +1137,7 @@ export class Simulation {
     const p = this.body.translation(),
       v = this.body.linvel();
     return {
+      comic: this.comic.snapshot(),
       run: this.trackRun?.snapshot() ?? null,
       position: { x: p.x, y: p.y, z: p.z },
       velocity: { x: v.x, y: v.y, z: v.z },

@@ -77,3 +77,16 @@ The runup beside each route has a breakable road sign, trash can, and oil barrel
 The lava has a thick fill in stone basins with grounded floors and perimeter walls. Its texture offset advances diagonally every simulation frame, while a shader adds localized heat distortion to the actual diffuse and emissive samples. Fire gantries and spike platforms have matching rendered and collidable supports down to the basin foundation. The truck's contact shadow now searches grass as well as road surfaces.
 
 Grounded tire angles drive chassis yaw and lateral grip as well as the wheel meshes. `tests/arena-updates.test.ts` measures the resulting trajectories; its sweep writes `artifacts/steering-sweep.json`. `e2e/arena-updates.spec.ts` verifies source-config saving/reset, gravity, grass shadows, actual lava pixel changes, and physical impacts with all three props. It restores the original source config after testing Store as Defaults.
+
+
+## Comic hazard update
+
+Failed attempts keep the world, fire and debris active. Results remain invisible for two simulation seconds, then fade in over three seconds. The run result and medal decision remain frozen while destruction continues.
+
+The five newer tracks have 25 additional hazards: cursed books, giant jaws, fatal-error laptops, contact-triggered colour flippers, pressure hydrants, burning jump sections, boosted water troughs and potion stands. Each crusher uses moving solid jaw/tooth colliders with a visible opening/warning cycle; detours remain available. Hydrants launch the truck, with pressure rupture on a 90+ MPH entry. Water requires more than 200 displayed MPH to begin skimming and more than 180 to keep skimming. Its approach pad boosts the truck, water adds drag, and slow entries sink through a real opening in the concrete.
+
+Potion colours: blue doubles motor top speed for five seconds and emits blue jets; grey clouds vision; purple makes the body tall/narrow; amber makes it flat/wide. Collider and suspension connection dimensions follow body scaling. Mixing distinct active potions destroys the truck; effects expire or clear on restart. Ground plaques and the HUD explain the rules.
+
+All road and ramp surfaces use the same Poly Haven asphalt as Triple Loop. New-track floors use two concrete variants with diffuse, normal and roughness maps tiled at world scale. Triple Loop retains grass. Asset conventions are recorded in [docs/PROJECT_MEMORY.md](docs/PROJECT_MEMORY.md).
+
+Verification: `npx playwright test e2e/comic-hazards.spec.ts e2e/comic-effects.spec.ts e2e/courses.spec.ts e2e/world-presentation.spec.ts`. To reproduce in-game visual evidence, run the dev server and `node scripts/capture-hazard-qa.mjs`. The reference-based review and screenshots live in `docs/hazard-qa/`.

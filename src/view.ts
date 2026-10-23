@@ -1,3 +1,5 @@
+import { ComicView } from "./comic-view";
+import { potionScale } from "./comic-hazards";
 import { CourseView } from "./course-view";
 import { LavaPartEffects } from "./lava-effects";
 import { PropView } from "./prop-view";
@@ -22,6 +24,9 @@ export class GameView {
   readonly renderer: T.WebGLRenderer;
   readonly chase = new ChaseCamera(this.camera);
   private props = new PropView();
+  private comic = new ComicView();
+  private comicInspection?: string;
+  private nitro = new T.Group();
   private officialCourse = new CourseView();
   private fire = new TruckFireView();
   private lavaEffects = new LavaPartEffects();
@@ -67,12 +72,25 @@ export class GameView {
     );
     this.contactShadow.rotation.x = -Math.PI / 2;
     this.scene.add(
+      this.comic,
+      this.nitro,
       this.contactShadow,
       this.skids,
       this.fire.smoke,
       this.props,
       this.lavaEffects,
     );
+    const blue = flameMaterial();
+    blue.fragmentShader = blue.fragmentShader
+      .replace("vec3(1.0,.12,.015)", "vec3(.01,.14,1.0)")
+      .replace("vec3(1.0,.85,.25)", "vec3(.2,.85,1.0)");
+    for (const x of [-1.2, 1.2])
+      for (const angle of [0, Math.PI / 2]) {
+        const jet = new T.Mesh(new T.PlaneGeometry(0.9, 4), blue);
+        jet.rotation.set(-Math.PI / 2, 0, angle);
+        jet.position.set(x, 0.7, -4.4);
+        this.nitro.add(jet);
+      }
     this.renderer = new T.WebGLRenderer({ antialias: true });
     host.append(this.renderer.domElement);
     let dragging = false,
@@ -415,6 +433,7 @@ export class GameView {
     );
   }
   resetTruck() {
+    this.comicInspection = undefined;
     this.overview = false;
     this.lavaInspection = false;
     this.lavaEffects.reset();
@@ -479,6 +498,12 @@ export class GameView {
   stats() {
     return {
       ...truckStats(this.truck),
+      potions: {
+        jets: this.nitro.visible,
+        filter: this.renderer.domElement.style.filter,
+        hoodScale: this.meshes.get("hood")?.scale.toArray(),
+      },
+      comicHazards: this.comic.inspect(),
       officialCourse: this.officialCourse.inspect(),
       fire: this.fire.inspect(),
       lavaParts: this.lavaEffects.inspect(),
@@ -515,6 +540,20 @@ export class GameView {
     this.course.visible = s.stage !== "lab" && !s.courseTrack;
     this.hazards.visible = s.stage !== "lab" && !s.courseTrack;
     this.officialCourse.update(s, this.camera);
+    this.comic.update(s);
+    this.nitro.visible = s.comic.effect === "nitro";
+    this.nitro.position.copy(root);
+    this.nitro.quaternion.copy(q);
+    for (const jet of this.nitro.children)
+      ((jet as T.Mesh).material as T.ShaderMaterial).uniforms.time.value =
+        s.time;
+    this.renderer.domElement.style.filter =
+      s.comic.effect === "fog"
+        ? `blur(${Math.min(7, s.comic.effectUntil - s.time) * 1.1}px) contrast(.75)`
+        : "";
+    const shape = new T.Vector3(
+      ...(potionScale(s.comic.effect) as [number, number, number]),
+    );
     this.loop.update(s.time);
     this.skids.update(s.skidStrokes);
     this.fire.update(s, root);
@@ -568,6 +607,7 @@ export class GameView {
         g = this.meshes.get(def.id)!;
       g.userData.detached = !!state.body;
       g.visible = !state.lava || state.lava.progress < 1;
+      g.scale.copy(state.body ? new T.Vector3(1, 1, 1) : shape);
       if (state.body) {
         g.position.copy(state.body.translation());
         g.quaternion.copy(state.body.rotation());
@@ -576,8 +616,9 @@ export class GameView {
         const wi = PARTS.slice(2, 6).findIndex((p) => p.id === def.id);
         if (wi >= 0) {
           local.copy(wheelPositions[wi]);
-          local.y -= s.vehicle.wheelSuspensionLength(wi) ?? 0.6;
         }
+        local.multiply(shape);
+        if (wi >= 0) local.y -= s.vehicle.wheelSuspensionLength(wi) ?? 0.6;
         g.position.copy(local.applyQuaternion(q).add(root));
         g.quaternion.copy(q);
         if (wi >= 0) {
@@ -641,8 +682,25 @@ export class GameView {
       );
       this.camera.lookAt(r.x - 7.5, -7.3, z);
     }
+    if (this.comicInspection) {
+      const h = s.comic.mechanisms.find(
+        (m) => m.h.id === this.comicInspection,
+      )?.h;
+      if (h) {
+        this.camera.position.set(
+          h.x - (h.kind === "hydrant" ? 8 : 18),
+          h.kind === "hydrant" ? 6 : 12,
+          h.z - (h.kind === "hydrant" ? 10 : 24),
+        );
+        this.camera.lookAt(h.x, h.kind === "hydrant" ? 1.5 : 4, h.z);
+      }
+    }
     this.snapCamera = false;
     if (draw) this.renderer.render(this.scene, this.camera);
+  }
+  hazardOverview(id: string) {
+    this.comicInspection = id;
+    this.render(true);
   }
   /** Probe fixed points on the outer basin wall while slightly orbiting below the road. */
   basinProbe(angle: number) {

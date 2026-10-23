@@ -1,3 +1,4 @@
+import { comicHazards } from "./comic-hazards";
 import type { Track, TrackId } from "./tracks";
 import type { Hazard } from "./hazards";
 import type { PropDefinition } from "./destructibles";
@@ -357,7 +358,51 @@ export function courseSolids(track: Track): CourseSolid[] {
         color: 0x75664d,
       });
   }
-  return solids;
+  for (const water of comicHazards(track).filter((h) => h.kind === "water"))
+    for (const direction of [-1, 1])
+      solids.push({
+        id: `${water.id}-approach-${direction}`,
+        kind: "road",
+        x: water.x,
+        y: 0.015,
+        z: water.z + direction * 29,
+        w: 12,
+        h: 0.03,
+        d: 32,
+        color: 0xc3c4c5,
+      });
+  // Subtract water-road apertures from the concrete, so failed skims really sink.
+  let result = solids;
+  for (const water of comicHazards(track).filter((h) => h.kind === "water")) {
+    result = result.flatMap((s) => {
+      if (s.kind !== "ground") return [s];
+      const left = s.x - s.w / 2,
+        right = s.x + s.w / 2,
+        near = s.z - s.d / 2,
+        far = s.z + s.d / 2;
+      const a = Math.max(left, water.x - 6),
+        b = Math.min(right, water.x + 6),
+        c = Math.max(near, water.z - 12),
+        d = Math.min(far, water.z + 12);
+      if (a >= b || c >= d) return [s];
+      return [
+        [left, a, near, far],
+        [b, right, near, far],
+        [a, b, near, c],
+        [a, b, d, far],
+      ]
+        .filter(([l, r, n, f]) => r > l && f > n)
+        .map(([l, r, n, f], i) => ({
+          ...s,
+          id: `${s.id}${i ? `-${i}` : ""}`,
+          x: (l + r) / 2,
+          z: (n + f) / 2,
+          w: r - l,
+          d: f - n,
+        }));
+    });
+  }
+  return result;
 }
 export function courseHazards(track: Track): Hazard[] {
   if (track.id === "inferno-vault")

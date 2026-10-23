@@ -197,6 +197,9 @@ async function boot() {
           : track.legacy
             ? "Clear the jump, complete the loop, then cross the exit."
             : "Follow every checkpoint. Cross the final gate.";
+      if (s.comic.effect)
+        $("state-copy").textContent =
+          `${s.comic.effect.toUpperCase()} POTION · ${s.comic.remaining.toFixed(1)}s · Mixing active potions is lethal`;
       $("run-progress").textContent =
         track.mode === "arena"
           ? `${s.run.collected.length} / ${s.run.collectibleCount} collected · ${Math.ceil(s.run.remaining ?? 0)}s remaining`
@@ -315,6 +318,8 @@ async function boot() {
       camera: () => view.inspectCamera(),
       burnoutOverview: (focus) => view.burnoutOverview(focus),
       lavaOverview: () => view.lavaOverview(),
+      hazardOverview: (id) => view.hazardOverview(id),
+      setVelocity: (velocity) => sim.body.setLinvel(velocity, true),
       basinProbe: (angle) => view.basinProbe(angle),
       dropPartInLava: (id) => {
         const def = PARTS.find((p) => p.id === id);
