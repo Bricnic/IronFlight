@@ -31,15 +31,16 @@ export function flameMaterial() {
   return new T.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
+      strength: { value: 1 },
       noiseMap: { value: texture("rock_06", "roughness", 1) },
     },
     vertexShader:
       "varying vec2 uv0; void main(){ uv0=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-    fragmentShader: `varying vec2 uv0; uniform float time; uniform sampler2D noiseMap;
+    fragmentShader: `varying vec2 uv0; uniform float time; uniform float strength; uniform sampler2D noiseMap;
 void main(){ vec2 uv=uv0; float noise=texture2D(noiseMap,vec2(uv.x*.7,uv.y*.6-time*.4)).r;
 float width=(1.0-uv.y)*.52; float x=abs(uv.x-.5+sin(uv.y*9.0-time*7.0)*.06+(noise-.5)*.17);
 float shape=1.0-smoothstep(width*.25,width+.01,x); float alpha=shape*(1.0-smoothstep(.6,1.0,uv.y))*smoothstep(0.0,.08,uv.y);
-vec3 color=mix(vec3(1.0,.12,.015),vec3(1.0,.85,.25),clamp((1.0-uv.y)*1.1-x*2.0,0.0,1.0)); gl_FragColor=vec4(color,alpha*.85); }`,
+vec3 color=mix(vec3(1.0,.12,.015),vec3(1.0,.85,.25),clamp((1.0-uv.y)*1.1-x*2.0,0.0,1.0)); gl_FragColor=vec4(color,alpha*.85*strength); }`,
     transparent: true,
     depthWrite: false,
     side: T.DoubleSide,

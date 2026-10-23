@@ -266,10 +266,10 @@ export function courseSolids(track: Track): CourseSolid[] {
         id: `vault-lava-${x}`,
         kind: "lava",
         x,
-        y: 0.6,
+        y: -4.8,
         z: 20,
         w: 16,
-        h: 0.8,
+        h: 1.2,
         d: 20,
         color: 0xff6a20,
       });
@@ -277,10 +277,10 @@ export function courseSolids(track: Track): CourseSolid[] {
         id: `vault-floor-${x}`,
         kind: "support",
         x,
-        y: 0.1,
+        y: -5.6,
         z: 20,
         w: 16,
-        h: 0.2,
+        h: 0.4,
         d: 20,
         color: 0x77716c,
       });
@@ -289,10 +289,10 @@ export function courseSolids(track: Track): CourseSolid[] {
           id: `vault-wall-x-${x}-${side}`,
           kind: "support",
           x: x + side * 8.5,
-          y: 0.65,
+          y: -2.7,
           z: 20,
           w: 1,
-          h: 1.3,
+          h: 5.6,
           d: 22,
           color: 0x77716c,
         });
@@ -300,10 +300,10 @@ export function courseSolids(track: Track): CourseSolid[] {
           id: `vault-wall-z-${x}-${side}`,
           kind: "support",
           x,
-          y: 0.65,
+          y: -2.7,
           z: 20 + side * 10.5,
           w: 16,
-          h: 1.3,
+          h: 5.6,
           d: 1,
           color: 0x77716c,
         });
@@ -373,17 +373,23 @@ export function courseSolids(track: Track): CourseSolid[] {
       });
   // Subtract water-road apertures from the concrete, so failed skims really sink.
   let result = solids;
-  for (const water of comicHazards(track).filter((h) => h.kind === "water")) {
+  const apertures = [
+    ...comicHazards(track)
+      .filter((h) => h.kind === "water")
+      .map((h) => ({ x: h.x, z: h.z, w: 12, d: 24 })),
+    ...solids.filter((s) => s.kind === "lava"),
+  ];
+  for (const water of apertures) {
     result = result.flatMap((s) => {
       if (s.kind !== "ground") return [s];
       const left = s.x - s.w / 2,
         right = s.x + s.w / 2,
         near = s.z - s.d / 2,
         far = s.z + s.d / 2;
-      const a = Math.max(left, water.x - 6),
-        b = Math.min(right, water.x + 6),
-        c = Math.max(near, water.z - 12),
-        d = Math.min(far, water.z + 12);
+      const a = Math.max(left, water.x - water.w / 2),
+        b = Math.min(right, water.x + water.w / 2),
+        c = Math.max(near, water.z - water.d / 2),
+        d = Math.min(far, water.z + water.d / 2);
       if (a >= b || c >= d) return [s];
       return [
         [left, a, near, far],

@@ -8,7 +8,13 @@ import { Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
 import { PARTS, type PartState } from "./damage";
-import { HAZARDS, hammerAngle, hazardActive, type Hazard } from "./hazards";
+import {
+  HAZARDS,
+  hammerAngle,
+  hazardActive,
+  flameIntensity,
+  type Hazard,
+} from "./hazards";
 import { arenaSolids } from "./arena";
 import { DEFAULT_TUNING, validateTuning, type Tuning } from "./tuning";
 import {
@@ -86,11 +92,17 @@ export class Simulation {
   smolderRemaining = 0;
   private smolderTriggered = false;
   inFlames = false;
+  private lastSmokeAt = -Infinity;
   get scorch() {
     return Math.min(1, this.fireDamageTaken + this.smolderDamageTaken);
   }
+  get smokeStrength() {
+    if (this.inFlames || this.smolderRemaining > 1e-9) return 1;
+    const t = Math.max(0, Math.min(1, 1 - (this.time - this.lastSmokeAt) / 3));
+    return t * t * (3 - 2 * t);
+  }
   get smoking() {
-    return this.inFlames || this.smolderRemaining > 1e-9;
+    return this.smokeStrength > 1e-6;
   }
   steeringAngle = 0;
   boostTicks = 0;
@@ -148,6 +160,7 @@ export class Simulation {
     this.smolderRemaining = 0;
     this.smolderTriggered = false;
     this.inFlames = false;
+    this.lastSmokeAt = -Infinity;
     this.steeringAngle = 0;
     this.boostTicks = 0;
     this.hammerPhase = 0;
@@ -673,7 +686,9 @@ export class Simulation {
         if (
           h.kind !== "hammer" &&
           h.kind !== "lava" &&
-          hazardActive(h, this.time) &&
+          (h.kind === "fire"
+            ? flameIntensity(h, this.time) > 1e-6
+            : hazardActive(h, this.time)) &&
           this.touches(h)
         ) {
           if (h.kind === "fire") this.inFlames = true;
@@ -683,9 +698,14 @@ export class Simulation {
             h.kind === "spikes"
               ? ["wheel-fl", "wheel-fr", "chassis-front"]
               : ["hood", "roof", "door-left", "door-right"];
-          for (const part of targets)
-            if (h.kind === "fire") this.fireDamage(part, 18);
-            else this.damage(part, 120);
+          if (h.kind === "fire") {
+            const intensity = flameIntensity(h, this.time);
+            for (const def of PARTS)
+              this.fireDamage(
+                def.id,
+                (targets.includes(def.id) ? 18 : def.hp * 0.018) * intensity,
+              );
+          } else for (const part of targets) this.damage(part, 120);
           this.damageEvents.push({
             source: h.kind,
             part: targets[0],
@@ -705,6 +725,8 @@ export class Simulation {
         this.fireDamage(part.id, part.hp * 0.01 * DT * barrelExposure);
     }
     this.updateSmolder();
+    if (this.inFlames || this.smolderRemaining > 1e-9)
+      this.lastSmokeAt = this.time;
     if (this.damageEvents.length > 64)
       this.damageEvents.splice(0, this.damageEvents.length - 64);
     const route = ROUTES.find((r) => r.id === this.stage),
@@ -1153,6 +1175,7 @@ export class Simulation {
       smolderRemaining: this.smolderRemaining,
       inFlames: this.inFlames,
       smoking: this.smoking,
+      smokeStrength: this.smokeStrength,
       scorch: this.scorch,
       speed: Math.hypot(v.x, v.z),
       signedSpeed: new Vector3(0, 0, 1)

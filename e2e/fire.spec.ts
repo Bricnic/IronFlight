@@ -44,7 +44,13 @@ test("flames char the exterior; smoke follows the five-second capped afterburn",
   }));
   expect(ended.state.smolderDamageTaken).toBeCloseTo(0.25, 6);
   expect(ended.state.smolderRemaining).toBe(0);
-  expect(ended.art.smokeVisible).toBe(false);
+  expect(ended.art.smokeVisible).toBe(true);
+  expect(ended.art.smokeStrength).toBeGreaterThan(0);
+  expect(ended.art.smokeStrength).toBeLessThan(0.22);
+  await page.evaluate(() => window.__game!.advanceFrames(180, 1, {}));
+  expect(
+    await page.evaluate(() => window.__game!.stats().fire.smokeVisible),
+  ).toBe(false);
   expect(ended.art.paintColor![0]).toBeLessThan(burning.art.paintColor![0]);
   await page.screenshot({ path: "artifacts/truck-charred.png" });
   await page.evaluate(() => window.__game!.advanceFrames(120, 1, {}));

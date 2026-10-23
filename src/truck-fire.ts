@@ -159,7 +159,8 @@ export class TruckFireView {
     this.smoke.visible = sim.smoking;
     this.smoke.position.copy(position);
     this.smoke.material.uniforms.time.value = sim.time;
-    this.smoke.material.uniforms.strength.value = sim.inFlames ? 0.28 : 0.22;
+    this.smoke.material.uniforms.strength.value =
+      (sim.inFlames ? 0.28 : 0.22) * sim.smokeStrength;
   }
   inspect() {
     return {
@@ -173,6 +174,7 @@ export class TruckFireView {
       },
       scorch: this.lastScorch,
       smokeVisible: this.smoke.visible,
+      smokeStrength: this.smoke.material.uniforms.strength.value,
       smokeParticles: this.smoke.visible ? 48 : 0,
       paintColor: [...this.originals.keys()]
         .find((m) => m instanceof T.MeshPhysicalMaterial && !m.transparent)

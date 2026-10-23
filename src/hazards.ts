@@ -47,3 +47,15 @@ export const HAMMER_SPEED = 1.7 * 1.5;
 export function hazardActive(h: Hazard, time: number) {
   return !h.period || time % h.period < (h.duration ?? h.period / 2);
 }
+
+/** Half-second emission ramp and trailing fade, shared by jet visuals and damage. */
+export function flameIntensity(h: Hazard, time: number) {
+  if (!h.period) return 1;
+  const phase = ((time % h.period) + h.period) % h.period,
+    duration = h.duration ?? h.period / 2;
+  const smooth = (v: number) => {
+    v = Math.max(0, Math.min(1, v));
+    return v * v * (3 - 2 * v);
+  };
+  return smooth(phase / 0.5) * (1 - smooth((phase - duration) / 0.5));
+}

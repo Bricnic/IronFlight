@@ -1,12 +1,13 @@
 import * as T from "three";
 import { courseHazards } from "./course";
-import { hazardActive, type Hazard } from "./hazards";
+import { flameIntensity, type Hazard } from "./hazards";
 import { pbr, lavaMaterial } from "./materials";
 import { flameMaterial } from "./materials";
 import { courseSolids } from "./course";
 import type { Simulation } from "./simulation";
 export class CourseView extends T.Group {
   private key = "";
+  private hazardTime = 0;
   private lavaMaterials: T.MeshStandardMaterial[] = [];
   private hazards: {
     h: Hazard;
@@ -39,6 +40,7 @@ export class CourseView extends T.Group {
     return mesh;
   }
   update(sim: Simulation, camera?: T.Camera) {
+    this.hazardTime = sim.time;
     const run = sim.trackRun;
     const key = run ? `${run.track.id}:${run.variant}` : "";
     if (key !== this.key) {
@@ -68,33 +70,37 @@ export class CourseView extends T.Group {
         const track = run.track;
         if (!track.legacy)
           for (const s of courseSolids(track)) {
+            const stone =
+              s.id.startsWith("vault-wall") || s.id.startsWith("vault-floor");
             const mat =
               s.kind === "lava"
                 ? lavaMaterial()
-                : s.kind === "road" || s.kind === "ramp"
-                  ? pbr("asphalt_02", 1, { color: 0xc3c4c5, roughness: 0.95 })
-                  : s.kind === "ground"
-                    ? pbr(
-                        ["foundry-run", "inferno-vault"].includes(track.id)
-                          ? "concrete_layers_02"
-                          : "concrete_floor_02",
-                        1,
-                        {
-                          color:
-                            track.id === "scrapyard-sweep"
-                              ? 0xb8a990
-                              : 0xc4c8c8,
-                          roughness: 0.96,
-                        },
-                      )
-                    : new T.MeshStandardMaterial({
-                        color: s.color,
-                        roughness: s.kind === "container" ? 0.65 : 0.95,
-                        metalness: s.kind === "container" ? 0.3 : 0,
-                      });
+                : stone
+                  ? pbr("rock_06", 1, { color: 0xb9b2a7, roughness: 0.94 })
+                  : s.kind === "road" || s.kind === "ramp"
+                    ? pbr("asphalt_02", 1, { color: 0xc3c4c5, roughness: 0.95 })
+                    : s.kind === "ground"
+                      ? pbr(
+                          ["foundry-run", "inferno-vault"].includes(track.id)
+                            ? "concrete_layers_02"
+                            : "concrete_floor_02",
+                          1,
+                          {
+                            color:
+                              track.id === "scrapyard-sweep"
+                                ? 0xb8a990
+                                : 0xc4c8c8,
+                            roughness: 0.96,
+                          },
+                        )
+                      : new T.MeshStandardMaterial({
+                          color: s.color,
+                          roughness: s.kind === "container" ? 0.65 : 0.95,
+                          metalness: s.kind === "container" ? 0.3 : 0,
+                        });
             if (s.kind === "lava") this.lavaMaterials.push(mat);
             const geometry = new T.BoxGeometry(s.w, s.h, s.d);
-            if (["ground", "road", "ramp"].includes(s.kind)) {
+            if (stone || ["ground", "road", "ramp"].includes(s.kind)) {
               const pos = geometry.attributes.position,
                 normals = geometry.attributes.normal,
                 uv = geometry.attributes.uv;
@@ -111,8 +117,11 @@ export class CourseView extends T.Group {
                 );
               }
               uv.needsUpdate = true;
-              mat.userData.surface =
-                s.kind === "ground" ? "concrete" : "asphalt_02";
+              mat.userData.surface = stone
+                ? "stone"
+                : s.kind === "ground"
+                  ? "concrete"
+                  : "asphalt_02";
             }
             const mesh = new T.Mesh(geometry, mat);
             mesh.position.set(s.x, s.y, s.z);
@@ -285,10 +294,16 @@ export class CourseView extends T.Group {
     for (const model of this.hazards) {
       if (model.rotor) model.rotor.rotation.z = sim.hammerPhase;
       if (model.flames) {
-        model.flames.visible = hazardActive(model.h, sim.time);
-        for (const mesh of model.flames.children)
-          ((mesh as T.Mesh).material as T.ShaderMaterial).uniforms.time.value =
-            sim.time;
+        const intensity = flameIntensity(model.h, sim.time);
+        model.flames.visible = intensity > 1e-6;
+        for (const child of model.flames.children) {
+          const mesh = child as T.Mesh;
+          mesh.scale.y = intensity;
+          mesh.position.y = -1.4 + 1.8 * intensity;
+          const shader = mesh.material as T.ShaderMaterial;
+          shader.uniforms.time.value = sim.time;
+          shader.uniforms.strength.value = intensity;
+        }
         model.lamp?.material.color.setHex(
           model.flames.visible ? 0xff4225 : 0x79e698,
         );
@@ -312,6 +327,14 @@ export class CourseView extends T.Group {
       gates: this.gateModels.filter((g) => g.visible).length,
       pickups: [...this.pickupModels.values()].filter((g) => g.visible).length,
       solids: this.meshes.length,
+      jets: this.hazards
+        .filter((m) => m.flames)
+        .map((m) => ({
+          id: m.h.id,
+          intensity: flameIntensity(m.h, this.hazardTime),
+          visible: m.flames!.visible,
+          scale: m.flames!.children[0].scale.y,
+        })),
       surfaces: this.meshes
         .filter(
           (m) => m.material instanceof T.MeshStandardMaterial && m.material.map,

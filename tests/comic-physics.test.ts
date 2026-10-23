@@ -48,9 +48,15 @@ for (const kind of [
     s.dispose();
   });
 
-test("initial jaw collider pose matches the visible open book, then closes destructively",()=>{
- const s=new Simulation();s.startTrack("harbor-sprint");const m=s.comic.mechanisms.find(m=>m.h.kind==="book")!;
- expect(m.bodies[0].rotation().x).toBeCloseTo(Math.sin(1.12/2));
- s.body.setTranslation({x:m.h.x,y:2.1,z:m.h.z},true);s.run(.5);expect(s.status).toBe("driving");
- s.run(3);expect(s.status).toBe("wrecked");s.dispose();
+test("initial jaw collider pose matches the visible open book, then closes destructively", () => {
+  const s = new Simulation();
+  s.startTrack("harbor-sprint");
+  const m = s.comic.mechanisms.find((m) => m.h.kind === "book")!;
+  expect(m.bodies[0].rotation().x).toBeCloseTo(Math.sin(1.12 / 2));
+  s.body.setTranslation({ x: m.h.x, y: 2.1, z: m.h.z }, true);
+  s.run(0.5);
+  expect(s.status).toBe("driving");
+  s.run(3);
+  expect(s.status).toBe("wrecked");
+  s.dispose();
 });

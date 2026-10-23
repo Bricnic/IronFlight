@@ -69,11 +69,14 @@ export class ComicPhysics {
         if (h.kind === "flippers") box(0, 1.3, 0, 10, 2, 10, true);
         for (const side of [-1, 1]) box(side * 6.4, 1.5, 4.8, 0.65, 3, 2);
         const b = world.createRigidBody(
-          R.RigidBodyDesc.kinematicPositionBased().setTranslation(
-            h.x,
-            1.2,
-            h.z + 5,
-          ).setRotation(new Quaternion().setFromAxisAngle(new Vector3(1,0,0),mechanismAngle(h,0))),
+          R.RigidBodyDesc.kinematicPositionBased()
+            .setTranslation(h.x, 1.2, h.z + 5)
+            .setRotation(
+              new Quaternion().setFromAxisAngle(
+                new Vector3(1, 0, 0),
+                mechanismAngle(h, 0),
+              ),
+            ),
         );
         m.bodies.push(b);
         box(0, 0, -5, 12, 1.6, 12, false, b);

@@ -53,7 +53,7 @@ it("smolder removes five original integrity points per second for exactly five s
     s.run(1);
     expect(s.snapshot().integrity).toBeCloseTo(start - second * 0.05, 6);
     expect(s.smolderDamageTaken).toBeCloseTo(second * 0.05, 6);
-    expect(s.smoking).toBe(second < 5);
+    expect(s.smoking).toBe(true);
   }
   expect(s.scorch).toBeCloseTo(0.8);
   const end = s.snapshot().integrity;
@@ -91,7 +91,7 @@ it("a fully burned wreck stops smoking, remains black, and rebuilding clears fir
   burn(s, 2);
   expect(s.scorch).toBeCloseTo(1);
   s.step();
-  s.run(5 + DT);
+  s.run(8 + DT);
   expect(s.smoking).toBe(false);
   expect(s.scorch).toBeCloseTo(1);
   s.reset();
@@ -110,7 +110,7 @@ it("charred materials stay dark after smoke ends and a fully burned exterior tur
   s.step();
   view.update(s, new Vector3());
   expect(view.inspect().smokeVisible).toBe(true);
-  s.run(6);
+  s.run(9);
   view.update(s, new Vector3());
   expect(view.inspect().scorch).toBeCloseTo(0.8);
   expect(view.inspect().smokeVisible).toBe(false);

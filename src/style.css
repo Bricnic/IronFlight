@@ -343,7 +343,7 @@ kbd {
   position: absolute;
   right: 22px;
   bottom: 85px;
-  width: 140px;
+  width: min(240px, calc(100vw - 58px));
   background: #14232bdb;
   padding: 12px 15px;
   border-top: 2px solid #fda46c;
@@ -370,14 +370,18 @@ kbd {
   padding-top: 8px;
 }
 .stats > span {
-  display: block;
-  font-size: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  white-space: nowrap;
+  font-size: 14pt;
   color: #a4b7bb;
   letter-spacing: 1px;
   line-height: 2;
 }
 .stats b {
-  float: right;
+  font-size: 14pt;
+  float: none;
   color: #f6edde;
   font-weight: 500;
 }
@@ -435,7 +439,7 @@ kbd {
     display: none !important;
   }
   #telemetry {
-    width: 120px;
+    width: 220px;
     right: 14px;
   }
   #status {
@@ -463,7 +467,7 @@ kbd {
     max-width: 160px;
   }
   .lab-toggle {
-    width: 140px;
+    width: min(240px, calc(100vw - 58px));
   }
   #viewport {
     top: 120px;
@@ -841,5 +845,14 @@ kbd {
   }
   .track-image {
     height: 175px;
+  }
+}
+
+@media (max-width: 650px) {
+  #status {
+    left: 14px;
+    bottom: 270px;
+    transform: none;
+    width: min(300px, calc(100vw - 28px));
   }
 }

@@ -556,7 +556,14 @@ export class GameView {
     );
     this.loop.update(s.time);
     this.skids.update(s.skidStrokes);
-    this.fire.update(s, root);
+    this.fire.update(
+      s,
+      s.parts.get("chassis-front")?.body
+        ? new T.Vector3().copy(
+            s.parts.get("chassis-front")!.body!.translation(),
+          )
+        : root,
+    );
     this.props.update(s.props, s.time);
     this.lavaEffects.update(s);
     for (const lava of this.lava) {
@@ -665,7 +672,10 @@ export class GameView {
       this.camera.position.copy(center).add(new T.Vector3(0, distance, 0.01));
       this.camera.lookAt(center);
     }
-    if (this.lavaInspection) {
+    if (this.lavaInspection && s.courseTrack?.id === "inferno-vault") {
+      this.camera.position.set(-8, 8, -1);
+      this.camera.lookAt(-25, -3.4, 20);
+    } else if (this.lavaInspection) {
       const r = ROUTES.find((r) => r.id === s.stage) ?? ROUTES[0],
         z = (r.gapEnd + 12) / 2;
       this.camera.position.set(r.x + 18, 10, z + 16);

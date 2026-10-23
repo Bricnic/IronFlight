@@ -21,7 +21,7 @@ export interface GameHarness {
   place(position: { x: number; y: number; z: number }, yaw: number): void;
   lavaOverview(): void;
   hazardOverview(id: string): void;
-  setVelocity(velocity:{x:number;y:number;z:number}):void;
+  setVelocity(velocity: { x: number; y: number; z: number }): void;
   basinProbe(angle: number): number[][];
   dropPartInLava(id: string): void;
   environmentProbe(): { x: number; y: number };
@@ -49,6 +49,12 @@ export interface GameHarness {
       gates: number;
       pickups: number;
       solids: number;
+      jets: {
+        id: string;
+        intensity: number;
+        visible: boolean;
+        scale: number;
+      }[];
     };
     shadow: { visible: boolean; opacity: number; y: number };
     lavaOffsets: number[][];
@@ -63,6 +69,7 @@ export interface GameHarness {
       scorch: number;
       smokeVisible: boolean;
       smokeParticles: number;
+      smokeStrength: number;
       paintColor?: number[];
     };
     dragonStatues: number;
