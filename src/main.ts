@@ -266,9 +266,14 @@ async function boot() {
       e.target instanceof HTMLTextAreaElement
     )
       return;
+    const k = e.key.toLowerCase();
+    if (k === "r" && surface !== "menu") {
+      e.preventDefault();
+      if (!e.repeat) retryTrack();
+      return;
+    }
     // Let menu/result buttons keep native Space/Enter activation.
     if (surface !== "play") return;
-    const k = e.key.toLowerCase();
     if (
       [
         "w",
@@ -283,8 +288,7 @@ async function boot() {
       ].includes(k)
     )
       e.preventDefault();
-    if (k === "r") retryTrack();
-    else keys.add(k);
+    keys.add(k);
   });
   window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => keys.clear());

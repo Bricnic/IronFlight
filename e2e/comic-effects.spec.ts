@@ -1,5 +1,43 @@
 import { test, expect } from "@playwright/test";
 import { POTIONS } from "../src/comic-hazards";
+for (const revealFrames of [0, 301])
+  test(`R restarts a wrecked run with game-over reveal at ${revealFrames} frames`, async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.waitForFunction(() => !!window.__game);
+    await page.evaluate((frames) => {
+      const g = window.__game!;
+      g.pause(true);
+      g.startTrack("harbor-sprint");
+      const h = g.snapshot().comic.hazards.find((h) => h.kind === "book")!;
+      g.place({ x: h.x, y: 2.1, z: h.z }, 0);
+      for (let i = 0; i < 240 && g.snapshot().status !== "wrecked"; i++)
+        g.driveFrames(1, 1, () => ({}), false);
+      g.advanceFrames(frames, 1, {});
+    }, revealFrames);
+    expect(
+      await page.evaluate(() => window.__game!.snapshot().run?.status),
+    ).toBe("failed");
+    await expect(page.locator("#track-result")).toHaveCSS(
+      "opacity",
+      revealFrames ? "1" : "0",
+    );
+    if (revealFrames) await page.locator("#result-level-select").focus();
+    await page.keyboard.press("r");
+    const restarted = await page.evaluate(() => window.__game!.snapshot());
+    expect(restarted.run?.status).toBe("running");
+    expect(restarted.run?.trackId).toBe("harbor-sprint");
+    expect(restarted.run?.elapsed).toBe(0);
+    expect(restarted.integrity).toBe(1);
+    await expect(page.locator("#track-result")).toBeHidden();
+    await page.keyboard.down("ArrowUp");
+    await page.evaluate(() => window.__game!.advanceFrames(90, 1));
+    await page.keyboard.up("ArrowUp");
+    expect(
+      await page.evaluate(() => window.__game!.snapshot().speed),
+    ).toBeGreaterThan(3);
+  });
 for (const [i, effect] of POTIONS.entries())
   test(`potion ${effect}: visible effect, five-second lifetime, reset`, async ({
     page,
