@@ -5,6 +5,7 @@ export function courseDriver(
   s: ReturnType<Simulation["snapshot"]>,
   track: Track,
 ) {
+  if (track.controls === "strafe") return strafeDriver(s, track);
   const index = s.run?.checkpoint ?? 0;
   const target =
     track.mode === "arena"
@@ -55,5 +56,54 @@ export function courseDriver(
     steer: Math.max(-1, Math.min(1, error * 3)),
     throttle: s.signedSpeed < speed ? 1 : 0,
     brake: s.signedSpeed > speed + 1 ? 0.35 : 0,
+  };
+}
+/** Pure-pursuit strafe driver: lateral centering only, flow provides speed. */
+function strafeDriver(s: ReturnType<Simulation["snapshot"]>, track: Track) {
+  if (s.run?.bounced) return { steer: 0, throttle: 0, brake: 0 };
+  const ring = track.ring!;
+  const idx = s.run?.checkpoint ?? 0;
+  if (idx >= track.checkpoints.length) {
+    const ex = s.position.x - ring.x;
+    const steer = Math.max(-1, Math.min(1, -ex * 0.3));
+    if (s.position.z < 2330)
+      return {
+        steer,
+        throttle: s.signedSpeed < 2 ? 0.35 : 0,
+        brake: 0,
+      };
+    if (Math.abs(s.signedSpeed) > 4)
+      return { steer, throttle: 0, brake: 1 };
+    const dz = ring.z - s.position.z;
+    if (Math.abs(ex) > 3 || Math.abs(dz) > 5)
+      return { steer, throttle: dz > 0 ? 0.35 : -0.35, brake: 0 };
+    return { steer: 0, throttle: 0, brake: 1 };
+  }
+  const pts = track.path;
+  const si = Math.min(idx, pts.length - 2);
+  const a = pts[si],
+    b = pts[si + 1];
+  const dx = b.x - a.x,
+    dz = b.z - a.z,
+    len = Math.hypot(dx, dz) || 1,
+    fx = dx / len,
+    fz = dz / len;
+  const along = Math.max(
+    0,
+    Math.min(len, (s.position.x - a.x) * fx + (s.position.z - a.z) * fz),
+  );
+  const cross =
+    (s.position.x - (a.x + fx * along)) * fz -
+    (s.position.z - (a.z + fz * along)) * fx;
+  if (Math.abs(cross) > 7)
+    return { steer: cross > 0 ? -1 : 1, throttle: 0, brake: 0 };
+  const ahead = Math.min(len, along + 30);
+  const e =
+    (a.x + fx * ahead - s.position.x) * fz -
+    (a.z + fz * ahead - s.position.z) * fx;
+  return {
+    steer: Math.max(-1, Math.min(1, e * 0.08)),
+    throttle: 0,
+    brake: 0,
   };
 }

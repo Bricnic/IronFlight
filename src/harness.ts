@@ -49,6 +49,8 @@ export interface GameHarness {
       key: string;
       axes: number;
       ghosts: number;
+      trampolines: number;
+      rings: number;
       gates: number;
       pickups: number;
       solids: number;

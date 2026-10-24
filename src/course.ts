@@ -1,4 +1,5 @@
 import { comicHazards } from "./comic-hazards.ts";
+import { slideProfileY } from "./tracks.ts";
 import type { Track, TrackId } from "./tracks.ts";
 import type { Hazard } from "./hazards.ts";
 import type { PropDefinition } from "./destructibles.ts";
@@ -31,6 +32,7 @@ export const courseAvailable = (id: TrackId) =>
     "inferno-vault",
     "canyon-plunge",
     "haunted-hollow",
+    "sky-slide",
   ].includes(id);
 export function courseSolids(track: Track): CourseSolid[] {
   if (!courseAvailable(track.id))
@@ -52,6 +54,7 @@ export function courseSolids(track: Track): CourseSolid[] {
     let i = 1;
     track.mode === "race" &&
     track.id !== "canyon-plunge" &&
+    track.id !== "sky-slide" &&
     i < track.path.length;
     i++
   ) {
@@ -677,6 +680,118 @@ export function courseSolids(track: Track): CourseSolid[] {
         color: 0x2b2620,
       }),
     );
+  }
+  if (track.id === "sky-slide") {
+    // Finish pad only: no ground anywhere under the slide, so edge falls
+    // reach the wreck plane.
+    solids[0] = {
+      id: "ground",
+      kind: "ground",
+      x: 0,
+      y: -0.6,
+      z: 2380,
+      w: 60,
+      h: 1.2,
+      d: 160,
+      color: 0x4a7d5b,
+    };
+    // Water channel: one pitched ramp per path segment, overlapping at joints.
+    for (let i = 1; i < track.path.length; i++) {
+      const a = track.path[i - 1],
+        b = track.path[i],
+        ya = slideProfileY(a.z),
+        yb = slideProfileY(b.z),
+        len = Math.hypot(b.x - a.x, b.z - a.z);
+      solids.push({
+        id: `slide-${i}`,
+        kind: "ramp",
+        x: (a.x + b.x) / 2,
+        y: (ya + yb) / 2,
+        z: (a.z + b.z) / 2,
+        w: 18,
+        h: 0.5,
+        d: len + 12,
+        yaw: Math.atan2(b.x - a.x, b.z - a.z),
+        angle: Math.atan2(ya - yb, len),
+        color: 0x4fb8ff,
+      });
+    }
+    // Taper glides the channel down into the pad so the slide tip never
+    // high-centers the truck.
+    solids.push({
+      id: "slide-taper",
+      kind: "ramp",
+      x: 0,
+      y: 1.0,
+      z: 2312,
+      w: 18,
+      h: 0.5,
+      d: 26,
+      angle: Math.atan2(1.9, 24),
+      color: 0x4fb8ff,
+    });
+    // Support piers every 200 m, stopping a meter under the channel surface.
+    for (let pier = 0; pier <= 12; pier++) {
+      const z = -100 + pier * 200;
+      if (z > 2250) continue;
+      let x = track.path[0].x;
+      for (let i = 1; i < track.path.length; i++) {
+        const a = track.path[i - 1],
+          b = track.path[i];
+        if (z >= a.z && z <= b.z) {
+          const t = (z - a.z) / (b.z - a.z);
+          x = a.x + (b.x - a.x) * t;
+          break;
+        }
+      }
+      const surf = slideProfileY(z);
+      solids.push({
+        id: `slide-pier-${pier}`,
+        kind: "support",
+        x,
+        y: (surf - 31) / 2,
+        z,
+        w: 6,
+        h: surf + 29,
+        d: 6,
+        color: 0x5d6a72,
+      });
+    }
+    for (const side of [-1, 1]) {
+      solids.push({
+        id: `slide-start-${side}`,
+        kind: "barrier",
+        x: side * 12,
+        y: 102,
+        z: -100,
+        w: 2,
+        h: 8,
+        d: 2,
+        color: 0x4fb8ff,
+      });
+      solids.push({
+        id: `slide-finish-${side}`,
+        kind: "barrier",
+        x: side * 10,
+        y: 4,
+        z: 2360,
+        w: 2,
+        h: 8,
+        d: 2,
+        color: 0xffd34d,
+      });
+    }
+    solids.push({
+      id: "slide-start-beam",
+      kind: "barrier",
+      x: 0,
+      y: 107,
+      z: -100,
+      w: 26,
+      h: 1,
+      d: 2,
+      color: 0x4fb8ff,
+    });
   }
   for (const water of comicHazards(track).filter((h) => h.kind === "water"))
     for (const direction of [-1, 1])

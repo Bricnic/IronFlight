@@ -17,6 +17,8 @@ export class CourseView extends T.Group {
     lamp?: T.Mesh<T.SphereGeometry, T.MeshBasicMaterial>;
   }[] = [];
   private gateModels: T.Group[] = [];
+  private trampolineModels: T.Group[] = [];
+  private ringModels: T.Group[] = [];
   private axeModels: { root: T.Group; rotor: T.Group }[] = [];
   private ghostGroup: T.Group | null = null;
   private pickupModels = new Map<string, T.Group>();
@@ -64,6 +66,8 @@ export class CourseView extends T.Group {
       this.clear();
       this.key = key;
       this.gateModels = [];
+      this.trampolineModels = [];
+      this.ringModels = [];
       this.axeModels = [];
       this.ghostGroup = null;
       this.hazards = [];
@@ -82,7 +86,13 @@ export class CourseView extends T.Group {
                 : stone
                   ? pbr("rock_06", 1, { color: 0xb9b2a7, roughness: 0.94 })
                   : s.kind === "road" || s.kind === "ramp"
-                    ? pbr("asphalt_02", 1, { color: 0xc3c4c5, roughness: 0.95 })
+                    ? pbr("asphalt_02", 1, {
+                        color:
+                          track.id === "sky-slide" && s.kind === "ramp"
+                            ? 0x4f9fd8
+                            : 0xc3c4c5,
+                        roughness: 0.95,
+                      })
                     : s.kind === "ground"
                       ? pbr(
                           ["foundry-run", "inferno-vault"].includes(track.id)
@@ -246,10 +256,20 @@ export class CourseView extends T.Group {
           });
           this.add(this.ghostGroup);
         }
+        if (track.ring) {
+          const tramp = buildTrampolineMesh();
+          tramp.position.set(track.ring.x, -0.5, track.ring.z);
+          this.add(tramp);
+          this.trampolineModels.push(tramp);
+          const ringMesh = buildRingMesh(track.ring.radius);
+          ringMesh.position.set(track.ring.x, track.ring.y, track.ring.z);
+          this.add(ringMesh);
+          this.ringModels.push(ringMesh);
+        }
         for (const [i, gate] of track.checkpoints.entries()) {
           const g = new T.Group();
           g.name = `checkpoint-${gate.id}`;
-          g.position.set(gate.x, 0, gate.z);
+          g.position.set(gate.x, Math.max(0, gate.y - 2.6), gate.z);
           g.rotation.y = Math.atan2(gate.nx, gate.nz);
           const mat = new T.MeshStandardMaterial({
             color: track.color,
@@ -270,7 +290,7 @@ export class CourseView extends T.Group {
           banner.position.y = 5.1;
           g.add(banner);
           const label = this.label(
-            i === track.checkpoints.length - 1
+            i === track.checkpoints.length - 1 && !track.ring
               ? "FINISH"
               : `CHECKPOINT ${i + 1}`,
             track.color,
@@ -363,6 +383,8 @@ export class CourseView extends T.Group {
       key: this.key,
       axes: this.axeModels.length,
       ghosts: this.ghostGroup?.children.length ?? 0,
+      trampolines: this.trampolineModels.length,
+      rings: this.ringModels.length,
       gates: this.gateModels.filter((g) => g.visible).length,
       pickups: [...this.pickupModels.values()].filter((g) => g.visible).length,
       solids: this.meshes.length,

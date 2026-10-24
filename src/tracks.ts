@@ -141,6 +141,13 @@ const slide = points([
   [-60, 1900],
   [0, 2300],
 ]);
+// Sky Slide water-channel surface height: 100 m at the top plaza, easing to
+// 2 m where the channel meets the trampoline pad. Single source for the gate
+// heights below and the ramp solids in course.ts.
+export function slideProfileY(z: number) {
+  const t = Math.max(0, Math.min(1, (2300 - z) / 2400));
+  return 2 + 98 * t * t;
+}
 function race(
   id: TrackId,
   name: string,
@@ -319,6 +326,11 @@ export const TRACKS: Track[] = [
       300,
     ),
     controls: "strafe",
+    spawn: { x: 0, z: -100, y: 102.1, yaw: 0 },
+    checkpoints: gates(slide).map((g) => ({
+      ...g,
+      y: Math.round((slideProfileY(g.z) + 2.1) * 10) / 10,
+    })),
     ring: { x: 0, z: 2360, y: 25, radius: 6 },
   },
 ];
