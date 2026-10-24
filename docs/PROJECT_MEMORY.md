@@ -1,3 +1,5 @@
 # Project asset memory
 
 Use Poly Haven (https://polyhaven.com/textures) for locally cached CC0 PBR materials. Fetch diffuse, OpenGL normal and roughness maps through its API. Keep source URLs, hashes and licenses in public/textures/manifest.json; scripts/fetch-textures.mjs reproduces the cache. Roads across all tracks share asphalt_02. Triple Loop uses grass; other tracks use concrete variants. The supplied chomping-book reference is E:/Downloads/9d79c0fc-d122-4af9-b348-e2f5da3134c4.jfif.
+
+Expansion tracks (7-9) keep the same cache discipline: Canyon Plunge pairs cracked_red_ground floors with dark_rock_02 gorge cliffs and coast_sand_rocks_02 road; Haunted Hollow uses brown_mud_leaves_01 dirt with monastery_stone_floor crypts; Sky Slide runs blue_plaster_wall channel over a grass_ground pad. three.js TextureLoader needs DOM images, so headless mesh builders (gravestones, ghosts, axes) stay flat-shaded with per-seed variation; PBR maps apply only in browser-built CourseView/PropView paths.

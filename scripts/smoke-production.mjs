@@ -29,7 +29,7 @@ try {
     "Production must not expose the dev harness",
   );
   assert.equal(await page.locator("#level-select").isVisible(), true);
-  assert.equal(await page.locator(".track-card").count(), 6);
+  assert.equal(await page.locator(".track-card").count(), 9);
   await page.waitForFunction(() =>
     Array.from(document.querySelectorAll(".track-card img")).every(
       (i) => i.complete && i.naturalWidth > 0,
