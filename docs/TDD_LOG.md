@@ -117,3 +117,8 @@ GREEN: new GhostSwarm mirrors the ComicPhysics before/after pattern — four see
 
 RED: `npx vitest run tests/expansion-axes.test.ts` failed to collect: missing axes module, sim wiring and mesh builders.
 GREEN: new AxeArray hangs six phased pendulums (amplitude 1.0 rad, 5 s period, distinct phases) with kinematic handle/blade colliders; strikes reuse hammerStrike with the live swing velocity so launch direction follows the swing, gated by a one-strike-per-contact-episode rule plus 0.45 s cooldown. The first strike test teleported inside the blade and penetration resolution bled the launch; encounters now park beside the blade so the swing sweeps in, mirroring the hammer tests. Axes live in their own module rather than a hazards.ts kind, matching the GhostSwarm/ComicPhysics split; CourseView.update wiring and crossing proof follow with the canyon course in chunk 7. Full `npm run check` passes 206/206 with the production build.
+
+## Expansion chunk 5 — Gravestones
+
+RED: `npx vitest run tests/expansion-gravestones.test.ts` failed 6/6 on the missing kind, props and meshes.
+GREEN: new gravestone prop kind breaks above 2.5 m/s closing speed with rubble debris, reports each stone id exactly once through takeDestroyed, and hollow courseProps mirror the catalog demolition targets. Three fixes along the way: the drain call moved out of the optional trackRun chain (arguments never evaluated without a run), the stone cap became a real hemisphere for honest triangle density, and the PropView update test moved to chunk 8 browser coverage because fire-material texture loading needs DOM. Full `npm run check` passes 211/211 with the production build.

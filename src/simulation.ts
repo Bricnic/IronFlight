@@ -764,12 +764,17 @@ export class Simulation {
         this.status = "finished";
       if (this.status === "driving" && p.y < -7) this.status = "wrecked";
     }
+    const destroyed = this.props.takeDestroyed();
     this.trackRun?.step(
       DT,
       this.previousPosition,
       this.body.translation(),
       this.status === "wrecked" ? 0 : this.remainingHealth() / this.fullHealth,
-      { landed: this.landed, loopCompleted: this.loopCompleted },
+      {
+        landed: this.landed,
+        loopCompleted: this.loopCompleted,
+        destroyed,
+      },
     );
   }
   run(seconds: number, input: Input = {}) {

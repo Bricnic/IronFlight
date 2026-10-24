@@ -2,7 +2,7 @@ import RAPIER from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
 import { ROUTES } from "./routes.ts";
 import { PARTS, type PartState } from "./damage.ts";
-export type PropKind = "sign" | "trash" | "barrel";
+export type PropKind = "sign" | "trash" | "barrel" | "gravestone";
 export type PropDefinition = {
   id: string;
   kind: PropKind;
@@ -42,6 +42,12 @@ export function propDefinitions(lab = false): PropDefinition[] {
 export class Destructibles {
   readonly props: PropState[] = [];
   private incoming = new Map<PropState, Vector3>();
+  private freshlyDestroyed: string[] = [];
+  takeDestroyed() {
+    const ids = [...this.freshlyDestroyed];
+    this.freshlyDestroyed = [];
+    return ids;
+  }
   captureVelocities() {
     for (const p of this.props)
       this.incoming.set(p, new Vector3().copy(p.body.linvel()));
@@ -54,7 +60,8 @@ export class Destructibles {
     for (const definition of definitions) {
       const { kind, x, z, ground } = definition,
         sign = kind === "sign",
-        height = sign ? 1.6 : kind === "trash" ? 0.65 : 0.7;
+        stone = kind === "gravestone",
+        height = sign ? 1.6 : stone ? 0.9 : kind === "trash" ? 0.65 : 0.7;
       const body = world.createRigidBody(
         RAPIER.RigidBodyDesc.dynamic()
           .setTranslation(x, ground + height, z)
@@ -95,7 +102,16 @@ export class Destructibles {
           true,
         );
         joint.setContactsEnabled(false);
-      } else
+      } else if (stone)
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cuboid(0.7, 0.9, 0.25)
+              .setMass(120)
+              .setFriction(0.7),
+            body,
+          ),
+        );
+      else
         colliders.push(
           world.createCollider(
             RAPIER.ColliderDesc.cylinder(height, kind === "trash" ? 0.48 : 0.5)
@@ -192,6 +208,15 @@ export class Destructibles {
           this.spill(prop, time);
         }
         if (
+          prop.definition.kind === "gravestone" &&
+          !prop.broken &&
+          closing > 2.5
+        ) {
+          prop.broken = true;
+          this.rubble(prop);
+          this.freshlyDestroyed.push(prop.definition.id);
+        }
+        if (
           prop.definition.kind === "barrel" &&
           relative.length() * 3.6 >= 90 - 1e-6
         )
@@ -256,6 +281,42 @@ export class Destructibles {
         body,
         size,
         color: [0xc2b9a6, 0x779288, 0xc59b64, 0xe2ded3][i % 4],
+      });
+    }
+  }
+  private rubble(prop: PropState) {
+    const position = prop.body.translation(),
+      velocity = prop.body.linvel();
+    for (let i = 0; i < 4; i++) {
+      const a = i * 1.5708 + 0.4,
+        size = [0.3 + (i % 2) * 0.15, 0.2 + (i % 3) * 0.1, 0.25];
+      const body = this.world.createRigidBody(
+        RAPIER.RigidBodyDesc.dynamic()
+          .setTranslation(
+            position.x + Math.cos(a) * 0.8,
+            position.y + 0.6,
+            position.z + Math.sin(a) * 0.8,
+          )
+          .setLinvel(
+            velocity.x * 0.5 + Math.cos(a) * 3,
+            3 + (i % 2),
+            velocity.z * 0.5 + Math.sin(a) * 3,
+          )
+          .setAngvel({ x: i + 2, y: 1, z: -i })
+          .setCcdEnabled(true),
+      );
+      this.world.createCollider(
+        RAPIER.ColliderDesc.cuboid(
+          ...(size.map((v) => v / 2) as [number, number, number]),
+        )
+          .setMass(6)
+          .setFriction(0.7),
+        body,
+      );
+      prop.pieces.push({
+        body,
+        size,
+        color: [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
       });
     }
   }

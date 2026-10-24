@@ -134,6 +134,11 @@ export class PropView extends T.Group {
         prop.definition.ground + 0.2,
         prop.definition.z,
       );
+    } else if (prop.definition.kind === "gravestone") {
+      const seed = prop.definition.id
+        .split("")
+        .reduce((n, c) => n + c.charCodeAt(0), 0);
+      root.add(buildGravestoneMesh(seed));
     } else {
       const h = prop.definition.kind === "trash" ? 1.3 : 1.4,
         r = prop.definition.kind === "trash" ? 0.48 : 0.5;
@@ -171,4 +176,51 @@ export class PropView extends T.Group {
     fire.visible = false;
     this.models.set(prop, { root, fire, trash: [] });
   }
+}
+export function buildGravestoneMesh(seed = 0) {
+  const group = new T.Group();
+  const stone = new T.MeshStandardMaterial({
+    color: [0x9aa0a3, 0x8f979b, 0xa5abae][seed % 3],
+    roughness: 0.95,
+  });
+  const dark = new T.MeshStandardMaterial({ color: 0x3a4043, roughness: 1 });
+  const slab = (
+    geometry: T.BufferGeometry,
+    mat: T.Material,
+    x: number,
+    y: number,
+    z: number,
+  ) => {
+    const m = new T.Mesh(geometry, mat);
+    m.position.set(x, y, z);
+    m.castShadow = true;
+    m.receiveShadow = true;
+    group.add(m);
+    return m;
+  };
+  slab(new T.BoxGeometry(1.6, 0.25, 0.8), dark, 0, -0.775, 0);
+  slab(new T.BoxGeometry(1.15, 1.05, 0.45), stone, 0, -0.125, 0);
+  slab(
+    new T.SphereGeometry(0.55, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    stone,
+    0,
+    0.4,
+    0,
+  );
+  slab(new T.BoxGeometry(0.7, 0.5, 0.06), dark, 0, 0, 0.24);
+  for (let i = 0; i < 3; i++)
+    slab(new T.BoxGeometry(0.5 - i * 0.08, 0.05, 0.02), stone, 0, 0.1 - i * 0.14, 0.28);
+  return group;
+}
+export function gravestoneStats(group: T.Group) {
+  let meshes = 0,
+    triangles = 0;
+  group.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    meshes++;
+    triangles += o.geometry.index
+      ? o.geometry.index.count / 3
+      : o.geometry.attributes.position.count / 3;
+  });
+  return { meshes, triangles: Math.round(triangles) };
 }

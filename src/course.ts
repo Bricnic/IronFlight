@@ -458,6 +458,14 @@ export function courseHazards(track: Track): Hazard[] {
     : [];
 }
 export function courseProps(track: Track): PropDefinition[] {
+  if (track.id === "haunted-hollow")
+    return (track.demolish ?? []).map((p) => ({
+      id: p.id,
+      kind: "gravestone",
+      x: p.x,
+      z: p.z,
+      ground: 0,
+    }));
   if (track.id === "scrapyard-sweep")
     return [-1, 1].flatMap((side) =>
       [-60, -20, 20, 60].map((z, i) => ({
