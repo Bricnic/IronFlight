@@ -25,7 +25,11 @@ export async function driveTrack(page: Page, id: TrackId, start = true) {
                 ? track.collectibles.find(
                     (p) => !s.run?.collected.includes(p.id),
                   )
-                : track.checkpoints[s.run?.checkpoint ?? 0];
+                : track.mode === "demolition"
+                  ? track.demolish!.find(
+                      (p) => !s.run?.destroyed.includes(p.id),
+                    )
+                  : track.checkpoints[s.run?.checkpoint ?? 0];
             if (!target) return { brake: 1 };
             let x = target.x + ("nx" in target ? target.nx * 5 : 0),
               z = target.z + ("nz" in target ? target.nz * 5 : 0);

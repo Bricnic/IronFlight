@@ -9,7 +9,9 @@ export function courseDriver(
   const target =
     track.mode === "arena"
       ? track.collectibles.find((p) => !s.run?.collected.includes(p.id))
-      : track.checkpoints[index];
+      : track.mode === "demolition"
+        ? track.demolish!.find((p) => !s.run?.destroyed.includes(p.id))
+        : track.checkpoints[index];
   if (!target) return { brake: 1 };
   // Drive beyond checkpoint planes rather than orbiting the exact gate center.
   let x = target.x + ("nx" in target ? target.nx * 5 : 0),
@@ -42,14 +44,12 @@ export function courseDriver(
       break;
     }
   }
-
   const desired = Math.atan2(x - s.position.x, z - s.position.z),
     heading = Math.atan2(s.forward[0], s.forward[2]);
   const error = Math.atan2(
     Math.sin(desired - heading),
     Math.cos(desired - heading),
   );
-  const distance = Math.hypot(x - s.position.x, z - s.position.z);
   const speed = Math.abs(error) > 0.6 ? 6 : Math.abs(error) > 0.25 ? 10 : 15;
   return {
     steer: Math.max(-1, Math.min(1, error * 3)),

@@ -30,6 +30,7 @@ export const courseAvailable = (id: TrackId) =>
     "scrapyard-sweep",
     "inferno-vault",
     "canyon-plunge",
+    "haunted-hollow",
   ].includes(id);
 export function courseSolids(track: Track): CourseSolid[] {
   if (!courseAvailable(track.id))
@@ -596,6 +597,86 @@ export function courseSolids(track: Track): CourseSolid[] {
         color: 0x4a545c,
       });
     }
+  }
+  if (track.id === "haunted-hollow") {
+    // Perimeter fence.
+    for (const [id, x, z, w, d] of [
+      ["fence-n", 0, -120, 344, 2],
+      ["fence-s", 0, 140, 344, 2],
+      ["fence-w", -170, 10, 2, 264],
+      ["fence-e", 170, 10, 2, 264],
+    ] as [string, number, number, number, number][])
+      solids.push({
+        id,
+        kind: "barrier",
+        x,
+        y: 1.25,
+        z,
+        w,
+        h: 2.5,
+        d,
+        color: 0x3a3340,
+      });
+    // Mausoleum in the back corner, clear of the start and racing lines.
+    solids.push(
+      {
+        id: "crypt-base",
+        kind: "barrier",
+        x: 120,
+        y: 2,
+        z: -105,
+        w: 12,
+        h: 4,
+        d: 9,
+        color: 0x5a5f66,
+      },
+      {
+        id: "crypt-roof",
+        kind: "barrier",
+        x: 120,
+        y: 4.75,
+        z: -105,
+        w: 13,
+        h: 1.5,
+        d: 10,
+        color: 0x43484e,
+      },
+      {
+        id: "crypt-door",
+        kind: "barrier",
+        x: 120,
+        y: 1.5,
+        z: -100.2,
+        w: 3,
+        h: 3,
+        d: 0.4,
+        color: 0x14161c,
+      },
+    );
+    // Dead trees near the edges, clear of the racing lines.
+    const trees: [number, number][] = [
+      [-165, -60],
+      [165, -60],
+      [-165, 0],
+      [165, 0],
+      [-165, 60],
+      [165, 60],
+      [-40, 120],
+      [40, 120],
+    ];
+    trees.forEach(([x, z], i) =>
+      solids.push({
+        id: `dead-tree-${i}`,
+        kind: "support",
+        x,
+        y: 4,
+        z,
+        w: 1.2,
+        h: 8,
+        d: 1.2,
+        color: 0x2b2620,
+      }),
+    );
   }
   for (const water of comicHazards(track).filter((h) => h.kind === "water"))
     for (const direction of [-1, 1])

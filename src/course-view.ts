@@ -18,6 +18,7 @@ export class CourseView extends T.Group {
   }[] = [];
   private gateModels: T.Group[] = [];
   private axeModels: { root: T.Group; rotor: T.Group }[] = [];
+  private ghostGroup: T.Group | null = null;
   private pickupModels = new Map<string, T.Group>();
   private meshes: T.Mesh[] = [];
   private label(text: string, color: number) {
@@ -64,6 +65,7 @@ export class CourseView extends T.Group {
       this.key = key;
       this.gateModels = [];
       this.axeModels = [];
+      this.ghostGroup = null;
       this.hazards = [];
       this.pickupModels.clear();
       this.meshes = [];
@@ -236,6 +238,14 @@ export class CourseView extends T.Group {
           this.add(root);
           this.axeModels.push({ root, rotor });
         }
+        const ghosts = sim.ghosts.snapshot().ghosts;
+        if (ghosts.length) {
+          this.ghostGroup = buildGhostMeshes(ghosts.length);
+          this.ghostGroup.children.forEach((g, i) => {
+            g.position.set(ghosts[i].x, ghosts[i].y, ghosts[i].z);
+          });
+          this.add(this.ghostGroup);
+        }
         for (const [i, gate] of track.checkpoints.entries()) {
           const g = new T.Group();
           g.name = `checkpoint-${gate.id}`;
@@ -324,6 +334,18 @@ export class CourseView extends T.Group {
     this.axeModels.forEach((m, i) => {
       if (axes[i]) m.rotor.rotation.z = axes[i].angle;
     });
+    const ghosts = sim.ghosts.snapshot().ghosts;
+    if (this.ghostGroup)
+      this.ghostGroup.children.forEach((g, i) => {
+        if (!ghosts[i]) return;
+        g.position.set(
+          ghosts[i].x,
+          ghosts[i].y + Math.sin(sim.time * 2 + ghosts[i].phase) * 0.4,
+          ghosts[i].z,
+        );
+        const truck = sim.body.translation();
+        g.lookAt(truck.x, g.position.y, truck.z);
+      });
     this.gateModels.forEach((g, i) => {
       g.visible = i >= run.checkpoint;
       g.scale.setScalar(1);
@@ -340,6 +362,7 @@ export class CourseView extends T.Group {
     return {
       key: this.key,
       axes: this.axeModels.length,
+      ghosts: this.ghostGroup?.children.length ?? 0,
       gates: this.gateModels.filter((g) => g.visible).length,
       pickups: [...this.pickupModels.values()].filter((g) => g.visible).length,
       solids: this.meshes.length,

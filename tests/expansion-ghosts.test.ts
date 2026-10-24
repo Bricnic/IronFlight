@@ -12,10 +12,10 @@ import {
 } from "../src/ghosts";
 import { buildGhostMeshes, ghostStats } from "../src/course-view";
 beforeAll(initPhysics);
-it("haunts the hollow with four distant ghosts and nowhere else", () => {
+it("haunts the hollow with three distant ghosts and nowhere else", () => {
   const defs = ghostDefs(getTrack("haunted-hollow"));
-  expect(defs).toHaveLength(4);
-  expect(new Set(defs.map((d) => d.id)).size).toBe(4);
+  expect(defs).toHaveLength(3);
+  expect(new Set(defs.map((d) => d.id)).size).toBe(3);
   const spawn = getTrack("haunted-hollow").spawn;
   for (const d of defs) {
     expect(Number.isFinite(d.x + d.z + d.phase)).toBe(true);
@@ -55,7 +55,7 @@ it("ghosts catch an idle truck and drain its integrity", () => {
   expect(sim.snapshot(false).integrity).toBeLessThan(1);
   sim.dispose();
 });
-it("a ghost parked on the truck wrecks it within half a minute", () => {
+it("a ghost parked on the truck eventually wrecks it", () => {
   expect(GHOST_DRAIN).toBeGreaterThan(0);
   expect(GHOST_RADIUS).toBeGreaterThan(0);
   const sim = new Simulation();
@@ -70,7 +70,7 @@ it("a ghost parked on the truck wrecks it within half a minute", () => {
   const integrity = sim.snapshot(false).integrity;
   expect(integrity).toBeGreaterThan(0.6);
   expect(integrity).toBeLessThan(0.9);
-  for (let i = 0; i < 20 * 120; i++) {
+  for (let i = 0; i < 35 * 120; i++) {
     swarm.update();
     sim.step({});
     swarm.attack();
@@ -86,7 +86,7 @@ it("ghost snapshots expose finite positions for the view and drivers", () => {
   sim.step({});
   swarm.attack();
   const snap = swarm.snapshot();
-  expect(snap.ghosts).toHaveLength(4);
+  expect(snap.ghosts).toHaveLength(3);
   for (const g of snap.ghosts) {
     expect(Number.isFinite(g.x + g.y + g.z)).toBe(true);
     expect(typeof g.overlapping).toBe("boolean");
@@ -95,10 +95,10 @@ it("ghost snapshots expose finite positions for the view and drivers", () => {
   sim.dispose();
 });
 it("ghost meshes are translucent sheet phantoms with visible faces", () => {
-  const group = buildGhostMeshes(4);
+  const group = buildGhostMeshes(3);
   const stats = ghostStats(group);
-  expect(stats.ghosts).toBe(4);
+  expect(stats.ghosts).toBe(3);
   expect(stats.triangles).toBeGreaterThan(500);
   expect(stats.translucent).toBeGreaterThanOrEqual(4);
-  expect(stats.eyes).toBe(8);
+  expect(stats.eyes).toBe(6);
 });

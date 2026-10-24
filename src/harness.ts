@@ -48,6 +48,7 @@ export interface GameHarness {
     officialCourse: {
       key: string;
       axes: number;
+      ghosts: number;
       gates: number;
       pickups: number;
       solids: number;

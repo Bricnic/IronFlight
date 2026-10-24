@@ -2,17 +2,16 @@ import { PARTS } from "./damage";
 import { DT } from "./clock";
 import type { Track } from "./tracks";
 import type { Simulation } from "./simulation";
-export const GHOST_SPEED = 13;
+export const GHOST_SPEED = 12;
 export const GHOST_RADIUS = 4;
-export const GHOST_DRAIN = 0.05;
+export const GHOST_DRAIN = 0.03;
 export type GhostDef = { id: string; x: number; z: number; phase: number };
 export function ghostDefs(track?: Track): GhostDef[] {
   if (track?.id !== "haunted-hollow") return [];
   return [
     [-55, -40],
     [55, -40],
-    [-55, 60],
-    [55, 60],
+    [0, 60],
   ].map(([x, z], i) => ({
     id: `ghost-${i + 1}`,
     x,
