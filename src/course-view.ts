@@ -17,6 +17,7 @@ export class CourseView extends T.Group {
     lamp?: T.Mesh<T.SphereGeometry, T.MeshBasicMaterial>;
   }[] = [];
   private gateModels: T.Group[] = [];
+  private axeModels: { root: T.Group; rotor: T.Group }[] = [];
   private pickupModels = new Map<string, T.Group>();
   private meshes: T.Mesh[] = [];
   private label(text: string, color: number) {
@@ -62,6 +63,7 @@ export class CourseView extends T.Group {
       this.clear();
       this.key = key;
       this.gateModels = [];
+      this.axeModels = [];
       this.hazards = [];
       this.pickupModels.clear();
       this.meshes = [];
@@ -225,6 +227,15 @@ export class CourseView extends T.Group {
             this.hazards.push({ h, root, flames, lamp });
           }
         }
+        for (const a of sim.axes.snapshot().axes) {
+          const root = new T.Group();
+          root.position.set(a.x, a.y, a.z);
+          const rotor = new T.Group();
+          rotor.add(buildAxeMesh());
+          root.add(rotor);
+          this.add(root);
+          this.axeModels.push({ root, rotor });
+        }
         for (const [i, gate] of track.checkpoints.entries()) {
           const g = new T.Group();
           g.name = `checkpoint-${gate.id}`;
@@ -309,6 +320,10 @@ export class CourseView extends T.Group {
         );
       }
     }
+    const axes = sim.axes.snapshot().axes;
+    this.axeModels.forEach((m, i) => {
+      if (axes[i]) m.rotor.rotation.z = axes[i].angle;
+    });
     this.gateModels.forEach((g, i) => {
       g.visible = i >= run.checkpoint;
       g.scale.setScalar(1);
@@ -324,6 +339,7 @@ export class CourseView extends T.Group {
   inspect() {
     return {
       key: this.key,
+      axes: this.axeModels.length,
       gates: this.gateModels.filter((g) => g.visible).length,
       pickups: [...this.pickupModels.values()].filter((g) => g.visible).length,
       solids: this.meshes.length,

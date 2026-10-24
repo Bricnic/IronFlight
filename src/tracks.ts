@@ -111,6 +111,7 @@ const canyon = points([
   [0, -100],
   [0, 300],
   [0, 700],
+  [0, 845],
   [0, 900],
   [0, 1300],
   [0, 1700],
@@ -291,7 +292,11 @@ export const TRACKS: Track[] = [
       0,
       300,
     ),
-    spawn: { x: 0, z: -100, y: 80, yaw: 0 },
+    spawn: { x: 0, z: -100, y: 82.1, yaw: 0 },
+    checkpoints: gates(canyon).map((g, i) => ({
+      ...g,
+      y: [56, 29, 19, 5, 5, 5, 5, 5][i],
+    })),
   },
   demo(
     "haunted-hollow",

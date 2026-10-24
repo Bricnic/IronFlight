@@ -29,6 +29,7 @@ export const courseAvailable = (id: TrackId) =>
     "skyline-circuit",
     "scrapyard-sweep",
     "inferno-vault",
+    "canyon-plunge",
   ].includes(id);
 export function courseSolids(track: Track): CourseSolid[] {
   if (!courseAvailable(track.id))
@@ -46,7 +47,13 @@ export function courseSolids(track: Track): CourseSolid[] {
       color: 0x6d817c,
     },
   ];
-  for (let i = 1; track.mode === "race" && i < track.path.length; i++) {
+  for (
+    let i = 1;
+    track.mode === "race" &&
+    track.id !== "canyon-plunge" &&
+    i < track.path.length;
+    i++
+  ) {
     const a = track.path[i - 1],
       b = track.path[i];
     solids.push({
@@ -357,6 +364,238 @@ export function courseSolids(track: Track): CourseSolid[] {
         d: 16,
         color: 0x75664d,
       });
+  }
+  if (track.id === "canyon-plunge") {
+    solids[0] = {
+      id: "ground",
+      kind: "ground",
+      x: 0,
+      y: -0.6,
+      z: 272.5,
+      w: 400,
+      h: 1.2,
+      d: 1145,
+      color: 0x8a6f52,
+    };
+    solids.push({
+      id: "ground-far",
+      kind: "ground",
+      x: 0,
+      y: -0.6,
+      z: 1733.5,
+      w: 400,
+      h: 1.2,
+      d: 1733,
+      color: 0x8a6f52,
+    });
+    // Elevated ramp: surface falls 80 -> 16 over z -100..845.
+    solids.push({
+      id: "plunge-ramp",
+      kind: "ramp",
+      x: 0,
+      y: 48,
+      z: 372.5,
+      w: 20,
+      h: 0.5,
+      d: 947,
+      angle: Math.atan2(64, 945),
+      color: 0x8c6858,
+    });
+    for (const side of [-1, 1])
+      solids.push({
+        id: `ramp-rail-${side}`,
+        kind: "barrier",
+        x: side * 11,
+        y: 49,
+        z: 372.5,
+        w: 0.6,
+        h: 2,
+        d: 947,
+        angle: Math.atan2(64, 945),
+        color: 0xe6c16a,
+      });
+    for (const z of [-50, 70, 190, 310, 430, 550, 670, 790]) {
+      const surf = 80 - (z + 100) * (64 / 945);
+      solids.push({
+        id: `ramp-pier-${z}`,
+        kind: "support",
+        x: 0,
+        y: surf / 2,
+        z,
+        w: 4,
+        h: surf,
+        d: 4,
+        color: 0x5d6a72,
+      });
+    }
+    // Launch kicker at the lip.
+    solids.push({
+      id: "plunge-kicker",
+      kind: "ramp",
+      x: 0,
+      y: 17.3,
+      z: 841,
+      w: 16,
+      h: 0.4,
+      d: 10,
+      angle: -0.35,
+      color: 0x8c6858,
+    });
+    // Canyon gorge: cliff faces and floor.
+    solids.push(
+      {
+        id: "gorge-near",
+        kind: "support",
+        x: 0,
+        y: -2,
+        z: 844,
+        w: 400,
+        h: 36,
+        d: 2,
+        color: 0x6e5138,
+      },
+      {
+        id: "gorge-far",
+        kind: "support",
+        x: 0,
+        y: -10,
+        z: 868,
+        w: 400,
+        h: 20,
+        d: 2,
+        color: 0x6e5138,
+      },
+      {
+        id: "gorge-floor",
+        kind: "support",
+        x: 0,
+        y: -20.6,
+        z: 856,
+        w: 400,
+        h: 1.2,
+        d: 24,
+        color: 0x2e2620,
+      },
+    );
+    // Runout upslope, taper back to the road, and far road.
+    solids.push({
+      id: "plunge-runout",
+      kind: "ramp",
+      x: 0,
+      y: 2,
+      z: 893.5,
+      w: 24,
+      h: 0.5,
+      d: 53.2,
+      angle: -Math.atan2(4, 53),
+      color: 0x8c6858,
+    });
+    solids.push({
+      id: "plunge-taper",
+      kind: "ramp",
+      x: 0,
+      y: 2,
+      z: 945,
+      w: 24,
+      h: 0.5,
+      d: 50.2,
+      angle: Math.atan2(4, 50),
+      color: 0x8c6858,
+    });
+    solids.push({
+      id: "road-far",
+      kind: "road",
+      x: 0,
+      y: 0.015,
+      z: 1700,
+      w: 24,
+      h: 0.03,
+      d: 1650,
+      color: 0x303e49,
+    });
+    for (const side of [-1, 1])
+      solids.push({
+        id: `plunge-rail-${side}`,
+        kind: "barrier",
+        x: side * 14,
+        y: 1,
+        z: 1690,
+        w: 1,
+        h: 2,
+        d: 1620,
+        color: 0xe6c16a,
+      });
+    for (const side of [-1, 1])
+      solids.push({
+        id: `plunge-start-${side}`,
+        kind: "barrier",
+        x: side * 12,
+        y: 44,
+        z: -100,
+        w: 2,
+        h: 88,
+        d: 2,
+        color: 0xe08a4c,
+      });
+    solids.push({
+      id: "plunge-start-beam",
+      kind: "barrier",
+      x: 0,
+      y: 88.5,
+      z: -100,
+      w: 26,
+      h: 1,
+      d: 2,
+      color: 0xe08a4c,
+    });
+    for (const side of [-1, 1])
+      solids.push({
+        id: `plunge-finish-${side}`,
+        kind: "barrier",
+        x: side * 13,
+        y: 4,
+        z: 2500,
+        w: 2,
+        h: 8,
+        d: 2,
+        color: 0xe8e4da,
+      });
+    for (const [i, z] of [950, 1050, 1400, 1600, 1800, 2000].entries()) {
+      for (const side of [-1, 1])
+        solids.push({
+          id: `axe-post-${i}-${side}`,
+          kind: "barrier",
+          x: side * 15.5,
+          y: 6.5,
+          z,
+          w: 1.5,
+          h: 13,
+          d: 1.5,
+          color: 0x4a545c,
+        });
+      solids.push({
+        id: `axe-beam-${i}`,
+        kind: "barrier",
+        x: 0,
+        y: 13,
+        z,
+        w: 32.5,
+        h: 1,
+        d: 1.5,
+        color: 0x4a545c,
+      });
+      solids.push({
+        id: `axe-hanger-${i}`,
+        kind: "barrier",
+        x: 0,
+        y: 11,
+        z,
+        w: 0.8,
+        h: 3,
+        d: 0.8,
+        color: 0x4a545c,
+      });
+    }
   }
   for (const water of comicHazards(track).filter((h) => h.kind === "water"))
     for (const direction of [-1, 1])

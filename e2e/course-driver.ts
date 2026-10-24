@@ -12,7 +12,7 @@ export async function driveTrack(page: Page, id: TrackId, start = true) {
       let peakY = 0;
       for (
         let frame = 0;
-        frame < 650 && g.snapshot().run?.status === "running";
+        frame < 1200 && g.snapshot().run?.status === "running";
         frame++
       )
         g.driveFrames(
@@ -49,6 +49,15 @@ export async function driveTrack(page: Page, id: TrackId, start = true) {
               }
             }
 
+            for (const a of s.axes.axes) {
+              const ax = a.x - s.position.x,
+                az = a.z - s.position.z,
+                ahead = ax * fx + az * fz;
+              if (ahead > 0 && ahead < 120 && (s.run?.checkpoint ?? 0) >= 3) {
+                x = a.x + 10.5;
+                break;
+              }
+            }
             const desired = Math.atan2(x - s.position.x, z - s.position.z),
               heading = Math.atan2(s.forward[0], s.forward[2]);
             const error = Math.atan2(

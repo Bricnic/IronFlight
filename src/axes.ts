@@ -188,6 +188,7 @@ export class AxeArray {
       axes: this.axes.map((a) => ({
         id: a.def.id,
         x: a.def.x,
+        y: a.def.y,
         z: a.def.z,
         angle: a.angle,
         velocity: a.velocity,
