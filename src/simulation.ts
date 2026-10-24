@@ -1,6 +1,7 @@
 import { ComicPhysics } from "./comic-physics";
 import { GhostSwarm } from "./ghosts";
 import { AxeArray } from "./axes";
+import { SlideSystems } from "./slide";
 import { courseSolids, courseHazards, courseProps } from "./course";
 import { getTrack, type TrackId } from "./tracks";
 import { TrackRun } from "./track-run";
@@ -54,6 +55,7 @@ export class Simulation {
   comic!: ComicPhysics;
   ghosts!: GhostSwarm;
   axes!: AxeArray;
+  slide!: SlideSystems;
   props!: Destructibles;
   private events!: RAPIER.EventQueue;
   body!: RAPIER.RigidBody;
@@ -115,6 +117,7 @@ export class Simulation {
   private activeSkids = new Map<number, number>();
   loopApex = false;
   loopCompleted = false;
+  bounced = false;
   setTuning(values: Partial<Tuning>) {
     Object.assign(this.tuning, validateTuning(values));
     if (this.world)
@@ -172,6 +175,7 @@ export class Simulation {
     this.activeSkids.clear();
     this.loopApex = false;
     this.loopCompleted = false;
+    this.bounced = false;
     this.world = new RAPIER.World({
       x: 0,
       y: -9.81 * this.tuning.gravity,
@@ -282,6 +286,7 @@ export class Simulation {
     this.comic = new ComicPhysics(this);
     this.ghosts = new GhostSwarm(this);
     this.axes = new AxeArray(this);
+    this.slide = new SlideSystems(this);
     if (stage !== "lab")
       for (const h of this.activeHazards) {
         if (h.kind === "hammer") {
@@ -378,6 +383,7 @@ export class Simulation {
       brake = Math.max(0, Math.min(1, input.brake ?? 0)),
       handbrake = Math.max(0, Math.min(1, input.handbrake ?? 0)),
       steer = Math.max(-1, Math.min(1, input.steer ?? 0));
+    const strafeMode = this.courseTrack?.controls === "strafe";
     const speed = this.body.linvel();
     const forward = new Vector3(0, 0, 1).applyQuaternion(
       new Quaternion().copy(this.body.rotation()),
@@ -389,7 +395,9 @@ export class Simulation {
       routeX !== undefined && Math.abs(position.x - routeX) < 6;
     const loopSuspension =
       routeX !== undefined && position.z > LOOP.z - LOOP.radius - 5;
-    this.body.setAngularDamping(loopSuspension ? 0.25 : 1.2);
+    this.body.setAngularDamping(
+      strafeMode ? 8 : loopSuspension ? 0.25 : 1.2,
+    );
     for (let i = 0; i < 4; i++) {
       if (this.parts.get(PARTS[i + 2].id)!.body) continue;
       this.vehicle.setWheelMaxSuspensionForce(
@@ -508,8 +516,9 @@ export class Simulation {
         true,
       );
     }
+    const effectiveSteer = strafeMode ? 0 : steer;
     const steeringDelta =
-      (steer * this.tuning.maxSteeringAngle * Math.PI) / 180 -
+      (effectiveSteer * this.tuning.maxSteeringAngle * Math.PI) / 180 -
       this.steeringAngle;
     this.steeringAngle +=
       Math.sign(steeringDelta) *
@@ -525,7 +534,7 @@ export class Simulation {
     const localUp = new Vector3(0, 1, 0).applyQuaternion(
       new Quaternion().copy(this.body.rotation()),
     );
-    if (frontGrip > 0 && localUp.y > 0.7 && !onLoop) {
+    if (frontGrip > 0 && localUp.y > 0.7 && !onLoop && !strafeMode) {
       const yaw = new Vector3().copy(this.body.angvel()).dot(localUp);
       const targetYaw =
         (longitudinal *
@@ -550,8 +559,35 @@ export class Simulation {
         true,
       );
     }
+    const flow = this.slide.flowAt(position);
+    if (flow) this.slide.applyFlow(flow);
+    if (strafeMode) {
+      this.slide.applyStrafe(steer);
+      const targetYaw = flow
+        ? Math.atan2(flow.dirx, flow.dirz)
+        : (this.courseTrack?.spawn.yaw ?? 0);
+      const currentYaw = Math.atan2(forward.x, forward.z);
+      const yawErr = Math.atan2(
+        Math.sin(targetYaw - currentYaw),
+        Math.cos(targetYaw - currentYaw),
+      );
+      const yawRate = new Vector3()
+        .copy(this.body.angvel())
+        .dot(new Vector3(0, 1, 0));
+      const hold = (yawErr * 6 - yawRate) * Math.min(1, 10 * DT);
+      this.body.applyTorqueImpulse(
+        new Vector3(0, hold * this.body.principalInertia().y, 0),
+        true,
+      );
+    }
     // Rolling resistance only acts while grounded and coasting, never in flight.
-    if (throttle === 0 && brake === 0 && handbrake === 0 && grounded) {
+    if (
+      throttle === 0 &&
+      brake === 0 &&
+      handbrake === 0 &&
+      grounded &&
+      !flow
+    ) {
       const delta = Math.min(
         Math.abs(longitudinal),
         1.8 * this.tuning.friction * DT,
@@ -635,6 +671,7 @@ export class Simulation {
           : 0,
       );
       this.vehicle.setWheelSteering(i, i < 2 ? this.steeringAngle : 0);
+      this.vehicle.setWheelSideFrictionStiffness(i, strafeMode ? 0.12 : 1.1);
     }
     // Suspension only uses fixed surfaces. A rotating hammer must not become
     // driveable ground and inject suspension impulses into a passing tire.
@@ -679,6 +716,7 @@ export class Simulation {
     const impact = before.distanceTo(this.body.linvel());
     const hammerHit = this.resolveHammerImpacts(before);
     const axeHit = this.axes.resolve(before);
+    this.slide.bounce();
     this.resolveLanding(before, impact);
     this.recordSkids(throttle, steer);
     if (
@@ -774,6 +812,7 @@ export class Simulation {
         landed: this.landed,
         loopCompleted: this.loopCompleted,
         destroyed,
+        bounced: this.bounced,
       },
     );
   }
@@ -1182,6 +1221,7 @@ export class Simulation {
       comic: this.comic.snapshot(),
       ghosts: this.ghosts.snapshot(),
       axes: this.axes.snapshot(),
+      slide: this.slide.snapshot(),
       run: this.trackRun?.snapshot() ?? null,
       position: { x: p.x, y: p.y, z: p.z },
       velocity: { x: v.x, y: v.y, z: v.z },

@@ -466,3 +466,89 @@ export function axeStats(group: T.Group) {
   });
   return { meshes, triangles: Math.round(triangles), metallic };
 }
+export function buildTrampolineMesh() {
+  const group = new T.Group();
+  const pad = new T.Mesh(
+    new T.CylinderGeometry(5, 5, 0.5, 40),
+    new T.MeshStandardMaterial({ color: 0x1d2b33, roughness: 0.9 }),
+  );
+  pad.position.y = 0.3;
+  const rim = new T.Mesh(
+    new T.TorusGeometry(5, 0.45, 14, 40),
+    new T.MeshStandardMaterial({ color: 0xd84a3a, roughness: 0.6 }),
+  );
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = 0.55;
+  group.add(pad, rim);
+  const legMat = new T.MeshStandardMaterial({
+    color: 0x8b9697,
+    metalness: 0.65,
+    roughness: 0.5,
+  });
+  for (let i = 0; i < 6; i++) {
+    const a = (i * Math.PI) / 3;
+    const leg = new T.Mesh(
+      new T.CylinderGeometry(0.14, 0.14, 1.4, 10),
+      legMat,
+    );
+    leg.position.set(Math.cos(a) * 4.4, -0.4, Math.sin(a) * 4.4);
+    group.add(leg);
+  }
+  group.traverse((o) => {
+    if (o instanceof T.Mesh) {
+      o.castShadow = true;
+      o.receiveShadow = true;
+    }
+  });
+  return group;
+}
+export function trampolineStats(group: T.Group) {
+  let meshes = 0,
+    triangles = 0;
+  group.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    meshes++;
+    triangles += o.geometry.index
+      ? o.geometry.index.count / 3
+      : o.geometry.attributes.position.count / 3;
+  });
+  return { meshes, triangles: Math.round(triangles) };
+}
+export function buildRingMesh(radius = 6) {
+  const group = new T.Group();
+  group.userData.radius = radius;
+  const band = new T.Mesh(
+    new T.TorusGeometry(radius, 0.5, 18, 56),
+    new T.MeshStandardMaterial({
+      color: 0xffd34d,
+      metalness: 1,
+      roughness: 0.25,
+      emissive: 0x7a5a00,
+      emissiveIntensity: 0.35,
+    }),
+  );
+  const inner = new T.Mesh(
+    new T.TorusGeometry(radius, 0.18, 12, 48),
+    new T.MeshBasicMaterial({ color: 0xfff3c4 }),
+  );
+  band.rotation.x = Math.PI / 2;
+  inner.rotation.x = Math.PI / 2;
+  group.add(band, inner);
+  return group;
+}
+export function ringStats(group: T.Group) {
+  let meshes = 0,
+    triangles = 0;
+  group.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    meshes++;
+    triangles += o.geometry.index
+      ? o.geometry.index.count / 3
+      : o.geometry.attributes.position.count / 3;
+  });
+  return {
+    meshes,
+    triangles: Math.round(triangles),
+    radius: group.userData.radius as number,
+  };
+}

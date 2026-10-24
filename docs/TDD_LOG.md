@@ -122,3 +122,8 @@ GREEN: new AxeArray hangs six phased pendulums (amplitude 1.0 rad, 5 s period, d
 
 RED: `npx vitest run tests/expansion-gravestones.test.ts` failed 6/6 on the missing kind, props and meshes.
 GREEN: new gravestone prop kind breaks above 2.5 m/s closing speed with rubble debris, reports each stone id exactly once through takeDestroyed, and hollow courseProps mirror the catalog demolition targets. Three fixes along the way: the drain call moved out of the optional trackRun chain (arguments never evaluated without a run), the stone cap became a real hemisphere for honest triangle density, and the PropView update test moved to chunk 8 browser coverage because fire-material texture loading needs DOM. Full `npm run check` passes 211/211 with the production build.
+
+## Expansion chunk 6 — Slide systems
+
+RED: `npx vitest run tests/expansion-slide.test.ts` failed to collect: missing slide module, sim wiring and mesh builders.
+GREEN: new SlideSystems owns flow boxes (8 m/s push with drag capped at 16 m/s, rolling resistance skipped while flowing), strafe mode (lateral impulse, slippery tires, heading-hold autopilot tracking flow direction or spawn yaw), and trampoline sensors (30 m/s safe bounce with 1 s cooldown, latched bounced flag for the run). Fixes along the way: a missing private constructor modifier, bounce resolution moved after impact detection so launches never count as collisions, and heading hold replacing damping alone against drift yaw. Full `npm run check` passes 220/220 with the production build. CourseView slide/trampoline/ring integration and full-run proof follow with the slide course in chunk 9.
