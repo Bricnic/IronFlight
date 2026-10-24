@@ -88,3 +88,12 @@ Final unretouched captures cover all eight families, plus closed-book, active-hy
 ## Restart from game over
 
 RED: pressing R after a physical book wreck left the run failed. The key handler returned for every non-play surface before checking restart. GREEN: process R on play/results before the driving-input guard, retaining menu button activation and editable-field handling. Browser regressions cover the invisible initial hold and fully revealed results with a focused menu button; both confirm the same track restarts at zero elapsed time, full integrity, a hidden results panel and working arrow acceleration. Repeated keydown events do not repeatedly rebuild. Production build passes.
+
+# Three-track expansion TDD log
+
+Plan: docs/EXPANSION_RELEASE_PLAN.md (Canyon Plunge, Haunted Hollow, Sky Slide).
+
+## Expansion chunk 0 -- Baseline (not new TDD)
+
+Environment provisioned: git 2.56.0 and Node.js 24.22.1 installed; repo-local commit identity matches existing history.
+`npm run check`: 185/185 unit tests pass across 37 files; production build passes. No code changes; the expansion plan is checked in as the chunk 0 snapshot.
