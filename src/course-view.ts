@@ -347,3 +347,58 @@ export class CourseView extends T.Group {
     };
   }
 }
+export function buildGhostMeshes(count: number) {
+  const group = new T.Group();
+  for (let i = 0; i < count; i++) {
+    const ghost = new T.Group();
+    ghost.name = `ghost-${i + 1}`;
+    const sheet = new T.MeshStandardMaterial({
+      color: 0xf2f6ff,
+      emissive: 0x8fb4ff,
+      emissiveIntensity: 0.25,
+      roughness: 0.35,
+      transparent: true,
+      opacity: 0.72,
+      side: T.DoubleSide,
+      depthWrite: false,
+    });
+    const body = new T.Mesh(new T.ConeGeometry(1.4, 3.2, 24, 1, true), sheet);
+    body.position.y = 1.6;
+    const head = new T.Mesh(new T.SphereGeometry(1.15, 24, 18), sheet);
+    head.position.y = 3.3;
+    const eyeMat = new T.MeshBasicMaterial({ color: 0x0a0f16 });
+    const eyes = [-0.42, 0.42].map((x) => {
+      const eye = new T.Mesh(new T.SphereGeometry(0.16, 12, 10), eyeMat);
+      eye.position.set(x, 3.5, 1.0);
+      eye.name = "eye";
+      return eye;
+    });
+    ghost.add(body, head, ...eyes);
+    group.add(ghost);
+  }
+  return group;
+}
+export function ghostStats(group: T.Group) {
+  let meshes = 0,
+    triangles = 0,
+    translucent = 0,
+    eyes = 0;
+  group.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    meshes++;
+    const position = o.geometry.attributes.position;
+    triangles += o.geometry.index
+      ? o.geometry.index.count / 3
+      : position.count / 3;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    if (mats.some((m) => m.transparent)) translucent++;
+    if (o.name === "eye") eyes++;
+  });
+  return {
+    ghosts: group.children.length,
+    meshes,
+    triangles: Math.round(triangles),
+    translucent,
+    eyes,
+  };
+}

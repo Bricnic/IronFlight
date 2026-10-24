@@ -1,4 +1,5 @@
 import { ComicPhysics } from "./comic-physics";
+import { GhostSwarm } from "./ghosts";
 import { courseSolids, courseHazards, courseProps } from "./course";
 import { getTrack, type TrackId } from "./tracks";
 import { TrackRun } from "./track-run";
@@ -50,6 +51,7 @@ export function initPhysics() {
 export class Simulation {
   world!: RAPIER.World;
   comic!: ComicPhysics;
+  ghosts!: GhostSwarm;
   props!: Destructibles;
   private events!: RAPIER.EventQueue;
   body!: RAPIER.RigidBody;
@@ -276,6 +278,7 @@ export class Simulation {
       this.courseTrack ? courseProps(this.courseTrack) : undefined,
     );
     this.comic = new ComicPhysics(this);
+    this.ghosts = new GhostSwarm(this);
     if (stage !== "lab")
       for (const h of this.activeHazards) {
         if (h.kind === "hammer") {
@@ -658,8 +661,10 @@ export class Simulation {
     this.updateLava();
     this.props.captureVelocities();
     this.comic.before();
+    this.ghosts.update();
     this.world.step(this.events, this.hammerHooks);
     this.comic.after();
+    this.ghosts.attack();
     for (let i = 0; i < 4; i++) {
       const ground = this.vehicle.wheelGroundObject(i);
       const kind = ground && this.surfaceKinds.get(ground.handle);
@@ -1160,6 +1165,7 @@ export class Simulation {
       v = this.body.linvel();
     return {
       comic: this.comic.snapshot(),
+      ghosts: this.ghosts.snapshot(),
       run: this.trackRun?.snapshot() ?? null,
       position: { x: p.x, y: p.y, z: p.z },
       velocity: { x: v.x, y: v.y, z: v.z },

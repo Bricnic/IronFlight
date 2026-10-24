@@ -107,3 +107,8 @@ GREEN: catalog gains canyon-plunge (race), haunted-hollow (demolition) and sky-s
 
 RED: `npx vitest run tests/expansion-run.test.ts` failed 3/4: demolition runs completed instantly through the zero-checkpoint race branch, and ring/bounce ordering was unenforced (the timeout/wreck contract test was already green).
 GREEN: TrackRun gains a demolition branch over reported destroyed IDs (duplicates ignored, empty target lists never auto-complete), latched bounce plus swept ring proximity that only counts after the bounce, and ring-gated race completion. Snapshot adds destroyed/demolishCount/bounced/ringDone for the later HUD chunk. Full `npm run check` passes 193/193 with the production build.
+
+## Expansion chunk 3 — Ghosts
+
+RED: `npx vitest run tests/expansion-ghosts.test.ts` failed to collect: missing ghosts module and mesh builders.
+GREEN: new GhostSwarm mirrors the ComicPhysics before/after pattern — four seek-steered ghosts at 13 m/s (below the 32.5 m/s stock top speed, so a moving truck escapes), 4 m overlap radius, 5%/s proportional drain that wrecks a parked truck in 20 s with ghost damage events. Simulation constructs the swarm, steps update/attack around world.step and exposes it in snapshots. Mechanics run against a real lab-stage sim driving the shipped methods in shipped order; translucent sheet-phantom meshes are built headless with geometry stats. CourseView.update wiring and browser proof follow with the hollow course in chunk 8. Full `npm run check` passes 199/199 with the production build.
