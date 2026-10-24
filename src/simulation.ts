@@ -1,5 +1,6 @@
 import { ComicPhysics } from "./comic-physics";
 import { GhostSwarm } from "./ghosts";
+import { AxeArray } from "./axes";
 import { courseSolids, courseHazards, courseProps } from "./course";
 import { getTrack, type TrackId } from "./tracks";
 import { TrackRun } from "./track-run";
@@ -52,6 +53,7 @@ export class Simulation {
   world!: RAPIER.World;
   comic!: ComicPhysics;
   ghosts!: GhostSwarm;
+  axes!: AxeArray;
   props!: Destructibles;
   private events!: RAPIER.EventQueue;
   body!: RAPIER.RigidBody;
@@ -279,6 +281,7 @@ export class Simulation {
     );
     this.comic = new ComicPhysics(this);
     this.ghosts = new GhostSwarm(this);
+    this.axes = new AxeArray(this);
     if (stage !== "lab")
       for (const h of this.activeHazards) {
         if (h.kind === "hammer") {
@@ -649,6 +652,7 @@ export class Simulation {
           this.hammerPhase,
         ),
       );
+    this.axes.update();
     const before = new Vector3().copy(this.body.linvel());
     for (const [id, rotor] of this.hazardBodies)
       for (let i = 0; i < rotor.numColliders(); i++) {
@@ -674,9 +678,15 @@ export class Simulation {
     this.time = this.ticks * DT;
     const impact = before.distanceTo(this.body.linvel());
     const hammerHit = this.resolveHammerImpacts(before);
+    const axeHit = this.axes.resolve(before);
     this.resolveLanding(before, impact);
     this.recordSkids(throttle, steer);
-    if (!hammerHit && impact > 10 && this.time - this.lastImpact > 0.2) {
+    if (
+      !hammerHit &&
+      !axeHit &&
+      impact > 10 &&
+      this.time - this.lastImpact > 0.2
+    ) {
       this.lastImpact = this.time;
       this.damage("bumper-front", (impact - 10) * 4, new Vector3(0, 0, 0.15));
       this.damage("hood", (impact - 10) * 2, new Vector3(0, 0.2, 0.6));
@@ -1166,6 +1176,7 @@ export class Simulation {
     return {
       comic: this.comic.snapshot(),
       ghosts: this.ghosts.snapshot(),
+      axes: this.axes.snapshot(),
       run: this.trackRun?.snapshot() ?? null,
       position: { x: p.x, y: p.y, z: p.z },
       velocity: { x: v.x, y: v.y, z: v.z },
@@ -1210,6 +1221,11 @@ export class Simulation {
       status: this.status,
       damageEvents: [...this.damageEvents],
       hammerImpacts: this.hammerImpacts.map((hit) => ({
+        ...hit,
+        point: [...hit.point],
+        deltaVelocity: [...hit.deltaVelocity],
+      })),
+      axeImpacts: this.axes.impacts.map((hit) => ({
         ...hit,
         point: [...hit.point],
         deltaVelocity: [...hit.deltaVelocity],

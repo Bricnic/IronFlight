@@ -402,3 +402,67 @@ export function ghostStats(group: T.Group) {
     eyes,
   };
 }
+export function buildAxeMesh() {
+  const group = new T.Group();
+  const steel = new T.MeshStandardMaterial({
+    color: 0xb9c4cc,
+    metalness: 0.85,
+    roughness: 0.32,
+  });
+  const dark = new T.MeshStandardMaterial({
+    color: 0x4a545c,
+    metalness: 0.7,
+    roughness: 0.5,
+  });
+  const wood = new T.MeshStandardMaterial({ color: 0x6b4a2e, roughness: 0.8 });
+  const handle = new T.Mesh(new T.CylinderGeometry(0.22, 0.28, 8, 20), wood);
+  handle.position.y = -4;
+  const shape = new T.Shape();
+  shape.moveTo(0, 1.8);
+  shape.quadraticCurveTo(2.6, 1.2, 2.9, -0.6);
+  shape.quadraticCurveTo(1.6, -0.9, 0.4, -1.8);
+  shape.lineTo(-0.4, -1.8);
+  shape.quadraticCurveTo(0.4, -0.9, 0.2, 0.6);
+  shape.quadraticCurveTo(0.1, 1.4, 0, 1.8);
+  const bladeGeo = new T.ExtrudeGeometry(shape, {
+    steps: 1,
+    depth: 0.5,
+    bevelEnabled: true,
+    bevelThickness: 0.12,
+    bevelSize: 0.12,
+    bevelSegments: 3,
+    curveSegments: 24,
+  });
+  bladeGeo.translate(0, 0, -0.25);
+  const blade = new T.Mesh(bladeGeo, steel);
+  blade.rotation.y = Math.PI / 2;
+  blade.position.y = -7;
+  const spike = new T.Mesh(new T.ConeGeometry(0.3, 1.6, 16), steel);
+  spike.rotation.x = -Math.PI / 2;
+  spike.position.set(0, -7, -2.2);
+  const collar = new T.Mesh(new T.CylinderGeometry(0.4, 0.4, 1.2, 16), dark);
+  collar.position.y = -7;
+  group.add(handle, blade, spike, collar);
+  return group;
+}
+export function axeStats(group: T.Group) {
+  let meshes = 0,
+    triangles = 0,
+    metallic = 0;
+  group.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    meshes++;
+    const position = o.geometry.attributes.position;
+    triangles += o.geometry.index
+      ? o.geometry.index.count / 3
+      : position.count / 3;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    if (
+      mats.some(
+        (m) => m instanceof T.MeshStandardMaterial && m.metalness >= 0.5,
+      )
+    )
+      metallic++;
+  });
+  return { meshes, triangles: Math.round(triangles), metallic };
+}

@@ -13,10 +13,9 @@ export function hammerStrike(
   radius: Vector3,
   normal: Vector3,
   incoming: Vector3,
+  speed = HAMMER_SPEED,
 ) {
-  const tangent = new Vector3(-radius.y, radius.x, 0).multiplyScalar(
-    HAMMER_SPEED,
-  );
+  const tangent = new Vector3(-radius.y, radius.x, 0).multiplyScalar(speed);
   const closing = Math.max(0, tangent.clone().sub(incoming).dot(normal));
   const strength = Math.max(tangent.length(), closing);
   const deltaVelocity = tangent.multiplyScalar(1.7).addScaledVector(normal, 8);
