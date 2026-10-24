@@ -4,6 +4,7 @@ import { flameIntensity, type Hazard } from "./hazards";
 import { pbr, lavaMaterial } from "./materials";
 import { flameMaterial } from "./materials";
 import { courseSolids } from "./course";
+import { slideProfileY } from "./tracks";
 import type { Simulation } from "./simulation";
 export class CourseView extends T.Group {
   private key = "";
@@ -79,42 +80,81 @@ export class CourseView extends T.Group {
         if (!track.legacy)
           for (const s of courseSolids(track)) {
             const stone =
-              s.id.startsWith("vault-wall") || s.id.startsWith("vault-floor");
+              s.id.startsWith("vault-wall") ||
+              s.id.startsWith("vault-floor") ||
+              (s.id.startsWith("crypt-") && s.id !== "crypt-door");
+            const cliff = s.id.startsWith("gorge-");
+            const groundMap =
+              track.id === "canyon-plunge"
+                ? "cracked_red_ground"
+                : track.id === "haunted-hollow"
+                  ? "brown_mud_leaves_01"
+                  : track.id === "sky-slide"
+                    ? "grass_ground"
+                    : ["foundry-run", "inferno-vault"].includes(track.id)
+                      ? "concrete_layers_02"
+                      : "concrete_floor_02";
+            const roadMap =
+              track.id === "canyon-plunge"
+                ? "coast_sand_rocks_02"
+                : track.id === "sky-slide"
+                  ? "blue_plaster_wall"
+                  : "asphalt_02";
+            const groundTint =
+              groundMap === "cracked_red_ground"
+                ? 0xffffff
+                : groundMap === "brown_mud_leaves_01"
+                  ? 0x8a7a6a
+                  : groundMap === "grass_ground"
+                    ? 0xa8c795
+                    : track.id === "scrapyard-sweep"
+                      ? 0xb8a990
+                      : 0xc4c8c8;
             const mat =
               s.kind === "lava"
                 ? lavaMaterial()
-                : stone
-                  ? pbr("rock_06", 1, { color: 0xb9b2a7, roughness: 0.94 })
-                  : s.kind === "road" || s.kind === "ramp"
-                    ? pbr("asphalt_02", 1, {
-                        color:
-                          track.id === "sky-slide" && s.kind === "ramp"
-                            ? 0x4f9fd8
-                            : 0xc3c4c5,
-                        roughness: 0.95,
-                      })
-                    : s.kind === "ground"
-                      ? pbr(
-                          ["foundry-run", "inferno-vault"].includes(track.id)
-                            ? "concrete_layers_02"
-                            : "concrete_floor_02",
-                          1,
-                          {
-                            color:
-                              track.id === "scrapyard-sweep"
-                                ? 0xb8a990
-                                : 0xc4c8c8,
-                            roughness: 0.96,
-                          },
-                        )
-                      : new T.MeshStandardMaterial({
+                : cliff
+                  ? pbr("dark_rock_02", 1, { color: 0xd89060, roughness: 0.95 })
+                  : stone
+                    ? pbr(
+                        track.id === "haunted-hollow"
+                          ? "monastery_stone_floor"
+                          : "rock_06",
+                        1,
+                        { color: 0xb9b2a7, roughness: 0.94 },
+                      )
+                    : s.kind === "road" || s.kind === "ramp"
+                      ? pbr(roadMap, 1, {
+                          color:
+                            roadMap === "blue_plaster_wall"
+                              ? 0x6fa8d8
+                              : roadMap === "coast_sand_rocks_02"
+                                ? 0xd8b88a
+                                : 0xc3c4c5,
+                          roughness:
+                            roadMap === "blue_plaster_wall" ? 0.35 : 0.95,
+                        })
+                      : s.kind === "ground"
+                        ? pbr(groundMap, 1, {
+                            color: groundTint,
+                            roughness:
+                              groundMap === "concrete_floor_02" ||
+                              groundMap === "concrete_layers_02"
+                                ? 0.96
+                                : 1,
+                          })
+                        : new T.MeshStandardMaterial({
                           color: s.color,
                           roughness: s.kind === "container" ? 0.65 : 0.95,
                           metalness: s.kind === "container" ? 0.3 : 0,
                         });
             if (s.kind === "lava") this.lavaMaterials.push(mat);
             const geometry = new T.BoxGeometry(s.w, s.h, s.d);
-            if (stone || ["ground", "road", "ramp"].includes(s.kind)) {
+            if (
+              stone ||
+              cliff ||
+              ["ground", "road", "ramp"].includes(s.kind)
+            ) {
               const pos = geometry.attributes.position,
                 normals = geometry.attributes.normal,
                 uv = geometry.attributes.uv;
@@ -133,9 +173,20 @@ export class CourseView extends T.Group {
               uv.needsUpdate = true;
               mat.userData.surface = stone
                 ? "stone"
-                : s.kind === "ground"
-                  ? "concrete"
-                  : "asphalt_02";
+                : cliff
+                  ? "cliff"
+                  : s.kind === "ground"
+                    ? groundMap === "concrete_floor_02" ||
+                      groundMap === "concrete_layers_02"
+                      ? "concrete"
+                      : groundMap === "grass_ground"
+                        ? "grass"
+                        : "dirt"
+                    : roadMap === "asphalt_02"
+                      ? "asphalt_02"
+                      : roadMap === "blue_plaster_wall"
+                        ? "plaster"
+                        : "sand";
             }
             const mesh = new T.Mesh(geometry, mat);
             mesh.position.set(s.x, s.y, s.z);
@@ -265,6 +316,72 @@ export class CourseView extends T.Group {
           ringMesh.position.set(track.ring.x, track.ring.y, track.ring.z);
           this.add(ringMesh);
           this.ringModels.push(ringMesh);
+        }
+        if (track.id === "sky-slide") {
+          const foamMat = new T.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.6,
+            depthWrite: false,
+          });
+          for (let i = 1; i < track.path.length; i++) {
+            const a = track.path[i - 1],
+              b = track.path[i],
+              ya = slideProfileY(a.z),
+              yb = slideProfileY(b.z),
+              len = Math.hypot(b.x - a.x, b.z - a.z);
+            const yaw = Math.atan2(b.x - a.x, b.z - a.z),
+              pitch = Math.atan2(ya - yb, len),
+              dx = (b.x - a.x) / len,
+              dz = (b.z - a.z) / len;
+            for (const [lateral, frac] of [
+              [-4, 0.25],
+              [3.5, 0.5],
+              [-1, 0.75],
+            ] as const) {
+              const foam = new T.Mesh(new T.PlaneGeometry(1.6, 9), foamMat);
+              foam.position.set(
+                a.x + (b.x - a.x) * frac + dz * lateral,
+                ya + (yb - ya) * frac + 0.35,
+                a.z + (b.z - a.z) * frac - dx * lateral,
+              );
+              foam.quaternion
+                .setFromAxisAngle(
+                  new T.Vector3(1, 0, 0),
+                  -Math.PI / 2 - pitch,
+                )
+                .multiply(
+                  new T.Quaternion().setFromAxisAngle(
+                    new T.Vector3(0, 1, 0),
+                    yaw,
+                  ),
+                );
+              this.add(foam);
+            }
+          }
+        }
+        if (track.id === "haunted-hollow") {
+          const spots: [number, number, number][] = [
+            [-120, 3.0, -120],
+            [-60, 3.0, -120],
+            [60, 3.0, -120],
+            [120, 3.0, -120],
+            [-120, 3.0, 140],
+            [-60, 3.0, 140],
+            [60, 3.0, 140],
+            [120, 3.0, 140],
+            [-170, 3.0, -40],
+            [170, 3.0, -40],
+            [-170, 3.0, 60],
+            [170, 3.0, 60],
+            [117, 6.0, -105],
+            [123, 6.0, -105],
+          ];
+          for (const [x, y, z] of spots) {
+            const pumpkin = buildPumpkinMesh();
+            pumpkin.position.set(x, y, z);
+            this.add(pumpkin);
+          }
         }
         for (const [i, gate] of track.checkpoints.entries()) {
           const g = new T.Group();
@@ -414,12 +531,12 @@ export function buildGhostMeshes(count: number) {
     const ghost = new T.Group();
     ghost.name = `ghost-${i + 1}`;
     const sheet = new T.MeshStandardMaterial({
-      color: 0xf2f6ff,
+      color: 0xdfe8ff,
       emissive: 0x8fb4ff,
-      emissiveIntensity: 0.25,
+      emissiveIntensity: 0.6,
       roughness: 0.35,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.6,
       side: T.DoubleSide,
       depthWrite: false,
     });
@@ -612,4 +729,20 @@ export function ringStats(group: T.Group) {
     triangles: Math.round(triangles),
     radius: group.userData.radius as number,
   };
+}
+export function buildPumpkinMesh() {
+  const group = new T.Group();
+  const body = new T.Mesh(
+    new T.SphereGeometry(0.7, 14, 10),
+    new T.MeshStandardMaterial({ color: 0xd8641f, roughness: 0.7 }),
+  );
+  body.scale.y = 0.75;
+  body.castShadow = true;
+  const stem = new T.Mesh(
+    new T.CylinderGeometry(0.08, 0.12, 0.4, 8),
+    new T.MeshStandardMaterial({ color: 0x3f5a26, roughness: 0.9 }),
+  );
+  stem.position.y = 0.6;
+  group.add(body, stem);
+  return group;
 }

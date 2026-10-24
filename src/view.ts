@@ -47,6 +47,8 @@ export class GameView {
   private arena = new T.Group();
   private course = new T.Group();
   private loop = new LoopView();
+  private sun!: T.DirectionalLight;
+  private hemi!: T.HemisphereLight;
   constructor(
     host: HTMLElement,
     readonly simulation: Simulation,
@@ -139,8 +141,10 @@ export class GameView {
     pmrem.dispose();
     this.scene.background = new T.Color(0xc5d0cf);
     this.scene.fog = new T.Fog(0xc5d0cf, 140, 430);
-    this.scene.add(new T.HemisphereLight(0xe5f0ff, 0x514733, 2));
+    this.hemi = new T.HemisphereLight(0xe5f0ff, 0x514733, 2);
+    this.scene.add(this.hemi);
     const sun = new T.DirectionalLight(0xffe3af, 3.5);
+    this.sun = sun;
     sun.position.set(-45, 80, -25);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
@@ -529,8 +533,26 @@ export class GameView {
     this.camera.updateProjectionMatrix();
   }
   render(snap = false, alpha = 1, draw = true) {
-    const s = this.simulation,
-      root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
+    const s = this.simulation;
+    const mood = s.courseTrack?.id;
+    const bg =
+      mood === "haunted-hollow"
+        ? 0x3a4a5a
+        : mood === "sky-slide"
+          ? 0xbfd8e8
+          : mood === "canyon-plunge"
+            ? 0xd8c8a8
+            : 0xc5d0cf;
+    (this.scene.background as T.Color).setHex(bg);
+    const fog = this.scene.fog as T.Fog;
+    fog.color.setHex(bg);
+    fog.near = mood === "haunted-hollow" ? 80 : mood === "sky-slide" ? 200 : mood === "canyon-plunge" ? 150 : 140;
+    fog.far = mood === "haunted-hollow" ? 320 : mood ? 600 : 430;
+    this.hemi.intensity = mood === "haunted-hollow" ? 1.2 : mood === "sky-slide" ? 2.2 : 2;
+    this.sun.intensity = mood === "haunted-hollow" ? 1.8 : 3.5;
+    this.sun.color.setHex(mood === "haunted-hollow" ? 0xff9a4a : 0xffe3af);
+    this.scene.environmentIntensity = mood === "haunted-hollow" ? 0.4 : mood === "sky-slide" ? 0.8 : 0.7;
+    const root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
       q = s.previousRotation
         .clone()
         .slerp(new T.Quaternion().copy(s.body.rotation()), alpha);

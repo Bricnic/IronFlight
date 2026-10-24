@@ -1,0 +1,162 @@
+{
+  "rows": [
+    {
+      "name": "canyon-top",
+      "track": "canyon-plunge",
+      "at": [
+        0,
+        81.4,
+        -90
+      ],
+      "yaw": 0,
+      "settle": 30,
+      "drawCalls": 273,
+      "renderTriangles": 110016,
+      "surfaces": 10
+    },
+    {
+      "name": "canyon-lip",
+      "track": "canyon-plunge",
+      "at": [
+        0,
+        20,
+        790
+      ],
+      "yaw": 0,
+      "settle": 30,
+      "drawCalls": 307,
+      "renderTriangles": 115544,
+      "surfaces": 10
+    },
+    {
+      "name": "hollow-stones",
+      "track": "haunted-hollow",
+      "at": [
+        0,
+        2.1,
+        -60
+      ],
+      "yaw": 0,
+      "settle": 60,
+      "drawCalls": 335,
+      "renderTriangles": 118114,
+      "surfaces": 3
+    },
+    {
+      "name": "hollow-crypt",
+      "track": "haunted-hollow",
+      "at": [
+        100,
+        2.1,
+        -70
+      ],
+      "yaw": 3.141592653589793,
+      "settle": 60,
+      "drawCalls": 277,
+      "renderTriangles": 111598,
+      "surfaces": 3
+    },
+    {
+      "name": "slide-top",
+      "track": "sky-slide",
+      "at": [
+        0,
+        101.4,
+        -90
+      ],
+      "yaw": 0,
+      "settle": 30,
+      "drawCalls": 272,
+      "renderTriangles": 109954,
+      "surfaces": 8
+    },
+    {
+      "name": "slide-mid",
+      "track": "sky-slide",
+      "at": [
+        28.5,
+        60,
+        490
+      ],
+      "yaw": 0,
+      "settle": 60,
+      "drawCalls": 276,
+      "renderTriangles": 110048,
+      "surfaces": 8
+    },
+    {
+      "name": "slide-finish",
+      "track": "sky-slide",
+      "at": [
+        0,
+        2.1,
+        2300
+      ],
+      "yaw": 0,
+      "settle": 30,
+      "drawCalls": 275,
+      "renderTriangles": 114608,
+      "surfaces": 8
+    },
+    {
+      "name": "slide-ring",
+      "track": "sky-slide",
+      "at": [
+        0,
+        2.1,
+        2359
+      ],
+      "yaw": 0,
+      "settle": 55,
+      "drawCalls": 258,
+      "renderTriangles": 112944,
+      "surfaces": 8
+    },
+    {
+      "name": "canyon-gauntlet",
+      "track": "canyon-plunge",
+      "at": [
+        0,
+        5,
+        890
+      ],
+      "yaw": 0,
+      "settle": 60,
+      "drawCalls": 298,
+      "renderTriangles": 115390,
+      "surfaces": 10
+    },
+    {
+      "name": "hollow-stone-close",
+      "track": "haunted-hollow",
+      "at": [
+        -140,
+        2.1,
+        -91
+      ],
+      "yaw": 0,
+      "settle": 120,
+      "drawCalls": 310,
+      "renderTriangles": 115914,
+      "surfaces": 3
+    },
+    {
+      "name": "hollow-smash",
+      "track": "haunted-hollow",
+      "at": [
+        -135,
+        2.1,
+        -89
+      ],
+      "yaw": 0,
+      "settle": 25,
+      "input": {
+        "throttle": 1
+      },
+      "drawCalls": 314,
+      "renderTriangles": 115962,
+      "surfaces": 3
+    }
+  ],
+  "errors": []
+}

@@ -179,10 +179,12 @@ export class PropView extends T.Group {
 }
 export function buildGravestoneMesh(seed = 0) {
   const group = new T.Group();
+  group.rotation.y = ((seed * 0.7) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
   const stone = new T.MeshStandardMaterial({
-    color: [0x9aa0a3, 0x8f979b, 0xa5abae][seed % 3],
+    color: [0x9aa0a3, 0x8f979b, 0xa5abae, 0x7d8478, 0x99a092][seed % 5],
     roughness: 0.95,
   });
+  const moss = new T.MeshStandardMaterial({ color: 0x4a5d33, roughness: 1 });
   const dark = new T.MeshStandardMaterial({ color: 0x3a4043, roughness: 1 });
   const slab = (
     geometry: T.BufferGeometry,
@@ -210,6 +212,8 @@ export function buildGravestoneMesh(seed = 0) {
   slab(new T.BoxGeometry(0.7, 0.5, 0.06), dark, 0, 0, 0.24);
   for (let i = 0; i < 3; i++)
     slab(new T.BoxGeometry(0.5 - i * 0.08, 0.05, 0.02), stone, 0, 0.1 - i * 0.14, 0.28);
+  if (seed % 3 === 0)
+    slab(new T.BoxGeometry(0.5, 0.3, 0.06), moss, 0.3, -0.45, 0.22);
   return group;
 }
 export function gravestoneStats(group: T.Group) {
