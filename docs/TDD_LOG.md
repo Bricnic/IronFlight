@@ -102,3 +102,8 @@ Environment provisioned: git 2.56.0 and Node.js 24.22.1 installed; repo-local co
 
 RED: `npx vitest run tests/expansion-tracks.test.ts` failed 4/4 on unknown track IDs and missing thumbnails.
 GREEN: catalog gains canyon-plunge (race), haunted-hollow (demolition) and sky-slide (strafe race), each with limit 300, feasibility 225 and provisional 150/210/270 medals; validation covers demolition targets, strafe rings and race headroom. The thumbnail script was broken on main under plain node (extensionless ESM imports); its import closure now uses explicit .ts extensions and all nine SVGs regenerate with no churn to the original six. Comic-hazard coverage is pinned to its original five tracks while the physics completion loop keys off courseAvailable, so it auto-expands as courses land. Full `npm run check` passes and `e2e/level-select.spec.ts` passes 6/6 with nine cards. Selecting an expansion track throws "Course not implemented" until its course chunk; demolition HUD/labels land with chunk 10.
+
+## Expansion chunk 2 — Run objectives
+
+RED: `npx vitest run tests/expansion-run.test.ts` failed 3/4: demolition runs completed instantly through the zero-checkpoint race branch, and ring/bounce ordering was unenforced (the timeout/wreck contract test was already green).
+GREEN: TrackRun gains a demolition branch over reported destroyed IDs (duplicates ignored, empty target lists never auto-complete), latched bounce plus swept ring proximity that only counts after the bounce, and ring-gated race completion. Snapshot adds destroyed/demolishCount/bounced/ringDone for the later HUD chunk. Full `npm run check` passes 193/193 with the production build.

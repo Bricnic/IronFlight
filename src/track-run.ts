@@ -45,6 +45,9 @@ export class TrackRun {
   elapsed = 0;
   checkpoint = 0;
   collected = new Set<string>();
+  destroyed = new Set<string>();
+  bounced = false;
+  ringDone = false;
   constructor(
     readonly track: Track,
     readonly variant = "default",
@@ -54,7 +57,12 @@ export class TrackRun {
     previous: Position,
     current: Position,
     integrity: number,
-    flags: { landed?: boolean; loopCompleted?: boolean } = {},
+    flags: {
+      landed?: boolean;
+      loopCompleted?: boolean;
+      bounced?: boolean;
+      destroyed?: string[];
+    } = {},
   ) {
     if (this.status !== "running") return;
     if (!Number.isFinite(dt) || dt <= 0) return;
@@ -69,6 +77,17 @@ export class TrackRun {
       this.reason = "timeout";
       return;
     }
+    if (flags.bounced) this.bounced = true;
+    if (flags.destroyed)
+      for (const id of flags.destroyed) this.destroyed.add(id);
+    if (this.track.ring && this.bounced && !this.ringDone) {
+      const r = this.track.ring;
+      if (
+        segmentDistance(previous, current, { x: r.x, y: r.y, z: r.z }) <=
+        r.radius
+      )
+        this.ringDone = true;
+    }
     if (this.track.mode === "arena") {
       for (const p of this.track.collectibles)
         if (
@@ -77,6 +96,10 @@ export class TrackRun {
         )
           this.collected.add(p.id);
       if (this.collected.size === this.track.collectibles.length)
+        this.status = "completed";
+    } else if (this.track.mode === "demolition") {
+      const targets = this.track.demolish ?? [];
+      if (targets.length && targets.every((t) => this.destroyed.has(t.id)))
         this.status = "completed";
     } else {
       while (this.checkpoint < this.track.checkpoints.length) {
@@ -96,7 +119,10 @@ export class TrackRun {
           break;
         this.checkpoint++;
       }
-      if (this.checkpoint === this.track.checkpoints.length)
+      if (
+        this.checkpoint === this.track.checkpoints.length &&
+        (!this.track.ring || this.ringDone)
+      )
         this.status = "completed";
     }
     if (
@@ -119,6 +145,10 @@ export class TrackRun {
       checkpointCount: this.track.checkpoints.length,
       collected: [...this.collected],
       collectibleCount: this.track.collectibles.length,
+      destroyed: [...this.destroyed],
+      demolishCount: this.track.demolish?.length ?? 0,
+      bounced: this.bounced,
+      ringDone: this.ringDone,
       remaining: this.track.limit
         ? Math.max(0, this.track.limit - this.elapsed)
         : null,
