@@ -485,6 +485,23 @@ kbd {
   .playback select {
     width: 70px;
   }
+  footer {
+    height: auto;
+    min-height: 62px;
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    row-gap: 4px;
+  }
+  .controls {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+  #status {
+    bottom: 108px;
+  }
+  #telemetry {
+    bottom: 108px;
+  }
 }
 
 .truck-colors {

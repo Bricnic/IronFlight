@@ -1,6 +1,7 @@
 import { TRACKS, getTrack, type TrackId } from "./tracks";
 import type { BestTimes } from "./best-times";
 import type { TrackRun } from "./track-run";
+import { modeLabel, timeoutCopy } from "./run-copy";
 const format = (time: number) => `${time.toFixed(2)}s`;
 export function createLevelSelect(
   host: HTMLElement,
@@ -13,7 +14,7 @@ export function createLevelSelect(
 ) {
   const screen = document.createElement("main");
   screen.id = "level-select";
-  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Six places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
+  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Nine places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
   const grid = screen.querySelector<HTMLElement>(".track-grid")!;
   const cards = new Map<TrackId, HTMLElement>();
   for (const [i, track] of TRACKS.entries()) {
@@ -24,7 +25,7 @@ export function createLevelSelect(
       "--track-accent",
       `#${track.color.toString(16).padStart(6, "0")}`,
     );
-    card.innerHTML = `<button class="track-play" aria-label="Play ${track.name}"><div class="track-image"><img src="${track.thumbnail}" alt="${track.name} route preview"><span class="track-number">0${i + 1}</span><span class="track-mode">${track.mode === "arena" ? `${track.limit}s COLLECTION` : track.legacy ? "STUNT RACE" : "CHECKPOINT RACE"}</span></div><div class="track-card-body"><div class="track-card-heading"><h2>${track.name}</h2><span class="best-medal">UNRANKED</span></div><p>${track.description}</p><div class="medal-targets"><span class="gold">● ${track.medals.gold}s</span><span class="silver">● ${track.medals.silver}s</span><span class="bronze">● ${track.medals.bronze}s</span></div><div class="track-card-bottom"><span class="best-time">NO TIME SET</span><span class="play-word">PLAY ↗</span></div></div></button>`;
+    card.innerHTML = `<button class="track-play" aria-label="Play ${track.name}"><div class="track-image"><img src="${track.thumbnail}" alt="${track.name} route preview"><span class="track-number">0${i + 1}</span><span class="track-mode">${modeLabel(track)}</span></div><div class="track-card-body"><div class="track-card-heading"><h2>${track.name}</h2><span class="best-medal">UNRANKED</span></div><p>${track.description}</p><div class="medal-targets"><span class="gold">● ${track.medals.gold}s</span><span class="silver">● ${track.medals.silver}s</span><span class="bronze">● ${track.medals.bronze}s</span></div><div class="track-card-bottom"><span class="best-time">NO TIME SET</span><span class="play-word">PLAY ↗</span></div></div></button>`;
     card.querySelector("button")!.onclick = () => onStart(track.id);
     grid.append(card);
     cards.set(track.id, card);
@@ -94,7 +95,7 @@ export function createLevelSelect(
       result.querySelector("#result-description")!.textContent = completed
         ? "You made it. Ready to shave off another second?"
         : run.reason === "timeout"
-          ? "Time ran out. Try a tighter collection route."
+          ? timeoutCopy(getTrack(run.trackId))
           : "Truck wrecked. Rebuild and take another run.";
       result.querySelector("#result-time")!.textContent = format(run.elapsed);
       const medal = result.querySelector<HTMLElement>("#result-medal")!;
