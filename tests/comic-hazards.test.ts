@@ -3,7 +3,15 @@ import { comicHazards, jawAngle, waterMode } from "../src/comic-hazards";
 import { TRACKS } from "../src/tracks";
 test("all five new tracks have a dense mix of grounded comic hazards", () => {
   const kinds = new Set<string>();
-  for (const t of TRACKS.filter((t) => !t.legacy)) {
+  const covered = TRACKS.filter((t) => comicHazards(t).length > 0);
+  expect(covered.map((t) => t.id).sort()).toEqual([
+    "foundry-run",
+    "harbor-sprint",
+    "inferno-vault",
+    "scrapyard-sweep",
+    "skyline-circuit",
+  ]);
+  for (const t of covered) {
     const hazards = comicHazards(t);
     expect(hazards.length).toBeGreaterThanOrEqual(4);
     expect(new Set(hazards.map((h) => h.id)).size).toBe(hazards.length);

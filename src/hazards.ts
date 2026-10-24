@@ -1,4 +1,4 @@
-import { ROUTES } from "./routes";
+import { ROUTES } from "./routes.ts";
 export type Hazard = {
   id: string;
   route: string;

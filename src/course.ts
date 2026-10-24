@@ -1,7 +1,7 @@
-import { comicHazards } from "./comic-hazards";
-import type { Track, TrackId } from "./tracks";
-import type { Hazard } from "./hazards";
-import type { PropDefinition } from "./destructibles";
+import { comicHazards } from "./comic-hazards.ts";
+import type { Track, TrackId } from "./tracks.ts";
+import type { Hazard } from "./hazards.ts";
+import type { PropDefinition } from "./destructibles.ts";
 export type CourseSolid = {
   id: string;
   kind:

@@ -1,7 +1,7 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
-import { ROUTES } from "./routes";
-import { PARTS, type PartState } from "./damage";
+import { ROUTES } from "./routes.ts";
+import { PARTS, type PartState } from "./damage.ts";
 export type PropKind = "sign" | "trash" | "barrel";
 export type PropDefinition = {
   id: string;

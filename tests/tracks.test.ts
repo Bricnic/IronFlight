@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { TRACKS, getTrack, validateTracks } from "../src/tracks";
-it("registers Triple Loop plus five distinct race/arena tracks", () => {
+it("registers Triple Loop plus eight distinct tracks", () => {
   expect(TRACKS.map((t) => t.name)).toEqual([
     "Triple Loop",
     "Harbor Sprint",
@@ -8,9 +8,13 @@ it("registers Triple Loop plus five distinct race/arena tracks", () => {
     "Skyline Circuit",
     "Scrapyard Sweep",
     "Inferno Vault",
+    "Canyon Plunge",
+    "Haunted Hollow",
+    "Sky Slide",
   ]);
   expect(TRACKS.filter((t) => t.mode === "arena")).toHaveLength(2);
-  expect(new Set(TRACKS.map((t) => t.thumbnail)).size).toBe(6);
+  expect(TRACKS.filter((t) => t.mode === "demolition")).toHaveLength(1);
+  expect(new Set(TRACKS.map((t) => t.thumbnail)).size).toBe(9);
   expect(getTrack("triple-loop").legacy).toBe(true);
   expect(validateTracks(TRACKS)).toEqual([]);
 });

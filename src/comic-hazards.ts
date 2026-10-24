@@ -1,4 +1,4 @@
-import type { Track } from "./tracks";
+import type { Track } from "./tracks.ts";
 export type ComicKind =
   | "book"
   | "teeth"

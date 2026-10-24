@@ -1,9 +1,12 @@
 import { beforeAll, test, expect } from "vitest";
 import { Simulation, initPhysics } from "../src/simulation";
 import { TRACKS } from "../src/tracks";
+import { courseAvailable } from "../src/course";
 import { Quaternion } from "three";
 beforeAll(initPhysics);
-for (const track of TRACKS.filter((t) => !t.legacy))
+for (const track of TRACKS.filter(
+  (t) => !t.legacy && courseAvailable(t.id),
+))
   test(`${track.name}: complete normal driving route survives new threats`, async () => {
     const { courseDriver } = await import("./course-driver");
     const s = new Simulation();

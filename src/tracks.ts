@@ -5,6 +5,9 @@ export const TRACK_IDS = [
   "skyline-circuit",
   "scrapyard-sweep",
   "inferno-vault",
+  "canyon-plunge",
+  "haunted-hollow",
+  "sky-slide",
 ] as const;
 export type TrackId = (typeof TRACK_IDS)[number];
 export type Point = { x: number; z: number };
@@ -17,10 +20,14 @@ export type Checkpoint = Point & {
   height: number;
 };
 export type Collectible = Point & { id: string; y: number; radius: number };
+export type Demolishable = Point & { id: string; y: number; radius: number };
 export type Track = {
   id: TrackId;
   name: string;
-  mode: "race" | "arena";
+  mode: "race" | "arena" | "demolition";
+  controls?: "drive" | "strafe";
+  ring?: Point & { y: number; radius: number };
+  demolish?: Demolishable[];
   description: string;
   legacy?: boolean;
   thumbnail: string;
@@ -99,6 +106,40 @@ const inferno = points([
   [0, 0],
   [0, 105],
 ]);
+// Provisional expansion geometry; course chunks finalize heights and hazards.
+const canyon = points([
+  [0, -100],
+  [0, 300],
+  [0, 700],
+  [0, 900],
+  [0, 1300],
+  [0, 1700],
+  [0, 2100],
+  [0, 2500],
+]);
+const hollow = points([
+  [0, -55],
+  [40, -40],
+  [70, 0],
+  [55, 45],
+  [20, 75],
+  [-20, 75],
+  [-55, 45],
+  [-70, 0],
+  [-40, -40],
+  [30, 20],
+  [-30, 15],
+  [0, 105],
+]);
+const slide = points([
+  [0, -100],
+  [0, 300],
+  [60, 700],
+  [60, 1100],
+  [-60, 1500],
+  [-60, 1900],
+  [0, 2300],
+]);
 function race(
   id: TrackId,
   name: string,
@@ -107,6 +148,7 @@ function race(
   path: Point[],
   times: number[],
   yaw = 0,
+  limit?: number,
 ): Track {
   return {
     id,
@@ -120,6 +162,7 @@ function race(
     checkpoints: gates(path),
     collectibles: [],
     medals: { gold: times[0], silver: times[1], bronze: times[2] },
+    ...(limit ? { limit, feasibility: limit * 0.75 } : {}),
   };
 }
 function arena(
@@ -149,6 +192,30 @@ function arena(
       ...p,
       y: 1.7,
       id: `pickup-${i + 1}`,
+      radius: 3.5,
+    })),
+  };
+}
+function demo(
+  id: TrackId,
+  name: string,
+  description: string,
+  color: number,
+  targets: Point[],
+  limit: number,
+  times: number[],
+): Track {
+  const t = race(id, name, description, color, [{ x: 0, z: -90 }], times);
+  return {
+    ...t,
+    mode: "demolition",
+    checkpoints: [],
+    limit,
+    feasibility: limit * 0.75,
+    demolish: targets.map((p, i) => ({
+      ...p,
+      y: 1.5,
+      id: `stone-${i + 1}`,
       radius: 3.5,
     })),
   };
@@ -213,6 +280,42 @@ export const TRACKS: Track[] = [
     150,
     [75, 110, 150],
   ),
+  {
+    ...race(
+      "canyon-plunge",
+      "Canyon Plunge",
+      "Drop the great ramp, clear the canyon and run the axe gauntlet.",
+      0xe08a4c,
+      canyon,
+      [150, 210, 270],
+      0,
+      300,
+    ),
+    spawn: { x: 0, z: -100, y: 80, yaw: 0 },
+  },
+  demo(
+    "haunted-hollow",
+    "Haunted Hollow",
+    "Smash all 12 gravestones before the ghosts wear the truck down.",
+    0x9a6fd0,
+    hollow,
+    300,
+    [150, 210, 270],
+  ),
+  {
+    ...race(
+      "sky-slide",
+      "Sky Slide",
+      "Ride the rapids, strafe the falls and ring the trampoline.",
+      0x4fb8ff,
+      slide,
+      [150, 210, 270],
+      0,
+      300,
+    ),
+    controls: "strafe",
+    ring: { x: 0, z: 2360, y: 25, radius: 6 },
+  },
 ];
 export function getTrack(id: string): Track {
   const track = TRACKS.find((t) => t.id === id);
@@ -243,10 +346,29 @@ export function validateTracks(tracks: Track[]) {
         !t.collectibles.length)
     )
       errors.push(`Invalid arena ${t.id}`);
+    if (
+      t.mode === "demolition" &&
+      (!t.limit ||
+        t.feasibility !== t.limit * 0.75 ||
+        t.medals.bronze > t.limit ||
+        !t.demolish?.length)
+    )
+      errors.push(`Invalid demolition ${t.id}`);
     if (t.mode === "race" && !t.checkpoints.length)
       errors.push(`Missing gates ${t.id}`);
+    if (t.mode === "race" && t.limit && t.medals.bronze > t.limit)
+      errors.push(`Medal beyond limit ${t.id}`);
+    if (t.mode === "race" && t.limit && t.feasibility !== t.limit * 0.75)
+      errors.push(`Missing headroom ${t.id}`);
+    if (t.controls === "strafe" && !t.ring)
+      errors.push(`Strafe without ring ${t.id}`);
     if (new Set(t.collectibles.map((p) => p.id)).size !== t.collectibles.length)
       errors.push(`Duplicate pickups ${t.id}`);
+    if (
+      new Set((t.demolish ?? []).map((p) => p.id)).size !==
+      (t.demolish ?? []).length
+    )
+      errors.push(`Duplicate targets ${t.id}`);
   }
   return errors;
 }
