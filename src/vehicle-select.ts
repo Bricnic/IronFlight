@@ -14,7 +14,7 @@ export function createVehicleSelect(
     const card = document.createElement("article");
     card.className = "vehicle-card";
     card.dataset.vehicle = vehicle.id;
-    card.innerHTML = `<button class="vehicle-pick" aria-label="Drive the ${vehicle.name}"><div class="track-card-body"><div class="track-card-heading"><h2>${vehicle.name}</h2><span class="best-medal picked">PICKED</span></div><p>${vehicle.blurb}</p><div class="track-card-bottom"><span class="best-time">${vehicle.parts.length} PARTS</span><span class="play-word">DRIVE ↗</span></div></div></button>`;
+    card.innerHTML = `<button class="vehicle-pick" aria-label="Drive the ${vehicle.name}"><div class="vehicle-preview"><img src="/vehicles/${vehicle.id}.png" alt="${vehicle.name} in-game preview" width="800" height="450"></div><div class="track-card-body"><div class="track-card-heading"><h2>${vehicle.name}</h2><span class="best-medal picked">PICKED</span></div><p>${vehicle.blurb}</p><div class="track-card-bottom"><span class="best-time">${vehicle.parts.length} PARTS</span><span class="play-word">DRIVE ↗</span></div></div></button>`;
     card.querySelector("button")!.onclick = () => onPick(vehicle.id);
     grid.append(card);
     cards.set(vehicle.id, card);
@@ -50,9 +50,8 @@ export function createVehicleSelect(
       screen.hidden = false;
       host.classList.add("at-level-select");
       (
-        grid.querySelector<HTMLElement>(
-          `[data-vehicle="${picked}"] button`,
-        ) ?? buttons[0]
+        grid.querySelector<HTMLElement>(`[data-vehicle="${picked}"] button`) ??
+        buttons[0]
       ).focus();
     },
     hide() {

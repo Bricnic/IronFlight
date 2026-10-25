@@ -71,6 +71,10 @@ export class GhostSwarm {
       });
   }
   update() {
+    if (!this.sim.ghostsEnabled) {
+      for (const ghost of this.ghosts) ghost.overlapping = false;
+      return;
+    }
     const t = this.sim.body.translation();
     const target = { x: t.x, y: t.y + 2.2, z: t.z };
     for (const g of this.ghosts) {
@@ -83,6 +87,7 @@ export class GhostSwarm {
     }
   }
   attack() {
+    if (!this.sim.ghostsEnabled) return;
     for (const g of this.ghosts) {
       if (!g.overlapping) continue;
       g.contacts++;
@@ -109,6 +114,7 @@ export class GhostSwarm {
   }
   snapshot() {
     return {
+      enabled: this.sim.ghostsEnabled,
       speed: this.speed,
       damageDealt: this.damageDealt,
       ghosts: this.ghosts.map((g) => ({

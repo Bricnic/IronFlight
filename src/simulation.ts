@@ -55,6 +55,7 @@ export class Simulation {
   world!: RAPIER.World;
   comic!: ComicPhysics;
   ghosts!: GhostSwarm;
+  ghostsEnabled = true;
   axes!: AxeArray;
   slide!: SlideSystems;
   props!: Destructibles;

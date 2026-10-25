@@ -100,3 +100,9 @@ All road and ramp surfaces use the same Poly Haven asphalt as Triple Loop. New-t
 Inferno's jets grow and shrink over 500ms and can burn the entire truck to zero integrity. Its lava surfaces sit 4.2 metres below ground in stone-lined shafts with real ground openings. Integrity and Run Time labels and values use 14pt type.
 
 Verification: `npx playwright test e2e/comic-hazards.spec.ts e2e/comic-effects.spec.ts e2e/courses.spec.ts e2e/world-presentation.spec.ts e2e/inferno-regressions.spec.ts`. To reproduce in-game visual evidence, run the dev server and `node scripts/capture-hazard-qa.mjs`. The [reference-based review and screenshots](docs/hazard-qa/README.md) include current full-course times and acceptance evidence.
+
+### Ghost toggle and garage previews
+
+Press backtick to open Playtest tuning, then uncheck **Enable graveyard ghosts** to hide Haunted Hollow's ghosts and stop their movement and damage. The setting persists in this browser across reloads and restarts; Reset tuning enables ghosts again.
+
+Vehicle selection includes in-game screenshots of all five vehicles. The PNGs in `public/vehicles/` are captured from the real game scene and camera, not separate illustrations. To regenerate them, start the dev server and run `node scripts/capture-vehicle-previews.mjs`.

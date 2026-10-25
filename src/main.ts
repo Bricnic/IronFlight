@@ -643,6 +643,7 @@ async function boot() {
         if (draw) view.render(false, clock.alpha);
         hud();
       },
+      vehiclePreview: () => view.vehiclePreview(),
       camera: () => view.inspectCamera(),
       burnoutOverview: (focus) => view.burnoutOverview(focus),
       lavaOverview: () => view.lavaOverview(),

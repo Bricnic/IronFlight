@@ -489,9 +489,7 @@ export class GameView {
     this.lastCameraTime = 0;
     for (const def of this.simulation.partDefs)
       this.meshes.set(def.id, this.truck.getObjectByName(def.id) as T.Group);
-    const doorDef = this.simulation.partDefs.find(
-      (d) => d.id === "door-left",
-    )!;
+    const doorDef = this.simulation.partDefs.find((d) => d.id === "door-left")!;
     for (const side of [-1, 1]) {
       const decal = this.label("IRON FLIGHT", "#fff0ce", "#ac401e", 512, 128);
       decal.scale.set(1.25, 0.31, 1);
@@ -602,9 +600,7 @@ export class GameView {
       this.renderer.shadowMap.enabled = spec.shadows;
       this.scene.traverse((o) => {
         if (o instanceof T.Mesh) {
-          for (const m of Array.isArray(o.material)
-            ? o.material
-            : [o.material])
+          for (const m of Array.isArray(o.material) ? o.material : [o.material])
             m.needsUpdate = true;
         }
       });
@@ -913,6 +909,21 @@ export class GameView {
     this.overview = true;
     this.overviewFocus = focus;
     this.render();
+  }
+  /** Frame the actual in-game vehicle and course for reproducible garage screenshots. */
+  vehiclePreview() {
+    this.render(true);
+    const bounds = new T.Box3().setFromObject(this.truck);
+    const center = bounds.getCenter(new T.Vector3());
+    const radius = bounds.getSize(new T.Vector3()).length() / 2;
+    const distance =
+      (radius / Math.sin(T.MathUtils.degToRad(this.camera.fov / 2))) * 1.15;
+    this.camera.position
+      .copy(center)
+      .add(new T.Vector3(1, 0.65, 1).normalize().multiplyScalar(distance));
+    this.camera.lookAt(center);
+    this.camera.updateMatrixWorld();
+    this.renderer.render(this.scene, this.camera);
   }
   inspectCamera() {
     const p = this.camera.position;

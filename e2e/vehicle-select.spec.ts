@@ -7,6 +7,24 @@ test("menu offers a vehicle screen that persists the choice", async ({
   await page.getByRole("button", { name: "Select vehicle" }).click();
   await expect(page.locator("#vehicle-select")).toBeVisible();
   await expect(page.locator(".vehicle-card")).toHaveCount(5);
+  const previews = page.locator(".vehicle-preview img");
+  await expect(previews).toHaveCount(5);
+  for (const image of await previews.all()) {
+    await expect(image).toBeVisible();
+    await expect
+      .poll(() =>
+        image.evaluate((node) => {
+          const img = node as HTMLImageElement;
+          return (
+            img.complete &&
+            img.naturalWidth === 800 &&
+            img.naturalHeight === 450
+          );
+        }),
+      )
+      .toBe(true);
+  }
+
   await page.locator('[data-vehicle="monster-truck"] .vehicle-pick').click();
   await expect(page.locator("#vehicle-select")).toBeHidden();
   expect(await page.evaluate(() => localStorage.getItem("vehicle"))).toBe(

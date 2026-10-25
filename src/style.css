@@ -969,7 +969,9 @@ kbd {
   border: 1px solid #ffffff38;
   background: #253941;
   color: #e8efec;
-  font: 600 12px "Barlow", sans-serif;
+  font:
+    600 12px "Barlow",
+    sans-serif;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -1090,7 +1092,9 @@ kbd {
   border: 1px solid #ffffff38;
   background: #253941;
   color: #e8efec;
-  font: 600 12px "Barlow", sans-serif;
+  font:
+    600 12px "Barlow",
+    sans-serif;
   cursor: pointer;
 }
 #placement-bar select {
@@ -1106,4 +1110,30 @@ kbd {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.debug-toggle {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 20px 0;
+}
+#debug-menu .debug-toggle input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: #ffa762;
+}
+.vehicle-preview {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #15242b;
+  border-bottom: 1px solid #ffffff20;
+}
+.vehicle-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

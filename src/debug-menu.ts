@@ -6,6 +6,7 @@ import {
   type Tuning,
 } from "./tuning";
 import type { Simulation } from "./simulation";
+const GHOSTS_KEY = "iron-flight-graveyard-ghosts";
 const STORAGE_KEY = "iron-flight-playtest-tuning-v3";
 export async function createDebugMenu(sim: Simulation) {
   if (import.meta.env.DEV) {
@@ -23,6 +24,9 @@ export async function createDebugMenu(sim: Simulation) {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
   }
+  try {
+    sim.ghostsEnabled = localStorage.getItem(GHOSTS_KEY) !== "false";
+  } catch {}
   const menu = document.createElement("section");
   menu.id = "debug-menu";
   menu.hidden = true;
@@ -44,9 +48,15 @@ export async function createDebugMenu(sim: Simulation) {
     shadowDarkness: "Truck shadow darkness",
     gravity: "Gravity strength",
   };
-  menu.innerHTML = `<div class="eyebrow">PLAYTEST TUNING <span>\u0060 TO CLOSE</span></div><h2>Make it your own.</h2><p>Live adjustments · saved on this browser</p><div id="truck-colors" class="truck-colors"></div>${(Object.keys(labels) as (keyof typeof labels)[]).map((key) => `<label for="tune-${key}">${labels[key]}<output id="value-${key}"></output></label><input id="tune-${key}" type="range" min="${tuningRange(key).min}" max="${tuningRange(key).max}" step="${tuningRange(key).step}" value="${sim.tuning[key]}">`).join("")}<button id="store-defaults">Store as Defaults</button><button id="reset-tuning">Reset tuning</button><p id="tuning-status" role="status" aria-live="polite"></p>`;
+  menu.innerHTML = `<div class="eyebrow">PLAYTEST TUNING <span>\u0060 TO CLOSE</span></div><h2>Make it your own.</h2><p>Live adjustments · saved on this browser</p><label class="debug-toggle" for="debug-ghosts"><span>Enable graveyard ghosts</span><input id="debug-ghosts" type="checkbox"></label><div id="truck-colors" class="truck-colors"></div>${(Object.keys(labels) as (keyof typeof labels)[]).map((key) => `<label for="tune-${key}">${labels[key]}<output id="value-${key}"></output></label><input id="tune-${key}" type="range" min="${tuningRange(key).min}" max="${tuningRange(key).max}" step="${tuningRange(key).step}" value="${sim.tuning[key]}">`).join("")}<button id="store-defaults">Store as Defaults</button><button id="reset-tuning">Reset tuning</button><p id="tuning-status" role="status" aria-live="polite"></p>`;
   document.getElementById("app")!.append(menu);
+  const ghostToggle = menu.querySelector<HTMLInputElement>("#debug-ghosts")!;
+  ghostToggle.addEventListener("change", () => {
+    sim.ghostsEnabled = ghostToggle.checked;
+    sync();
+  });
   const sync = () => {
+    ghostToggle.checked = sim.ghostsEnabled;
     for (const key of Object.keys(labels) as (keyof typeof labels)[]) {
       (menu.querySelector(`#tune-${key}`) as HTMLInputElement).value = String(
         sim.tuning[key],
@@ -63,6 +73,7 @@ export async function createDebugMenu(sim: Simulation) {
     syncColors(sim.tuning);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sim.tuning));
+      localStorage.setItem(GHOSTS_KEY, String(sim.ghostsEnabled));
     } catch {}
   };
   const syncColors = createTruckColorPickers(
@@ -113,6 +124,7 @@ export async function createDebugMenu(sim: Simulation) {
           replaceDefaults(await response.json());
         }
         sim.setTuning(DEFAULT_TUNING);
+        sim.ghostsEnabled = true;
         sync();
         status.textContent = "Restored source defaults.";
       } catch (error) {

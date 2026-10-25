@@ -518,6 +518,7 @@ export class CourseView extends T.Group {
       if (axes[i]) m.rotor.rotation.z = axes[i].angle;
     });
     const ghosts = sim.ghosts.snapshot().ghosts;
+    if (this.ghostGroup) this.ghostGroup.visible = sim.ghostsEnabled;
     if (this.ghostGroup)
       this.ghostGroup.children.forEach((g, i) => {
         if (!ghosts[i]) return;
@@ -545,7 +546,7 @@ export class CourseView extends T.Group {
     return {
       key: this.key,
       axes: this.axeModels.length,
-      ghosts: this.ghostGroup?.children.length ?? 0,
+      ghosts: this.ghostGroup?.visible ? this.ghostGroup.children.length : 0,
       trampolines: this.trampolineModels.length,
       rings: this.ringModels.length,
       gates: this.gateModels.filter((g) => g.visible).length,
