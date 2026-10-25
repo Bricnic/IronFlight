@@ -8,7 +8,7 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 import { deformGeometry } from "./damage";
 import { ROUTES, routeSolids } from "./routes";
 import { Simulation } from "./simulation";
-import { getVehicle } from "./vehicles";
+import { getVehicle, lightBarState } from "./vehicles";
 import { HAZARDS, hammerAngle } from "./hazards";
 import { truckStats } from "./truck";
 import { pbr, flameMaterial, lavaMaterial } from "./materials";
@@ -41,6 +41,7 @@ export class GameView {
   private lastCameraTime = 0;
   readonly meshes = new Map<string, T.Group>();
   private dentCounts = new Map<string, number>();
+  private lightbar: [T.Mesh?, T.Mesh?] = [];
   private truck = new T.Group();
   private labFloor = new T.Group();
   private snapCamera = true;
@@ -504,10 +505,23 @@ export class GameView {
       });
     }
     this.fire.reset(this.truck);
+    this.lightbar = [
+      this.truck.getObjectByName("lightbar-a") as T.Mesh | undefined,
+      this.truck.getObjectByName("lightbar-b") as T.Mesh | undefined,
+    ];
+  }
+  private lightIntensities(): [number, number] {
+    return this.lightbar.map(
+      (dome) =>
+        (dome?.material as T.MeshStandardMaterial | undefined)
+          ?.emissiveIntensity ?? 0,
+    ) as [number, number];
   }
   stats() {
+    const [lightA, lightB] = this.lightIntensities();
     return {
       vehicleId: this.simulation.vehicleId,
+      lights: { a: lightA, b: lightB },
       ...truckStats(this.truck),
       potions: {
         jets: this.nitro.visible,
@@ -686,6 +700,15 @@ export class GameView {
         );
       }
       this.dentCounts.set(def.id, state.dents.length);
+    }
+    if (getVehicle(s.vehicleId).lights) {
+      const v = s.body.linvel();
+      const flash = lightBarState(Math.hypot(v.x, v.z), s.time);
+      const levels = [flash.a, flash.b];
+      this.lightbar.forEach((dome, i) => {
+        const mat = dome?.material as T.MeshStandardMaterial | undefined;
+        if (mat) mat.emissiveIntensity = levels[i];
+      });
     }
     const renderTime = Math.max(0, (s.ticks - 1 + alpha) * DT),
       elapsed = Math.max(0, renderTime - this.lastCameraTime);

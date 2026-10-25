@@ -13,7 +13,8 @@ and playtest; (3) a settings page with low/med/high video quality that hits
 
 - A "select vehicle" screen offers five vehicles: monster truck (existing),
   sports car, cop car, ambulance, school bus. Cop and ambulance flash their
-  light bars above 90 mph (40.23 m/s). Every new mesh matches or beats the
+  light bars above 90 game mph (horizontal m/s x 3.6, the HUD/comic-hazard
+  convention — 25 m/s true). Every new mesh matches or beats the
   truck's detail (60k-125k triangles) and supports the existing per-part
   deformation pipeline (named part groups, first child deformable).
 - Every level (9) is beaten end to end with every vehicle (5): a 45-run

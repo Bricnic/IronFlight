@@ -8,7 +8,14 @@ import {
   SPORTS_SUSPENSION_REST,
   SPORTS_WHEEL_RADIUS,
 } from "./sports-car";
-export type VehicleId = "monster-truck" | "sports-car";
+import {
+  createCopCar,
+  COP_PARTS,
+  COP_SUSPENSION,
+  COP_SUSPENSION_REST,
+  COP_WHEEL_RADIUS,
+} from "./cop-car";
+export type VehicleId = "monster-truck" | "sports-car" | "cop-car";
 export interface VehiclePart {
   id: string;
   pos: readonly [number, number, number];
@@ -57,7 +64,28 @@ export const VEHICLES: VehicleDef[] = [
     suspensionRest: SPORTS_SUSPENSION_REST,
     build: (options) => createSportsCar(options),
   },
+  {
+    id: "cop-car",
+    name: "Cop Car",
+    blurb: "Black-and-white interceptor. Light bar wakes up past 90 mph.",
+    parts: COP_PARTS,
+    suspension: COP_SUSPENSION,
+    wheelRadius: COP_WHEEL_RADIUS,
+    suspensionRest: COP_SUSPENSION_REST,
+    build: (options) => createCopCar(options),
+    lights: "police",
+  },
 ];
+/** Game mph everywhere: the HUD and comic hazards use m/s x 3.6. */
+export const MS_TO_GAME_MPH = 3.6;
+export const LIGHT_BAR_MPH = 90;
+/** Alternating dome intensities; steady dim at or below the threshold. */
+export function lightBarState(speedMs: number, time: number) {
+  if (speedMs * MS_TO_GAME_MPH <= LIGHT_BAR_MPH) return { a: 0.15, b: 0.15 };
+  return Math.floor(time * 6) % 2 === 0
+    ? { a: 3, b: 0.15 }
+    : { a: 0.15, b: 3 };
+}
 export function getVehicle(id: string): VehicleDef {
   const vehicle = VEHICLES.find((v) => v.id === id);
   if (!vehicle) throw new RangeError(`Unknown vehicle: ${id}`);
@@ -76,5 +104,9 @@ export function validateVehicles() {
     for (const id of ids)
       if (!group.getObjectByName(id))
         throw new Error(`${v.id}: mesh misses part ${id}`);
+    if (v.lights)
+      for (const dome of ["lightbar-a", "lightbar-b"])
+        if (!group.getObjectByName(dome))
+          throw new Error(`${v.id}: mesh misses ${dome}`);
   }
 }

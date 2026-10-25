@@ -43,6 +43,7 @@ export interface GameHarness {
   };
   stats(): {
     vehicleId: string;
+    lights: { a: number; b: number };
     comicHazards: {
       id: string;
       kind: string;
