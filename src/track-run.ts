@@ -82,11 +82,12 @@ export class TrackRun {
       for (const id of flags.destroyed) this.destroyed.add(id);
     if (this.track.ring && this.bounced && !this.ringDone) {
       const r = this.track.ring;
-      if (
-        segmentDistance(previous, current, { x: r.x, y: r.y, z: r.z }) <=
-        r.radius
-      )
-        this.ringDone = true;
+      if (previous.z < r.z && current.z >= r.z) {
+        const t = (r.z - previous.z) / (current.z - previous.z);
+        const x = previous.x + (current.x - previous.x) * t;
+        const y = previous.y + (current.y - previous.y) * t;
+        if (Math.hypot(x - r.x, y - r.y) <= r.radius) this.ringDone = true;
+      }
     }
     if (this.track.mode === "arena") {
       for (const p of this.track.collectibles)

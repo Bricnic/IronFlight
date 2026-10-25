@@ -5,6 +5,7 @@ test("all five new tracks have a dense mix of grounded comic hazards", () => {
   const kinds = new Set<string>();
   const covered = TRACKS.filter((t) => comicHazards(t).length > 0);
   expect(covered.map((t) => t.id).sort()).toEqual([
+    "canyon-plunge",
     "foundry-run",
     "harbor-sprint",
     "inferno-vault",

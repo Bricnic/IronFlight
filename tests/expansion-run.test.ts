@@ -40,14 +40,19 @@ it("demolition fails on timeout and freezes the failure", () => {
   run.step(1, pos(0, 2, -90), pos(0, 2, -80), 1, { destroyed: stones });
   expect(run.status).toBe("failed");
 });
-it("slide requires gates, trampoline bounce and ring touch in order", () => {
+it("slide requires gates, trampoline bounce and forward ring passage in order", () => {
   const track = getTrack("sky-slide"),
     ring = track.ring!;
   const run = new TrackRun(track);
   for (const g of track.checkpoints) cross(run, g);
   expect(run.checkpoint).toBe(track.checkpoints.length);
   expect(run.status).toBe("running");
-  run.step(0.5, pos(ring.x, ring.y - 5, ring.z), pos(ring.x, ring.y + 5, ring.z), 1);
+  run.step(
+    0.5,
+    pos(ring.x, ring.y - 5, ring.z),
+    pos(ring.x, ring.y + 5, ring.z),
+    1,
+  );
   expect(run.status).toBe("running");
   run.step(0.5, pos(0, 2, 2330), pos(0, 2, 2340), 1, { bounced: true });
   expect(run.status).toBe("running");
@@ -58,7 +63,19 @@ it("slide requires gates, trampoline bounce and ring touch in order", () => {
     1,
   );
   expect(run.status).toBe("running");
-  run.step(0.5, pos(ring.x, ring.y - 5, ring.z), pos(ring.x, ring.y + 5, ring.z), 1);
+  run.step(
+    0.5,
+    pos(ring.x, ring.y - 5, ring.z),
+    pos(ring.x, ring.y + 5, ring.z),
+    1,
+  );
+  expect(run.status).toBe("running");
+  run.step(
+    0.5,
+    pos(ring.x, ring.y, ring.z - 15),
+    pos(ring.x, ring.y, ring.z + 15),
+    1,
+  );
   expect(run.status).toBe("completed");
 });
 it("limited races fail on timeout and falls below the course wreck", () => {

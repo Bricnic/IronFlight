@@ -375,6 +375,31 @@ export class Simulation {
     },
     filterIntersectionPair: () => true,
   };
+  get effectiveTopSpeed() {
+    return (
+      this.tuning.topSpeed *
+      (this.courseTrack?.id === "canyon-plunge"
+        ? this.tuning.canyonTopSpeed
+        : 1)
+    );
+  }
+  breakRandomPart(source: string) {
+    const remaining = PARTS.filter((p) => this.parts.get(p.id)!.health > 0);
+    // Shed bodywork before wheels and structural pieces so early hits remain survivable.
+    const panels = remaining.filter(
+      (p) => !p.id.startsWith("chassis") && !p.id.startsWith("wheel"),
+    );
+    const wheels = remaining.filter((p) => p.id.startsWith("wheel"));
+    const attached = panels.length
+      ? panels
+      : wheels.length
+        ? wheels
+        : remaining;
+    if (!attached.length) return;
+    const part = attached[Math.floor(Math.random() * attached.length)];
+    this.damage(part.id, this.parts.get(part.id)!.health);
+    this.damageEvents.push({ source, part: part.id, time: this.time });
+  }
   step(input: Input = {}) {
     this.previousPosition.copy(this.body.translation());
     this.previousRotation.copy(this.body.rotation());
@@ -383,7 +408,8 @@ export class Simulation {
       brake = Math.max(0, Math.min(1, input.brake ?? 0)),
       handbrake = Math.max(0, Math.min(1, input.handbrake ?? 0)),
       steer = Math.max(-1, Math.min(1, input.steer ?? 0));
-    const strafeMode = this.courseTrack?.controls === "strafe";
+    const flow = this.slide.flowAt(this.body.translation());
+    const strafeMode = this.courseTrack?.controls === "strafe" && !!flow;
     const speed = this.body.linvel();
     const forward = new Vector3(0, 0, 1).applyQuaternion(
       new Quaternion().copy(this.body.rotation()),
@@ -395,9 +421,7 @@ export class Simulation {
       routeX !== undefined && Math.abs(position.x - routeX) < 6;
     const loopSuspension =
       routeX !== undefined && position.z > LOOP.z - LOOP.radius - 5;
-    this.body.setAngularDamping(
-      strafeMode ? 8 : loopSuspension ? 0.25 : 1.2,
-    );
+    this.body.setAngularDamping(strafeMode ? 8 : loopSuspension ? 0.25 : 1.2);
     for (let i = 0; i < 4; i++) {
       if (this.parts.get(PARTS[i + 2].id)!.body) continue;
       this.vehicle.setWheelMaxSuspensionForce(
@@ -419,7 +443,7 @@ export class Simulation {
     ) {
       const delta = Math.min(
         25 * this.tuning.boostPower * DT,
-        Math.max(0, 75 * this.tuning.topSpeed - longitudinal),
+        Math.max(0, 75 * this.effectiveTopSpeed - longitudinal),
       );
       this.body.applyImpulse(
         forward.clone().multiplyScalar(delta * this.body.mass()),
@@ -481,6 +505,8 @@ export class Simulation {
       (attached, i) => attached && this.vehicle.wheelIsInContact(i),
     ).length;
     const grounded = contactCount > 0;
+    if (this.courseTrack?.id === "sky-slide")
+      this.body.setLinearDamping(this.bounced && !grounded ? 0 : 0.08);
     const driveShare = attachedWheels.filter(Boolean).length / 4;
     const braking =
       Math.max(brake, handbrake * this.tuning.handbrakePower) *
@@ -496,7 +522,7 @@ export class Simulation {
         1 -
           Math.max(0, longitudinal * Math.sign(throttle)) /
             ((throttle < 0 ? 8 : 25) *
-              this.tuning.topSpeed *
+              this.effectiveTopSpeed *
               (this.comic.effect === "nitro" ? 2 : 1)),
       );
       // Extra arcade motor force acts through the center of mass to avoid a
@@ -559,7 +585,6 @@ export class Simulation {
         true,
       );
     }
-    const flow = this.slide.flowAt(position);
     if (flow) this.slide.applyFlow(flow);
     if (strafeMode) {
       this.slide.applyStrafe(steer);
@@ -581,13 +606,7 @@ export class Simulation {
       );
     }
     // Rolling resistance only acts while grounded and coasting, never in flight.
-    if (
-      throttle === 0 &&
-      brake === 0 &&
-      handbrake === 0 &&
-      grounded &&
-      !flow
-    ) {
+    if (throttle === 0 && brake === 0 && handbrake === 0 && grounded && !flow) {
       const delta = Math.min(
         Math.abs(longitudinal),
         1.8 * this.tuning.friction * DT,
@@ -655,7 +674,7 @@ export class Simulation {
                 1 -
                   Math.max(0, longitudinal * Math.sign(throttle)) /
                     ((throttle < 0 ? 8 : 25) *
-                      this.tuning.topSpeed *
+                      this.effectiveTopSpeed *
                       (this.comic.effect === "nitro" ? 2 : 1)),
               )
           : 0,
@@ -671,16 +690,17 @@ export class Simulation {
           : 0,
       );
       this.vehicle.setWheelSteering(i, i < 2 ? this.steeringAngle : 0);
-      this.vehicle.setWheelSideFrictionStiffness(i, strafeMode ? 0.12 : 1.1);
+      this.vehicle.setWheelSideFrictionStiffness(i, strafeMode ? 0 : 1.1);
     }
     // Suspension only uses fixed surfaces. A rotating hammer must not become
     // driveable ground and inject suspension impulses into a passing tire.
-    this.vehicle.updateVehicle(
-      DT,
-      RAPIER.QueryFilterFlags.EXCLUDE_DYNAMIC |
-        RAPIER.QueryFilterFlags.EXCLUDE_KINEMATIC |
-        RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
-    );
+    if (this.parts.get("chassis-front")!.health > 0)
+      this.vehicle.updateVehicle(
+        DT,
+        RAPIER.QueryFilterFlags.EXCLUDE_DYNAMIC |
+          RAPIER.QueryFilterFlags.EXCLUDE_KINEMATIC |
+          RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
+      );
     this.hammerPhase += hammerAngle(DT) * this.tuning.hammerSpeed;
     for (const b of this.hazardBodies.values())
       b.setNextKinematicRotation(
@@ -803,6 +823,25 @@ export class Simulation {
       if (this.status === "driving" && p.y < -7) this.status = "wrecked";
     }
     const destroyed = this.props.takeDestroyed();
+    for (const id of destroyed) {
+      const prop = this.props.props.find((p) => p.definition.id === id);
+      if (prop?.definition.kind === "snowman") {
+        this.breakRandomPart("snowman");
+        const p = this.body.translation();
+        const box = this.slide.flowAt(p);
+        const side = box
+          ? Math.sign((p.x - box.x) * box.dirz - (p.z - box.z) * box.dirx) || 1
+          : 1;
+        this.body.applyImpulse(
+          {
+            x: (box?.dirz ?? 1) * side * this.body.mass() * 2,
+            y: 0,
+            z: -(box?.dirx ?? 0) * side * this.body.mass() * 2,
+          },
+          true,
+        );
+      }
+    }
     this.trackRun?.step(
       DT,
       this.previousPosition,
@@ -1209,6 +1248,11 @@ export class Simulation {
     if (id === "chassis-front") {
       for (const p of PARTS) if (p.id !== id) this.damage(p.id, 10000);
       this.status = "wrecked";
+      // All colliders now belong to debris. Keep the empty zero-mass root out of
+      // dynamic integration while the detached pieces continue to fall and sink.
+      this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      this.body.setBodyType(RAPIER.RigidBodyType.Fixed, true);
     }
     if (id === "chassis-rear")
       for (const p of PARTS)

@@ -2,7 +2,7 @@ import RAPIER from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
 import { ROUTES } from "./routes.ts";
 import { PARTS, type PartState } from "./damage.ts";
-export type PropKind = "sign" | "trash" | "barrel" | "gravestone";
+export type PropKind = "sign" | "trash" | "barrel" | "gravestone" | "snowman";
 export type PropDefinition = {
   id: string;
   kind: PropKind;
@@ -61,9 +61,20 @@ export class Destructibles {
       const { kind, x, z, ground } = definition,
         sign = kind === "sign",
         stone = kind === "gravestone",
-        height = sign ? 1.6 : stone ? 0.9 : kind === "trash" ? 0.65 : 0.7;
+        height = sign
+          ? 1.6
+          : kind === "snowman"
+            ? 1.4
+            : stone
+              ? 0.9
+              : kind === "trash"
+                ? 0.65
+                : 0.7;
       const body = world.createRigidBody(
-        RAPIER.RigidBodyDesc.dynamic()
+        (kind === "snowman"
+          ? RAPIER.RigidBodyDesc.fixed()
+          : RAPIER.RigidBodyDesc.dynamic()
+        )
           .setTranslation(x, ground + height, z)
           .setLinearDamping(0.12)
           .setAngularDamping(0.3)
@@ -102,7 +113,14 @@ export class Destructibles {
           true,
         );
         joint.setContactsEnabled(false);
-      } else if (stone)
+      } else if (kind === "snowman")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.ball(1.3).setSensor(true),
+            body,
+          ),
+        );
+      else if (stone)
         colliders.push(
           world.createCollider(
             RAPIER.ColliderDesc.cuboid(0.7, 0.9, 0.25)
@@ -151,9 +169,20 @@ export class Destructibles {
     let fireExposure = 0;
     for (const prop of this.props) {
       const position = new Vector3().copy(prop.body.translation());
-      if (position.distanceToSquared(root) > 64) continue;
+      if (
+        (prop.definition.kind === "snowman" && prop.broken) ||
+        position.distanceToSquared(root) > 64
+      )
+        continue;
       let contact = false;
       for (const collider of prop.colliders) {
+        if (prop.definition.kind === "snowman")
+          for (const state of parts.values())
+            if (
+              state.collider &&
+              this.world.intersectionPair(collider, state.collider)
+            )
+              contact = true;
         this.world.contactPairsWith(collider, (other) => {
           if (!truckColliders.has(other.handle)) return;
           this.world.contactPair(collider, other, (m) => {
@@ -206,6 +235,13 @@ export class Destructibles {
         if (prop.definition.kind === "trash" && !prop.spilled) {
           prop.spilled = true;
           this.spill(prop, time);
+        }
+        if (prop.definition.kind === "snowman" && !prop.broken) {
+          prop.broken = true;
+          this.rubble(prop);
+          for (const c of prop.colliders) this.world.removeCollider(c, true);
+          prop.colliders = [];
+          this.freshlyDestroyed.push(prop.definition.id);
         }
         if (
           prop.definition.kind === "gravestone" &&
@@ -287,7 +323,7 @@ export class Destructibles {
   private rubble(prop: PropState) {
     const position = prop.body.translation(),
       velocity = prop.body.linvel();
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < (prop.definition.kind === "snowman" ? 12 : 4); i++) {
       const a = i * 1.5708 + 0.4,
         size = [0.3 + (i % 2) * 0.15, 0.2 + (i % 3) * 0.1, 0.25];
       const body = this.world.createRigidBody(
@@ -316,7 +352,10 @@ export class Destructibles {
       prop.pieces.push({
         body,
         size,
-        color: [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
+        color:
+          prop.definition.kind === "snowman"
+            ? [0xffffff, 0xdeefff, 0xff8b28, 0x202830][i % 4]
+            : [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
       });
     }
   }

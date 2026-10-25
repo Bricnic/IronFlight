@@ -12,11 +12,7 @@ import { GameView } from "./view";
 import "./harness";
 import type { CameraSample } from "./harness";
 import { drivingInput } from "./controls";
-import {
-  objectiveCopy,
-  progressCopy,
-  progressFraction,
-} from "./run-copy";
+import { objectiveCopy, progressCopy, progressFraction } from "./run-copy";
 import { createDebugMenu } from "./debug-menu";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
@@ -24,7 +20,7 @@ app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON
 <section id="lab" hidden><div class="eyebrow">SURGICAL DAMAGE TOOLS</div><label for="target">Target part</label><select id="target">${PARTS.map((p) => `<option value="${p.id}">${p.id}</option>`).join("")}</select><div class="tool-grid"><button id="dent">Dent panel</button><button id="destroy">Destroy part</button><button id="sever">Sever chassis</button><button id="restore">Restore truck</button></div><p>Each tool applies real damage. Detached pieces keep their momentum.</p></section></aside>
 <div id="status"><span id="state-label">READY TO SEND IT</span><strong id="state-copy">Build speed. Hold your line.</strong><div id="run-progress" hidden></div><div class="progress"><i id="progress"></i></div></div>
 <section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span></div></section>
-<footer><div class="controls"><span><kbd>W / UP</kbd> GAS</span><span><kbd>S / DOWN</kbd> BRAKE / REV</span><span><kbd>A/D / LEFT/RIGHT</kbd> <span id="steer-label">STEER</span></span><span><kbd>R</kbd> RESTART</span><span><kbd>SPACE</kbd> HANDBRAKE</span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
+<footer><div class="controls"><span><kbd>W / UP</kbd> GAS</span><span><kbd>S / DOWN</kbd> BRAKE / REV</span><span><kbd>A/D / LEFT/RIGHT</kbd> <span id="steer-label">STEER</span></span><span><kbd>R</kbd> RESTART</span><span><kbd>L</kbd> LEVEL SELECT</span><span><kbd>SPACE</kbd> HANDBRAKE</span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
 async function boot() {
   // Navigation occupies the header, not the 3D viewport. Only lab tools use a drawer.
   const header = document.querySelector("header")!,
@@ -198,13 +194,12 @@ async function boot() {
       $("state-label").textContent = track.name.toUpperCase();
       $("state-copy").textContent = objectiveCopy(track);
       $("steer-label").textContent =
-        track.controls === "strafe" ? "STRAFE" : "STEER";
+        track.controls === "strafe" && s.slide.flowing ? "STRAFE" : "STEER";
       if (s.comic.effect)
         $("state-copy").textContent =
           `${s.comic.effect.toUpperCase()} POTION · ${s.comic.remaining.toFixed(1)}s · Mixing active potions is lethal`;
       $("run-progress").textContent = progressCopy(track, s.run);
-      $("progress").style.width =
-        `${progressFraction(track, s.run) * 100}%`;
+      $("progress").style.width = `${progressFraction(track, s.run) * 100}%`;
       if (
         surface === "play" &&
         s.run.status !== "running" &&
@@ -266,6 +261,11 @@ async function boot() {
     )
       return;
     const k = e.key.toLowerCase();
+    if (k === "l") {
+      e.preventDefault();
+      if (!e.repeat) showLevelSelect();
+      return;
+    }
     if (k === "r" && surface !== "menu") {
       e.preventDefault();
       if (!e.repeat) retryTrack();

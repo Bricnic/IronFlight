@@ -397,11 +397,11 @@ export function courseSolids(track: Track): CourseSolid[] {
       id: "plunge-ramp",
       kind: "ramp",
       x: 0,
-      y: 48,
-      z: 372.5,
+      y: 49.016,
+      z: 357.5,
       w: 20,
       h: 0.5,
-      d: 947,
+      d: 977,
       angle: Math.atan2(64, 945),
       color: 0x8c6858,
     });
@@ -410,11 +410,11 @@ export function courseSolids(track: Track): CourseSolid[] {
         id: `ramp-rail-${side}`,
         kind: "barrier",
         x: side * 11,
-        y: 49,
-        z: 372.5,
+        y: 50.016,
+        z: 357.5,
         w: 0.6,
         h: 2,
-        d: 947,
+        d: 977,
         angle: Math.atan2(64, 945),
         color: 0xe6c16a,
       });
@@ -893,6 +893,31 @@ export function courseHazards(track: Track): Hazard[] {
     : [];
 }
 export function courseProps(track: Track): PropDefinition[] {
+  if (track.id === "sky-slide") {
+    const lengths = track.path
+      .slice(1)
+      .map((p, i) => Math.hypot(p.x - track.path[i].x, p.z - track.path[i].z));
+    const total = lengths.reduce((a, b) => a + b, 0);
+    return Array.from({ length: 20 }, (_, i) => {
+      let distance = (total * (i * 5 + 4.5)) / 100;
+      let segment = 0;
+      while (segment < lengths.length - 1 && distance > lengths[segment])
+        distance -= lengths[segment++];
+      const a = track.path[segment],
+        b = track.path[segment + 1];
+      const t = distance / lengths[segment];
+      const side = [-4.5, 4.5, 0][i % 3];
+      const x = a.x + (b.x - a.x) * t + (side * (b.z - a.z)) / lengths[segment];
+      const z = a.z + (b.z - a.z) * t - (side * (b.x - a.x)) / lengths[segment];
+      return {
+        id: `slide-snowman-${i + 1}`,
+        kind: "snowman" as const,
+        x,
+        z,
+        ground: slideProfileY(z) + 0.25,
+      };
+    });
+  }
   if (track.id === "haunted-hollow")
     return (track.demolish ?? []).map((p) => ({
       id: p.id,

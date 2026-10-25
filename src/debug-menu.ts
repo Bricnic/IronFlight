@@ -30,6 +30,8 @@ export async function createDebugMenu(sim: Simulation) {
   const labels: Record<Exclude<keyof Tuning, TruckColorKey>, string> = {
     acceleration: "Acceleration",
     topSpeed: "Top speed",
+    canyonTopSpeed: "Canyon Plunge top speed",
+    slideWaterSpeed: "Sky Slide water speed (100 MPH base)",
     boostPower: "Boost pad power",
     friction: "Coasting friction",
     steeringRate: "Tire steering rate",
@@ -50,9 +52,13 @@ export async function createDebugMenu(sim: Simulation) {
         sim.tuning[key],
       );
       menu.querySelector(`#value-${key}`)!.textContent =
-        key === "maxSteeringAngle"
-          ? `${sim.tuning[key]}°`
-          : `${sim.tuning[key].toFixed(1)}×`;
+        key === "slideWaterSpeed"
+          ? `${sim.tuning[key].toFixed(1)}× · ${Math.round(sim.tuning[key] * 100)} MPH`
+          : key === "canyonTopSpeed"
+            ? `${sim.tuning[key].toFixed(1)}× · ${(sim.tuning.topSpeed * sim.tuning[key]).toFixed(1)}× total`
+            : key === "maxSteeringAngle"
+              ? `${sim.tuning[key]}°`
+              : `${sim.tuning[key].toFixed(1)}×`;
     }
     syncColors(sim.tuning);
     try {

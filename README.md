@@ -1,6 +1,6 @@
 # Iron Flight
 
-A single-player Three.js/Rapier monster-truck game with six official tracks. Start at level select, choose a checkpoint race or timed collection arena, and earn bronze, silver or gold from your best completed time. Personal bests persist in this browser.
+A single-player Three.js/Rapier monster-truck game with nine official tracks. Start at level select, choose a checkpoint race or timed collection arena, and earn bronze, silver or gold from your best completed time. Personal bests persist in this browser.
 
 **Triple Loop** preserves the original three-lane arena: Ignition, The Gauntlet and Danger Zone. A timed attempt clears a lane's jump, survives its dragon pass, physically completes its loop and crosses the exit. **Harbor Sprint**, **Foundry Run** and **Skyline Circuit** add checkpoint racing; **Scrapyard Sweep** gives 120 seconds for twelve salvage tokens, and **Inferno Vault** gives 150 seconds for ten cores. The destruction lab remains available from the menu.
 
@@ -17,11 +17,19 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:5173 and choose a track. The level-select screen pauses the simulation. W/Up accelerates; A/D or Left/Right steers; S/Down brakes then reverses; Space is the handbrake. R restarts the selected attempt and recenters the camera. Drag to orbit and scroll to zoom between 6 and 45 meters. Triple Loop's lane buttons restart that lane. Official finishes and timeouts show a result panel with Retry and Level select. The playback selector offers 1x, 4x and 16x, using the same fixed physics timestep. The lab's thirteen-part selector applies the same damage system as collisions and hazards.
+On Windows, double-click `start.cmd` to install missing dependencies, start the server, and open the game.
+
+Open http://127.0.0.1:5173 and choose a track. The level-select screen pauses the simulation. Use arrow keys to choose a track and Space to start. L returns to level select. W/Up accelerates; A/D or Left/Right steers; S/Down brakes then reverses; Space is the handbrake. R restarts the selected attempt and recenters the camera. Drag to orbit and scroll to zoom between 6 and 45 meters. Triple Loop's lane buttons restart that lane. Official finishes and timeouts show a result panel with Retry and Level select. The playback selector offers 1x, 4x and 16x, using the same fixed physics timestep. The lab's thirteen-part selector applies the same damage system as collisions and hazards.
 
 Press backtick (`) for **Playtest tuning**. The current defaults live in `src/tuning-defaults.json`; Store as Defaults saves all current settings there in the local development server, and Reset tuning reloads that config. Tuning and colors also persist in this browser. Source saving is disabled in production builds.
 
 Steering rate, maximum tire angle (5–90 degrees) and actual turning power (0.1–10x) are independent. Gravity spans 0.1–10x. Primary and secondary color wheels recolor the paint and metal trim/rims, with brightness and hex entry; burn darkening remains applied. Acceleration, top speed, boost, coasting friction, brake power, dragon damage, hammer speed, handbrake strength and shadow darkness are also tunable.
+
+Canyon Plunge has a separate **Canyon Plunge top speed** slider (1–10x), multiplied by the global top-speed setting. Its starting ramp extends thirty meters behind the truck, with ten hydrants staggered across the descent. Triple Loop's loop surfaces use translucent plastic so the truck remains visible.
+
+Sky Slide's **Sky Slide water speed** slider sets a minimum flow speed from 100–1,000 displayed MPH (1–10x), defaulting to 250 MPH (2.5x). Twenty snowmen occupy every fifth segment of the channel. Impacts scatter snow and detach a random part, nudging the truck toward the edge. A/D strafe on the water; normal steering resumes on solid ground. The trampoline launches forward through an upright golden ring, including at maximum water speed.
+
+Haunted Hollow's ghosts accelerate from about 22 MPH to 50 MPH as the twelve gravestones are destroyed. Each 20 percentage points of actual ghost damage tears off another random part. In Inferno Vault, the camera pans above the stage to watch the truck sink into lava.
 
 W/S and Up/Down blend braking into opposite-direction acceleration over the last 20 displayed speed units before stopping. Space applies the stronger handbrake. The HUD says MPH and retains the previous numerical values, as requested. The boost pad keeps its ground chevrons; its overhead boost banner has been removed. The pad still targets three times nominal top speed, with power controlled by the saved tuning; the physics sweep is saved to `artifacts/boost-sweep.json`.
 

@@ -73,7 +73,7 @@ function consolidate(root: T.Group) {
 function build(h: ComicHazard): Model {
   const root = new T.Group();
   root.name = h.id;
-  root.position.set(h.x, 0, h.z);
+  root.position.set(h.x, h.y ?? 0, h.z);
   const model: Model = { h, root, flames: [], triangles: 0 };
   const metal = pbr("green_metal_rust", 1, {
     color: 0x89958f,

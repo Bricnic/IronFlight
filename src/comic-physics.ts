@@ -60,7 +60,11 @@ export class ComicPhysics {
       ) => {
         const c = world.createCollider(
           R.ColliderDesc.cuboid(w / 2, height / 2, d / 2)
-            .setTranslation(body ? x : h.x + x, y, body ? z : h.z + z)
+            .setTranslation(
+              body ? x : h.x + x,
+              y + (body ? 0 : (h.y ?? 0)),
+              body ? z : h.z + z,
+            )
             .setSensor(sensor)
             .setFriction(0.75),
           body,
@@ -103,7 +107,11 @@ export class ComicPhysics {
       } else if (h.kind === "hydrant") {
         box(0, 0.15, 0, 5, 0.3, 5);
         const c = world.createCollider(
-          R.ColliderDesc.cylinder(1.35, 0.85).setTranslation(h.x, 1.5, h.z),
+          R.ColliderDesc.cylinder(1.35, 0.85).setTranslation(
+            h.x,
+            (h.y ?? 0) + 1.5,
+            h.z,
+          ),
         );
         m.colliders.push(c);
         box(0, 3.5, 0, 5, 7, 5, true);

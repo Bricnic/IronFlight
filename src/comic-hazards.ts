@@ -14,9 +14,22 @@ export type ComicHazard = {
   x: number;
   z: number;
   phase: number;
+  y?: number;
 };
 /** Alternating road-edge threats leave a readable ordinary-driving bypass. */
 export function comicHazards(track: Track): ComicHazard[] {
+  if (track.id === "canyon-plunge")
+    return Array.from({ length: 10 }, (_, i) => {
+      const z = -100 + (i + 0.5) * 94.5;
+      return {
+        id: `canyon-hydrant-${i + 1}`,
+        kind: "hydrant" as const,
+        x: [-6, 6, 0][i % 3],
+        z,
+        y: 80 - ((z + 100) * 64) / 945 + 0.25,
+        phase: 0,
+      };
+    });
   const layouts: Partial<Record<Track["id"], [ComicKind, number, number][]>> = {
     "harbor-sprint": [
       ["book", 12, -65],

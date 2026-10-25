@@ -4,11 +4,13 @@ export class ChaseCamera {
   pitch = Math.atan2(5.5, 14);
   distance = 15.04;
   private height = 0;
+  private sinkBlend = 0;
   private heading = 0;
   private initialized = false;
   constructor(readonly camera: PerspectiveCamera) {}
   reset() {
     this.initialized = false;
+    this.sinkBlend = 0;
     this.yaw = 0;
     this.pitch = Math.atan2(5.5, 14);
     this.distance = 15.04;
@@ -24,7 +26,13 @@ export class ChaseCamera {
       Math.min(45, this.distance * Math.exp(deltaPixels * 0.001)),
     );
   }
-  update(position: Vector3, rotation: Quaternion, dt: number, snap = false) {
+  update(
+    position: Vector3,
+    rotation: Quaternion,
+    dt: number,
+    snap = false,
+    sinking = false,
+  ) {
     const forward = new Vector3(0, 0, 1).applyQuaternion(rotation),
       heading = Math.atan2(forward.x, forward.z);
     if (snap || !this.initialized) {
@@ -52,8 +60,18 @@ export class ChaseCamera {
           -Math.cos(angle) * Math.cos(this.pitch) * distance,
         ),
       );
+    this.sinkBlend +=
+      ((sinking ? 1 : 0) - this.sinkBlend) *
+      (1 - Math.exp(-5 * Math.max(dt, snap ? 1 : 0)));
+    if (sinking) {
+      this.camera.position.lerp(
+        new Vector3(position.x, Math.max(12, position.y + 18), position.z - 7),
+        this.sinkBlend,
+      );
+      this.camera.position.y = Math.max(8, this.camera.position.y);
+    }
     this.camera.lookAt(
-      anchor
+      (sinking ? position : anchor)
         .clone()
         .add(
           new Vector3(

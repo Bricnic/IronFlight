@@ -22,7 +22,8 @@ export class LoopView extends T.Group {
     super();
     this.name = "dragon-loop-course";
     const asphalt = pbr("asphalt_02", 1, { color: 0xb0b8b8, roughness: 0.85 });
-    const geometries = loopSolids().map((s) => {
+    const solids = loopSolids();
+    const geometries = solids.map((s) => {
       const g = new T.BoxGeometry(s.w, s.h, s.d);
       const positions = g.attributes.position,
         normals = g.attributes.normal,
@@ -36,7 +37,26 @@ export class LoopView extends T.Group {
       g.translate(s.x, s.y, s.z);
       return g;
     });
-    const track = new T.Mesh(mergeGeometries(geometries), asphalt);
+    const track = new T.Mesh(
+      mergeGeometries(geometries.filter((_, i) => solids[i].kind !== "loop")),
+      asphalt,
+    );
+    const plastic = new T.MeshPhysicalMaterial({
+      color: 0x9bddf4,
+      transparent: true,
+      opacity: 0.27,
+      roughness: 0.2,
+      metalness: 0,
+      clearcoat: 1,
+      side: T.DoubleSide,
+      depthWrite: false,
+    });
+    const arcs = new T.Mesh(
+      mergeGeometries(geometries.filter((_, i) => solids[i].kind === "loop")),
+      plastic,
+    );
+    arcs.name = "transparent-plastic-loops";
+    this.add(arcs);
     track.name = "physical-loop-track";
     track.receiveShadow = true;
     track.castShadow = true;

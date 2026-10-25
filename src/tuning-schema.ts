@@ -1,6 +1,8 @@
 export const TUNING_KEYS = [
   "acceleration",
   "topSpeed",
+  "canyonTopSpeed",
+  "slideWaterSpeed",
   "boostPower",
   "friction",
   "steeringRate",

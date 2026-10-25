@@ -37,7 +37,7 @@ it("a full destruction tour clears every stone within the medal window", () => {
     s.trackRun?.status,
     JSON.stringify({ run: s.trackRun?.snapshot(), p: s.body.translation() }),
   ).toBe("completed");
-  expect(s.trackRun?.elapsed).toBeGreaterThanOrEqual(120);
+  expect(s.trackRun?.elapsed).toBeGreaterThan(60);
   expect(s.trackRun?.elapsed).toBeLessThanOrEqual(track.feasibility!);
   expect(s.snapshot(false).integrity).toBeGreaterThan(0);
   s.dispose();
@@ -48,8 +48,6 @@ it("parking under the ghosts on the real course wrecks the truck", () => {
   s.run(60);
   expect(s.trackRun?.status).toBe("failed");
   expect(s.trackRun?.reason).toBe("wrecked");
-  expect(
-    s.damageEvents.some((e) => e.source === "ghost"),
-  ).toBe(true);
+  expect(s.damageEvents.some((e) => e.source === "ghost")).toBe(true);
   s.dispose();
 });

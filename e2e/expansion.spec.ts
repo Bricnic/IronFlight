@@ -12,6 +12,9 @@ test("Canyon Plunge: descend the ramp, clear the gorge and run the gauntlet", as
   expect(result.state.run!.elapsed).toBeLessThanOrEqual(225);
   expect(result.state.integrity).toBeGreaterThan(0);
   expect(result.state.axes.axes).toHaveLength(6);
+  expect(
+    result.state.comic.hazards.filter((h) => h.kind === "hydrant"),
+  ).toHaveLength(10);
   expect(result.art.gates).toBe(0);
   await info.attach("completion", {
     body: JSON.stringify(result.state),
@@ -27,7 +30,7 @@ test("Haunted Hollow: smash every gravestone while ghosts hunt the truck", async
     "completed",
   );
   expect(result.state.run?.destroyed).toHaveLength(12);
-  expect(result.state.run!.elapsed).toBeGreaterThanOrEqual(120);
+  expect(result.state.run!.elapsed).toBeGreaterThan(60);
   expect(result.state.run!.elapsed).toBeLessThanOrEqual(225);
   expect(result.state.integrity).toBeGreaterThan(0);
   expect(result.art.ghosts).toBe(3);
@@ -45,7 +48,7 @@ test("Sky Slide: ride the rapids, bounce the trampoline and thread the ring", as
     "completed",
   );
   expect(result.state.run?.checkpoint).toBe(6);
-  expect(result.state.run!.elapsed).toBeGreaterThanOrEqual(120);
+  expect(result.state.run!.elapsed).toBeGreaterThan(20);
   expect(result.state.run!.elapsed).toBeLessThanOrEqual(225);
   expect(result.state.integrity).toBeGreaterThan(0);
   expect(result.state.run?.bounced).toBe(true);

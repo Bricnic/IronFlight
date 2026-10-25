@@ -1,7 +1,7 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
-import type { Track } from "./tracks";
+import { slideProfileY, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
 export const SLIDE_FLOW_ACCEL = 8;
 export const SLIDE_DRAG = 0.5;
@@ -37,8 +37,7 @@ export function slideDefs(track?: Track): SlideDef {
       dirz: dz / len,
     });
   }
-  const ring = track.ring!;
-  return { flows, trampolines: [{ x: ring.x, y: 0, z: ring.z }] };
+  return { flows, trampolines: [track.trampoline!] };
 }
 export function inFlow(box: FlowBox, x: number, z: number) {
   const dx = x - box.x,
@@ -59,6 +58,7 @@ type Trampoline = {
 };
 export class SlideSystems {
   private defs: SlideDef;
+  private previousFlow?: FlowBox;
   private sensors: Trampoline[] = [];
   flowing = false;
   constructor(
@@ -80,15 +80,41 @@ export class SlideSystems {
         lastBounce: -100,
       });
     }
+    this.flowAt(sim.body.translation());
   }
   flowAt(position: { x: number; y: number; z: number }) {
-    const box = this.defs.flows.find((b) =>
-      inFlow(b, position.x, position.z),
+    const box = this.defs.flows.find(
+      (b) =>
+        inFlow(b, position.x, position.z) &&
+        (this.sim.courseTrack?.id !== "sky-slide" ||
+          (position.y > slideProfileY(position.z) - 3 &&
+            position.y < slideProfileY(position.z) + 6)),
     );
     this.flowing = !!box;
     return box;
   }
   applyFlow(box: FlowBox) {
+    if (this.sim.courseTrack?.id === "sky-slide") {
+      const v = this.sim.body.linvel();
+      const along = v.x * box.dirx + v.z * box.dirz;
+      const previous = this.previousFlow ?? box;
+      const lateral = v.x * previous.dirz - v.z * previous.dirx;
+      this.previousFlow = box;
+      const speed = Math.max(
+        (100 * this.sim.tuning.slideWaterSpeed) / 3.6,
+        along,
+      );
+      const slip = lateral * Math.exp(-SLIDE_DRAG * DT);
+      this.sim.body.setLinvel(
+        {
+          x: box.dirx * speed + box.dirz * slip,
+          y: v.y,
+          z: box.dirz * speed - box.dirx * slip,
+        },
+        true,
+      );
+      return;
+    }
     const mass = this.sim.body.mass();
     this.sim.body.applyImpulse(
       {
@@ -115,9 +141,7 @@ export class SlideSystems {
     localX.y = 0;
     localX.normalize();
     this.sim.body.applyImpulse(
-      localX.multiplyScalar(
-        steer * STRAFE_ACCEL * this.sim.body.mass() * DT,
-      ),
+      localX.multiplyScalar(steer * STRAFE_ACCEL * this.sim.body.mass() * DT),
       true,
     );
   }
@@ -139,7 +163,21 @@ export class SlideSystems {
       if (v.y < 5 && this.sim.time - s.lastBounce > 1) {
         s.lastBounce = this.sim.time;
         s.bounces++;
-        this.sim.body.setLinvel({ x: v.x, y: BOUNCE_SPEED, z: v.z }, true);
+        const ring = this.sim.courseTrack?.ring;
+        if (ring && this.sim.courseTrack?.trampoline) {
+          const p = this.sim.body.translation();
+          const speed = Math.max(100 / 3.6, Math.hypot(v.x, v.z));
+          const distance = Math.hypot(ring.x - p.x, ring.z - p.z);
+          const t = distance / speed;
+          // Preserve forward speed; scale lift to cross the upright ring at any water setting.
+          const lift = (ring.y - p.y) / t - (this.sim.world.gravity.y * t) / 2;
+          this.sim.body.setLinvel(
+            { x: (ring.x - p.x) / t, y: lift, z: (ring.z - p.z) / t },
+            true,
+          );
+          this.sim.body.setLinearDamping(0);
+        } else
+          this.sim.body.setLinvel({ x: v.x, y: BOUNCE_SPEED, z: v.z }, true);
         this.sim.bounced = true;
       }
     }

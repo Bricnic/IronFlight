@@ -144,17 +144,13 @@ export class CourseView extends T.Group {
                                 : 1,
                           })
                         : new T.MeshStandardMaterial({
-                          color: s.color,
-                          roughness: s.kind === "container" ? 0.65 : 0.95,
-                          metalness: s.kind === "container" ? 0.3 : 0,
-                        });
+                            color: s.color,
+                            roughness: s.kind === "container" ? 0.65 : 0.95,
+                            metalness: s.kind === "container" ? 0.3 : 0,
+                          });
             if (s.kind === "lava") this.lavaMaterials.push(mat);
             const geometry = new T.BoxGeometry(s.w, s.h, s.d);
-            if (
-              stone ||
-              cliff ||
-              ["ground", "road", "ramp"].includes(s.kind)
-            ) {
+            if (stone || cliff || ["ground", "road", "ramp"].includes(s.kind)) {
               const pos = geometry.attributes.position,
                 normals = geometry.attributes.normal,
                 uv = geometry.attributes.uv;
@@ -309,7 +305,11 @@ export class CourseView extends T.Group {
         }
         if (track.ring) {
           const tramp = buildTrampolineMesh();
-          tramp.position.set(track.ring.x, -0.5, track.ring.z);
+          tramp.position.set(
+            track.trampoline?.x ?? track.ring.x,
+            -0.5,
+            track.trampoline?.z ?? track.ring.z,
+          );
           this.add(tramp);
           this.trampolineModels.push(tramp);
           const ringMesh = buildRingMesh(track.ring.radius);
@@ -346,10 +346,7 @@ export class CourseView extends T.Group {
                 a.z + (b.z - a.z) * frac - dx * lateral,
               );
               foam.quaternion
-                .setFromAxisAngle(
-                  new T.Vector3(1, 0, 0),
-                  -Math.PI / 2 - pitch,
-                )
+                .setFromAxisAngle(new T.Vector3(1, 0, 0), -Math.PI / 2 - pitch)
                 .multiply(
                   new T.Quaternion().setFromAxisAngle(
                     new T.Vector3(0, 1, 0),
@@ -665,10 +662,7 @@ export function buildTrampolineMesh() {
   });
   for (let i = 0; i < 6; i++) {
     const a = (i * Math.PI) / 3;
-    const leg = new T.Mesh(
-      new T.CylinderGeometry(0.14, 0.14, 1.4, 10),
-      legMat,
-    );
+    const leg = new T.Mesh(new T.CylinderGeometry(0.14, 0.14, 1.4, 10), legMat);
     leg.position.set(Math.cos(a) * 4.4, -0.4, Math.sin(a) * 4.4);
     group.add(leg);
   }
@@ -709,8 +703,7 @@ export function buildRingMesh(radius = 6) {
     new T.TorusGeometry(radius, 0.18, 12, 48),
     new T.MeshBasicMaterial({ color: 0xfff3c4 }),
   );
-  band.rotation.x = Math.PI / 2;
-  inner.rotation.x = Math.PI / 2;
+  // The torus lies in XY: forward (+Z) travel passes through its opening.
   group.add(band, inner);
   return group;
 }

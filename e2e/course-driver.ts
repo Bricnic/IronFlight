@@ -25,24 +25,14 @@ export async function driveTrack(page: Page, id: TrackId, start = true) {
               const ring = track.ring!;
               const idx = s.run?.checkpoint ?? 0;
               if (idx >= track.checkpoints.length) {
-                const ex = s.position.x - ring.x;
-                const steer = Math.max(-1, Math.min(1, -ex * 0.3));
-                if (s.position.z < 2330)
-                  return {
-                    steer,
-                    throttle: s.signedSpeed < 2 ? 0.35 : 0,
-                    brake: 0,
-                  };
-                if (Math.abs(s.signedSpeed) > 4)
-                  return { steer, throttle: 0, brake: 1 };
-                const dz = ring.z - s.position.z;
-                if (Math.abs(ex) > 3 || Math.abs(dz) > 5)
-                  return {
-                    steer,
-                    throttle: dz > 0 ? 0.35 : -0.35,
-                    brake: 0,
-                  };
-                return { steer: 0, throttle: 0, brake: 1 };
+                const error =
+                  Math.atan2(ring.x - s.position.x, ring.z - s.position.z) -
+                  Math.atan2(s.forward[0], s.forward[2]);
+                return {
+                  steer: Math.max(-1, Math.min(1, error * 3)),
+                  throttle: 0,
+                  brake: 0,
+                };
               }
               const pts = track.path;
               const si = Math.min(idx, pts.length - 2);
@@ -69,12 +59,28 @@ export async function driveTrack(page: Page, id: TrackId, start = true) {
                   throttle: 0,
                   brake: 0,
                 };
-              const ahead = Math.min(len, along + 30);
-              const e =
-                (a.x + fx * ahead - s.position.x) * fz -
-                (a.z + fz * ahead - s.position.z) * fx;
+              const obstacle = s.props
+                .filter((p) => p.kind === "snowman" && !p.broken)
+                .map((p) => ({
+                  p,
+                  ahead:
+                    (p.position.x - s.position.x) * fx +
+                    (p.position.z - s.position.z) * fz,
+                }))
+                .filter((p) => p.ahead > -5 && p.ahead < 100)
+                .sort((a, b) => a.ahead - b.ahead)[0];
+              const obstacleSide = obstacle
+                ? (obstacle.p.position.x - a.x) * fz -
+                  (obstacle.p.position.z - a.z) * fx
+                : 10;
+              const lane =
+                Math.abs(obstacleSide) < 2 ? (cross >= 0 ? 4.8 : -4.8) : 0;
+              const lateralSpeed = s.velocity.x * fz - s.velocity.z * fx;
               return {
-                steer: Math.max(-1, Math.min(1, e * 0.08)),
+                steer: Math.max(
+                  -1,
+                  Math.min(1, (lane - cross) * 0.7 - lateralSpeed * 0.4),
+                ),
                 throttle: 0,
                 brake: 0,
               };
@@ -85,9 +91,13 @@ export async function driveTrack(page: Page, id: TrackId, start = true) {
                     (p) => !s.run?.collected.includes(p.id),
                   )
                 : track.mode === "demolition"
-                  ? track.demolish!.find(
-                      (p) => !s.run?.destroyed.includes(p.id),
-                    )
+                  ? track
+                      .demolish!.filter((p) => !s.run?.destroyed.includes(p.id))
+                      .sort(
+                        (a, b) =>
+                          Math.hypot(a.x - s.position.x, a.z - s.position.z) -
+                          Math.hypot(b.x - s.position.x, b.z - s.position.z),
+                      )[0]
                   : track.checkpoints[s.run?.checkpoint ?? 0];
             if (!target) return { brake: 1 };
             let x = target.x + ("nx" in target ? target.nx * 5 : 0),

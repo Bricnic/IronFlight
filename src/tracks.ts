@@ -26,6 +26,7 @@ export type Track = {
   name: string;
   mode: "race" | "arena" | "demolition";
   controls?: "drive" | "strafe";
+  trampoline?: Point & { y: number };
   ring?: Point & { y: number; radius: number };
   demolish?: Demolishable[];
   description: string;
@@ -331,7 +332,8 @@ export const TRACKS: Track[] = [
       ...g,
       y: Math.round((slideProfileY(g.z) + 2.1) * 10) / 10,
     })),
-    ring: { x: 0, z: 2360, y: 25, radius: 6 },
+    trampoline: { x: 0, z: 2360, y: 0 },
+    ring: { x: 0, z: 2440, y: 20, radius: 10 },
   },
 ];
 export function getTrack(id: string): Track {

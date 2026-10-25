@@ -30,6 +30,7 @@ export class PropView extends T.Group {
       for (const prop of source.props) this.build(prop);
     }
     for (const [prop, model] of this.models) {
+      model.root.visible = !(prop.definition.kind === "snowman" && prop.broken);
       model.root.position.copy(prop.body.translation());
       model.root.quaternion.copy(prop.body.rotation());
       const lid = model.root.getObjectByName("trash-lid");
@@ -79,7 +80,43 @@ export class PropView extends T.Group {
       parent.add(m);
       return m;
     };
-    if (prop.definition.kind === "sign") {
+    if (prop.definition.kind === "snowman") {
+      const snow = new T.MeshStandardMaterial({
+        color: 0xf3fbff,
+        roughness: 0.8,
+      });
+      const coal = new T.MeshStandardMaterial({ color: 0x182330 });
+      for (const [radius, y] of [
+        [1.15, -0.25],
+        [0.85, 1],
+        [0.6, 2],
+      ])
+        mesh(new T.SphereGeometry(radius, 18, 12), snow).position.y = y;
+      for (const x of [-0.22, 0.22])
+        mesh(new T.SphereGeometry(0.09, 8, 8), coal).position.set(
+          x,
+          2.1,
+          -0.55,
+        );
+      for (const y of [0.7, 1.1, 1.5])
+        mesh(new T.SphereGeometry(0.1, 8, 8), coal).position.set(0, y, -0.78);
+      const nose = mesh(
+        new T.ConeGeometry(0.13, 0.65, 10),
+        new T.MeshStandardMaterial({ color: 0xff851b }),
+      );
+      nose.rotation.x = -Math.PI / 2;
+      nose.position.set(0, 1.95, -0.8);
+      mesh(new T.CylinderGeometry(0.7, 0.7, 0.12, 18), coal).position.y = 2.5;
+      mesh(new T.CylinderGeometry(0.43, 0.48, 0.55, 18), coal).position.y = 2.8;
+      for (const side of [-1, 1]) {
+        const arm = mesh(
+          new T.CylinderGeometry(0.06, 0.09, 1.5, 6),
+          new T.MeshStandardMaterial({ color: 0x705039 }),
+        );
+        arm.rotation.z = side * 1.1;
+        arm.position.set(side * 1.1, 1.1, 0);
+      }
+    } else if (prop.definition.kind === "sign") {
       const pole = mesh(
         new T.BoxGeometry(0.13, 3.2, 0.13),
         new T.MeshStandardMaterial({
@@ -179,7 +216,8 @@ export class PropView extends T.Group {
 }
 export function buildGravestoneMesh(seed = 0) {
   const group = new T.Group();
-  group.rotation.y = ((seed * 0.7) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  group.rotation.y =
+    (((seed * 0.7) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
   const stone = new T.MeshStandardMaterial({
     color: [0x9aa0a3, 0x8f979b, 0xa5abae, 0x7d8478, 0x99a092][seed % 5],
     roughness: 0.95,
@@ -211,7 +249,13 @@ export function buildGravestoneMesh(seed = 0) {
   );
   slab(new T.BoxGeometry(0.7, 0.5, 0.06), dark, 0, 0, 0.24);
   for (let i = 0; i < 3; i++)
-    slab(new T.BoxGeometry(0.5 - i * 0.08, 0.05, 0.02), stone, 0, 0.1 - i * 0.14, 0.28);
+    slab(
+      new T.BoxGeometry(0.5 - i * 0.08, 0.05, 0.02),
+      stone,
+      0,
+      0.1 - i * 0.14,
+      0.28,
+    );
   if (seed % 3 === 0)
     slab(new T.BoxGeometry(0.5, 0.3, 0.06), moss, 0.3, -0.45, 0.22);
   return group;

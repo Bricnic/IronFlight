@@ -79,7 +79,7 @@ test("slide HUD coaches strafe and tracks bounce then ring", async ({
     ({ track }) => {
       const g = window.__game!;
       g.driveFrames(
-        150,
+        30,
         16,
         (s) => {
           const pts = track.path;

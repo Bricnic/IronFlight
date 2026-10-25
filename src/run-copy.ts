@@ -8,12 +8,14 @@ export function modeLabel(track: Track) {
   return track.legacy ? "STUNT RACE" : "CHECKPOINT RACE";
 }
 export function objectiveCopy(track: Track) {
-  if (track.mode === "arena") return "Collect every token before time runs out.";
+  if (track.mode === "arena")
+    return "Collect every token before time runs out.";
   if (track.mode === "demolition")
     return "Smash every gravestone. Keep moving — ghosts drain parked trucks.";
   if (track.controls === "strafe")
-    return "Ride the running water. A and D strafe — the truck never steers.";
-  if (track.legacy) return "Clear the jump, complete the loop, then cross the exit.";
+    return "Ride the running water. A and D strafe on the slide; steer normally on solid ground.";
+  if (track.legacy)
+    return "Clear the jump, complete the loop, then cross the exit.";
   return "Follow every checkpoint. Cross the final gate.";
 }
 export function progressCopy(track: Track, run: RunSnapshot) {

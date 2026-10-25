@@ -546,12 +546,21 @@ export class GameView {
     (this.scene.background as T.Color).setHex(bg);
     const fog = this.scene.fog as T.Fog;
     fog.color.setHex(bg);
-    fog.near = mood === "haunted-hollow" ? 80 : mood === "sky-slide" ? 200 : mood === "canyon-plunge" ? 150 : 140;
+    fog.near =
+      mood === "haunted-hollow"
+        ? 80
+        : mood === "sky-slide"
+          ? 200
+          : mood === "canyon-plunge"
+            ? 150
+            : 140;
     fog.far = mood === "haunted-hollow" ? 320 : mood ? 600 : 430;
-    this.hemi.intensity = mood === "haunted-hollow" ? 1.2 : mood === "sky-slide" ? 2.2 : 2;
+    this.hemi.intensity =
+      mood === "haunted-hollow" ? 1.2 : mood === "sky-slide" ? 2.2 : 2;
     this.sun.intensity = mood === "haunted-hollow" ? 1.8 : 3.5;
     this.sun.color.setHex(mood === "haunted-hollow" ? 0xff9a4a : 0xffe3af);
-    this.scene.environmentIntensity = mood === "haunted-hollow" ? 0.4 : mood === "sky-slide" ? 0.8 : 0.7;
+    this.scene.environmentIntensity =
+      mood === "haunted-hollow" ? 0.4 : mood === "sky-slide" ? 0.8 : 0.7;
     const root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
       q = s.previousRotation
         .clone()
@@ -671,9 +680,11 @@ export class GameView {
     const debris = s.parts.get("chassis-front")?.body;
     this.chase.update(
       debris ? new T.Vector3().copy(debris.translation()) : root,
-      q,
+      debris ? new T.Quaternion().copy(debris.rotation()) : q,
       elapsed,
       this.snapCamera || snap,
+      s.courseTrack?.id === "inferno-vault" &&
+        !!s.parts.get("chassis-front")?.lava,
     );
     if (this.overview && s.skidStrokes.length) {
       const bounds = new T.Box3();

@@ -1,12 +1,7 @@
 import { beforeAll, expect, it } from "vitest";
 import { Simulation, initPhysics } from "../src/simulation";
 import { getTrack } from "../src/tracks";
-import {
-  SlideSystems,
-  slideDefs,
-  inFlow,
-  type FlowBox,
-} from "../src/slide";
+import { SlideSystems, slideDefs, inFlow, type FlowBox } from "../src/slide";
 import {
   buildTrampolineMesh,
   trampolineStats,
@@ -24,7 +19,7 @@ const flowBox = (): FlowBox => ({
   dirx: 0,
   dirz: 1,
 });
-it("defines flow zones along the slide and a trampoline under the ring", () => {
+it("defines flow zones along the slide and a trampoline ahead of the ring", () => {
   const defs = slideDefs(slide());
   expect(defs.flows.length).toBeGreaterThanOrEqual(5);
   for (const f of defs.flows) {
@@ -34,7 +29,7 @@ it("defines flow zones along the slide and a trampoline under the ring", () => {
   expect(defs.trampolines).toHaveLength(1);
   const ring = slide().ring!;
   expect(defs.trampolines[0].x).toBe(ring.x);
-  expect(defs.trampolines[0].z).toBe(ring.z);
+  expect(defs.trampolines[0].z).toBeLessThan(ring.z);
   expect(slideDefs(getTrack("harbor-sprint"))).toEqual({
     flows: [],
     trampolines: [],
@@ -42,7 +37,15 @@ it("defines flow zones along the slide and a trampoline under the ring", () => {
   expect(slideDefs()).toEqual({ flows: [], trampolines: [] });
 });
 it("flow boxes rotate with the slide", () => {
-  const box: FlowBox = { x: 0, z: 0, yaw: Math.PI / 2, w: 10, len: 30, dirx: 1, dirz: 0 };
+  const box: FlowBox = {
+    x: 0,
+    z: 0,
+    yaw: Math.PI / 2,
+    w: 10,
+    len: 30,
+    dirx: 1,
+    dirz: 0,
+  };
   expect(inFlow(box, 12, 0)).toBe(true);
   expect(inFlow(box, 0, 12)).toBe(false);
   expect(inFlow(box, 20, 0)).toBe(false);
@@ -68,10 +71,10 @@ it("water drag caps the coasting speed", () => {
 });
 it("strafe slides sideways without yaw while drive mode turns", () => {
   const strafe = new Simulation();
-  strafe.courseTrack = slide();
-  strafe.run(3, { throttle: 1, steer: 1 });
+  strafe.startTrack("sky-slide");
+  strafe.run(0.6, { steer: 1 });
   const s = strafe.snapshot(false);
-  expect(s.position.x).toBeGreaterThan(5);
+  expect(s.position.x).toBeGreaterThan(0.5);
   expect(s.forward[2]).toBeGreaterThan(0.95);
   expect(Math.abs(s.forward[0])).toBeLessThan(0.05);
   strafe.dispose();

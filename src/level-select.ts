@@ -14,7 +14,7 @@ export function createLevelSelect(
 ) {
   const screen = document.createElement("main");
   screen.id = "level-select";
-  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Nine places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
+  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Nine places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to play · L for level select · Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
   const grid = screen.querySelector<HTMLElement>(".track-grid")!;
   const cards = new Map<TrackId, HTMLElement>();
   for (const [i, track] of TRACKS.entries()) {
@@ -26,7 +26,10 @@ export function createLevelSelect(
       `#${track.color.toString(16).padStart(6, "0")}`,
     );
     card.innerHTML = `<button class="track-play" aria-label="Play ${track.name}"><div class="track-image"><img src="${track.thumbnail}" alt="${track.name} route preview"><span class="track-number">0${i + 1}</span><span class="track-mode">${modeLabel(track)}</span></div><div class="track-card-body"><div class="track-card-heading"><h2>${track.name}</h2><span class="best-medal">UNRANKED</span></div><p>${track.description}</p><div class="medal-targets"><span class="gold">● ${track.medals.gold}s</span><span class="silver">● ${track.medals.silver}s</span><span class="bronze">● ${track.medals.bronze}s</span></div><div class="track-card-bottom"><span class="best-time">NO TIME SET</span><span class="play-word">PLAY ↗</span></div></div></button>`;
-    card.querySelector("button")!.onclick = () => onStart(track.id);
+    card.querySelector("button")!.onclick = () => {
+      selected = i;
+      onStart(track.id);
+    };
     grid.append(card);
     cards.set(track.id, card);
   }
@@ -43,6 +46,38 @@ export function createLevelSelect(
   result.querySelector<HTMLButtonElement>("#retry-track")!.onclick = onRetry;
   result.querySelector<HTMLButtonElement>("#result-level-select")!.onclick =
     onMenu;
+  let selected = 0;
+  const buttons = Array.from(
+    grid.querySelectorAll<HTMLButtonElement>(".track-play"),
+  );
+  screen.addEventListener("keydown", (e) => {
+    if (!(e.target instanceof Element) || !e.target.closest(".track-grid"))
+      return;
+    const current = buttons.indexOf(
+      document.activeElement as HTMLButtonElement,
+    );
+    if (current >= 0) selected = current;
+    const columns =
+      getComputedStyle(grid).gridTemplateColumns.split(" ").length;
+    const delta: Record<string, number> = {
+      ArrowLeft: -1,
+      ArrowRight: 1,
+      ArrowUp: -columns,
+      ArrowDown: columns,
+    };
+    if (e.key in delta) {
+      e.preventDefault();
+      selected = Math.max(
+        0,
+        Math.min(buttons.length - 1, selected + delta[e.key]),
+      );
+      buttons[selected].focus();
+    } else if (e.code === "Space") {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!e.repeat) buttons[selected].click();
+    }
+  });
   const refresh = () => {
     for (const track of TRACKS) {
       const best = track.legacy
@@ -67,6 +102,7 @@ export function createLevelSelect(
       screen.hidden = false;
       result.hidden = true;
       host.classList.add("at-level-select");
+      buttons[selected].focus();
     },
     hide() {
       screen.hidden = true;
