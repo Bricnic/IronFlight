@@ -716,6 +716,12 @@ export class ComicView extends T.Group {
           this.add(m.root);
         }
     }
+    for (const mech of s.comic.mechanisms) {
+      if (this.models.some((m) => m.h.id === mech.h.id)) continue;
+      const m = build(mech.h);
+      this.models.push(m);
+      this.add(m.root);
+    }
     for (const m of this.models) {
       if (m.jaw)
         m.jaw.rotation.x = mechanismAngle(

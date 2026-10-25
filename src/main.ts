@@ -2,6 +2,13 @@ import { resultOpacity } from "./result-reveal";
 import { createLevelSelect } from "./level-select";
 import { createVehicleSelect } from "./vehicle-select";
 import { createLevelEditor } from "./level-editor";
+import * as T from "three";
+import {
+  placeInLevel,
+  appendCheckpoint,
+  TEXTURE_IDS,
+  validateCustomLevel,
+} from "./custom-level";
 import { getVehicle } from "./vehicles";
 import { BestTimes } from "./best-times";
 import { getTrack, type CustomTrackId, type TrackId } from "./tracks";
@@ -86,6 +93,7 @@ async function boot() {
   ($("target") as HTMLSelectElement).value = lab.selected;
   function select(stage: Stage) {
     surface = "play";
+    exitEdit();
     screens?.hide();
     vehicleScreens?.hide();
     editorScreens?.hide();
@@ -123,6 +131,7 @@ async function boot() {
     keys.clear();
     surface = "play";
     recordedRun = undefined;
+    exitEdit();
     if (unpause) paused = false;
     screens?.hide();
     vehicleScreens?.hide();
@@ -141,6 +150,7 @@ async function boot() {
   }
   function showLevelSelect() {
     surface = "menu";
+    exitEdit();
     keys.clear();
     clock.reset();
     vehicleScreens?.hide();
@@ -150,6 +160,7 @@ async function boot() {
   }
   function showLevelEditor() {
     surface = "menu";
+    exitEdit();
     keys.clear();
     clock.reset();
     screens.hide();
@@ -159,6 +170,7 @@ async function boot() {
   }
   function showVehicleSelect() {
     surface = "menu";
+    exitEdit();
     keys.clear();
     clock.reset();
     screens.hide();
@@ -198,7 +210,183 @@ async function boot() {
   $("vehicle-select-button").onclick = showVehicleSelect;
   editorScreens = createLevelEditor(app, showLevelSelect);
   $("level-editor-button").onclick = showLevelEditor;
+  // In-game placement for custom levels: ghost brick, live commit, disk save.
+  app.insertAdjacentHTML(
+    "beforeend",
+    `<div id="placement-bar" hidden>
+      <button id="edit-toggle">Edit</button>
+      <select id="place-kind" aria-label="Placement palette">
+        <option value="brick">brick</option>
+        <option value="wall">wall</option>
+        <option value="checkpoint">checkpoint</option>
+        <option value="book">book</option>
+        <option value="snowman">snowman</option>
+        <option value="hydrant">hydrant</option>
+      </select>
+      <select id="place-texture" aria-label="Brick texture"></select>
+      <span id="place-status"></span>
+    </div>`,
+  );
+  const placementBar = $("placement-bar");
+  const editToggle = $("edit-toggle") as HTMLButtonElement;
+  const placeKind = $("place-kind") as HTMLSelectElement;
+  const placeTexture = $("place-texture") as HTMLSelectElement;
+  const placeStatus = $("place-status");
+  placeTexture.append(new Option("(brick texture)", ""));
+  for (const id of TEXTURE_IDS) placeTexture.append(new Option(id, id));
+  const ghost = new T.Group();
+  const ghostBrick = new T.Mesh(
+    new T.BoxGeometry(6, 1.6, 5),
+    new T.MeshBasicMaterial({ color: 0xffe08a, wireframe: true }),
+  );
+  const ghostMark = new T.Mesh(
+    new T.OctahedronGeometry(1.2),
+    new T.MeshBasicMaterial({ color: 0xffe08a, wireframe: true }),
+  );
+  const ghostGate = new T.Mesh(
+    new T.PlaneGeometry(24, 8),
+    new T.MeshBasicMaterial({
+      color: 0xffe08a,
+      wireframe: true,
+      side: T.DoubleSide,
+    }),
+  );
+  ghost.add(ghostBrick, ghostMark, ghostGate);
+  ghost.visible = false;
+  let editing = false;
+  let resumePaused = false;
+  const say = (message: string) => {
+    placeStatus.textContent = message;
+  };
+  function updateGhost(point: T.Vector3 | null) {
+    ghost.visible = editing && !!point;
+    if (!point) return;
+    const wall = placeKind.value === "wall";
+    ghostBrick.visible =
+      placeKind.value === "brick" || wall;
+    ghostMark.visible =
+      placeKind.value !== "brick" &&
+      !wall &&
+      placeKind.value !== "checkpoint";
+    ghostGate.visible = placeKind.value === "checkpoint";
+    ghost.position.set(
+      point.x,
+      placeKind.value === "checkpoint" ? 2 : point.y,
+      point.z,
+    );
+    ghostBrick.scale.set(wall ? 4 : 1, wall ? 1.875 : 1, wall ? 0.4 : 1);
+    ghostBrick.position.y = wall ? 1.5 : 0.8;
+    ghostMark.position.y = 1.5;
+    ghostGate.position.y = 0;
+  }
+  async function commitPlacement(point: T.Vector3) {
+    const track = sim.courseTrack;
+    const level = track?.custom;
+    if (!track || !level) return;
+    try {
+      if (placeKind.value === "brick" || placeKind.value === "wall") {
+        const wall = placeKind.value === "wall";
+        const next = placeInLevel(level, {
+          type: "solid",
+          kind: "barrier",
+          x: point.x,
+          z: point.z,
+          y: point.y + (wall ? 1.5 : 0.8),
+          ...(wall ? { w: 24, h: 3, d: 2 } : {}),
+          texture: placeTexture.value || undefined,
+        });
+        track.custom = validateCustomLevel(next);
+        await saveLevel(undefined, track.custom);
+        const solid = track.custom.solids.at(-1)!;
+        sim.addCustomSolid(solid);
+        view.addCourseSolid(solid);
+        say(`${wall ? "Wall" : "Brick"} saved (${solid.id})`);
+      } else if (placeKind.value === "checkpoint") {
+        const next = placeInLevel(level, {
+          type: "checkpoint",
+          x: point.x,
+          z: point.z,
+        });
+        track.custom = validateCustomLevel(next);
+        await saveLevel(undefined, track.custom);
+        const gate = appendCheckpoint(track, point.x, point.z);
+        view.addCheckpointGate(gate);
+        say(`Checkpoint gate ${track.checkpoints.length} saved`);
+      } else {
+        const kind = placeKind.value;
+        const next = placeInLevel(level, {
+          type: "prefab",
+          kind,
+          x: point.x,
+          z: point.z,
+          y: Math.max(0, point.y),
+        });
+        track.custom = validateCustomLevel(next);
+        await saveLevel(undefined, track.custom);
+        const prefab = track.custom.prefabs.at(-1)!;
+        if (kind === "snowman")
+          sim.props.addProp({
+            id: prefab.id,
+            kind: "snowman",
+            x: prefab.x,
+            z: prefab.z,
+            ground: prefab.y ?? 0,
+          });
+        else
+          sim.comic.addHazard({
+            id: prefab.id,
+            kind: kind as "book" | "hydrant",
+            x: prefab.x,
+            z: prefab.z,
+            phase: 0,
+            ...(prefab.y === undefined ? {} : { y: prefab.y }),
+          });
+        say(`${kind} saved (${prefab.id})`);
+      }
+    } catch (e) {
+      say(e instanceof Error ? e.message : "Placement failed");
+    }
+  }
+  function enterEdit() {
+    if (editing || surface !== "play" || !sim.courseTrack?.custom) return;
+    editing = true;
+    resumePaused = paused;
+    paused = true;
+    keys.clear();
+    view.scene.add(ghost);
+    editToggle.textContent = "Done";
+    say("Click the course to place · Esc exits");
+  }
+  function exitEdit() {
+    if (!editing) return;
+    editing = false;
+    paused = resumePaused;
+    view.scene.remove(ghost);
+    ghost.visible = false;
+    editToggle.textContent = "Edit";
+    say("");
+  }
+  editToggle.onclick = () => (editing ? exitEdit() : enterEdit());
+  let downAt: [number, number] | null = null;
+  view.renderer.domElement.addEventListener("pointermove", (e) => {
+    if (!editing) return;
+    updateGhost(view.aimPoint(e.clientX, e.clientY));
+  });
+  view.renderer.domElement.addEventListener("pointerdown", (e) => {
+    downAt = [e.clientX, e.clientY];
+  });
+  view.renderer.domElement.addEventListener("pointerup", (e) => {
+    if (!editing || !downAt) return;
+    const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]);
+    downAt = null;
+    if (moved > 6) return;
+    const point = view.aimPoint(e.clientX, e.clientY);
+    if (point) void commitPlacement(point);
+  });
   function hud() {
+    placementBar.hidden = !(
+      surface === "play" && !!sim.courseTrack?.custom
+    );
     const s = sim.snapshot(false),
       r = ROUTES.find((r) => r.id === s.stage);
     $("speed").textContent = Math.round(s.speed * 3.6)
@@ -316,6 +504,11 @@ async function boot() {
       if (!e.repeat) toggleDebug();
       return;
     }
+    if (e.key === "Escape" && editing) {
+      e.preventDefault();
+      exitEdit();
+      return;
+    }
     if (
       e.target instanceof HTMLSelectElement ||
       e.target instanceof HTMLInputElement ||
@@ -368,6 +561,21 @@ async function boot() {
         remove: (name: string) => removeLevel(undefined, name),
       },
       editor: () => editorScreens.probe(),
+      placement: () => ({
+        editing,
+        palette: placeKind.value,
+        texture: placeTexture.value,
+      }),
+      project: (point: { x: number; y: number; z: number }) => {
+        const v = new T.Vector3(point.x, point.y, point.z).project(
+          view.camera,
+        );
+        const rect = view.renderer.domElement.getBoundingClientRect();
+        return {
+          x: rect.left + ((v.x + 1) / 2) * rect.width,
+          y: rect.top + ((1 - v.y) / 2) * rect.height,
+        };
+      },
       pause: (v) => (paused = v),
       advanceFrames: (frames, r, i) => {
         for (let f = 0; f < frames; f++) {

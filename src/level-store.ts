@@ -50,13 +50,14 @@ export async function listLevels(deps?: Partial<LevelStoreDeps>) {
     if (!names.includes(name)) names.unshift(name);
   return names;
 }
-/** Validate, mirror locally, then persist to disk when the server is up. */
+/** Validate, register the playable track, mirror locally, persist to disk. */
 export async function saveLevel(
   deps: Partial<LevelStoreDeps> | undefined,
   level: CustomLevel,
 ) {
   const { fetchFn, storage } = depsOrDefaults(deps);
   const valid = validateCustomLevel(level);
+  registerCustomTrack(toTrack(valid));
   storage.setItem(levelKey(valid.name), JSON.stringify(valid));
   const names = readIndex(storage);
   if (!names.includes(valid.name)) writeIndex(storage, [...names, valid.name]);

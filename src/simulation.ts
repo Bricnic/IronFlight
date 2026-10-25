@@ -2,7 +2,12 @@ import { ComicPhysics } from "./comic-physics";
 import { GhostSwarm } from "./ghosts";
 import { AxeArray } from "./axes";
 import { SlideSystems } from "./slide";
-import { courseSolids, courseHazards, courseProps } from "./course";
+import {
+  courseSolids,
+  courseHazards,
+  courseProps,
+  type CourseSolid,
+} from "./course";
 import { getTrack, type CustomTrackId, type TrackId } from "./tracks";
 import { TrackRun } from "./track-run";
 import { Destructibles } from "./destructibles";
@@ -154,6 +159,39 @@ export class Simulation {
       lane,
     );
   }
+  private addSolidCollider(s: {
+    w: number;
+    h: number;
+    d: number;
+    x: number;
+    y: number;
+    z: number;
+    angle?: number;
+    yaw?: number;
+    kind: string;
+  }) {
+    const collider = this.world.createCollider(
+      RAPIER.ColliderDesc.cuboid(s.w / 2, s.h / 2, s.d / 2)
+        .setTranslation(s.x, s.y, s.z)
+        .setRotation(
+          new Quaternion()
+            .setFromAxisAngle(new Vector3(1, 0, 0), s.angle ?? 0)
+            .multiply(
+              new Quaternion().setFromAxisAngle(
+                new Vector3(0, 1, 0),
+                "yaw" in s ? (s.yaw ?? 0) : 0,
+              ),
+            ),
+        )
+        .setFriction(1)
+        .setSensor(s.kind === "lava"),
+    );
+    this.surfaceKinds.set(collider.handle, s.kind);
+  }
+  /** Live placement: add one solid collider without resetting the run. */
+  addCustomSolid(s: CourseSolid) {
+    this.addSolidCollider(s);
+  }
   reset(stage: Stage = this.stage) {
     this.trackRun = undefined;
     this.courseTrack = ["lab", "easy", "medium", "hard"].includes(stage)
@@ -220,25 +258,8 @@ export class Simulation {
             ...arenaSolids(),
             ...loopSolids(),
             ...loopScenerySolids(),
-          ]) {
-        const collider = this.world.createCollider(
-          RAPIER.ColliderDesc.cuboid(s.w / 2, s.h / 2, s.d / 2)
-            .setTranslation(s.x, s.y, s.z)
-            .setRotation(
-              new Quaternion()
-                .setFromAxisAngle(new Vector3(1, 0, 0), s.angle ?? 0)
-                .multiply(
-                  new Quaternion().setFromAxisAngle(
-                    new Vector3(0, 1, 0),
-                    "yaw" in s ? (s.yaw ?? 0) : 0,
-                  ),
-                ),
-            )
-            .setFriction(1)
-            .setSensor(s.kind === "lava"),
-        );
-        this.surfaceKinds.set(collider.handle, s.kind);
-      }
+          ])
+        this.addSolidCollider(s);
     const route = ROUTES.find((r) => r.id === stage);
     this.body = this.world.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic()

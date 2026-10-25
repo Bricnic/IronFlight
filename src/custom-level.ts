@@ -362,6 +362,118 @@ export function blankLevel(name: string): CustomLevel {
     medals: { gold: 30, silver: 45, bronze: 60 },
   };
 }
+export function solidDefaults(kind: SolidKind) {
+  const defaults: Record<
+    SolidKind,
+    { w: number; h: number; d: number; color: number; angle?: number }
+  > = {
+    ground: { w: 200, h: 1.2, d: 200, color: 0x6d817c },
+    road: { w: 24, h: 0.03, d: 100, color: 0x303e49 },
+    container: { w: 8, h: 5.2, d: 16, color: 0xac623f },
+    barrier: { w: 6, h: 1.6, d: 5, color: 0xe6c16a },
+    ramp: { w: 16, h: 0.35, d: 12, color: 0x8a8f96, angle: -0.124 },
+    support: { w: 2, h: 8, d: 2, color: 0x555c60 },
+    lava: { w: 20, h: 0.5, d: 20, color: 0xff5a1f },
+  };
+  return defaults[kind];
+}
+export type Placement =
+  | {
+      type: "solid";
+      kind: SolidKind;
+      x: number;
+      z: number;
+      y?: number;
+      w?: number;
+      h?: number;
+      d?: number;
+      texture?: string;
+    }
+  | { type: "prefab"; kind: string; x: number; z: number; y?: number }
+  | { type: "checkpoint"; x: number; z: number; y?: number };
+function nextPlacementId(prefix: string, taken: Set<string>) {
+  let n = taken.size + 1;
+  while (taken.has(`${prefix}-${n}`)) n++;
+  return `${prefix}-${n}`;
+}
+/** Commit one in-game placement, returning the updated level. */
+export function placeInLevel(
+  level: CustomLevel,
+  placement: Placement,
+): CustomLevel {
+  if (placement.type === "solid") {
+    const defaults = solidDefaults(placement.kind);
+    const taken = new Set(level.solids.map((s) => s.id));
+    const h = placement.h ?? defaults.h;
+    const solid: CustomSolid = {
+      id: nextPlacementId(placement.kind, taken),
+      kind: placement.kind,
+      x: placement.x,
+      y: placement.y ?? h / 2,
+      z: placement.z,
+      w: placement.w ?? defaults.w,
+      h,
+      d: placement.d ?? defaults.d,
+      color: defaults.color,
+      ...(defaults.angle === undefined ? {} : { angle: defaults.angle }),
+      ...(placement.texture === undefined
+        ? {}
+        : { texture: placement.texture }),
+    };
+    return { ...level, solids: [...level.solids, solid] };
+  }
+  if (placement.type === "prefab") {
+    if (!(PREFAB_KINDS as readonly string[]).includes(placement.kind))
+      throw new Error(`Unknown prefab kind: ${placement.kind}`);
+    const taken = new Set(level.prefabs.map((p) => p.id));
+    const prefab: CustomPrefab = {
+      id: nextPlacementId(placement.kind, taken),
+      kind: placement.kind,
+      x: placement.x,
+      z: placement.z,
+      ...(placement.y === undefined ? {} : { y: placement.y }),
+    };
+    return { ...level, prefabs: [...level.prefabs, prefab] };
+  }
+  return {
+    ...level,
+    checkpoints: [
+      ...level.checkpoints,
+      {
+        x: placement.x,
+        z: placement.z,
+        ...(placement.y === undefined ? {} : { y: placement.y }),
+      },
+    ],
+  };
+}
+/** Append a live gate to a playable track, mirroring gates() math. */
+export function appendCheckpoint(
+  track: Track,
+  x: number,
+  z: number,
+  y = 2,
+) {
+  const previous = track.path[track.path.length - 1];
+  track.path.push({ x, z });
+  const length = Math.hypot(x - previous.x, z - previous.z);
+  const fallback =
+    track.checkpoints.length > 0
+      ? track.checkpoints[track.checkpoints.length - 1]
+      : { nx: 0, nz: 1 };
+  const gate = {
+    x,
+    z,
+    id: `gate-${track.checkpoints.length + 1}`,
+    nx: length > 1e-6 ? (x - previous.x) / length : fallback.nx,
+    nz: length > 1e-6 ? (z - previous.z) / length : fallback.nz,
+    width: 24,
+    y,
+    height: 8,
+  };
+  track.checkpoints.push(gate);
+  return gate;
+}
 const registry = new Map<string, Track>();
 export function registerCustomTrack(track: Track) {
   if (!track.id.startsWith("custom:"))

@@ -35,8 +35,13 @@ export class ComicPhysics {
   private consumed = new Map<string, number>();
   constructor(private sim: Simulation) {
     if (!sim.courseTrack) return;
+    for (const h of comicHazards(sim.courseTrack)) this.addHazard(h);
+  }
+  /** Live placement: add one hazard without resetting the run. */
+  addHazard(h: ComicHazard) {
+    const sim = this.sim;
     const world = sim.world;
-    for (const h of comicHazards(sim.courseTrack)) {
+    {
       const m: Mechanism = {
         h,
         bodies: [],

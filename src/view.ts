@@ -15,6 +15,8 @@ import { pbr, flameMaterial, lavaMaterial } from "./materials";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { arenaSolids } from "./arena";
 import { ChaseCamera } from "./camera";
+import type { CourseSolid } from "./course";
+import type { Checkpoint } from "./tracks";
 import { DT } from "./clock";
 import { TruckFireView } from "./truck-fire";
 import { SkidView } from "./skids";
@@ -516,6 +518,31 @@ export class GameView {
         (dome?.material as T.MeshStandardMaterial | undefined)
           ?.emissiveIntensity ?? 0,
     ) as [number, number];
+  }
+  /** Raycast the course for the placement ghost; y=0 plane fallback. */
+  aimPoint(clientX: number, clientY: number): T.Vector3 | null {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return null;
+    const ndc = new T.Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    const ray = new T.Raycaster();
+    ray.setFromCamera(ndc, this.camera);
+    const hits = ray.intersectObjects(this.officialCourse.children, true);
+    if (hits.length) return hits[0].point.clone();
+    if (Math.abs(ray.ray.direction.y) < 1e-6) return null;
+    const t = -ray.ray.origin.y / ray.ray.direction.y;
+    return t > 0
+      ? ray.ray.origin.clone().addScaledVector(ray.ray.direction, t)
+      : null;
+  }
+  addCourseSolid(s: CourseSolid) {
+    this.officialCourse.addSolidMesh(s);
+  }
+  addCheckpointGate(gate: Checkpoint) {
+    const track = this.simulation.courseTrack;
+    if (track) this.officialCourse.addCheckpointGate(track, gate);
   }
   stats() {
     const [lightA, lightB] = this.lightIntensities();

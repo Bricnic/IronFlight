@@ -135,3 +135,13 @@ it("missing levels raise a clear error", async () => {
   const d = deps();
   await expect(loadLevel(d, "Ghost")).rejects.toThrow(/Ghost/);
 });
+it("registers the playable track on save, replacing stale versions", async () => {
+  const d = deps();
+  const { getTrack } = await import("../src/tracks");
+  await saveLevel(d, level("Fresh Play"));
+  expect(getTrack("custom:fresh-play").checkpoints).toHaveLength(1);
+  const revised = level("Fresh Play");
+  revised.checkpoints.push({ x: 10, z: 50 });
+  await saveLevel(d, revised);
+  expect(getTrack("custom:fresh-play").checkpoints).toHaveLength(2);
+});

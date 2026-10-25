@@ -1055,3 +1055,41 @@ kbd {
   font-size: 12px;
   color: #8fa5a8;
 }
+
+#placement-bar {
+  position: fixed;
+  left: 16px;
+  bottom: 70px;
+  z-index: 14;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #14212add;
+  border: 1px solid #ffffff28;
+  border-radius: 6px;
+  color: #e8efec;
+  font-size: 12px;
+}
+#placement-bar button {
+  padding: 6px 12px;
+  border: 1px solid #ffffff38;
+  background: #253941;
+  color: #e8efec;
+  font: 600 12px "Barlow", sans-serif;
+  cursor: pointer;
+}
+#placement-bar select {
+  background: #1d3038;
+  color: #e8efec;
+  border: 1px solid #ffffff28;
+  padding: 6px 8px;
+  font: inherit;
+}
+#place-status {
+  color: #8fa5a8;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

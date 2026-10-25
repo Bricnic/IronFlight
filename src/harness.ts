@@ -24,6 +24,8 @@ export interface GameHarness {
     dirty: boolean;
     levels: string[];
   };
+  placement(): { editing: boolean; palette: string; texture: string };
+  project(point: { x: number; y: number; z: number }): { x: number; y: number };
   customLevels: {
     list(): Promise<string[]>;
     save(level: CustomLevel): Promise<CustomLevel>;

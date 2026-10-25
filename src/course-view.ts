@@ -3,8 +3,8 @@ import { courseHazards } from "./course";
 import { flameIntensity, type Hazard } from "./hazards";
 import { pbr, lavaMaterial } from "./materials";
 import { flameMaterial } from "./materials";
-import { courseSolids } from "./course";
-import { slideProfileY } from "./tracks";
+import { courseSolids, type CourseSolid } from "./course";
+import { slideProfileY, type Checkpoint, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
 export class CourseView extends T.Group {
   private key = "";
@@ -24,6 +24,7 @@ export class CourseView extends T.Group {
   private ghostGroup: T.Group | null = null;
   private pickupModels = new Map<string, T.Group>();
   private meshes: T.Mesh[] = [];
+  private builtTrack: Track | null = null;
   private label(text: string, color: number) {
     const c = document.createElement("canvas");
     c.width = 512;
@@ -44,10 +45,220 @@ export class CourseView extends T.Group {
     );
     return mesh;
   }
+  private buildSolidMesh(track: Track, s: CourseSolid) {
+    const stone =
+      s.id.startsWith("vault-wall") ||
+      s.id.startsWith("vault-floor") ||
+      (s.id.startsWith("crypt-") && s.id !== "crypt-door");
+    const cliff = s.id.startsWith("gorge-");
+    const groundMap =
+      track.id === "canyon-plunge"
+        ? "cracked_red_ground"
+        : track.id === "haunted-hollow"
+          ? "brown_mud_leaves_01"
+          : track.id === "sky-slide"
+            ? "grass_ground"
+            : ["foundry-run", "inferno-vault"].includes(track.id)
+              ? "concrete_layers_02"
+              : "concrete_floor_02";
+    const roadMap =
+      track.id === "canyon-plunge"
+        ? "coast_sand_rocks_02"
+        : track.id === "sky-slide"
+          ? "blue_plaster_wall"
+          : "asphalt_02";
+    const groundTint =
+      groundMap === "cracked_red_ground"
+        ? 0xffffff
+        : groundMap === "brown_mud_leaves_01"
+          ? 0x8a7a6a
+          : groundMap === "grass_ground"
+            ? 0xa8c795
+            : track.id === "scrapyard-sweep"
+              ? 0xb8a990
+              : 0xc4c8c8;
+    const mat =
+      s.kind === "lava"
+        ? lavaMaterial()
+        : s.texture
+          ? pbr(s.texture, 1, { color: s.color, roughness: 0.9 })
+          : cliff
+          ? pbr("dark_rock_02", 1, { color: 0xd89060, roughness: 0.95 })
+          : stone
+            ? pbr(
+                track.id === "haunted-hollow"
+                  ? "monastery_stone_floor"
+                  : "rock_06",
+                1,
+                { color: 0xb9b2a7, roughness: 0.94 },
+              )
+            : s.kind === "road" || s.kind === "ramp"
+              ? pbr(roadMap, 1, {
+                  color:
+                    roadMap === "blue_plaster_wall"
+                      ? 0x6fa8d8
+                      : roadMap === "coast_sand_rocks_02"
+                        ? 0xd8b88a
+                        : 0xc3c4c5,
+                  roughness:
+                    roadMap === "blue_plaster_wall" ? 0.35 : 0.95,
+                })
+              : s.kind === "ground"
+                ? pbr(groundMap, 1, {
+                    color: groundTint,
+                    roughness:
+                      groundMap === "concrete_floor_02" ||
+                      groundMap === "concrete_layers_02"
+                        ? 0.96
+                        : 1,
+                  })
+                : new T.MeshStandardMaterial({
+                    color: s.color,
+                    roughness: s.kind === "container" ? 0.65 : 0.95,
+                    metalness: s.kind === "container" ? 0.3 : 0,
+                  });
+    if (s.kind === "lava") this.lavaMaterials.push(mat);
+    const geometry = new T.BoxGeometry(s.w, s.h, s.d);
+    if (
+      stone ||
+      cliff ||
+      s.texture ||
+      ["ground", "road", "ramp"].includes(s.kind)
+    ) {
+      const pos = geometry.attributes.position,
+        normals = geometry.attributes.normal,
+        uv = geometry.attributes.uv;
+      for (let i = 0; i < pos.count; i++) {
+        const top = Math.abs(normals.getY(i)) > 0.5;
+        uv.setXY(
+          i,
+          (top
+            ? pos.getX(i) + (s.kind === "ground" ? s.x : 0)
+            : pos.getX(i) + pos.getZ(i)) / 3,
+          (top
+            ? pos.getZ(i) + (s.kind === "ground" ? s.z : 0)
+            : pos.getY(i)) / 3,
+        );
+      }
+      uv.needsUpdate = true;
+      mat.userData.surface = s.texture
+        ? s.texture
+        : stone
+        ? "stone"
+        : cliff
+          ? "cliff"
+          : s.kind === "ground"
+            ? groundMap === "concrete_floor_02" ||
+              groundMap === "concrete_layers_02"
+              ? "concrete"
+              : groundMap === "grass_ground"
+                ? "grass"
+                : "dirt"
+            : roadMap === "asphalt_02"
+              ? "asphalt_02"
+              : roadMap === "blue_plaster_wall"
+                ? "plaster"
+                : "sand";
+    }
+    const mesh = new T.Mesh(geometry, mat);
+    mesh.position.set(s.x, s.y, s.z);
+    mesh.quaternion
+      .setFromAxisAngle(new T.Vector3(1, 0, 0), s.angle ?? 0)
+      .multiply(
+        new T.Quaternion().setFromAxisAngle(
+          new T.Vector3(0, 1, 0),
+          s.yaw ?? 0,
+        ),
+      );
+    mesh.castShadow = s.kind !== "ground" && s.kind !== "road";
+    mesh.receiveShadow = true;
+    mesh.name = s.id;
+    if (s.kind === "container")
+      for (let i = -3; i <= 3; i++) {
+        const rib = new T.Mesh(
+          new T.BoxGeometry(0.07, s.h - 0.2, s.d + 0.04),
+          new T.MeshStandardMaterial({
+            color: s.color,
+            roughness: 0.75,
+          }),
+        );
+        rib.position.x = i;
+        mesh.add(rib);
+      }
+    return mesh;
+  }
+
+  private buildGate(track: Track, gate: Checkpoint, index: number, total: number) {
+    const g = new T.Group();
+    g.name = `checkpoint-${gate.id}`;
+    g.position.set(gate.x, Math.max(0, gate.y - 2.6), gate.z);
+    g.rotation.y = Math.atan2(gate.nx, gate.nz);
+    const mat = new T.MeshStandardMaterial({
+      color: track.color,
+      roughness: 0.6,
+    });
+    for (const side of [-1, 1]) {
+      const pole = new T.Mesh(
+        new T.CylinderGeometry(0.13, 0.2, 5.2, 10),
+        mat,
+      );
+      pole.position.set((side * gate.width) / 2, 2.6, 0);
+      g.add(pole);
+    }
+    const banner = new T.Mesh(
+      new T.BoxGeometry(gate.width, 0.35, 0.35),
+      mat,
+    );
+    banner.position.y = 5.1;
+    g.add(banner);
+    const label = this.label(
+      index === total - 1 && !track.ring
+        ? "FINISH"
+        : `CHECKPOINT ${index + 1}`,
+      track.color,
+    );
+    label.position.y = 5.7;
+    label.rotation.y = Math.PI;
+    g.add(label);
+    return g;
+  }
+  private addGateModel(g: T.Group) {
+    this.add(g);
+    this.gateModels.push(g);
+  }
+  /** Live placement: append one gate, demoting the old FINISH label. */
+  addCheckpointGate(track: Track, gate: Checkpoint) {
+    const prev = this.gateModels[this.gateModels.length - 1];
+    if (prev && !track.ring) {
+      const old = prev.children[3] as T.Mesh | undefined;
+      if (old) {
+        prev.remove(old);
+        old.geometry.dispose();
+        const material = old.material as T.MeshBasicMaterial;
+        (material.map as T.CanvasTexture | null)?.dispose();
+        material.dispose();
+        const label = this.label(`CHECKPOINT ${this.gateModels.length}`, track.color);
+        label.position.y = 5.7;
+        label.rotation.y = Math.PI;
+        prev.add(label);
+      }
+    }
+    this.addGateModel(this.buildGate(track, gate, this.gateModels.length, track.checkpoints.length));
+  }
+  /** Live placement: add one solid mesh without rebuilding. */
+  addSolidMesh(s: CourseSolid) {
+    const track = this.builtTrack;
+    if (!track || track.legacy) return;
+    const mesh = this.buildSolidMesh(track, s);
+    this.add(mesh);
+    this.meshes.push(mesh);
+  }
+
   update(sim: Simulation, camera?: T.Camera) {
     this.hazardTime = sim.time;
     const run = sim.trackRun;
     const key = run ? `${run.track.id}:${run.variant}` : "";
+    this.builtTrack = run?.track ?? null;
     if (key !== this.key) {
       this.traverse((o) => {
         if (o instanceof T.Mesh) {
@@ -79,147 +290,9 @@ export class CourseView extends T.Group {
         const track = run.track;
         if (!track.legacy)
           for (const s of courseSolids(track)) {
-            const stone =
-              s.id.startsWith("vault-wall") ||
-              s.id.startsWith("vault-floor") ||
-              (s.id.startsWith("crypt-") && s.id !== "crypt-door");
-            const cliff = s.id.startsWith("gorge-");
-            const groundMap =
-              track.id === "canyon-plunge"
-                ? "cracked_red_ground"
-                : track.id === "haunted-hollow"
-                  ? "brown_mud_leaves_01"
-                  : track.id === "sky-slide"
-                    ? "grass_ground"
-                    : ["foundry-run", "inferno-vault"].includes(track.id)
-                      ? "concrete_layers_02"
-                      : "concrete_floor_02";
-            const roadMap =
-              track.id === "canyon-plunge"
-                ? "coast_sand_rocks_02"
-                : track.id === "sky-slide"
-                  ? "blue_plaster_wall"
-                  : "asphalt_02";
-            const groundTint =
-              groundMap === "cracked_red_ground"
-                ? 0xffffff
-                : groundMap === "brown_mud_leaves_01"
-                  ? 0x8a7a6a
-                  : groundMap === "grass_ground"
-                    ? 0xa8c795
-                    : track.id === "scrapyard-sweep"
-                      ? 0xb8a990
-                      : 0xc4c8c8;
-            const mat =
-              s.kind === "lava"
-                ? lavaMaterial()
-                : s.texture
-                  ? pbr(s.texture, 1, { color: s.color, roughness: 0.9 })
-                  : cliff
-                  ? pbr("dark_rock_02", 1, { color: 0xd89060, roughness: 0.95 })
-                  : stone
-                    ? pbr(
-                        track.id === "haunted-hollow"
-                          ? "monastery_stone_floor"
-                          : "rock_06",
-                        1,
-                        { color: 0xb9b2a7, roughness: 0.94 },
-                      )
-                    : s.kind === "road" || s.kind === "ramp"
-                      ? pbr(roadMap, 1, {
-                          color:
-                            roadMap === "blue_plaster_wall"
-                              ? 0x6fa8d8
-                              : roadMap === "coast_sand_rocks_02"
-                                ? 0xd8b88a
-                                : 0xc3c4c5,
-                          roughness:
-                            roadMap === "blue_plaster_wall" ? 0.35 : 0.95,
-                        })
-                      : s.kind === "ground"
-                        ? pbr(groundMap, 1, {
-                            color: groundTint,
-                            roughness:
-                              groundMap === "concrete_floor_02" ||
-                              groundMap === "concrete_layers_02"
-                                ? 0.96
-                                : 1,
-                          })
-                        : new T.MeshStandardMaterial({
-                            color: s.color,
-                            roughness: s.kind === "container" ? 0.65 : 0.95,
-                            metalness: s.kind === "container" ? 0.3 : 0,
-                          });
-            if (s.kind === "lava") this.lavaMaterials.push(mat);
-            const geometry = new T.BoxGeometry(s.w, s.h, s.d);
-            if (
-              stone ||
-              cliff ||
-              s.texture ||
-              ["ground", "road", "ramp"].includes(s.kind)
-            ) {
-              const pos = geometry.attributes.position,
-                normals = geometry.attributes.normal,
-                uv = geometry.attributes.uv;
-              for (let i = 0; i < pos.count; i++) {
-                const top = Math.abs(normals.getY(i)) > 0.5;
-                uv.setXY(
-                  i,
-                  (top
-                    ? pos.getX(i) + (s.kind === "ground" ? s.x : 0)
-                    : pos.getX(i) + pos.getZ(i)) / 3,
-                  (top
-                    ? pos.getZ(i) + (s.kind === "ground" ? s.z : 0)
-                    : pos.getY(i)) / 3,
-                );
-              }
-              uv.needsUpdate = true;
-              mat.userData.surface = s.texture
-                ? s.texture
-                : stone
-                ? "stone"
-                : cliff
-                  ? "cliff"
-                  : s.kind === "ground"
-                    ? groundMap === "concrete_floor_02" ||
-                      groundMap === "concrete_layers_02"
-                      ? "concrete"
-                      : groundMap === "grass_ground"
-                        ? "grass"
-                        : "dirt"
-                    : roadMap === "asphalt_02"
-                      ? "asphalt_02"
-                      : roadMap === "blue_plaster_wall"
-                        ? "plaster"
-                        : "sand";
-            }
-            const mesh = new T.Mesh(geometry, mat);
-            mesh.position.set(s.x, s.y, s.z);
-            mesh.quaternion
-              .setFromAxisAngle(new T.Vector3(1, 0, 0), s.angle ?? 0)
-              .multiply(
-                new T.Quaternion().setFromAxisAngle(
-                  new T.Vector3(0, 1, 0),
-                  s.yaw ?? 0,
-                ),
-              );
-            mesh.castShadow = s.kind !== "ground" && s.kind !== "road";
-            mesh.receiveShadow = true;
-            mesh.name = s.id;
+            const mesh = this.buildSolidMesh(track, s);
             this.add(mesh);
             this.meshes.push(mesh);
-            if (s.kind === "container")
-              for (let i = -3; i <= 3; i++) {
-                const rib = new T.Mesh(
-                  new T.BoxGeometry(0.07, s.h - 0.2, s.d + 0.04),
-                  new T.MeshStandardMaterial({
-                    color: s.color,
-                    roughness: 0.75,
-                  }),
-                );
-                rib.position.x = i;
-                mesh.add(rib);
-              }
           }
         for (const h of courseHazards(track)) {
           const root = new T.Group();
@@ -389,41 +462,8 @@ export class CourseView extends T.Group {
             this.add(pumpkin);
           }
         }
-        for (const [i, gate] of track.checkpoints.entries()) {
-          const g = new T.Group();
-          g.name = `checkpoint-${gate.id}`;
-          g.position.set(gate.x, Math.max(0, gate.y - 2.6), gate.z);
-          g.rotation.y = Math.atan2(gate.nx, gate.nz);
-          const mat = new T.MeshStandardMaterial({
-            color: track.color,
-            roughness: 0.6,
-          });
-          for (const side of [-1, 1]) {
-            const pole = new T.Mesh(
-              new T.CylinderGeometry(0.13, 0.2, 5.2, 10),
-              mat,
-            );
-            pole.position.set((side * gate.width) / 2, 2.6, 0);
-            g.add(pole);
-          }
-          const banner = new T.Mesh(
-            new T.BoxGeometry(gate.width, 0.35, 0.35),
-            mat,
-          );
-          banner.position.y = 5.1;
-          g.add(banner);
-          const label = this.label(
-            i === track.checkpoints.length - 1 && !track.ring
-              ? "FINISH"
-              : `CHECKPOINT ${i + 1}`,
-            track.color,
-          );
-          label.position.y = 5.7;
-          label.rotation.y = Math.PI;
-          g.add(label);
-          this.add(g);
-          this.gateModels.push(g);
-        }
+        for (const [i, gate] of track.checkpoints.entries())
+          this.addGateModel(this.buildGate(track, gate, i, track.checkpoints.length));
         for (const [i, p] of track.collectibles.entries()) {
           const g = new T.Group();
           g.position.set(p.x, p.y, p.z);

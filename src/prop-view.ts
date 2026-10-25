@@ -29,6 +29,8 @@ export class PropView extends T.Group {
       this.source = source;
       for (const prop of source.props) this.build(prop);
     }
+    for (const prop of source.props)
+      if (!this.models.has(prop)) this.build(prop);
     for (const [prop, model] of this.models) {
       model.root.visible = !(prop.definition.kind === "snowman" && prop.broken);
       model.root.position.copy(prop.body.translation());

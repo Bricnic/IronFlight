@@ -57,7 +57,12 @@ export class Destructibles {
     lab: boolean,
     definitions = propDefinitions(lab),
   ) {
-    for (const definition of definitions) {
+    for (const definition of definitions) this.addProp(definition);
+  }
+  /** Live placement: add one prop without resetting the run. */
+  addProp(definition: PropDefinition) {
+    const world = this.world;
+    {
       const { kind, x, z, ground } = definition,
         sign = kind === "sign",
         stone = kind === "gravestone",

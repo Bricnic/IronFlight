@@ -1,5 +1,6 @@
 import {
   blankLevel,
+  solidDefaults,
   type CustomLevel,
   type CustomPrefab,
   type CustomPoint,
@@ -13,18 +14,6 @@ export type EditorSelection =
   | { kind: "target"; index: number }
   | { kind: "spawn" }
   | null;
-const SOLID_DEFAULTS: Record<
-  SolidKind,
-  { w: number; h: number; d: number; color: number; angle?: number }
-> = {
-  ground: { w: 200, h: 1.2, d: 200, color: 0x6d817c },
-  road: { w: 24, h: 0.03, d: 100, color: 0x303e49 },
-  container: { w: 8, h: 5.2, d: 16, color: 0xac623f },
-  barrier: { w: 6, h: 1.6, d: 5, color: 0xe6c16a },
-  ramp: { w: 16, h: 0.35, d: 12, color: 0x8a8f96, angle: -0.124 },
-  support: { w: 2, h: 8, d: 2, color: 0x555c60 },
-  lava: { w: 20, h: 0.5, d: 20, color: 0xff5a1f },
-};
 /** Mutable level-editing state with dirty tracking. The DOM screen observes it. */
 export class EditorStore {
   level: CustomLevel;
@@ -72,7 +61,7 @@ export class EditorStore {
     return `${prefix}-${n}`;
   }
   addSolid(kind: SolidKind, x = 0, z = 0): CustomSolid {
-    const defaults = SOLID_DEFAULTS[kind];
+    const defaults = solidDefaults(kind);
     const taken = new Set(this.level.solids.map((s) => s.id));
     const nudge = this.level.solids.length * 2;
     const solid: CustomSolid = {
