@@ -18,6 +18,7 @@ import { ChaseCamera } from "./camera";
 import type { CourseSolid } from "./course";
 import type { Checkpoint } from "./tracks";
 import { DT } from "./clock";
+import { QUALITY, type VideoQuality } from "./settings";
 import { TruckFireView } from "./truck-fire";
 import { SkidView } from "./skids";
 import { LoopView } from "./loop-view";
@@ -53,6 +54,8 @@ export class GameView {
   private loop = new LoopView();
   private sun!: T.DirectionalLight;
   private hemi!: T.HemisphereLight;
+  private videoTier: VideoQuality = "high";
+  private fogScale = 1;
   constructor(
     host: HTMLElement,
     readonly simulation: Simulation,
@@ -130,9 +133,8 @@ export class GameView {
       },
       { passive: false },
     );
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-    this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = T.PCFSoftShadowMap;
+    this.applyQuality("high");
     this.renderer.toneMapping = T.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.25;
     const pmrem = new T.PMREMGenerator(this.renderer);
@@ -571,6 +573,13 @@ export class GameView {
       renderTriangles: this.renderer.info.render.triangles,
       geometries: this.renderer.info.memory.geometries,
       textures: this.renderer.info.memory.textures,
+      video: {
+        tier: this.videoTier,
+        pixelRatio: this.renderer.getPixelRatio(),
+        shadows: this.renderer.shadowMap.enabled,
+        far: this.camera.far,
+        fogScale: this.fogScale,
+      },
     };
   }
   resize() {
@@ -580,6 +589,29 @@ export class GameView {
     this.renderer.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+  }
+  /** Live video-quality tier switch: pixel ratio, shadows, far plane, fog. */
+  applyQuality(tier: VideoQuality) {
+    const spec = QUALITY[tier];
+    this.videoTier = tier;
+    this.fogScale = spec.fogScale;
+    this.renderer.setPixelRatio(
+      Math.min(devicePixelRatio || 1, spec.pixelRatio),
+    );
+    if (this.renderer.shadowMap.enabled !== spec.shadows) {
+      this.renderer.shadowMap.enabled = spec.shadows;
+      this.scene.traverse((o) => {
+        if (o instanceof T.Mesh) {
+          for (const m of Array.isArray(o.material)
+            ? o.material
+            : [o.material])
+            m.needsUpdate = true;
+        }
+      });
+    }
+    this.camera.far = spec.far;
+    this.camera.updateProjectionMatrix();
+    this.resize();
   }
   render(snap = false, alpha = 1, draw = true) {
     const s = this.simulation;
@@ -596,14 +628,15 @@ export class GameView {
     const fog = this.scene.fog as T.Fog;
     fog.color.setHex(bg);
     fog.near =
-      mood === "haunted-hollow"
+      (mood === "haunted-hollow"
         ? 80
         : mood === "sky-slide"
           ? 200
           : mood === "canyon-plunge"
             ? 150
-            : 140;
-    fog.far = mood === "haunted-hollow" ? 320 : mood ? 600 : 430;
+            : 140) * this.fogScale;
+    fog.far =
+      (mood === "haunted-hollow" ? 320 : mood ? 600 : 430) * this.fogScale;
     this.hemi.intensity =
       mood === "haunted-hollow" ? 1.2 : mood === "sky-slide" ? 2.2 : 2;
     this.sun.intensity = mood === "haunted-hollow" ? 1.8 : 3.5;

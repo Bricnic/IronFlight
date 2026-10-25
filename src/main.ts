@@ -2,6 +2,8 @@ import { resultOpacity } from "./result-reveal";
 import { createLevelSelect } from "./level-select";
 import { createVehicleSelect } from "./vehicle-select";
 import { createLevelEditor } from "./level-editor";
+import { createSettings } from "./settings-screen";
+import { loadSettings } from "./settings";
 import * as T from "three";
 import {
   placeInLevel,
@@ -54,6 +56,7 @@ async function boot() {
     lab = new DestructionLab(sim),
     view = new GameView(document.querySelector("#viewport")!, sim),
     clock = new FixedClock();
+  view.applyQuality(loadSettings().video);
   const toggleDebug = await createDebugMenu(sim);
   document.querySelector(".camera-hint")!.textContent =
     "DRAG TO ORBIT · WHEEL TO ZOOM · ` TUNING";
@@ -63,6 +66,7 @@ async function boot() {
   let screens: ReturnType<typeof createLevelSelect>;
   let vehicleScreens: ReturnType<typeof createVehicleSelect>;
   let editorScreens: ReturnType<typeof createLevelEditor>;
+  let settingsScreens: ReturnType<typeof createSettings>;
   function applyStoredVehicle() {
     try {
       sim.vehicleId = getVehicle(
@@ -80,7 +84,7 @@ async function boot() {
   });
   header.insertAdjacentHTML(
     "beforeend",
-    '<button id="level-select-button">Level select</button><button id="vehicle-select-button">Select vehicle</button><button id="level-editor-button">Level editor</button>',
+    '<button id="level-select-button">Level select</button><button id="vehicle-select-button">Select vehicle</button><button id="level-editor-button">Level editor</button><button id="settings-button">Settings</button>',
   );
   const keys = new Set<string>();
   let cameraTrace: CameraSample[] = [],
@@ -97,6 +101,7 @@ async function boot() {
     screens?.hide();
     vehicleScreens?.hide();
     editorScreens?.hide();
+    settingsScreens?.hide();
     recordedRun = undefined;
     applyStoredVehicle();
     sim.reset(stage);
@@ -136,6 +141,7 @@ async function boot() {
     screens?.hide();
     vehicleScreens?.hide();
     editorScreens?.hide();
+    settingsScreens?.hide();
     $("lab").hidden = true;
     panel.hidden = true;
     $("routes").hidden = !getTrack(id).legacy;
@@ -155,6 +161,7 @@ async function boot() {
     clock.reset();
     vehicleScreens?.hide();
     editorScreens?.hide();
+    settingsScreens?.hide();
     screens.show();
     panel.hidden = true;
   }
@@ -165,6 +172,7 @@ async function boot() {
     clock.reset();
     screens.hide();
     vehicleScreens?.hide();
+    settingsScreens?.hide();
     editorScreens.show();
     panel.hidden = true;
   }
@@ -175,7 +183,19 @@ async function boot() {
     clock.reset();
     screens.hide();
     editorScreens?.hide();
+    settingsScreens?.hide();
     vehicleScreens.show();
+    panel.hidden = true;
+  }
+  function showSettings() {
+    surface = "menu";
+    exitEdit();
+    keys.clear();
+    clock.reset();
+    screens.hide();
+    editorScreens?.hide();
+    vehicleScreens?.hide();
+    settingsScreens.show();
     panel.hidden = true;
   }
   function retryTrack() {
@@ -212,6 +232,12 @@ async function boot() {
     startOfficial(id),
   );
   $("level-editor-button").onclick = showLevelEditor;
+  settingsScreens = createSettings(
+    app,
+    (tier) => view.applyQuality(tier),
+    showLevelSelect,
+  );
+  $("settings-button").onclick = showSettings;
   // In-game placement for custom levels: ghost brick, live commit, disk save.
   app.insertAdjacentHTML(
     "beforeend",

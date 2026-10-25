@@ -621,7 +621,8 @@ kbd {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
-#vehicle-select {
+#vehicle-select,
+#settings-screen {
   position: fixed;
   inset: 84px 0 0;
   overflow: auto;

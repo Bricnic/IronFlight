@@ -115,6 +115,13 @@ export interface GameHarness {
     renderTriangles: number;
     geometries: number;
     textures: number;
+    video: {
+      tier: string;
+      pixelRatio: number;
+      shadows: boolean;
+      far: number;
+      fogScale: number;
+    };
   };
 }
 declare global {
