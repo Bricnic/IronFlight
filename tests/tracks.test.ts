@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { TRACKS, getTrack, validateTracks } from "../src/tracks";
+import { TRACKS, getTrack, stepTrackId, validateTracks } from "../src/tracks";
 it("registers Triple Loop plus eight distinct tracks", () => {
   expect(TRACKS.map((t) => t.name)).toEqual([
     "Triple Loop",
@@ -25,6 +25,16 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
     expect(t.collectibles.length).toBeGreaterThanOrEqual(10);
     expect(t.feasibility).toBe(t.limit! * 0.75);
   }
+});
+it("steps to the next and previous level with wraparound", () => {
+  expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
+  expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
+  expect(stepTrackId("sky-slide", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("sky-slide");
+  expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
+  expect(stepTrackId("custom:my-level", -1)).toBe("sky-slide");
+  expect(stepTrackId(undefined, 1)).toBe("triple-loop");
+  expect(stepTrackId(undefined, -1)).toBe("sky-slide");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

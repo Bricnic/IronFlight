@@ -221,3 +221,8 @@ GREEN: the fps probe measures live rAF frame rate per level on low video, but Sw
 
 RED: full sweep 164/173 with 9 e2e failures. Triage via a chunk-8 worktree bisect: 4 pre-existing (dragon-flame + 2 inferno specs exceed the 90s budget under SwiftShader; world-presentation polls a ~5s/frame state on a 5s budget), 2 pre-existing ambiguous selectors (level/vehicle screens already shared `.track-grid`/`.track-select-intro`), 1 real regression from chunk 11 (settings cards reused `.vehicle-card`, 5 became 8), and 2 load flakes (editor save + playtest boot transitions on 5s budgets).
 GREEN: settings screen uses dedicated `settings-intro`/`settings-grid`/`settings-card` classes sharing the same CSS; the two ambiguous specs scope to `#level-select`; the three slow specs gain `test.slow()`; world/editor/playtest assertions keep identical predicates on realistic software-renderer budgets (30s/15s/20s). Verification set of 12 files (all 8 previously-failing + placement/settings/custom-levels/fps) passes 35/35; full unit gate 358/358 with the production build.
+
+## Level hotkeys -- N/P for next/previous level
+
+RED: `tests/tracks.test.ts` step test fails on the missing `stepTrackId`; `e2e/level-keys.spec.ts` is new.
+GREEN: new `stepTrackId(current, dir)` in `src/tracks.ts` cycles the nine official levels with wraparound (sky-slide -> triple-loop, triple-loop -> sky-slide; customs/empty fall off the ends), wired to N/P in the main keydown handler alongside R (menu surfaces excluded, lane preserved like retry), and documented in the level-select footnote. Unit 4/4, e2e 1/1.

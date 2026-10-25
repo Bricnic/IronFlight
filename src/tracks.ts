@@ -346,6 +346,16 @@ export function getTrack(id: string): Track {
   if (!track) throw new RangeError(`Unknown track: ${id}`);
   return track;
 }
+/** Next/previous official level with wraparound; customs fall off the ends. */
+export function stepTrackId(
+  current: string | undefined,
+  dir: 1 | -1,
+): TrackId {
+  const ids = TRACK_IDS;
+  const at = current ? ids.indexOf(current as TrackId) : -1;
+  if (at < 0) return dir === 1 ? ids[0] : ids[ids.length - 1];
+  return ids[(at + dir + ids.length) % ids.length];
+}
 export function validateTracks(tracks: Track[]) {
   const errors: string[] = [];
   const ids = new Set<string>();

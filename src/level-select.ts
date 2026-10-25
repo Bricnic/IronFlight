@@ -14,7 +14,7 @@ export function createLevelSelect(
 ) {
   const screen = document.createElement("main");
   screen.id = "level-select";
-  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Nine places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to play · L for level select · Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
+  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Nine places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to play · L for level select · N/P for next/previous level · Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
   const grid = screen.querySelector<HTMLElement>(".track-grid")!;
   const cards = new Map<TrackId, HTMLElement>();
   for (const [i, track] of TRACKS.entries()) {

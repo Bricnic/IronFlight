@@ -13,7 +13,12 @@ import {
 } from "./custom-level";
 import { getVehicle } from "./vehicles";
 import { BestTimes } from "./best-times";
-import { getTrack, type CustomTrackId, type TrackId } from "./tracks";
+import {
+  getTrack,
+  stepTrackId,
+  type CustomTrackId,
+  type TrackId,
+} from "./tracks";
 import {
   listLevels,
   saveLevel,
@@ -207,6 +212,14 @@ async function boot() {
         !paused,
       );
     else select(sim.stage);
+  }
+  function stepLevel(dir: 1 | -1) {
+    const run = sim.trackRun;
+    startOfficial(
+      stepTrackId(run?.track.id, dir),
+      run?.track.legacy ? (run.variant as "easy" | "medium" | "hard") : "easy",
+      !paused,
+    );
   }
   await registerStoredTracks();
   screens = createLevelSelect(
@@ -552,6 +565,11 @@ async function boot() {
     if (k === "r" && surface !== "menu") {
       e.preventDefault();
       if (!e.repeat) retryTrack();
+      return;
+    }
+    if ((k === "n" || k === "p") && surface !== "menu") {
+      e.preventDefault();
+      if (!e.repeat) stepLevel(k === "n" ? 1 : -1);
       return;
     }
     // Let menu/result buttons keep native Space/Enter activation.
