@@ -544,7 +544,7 @@ export class GameView {
     const track = this.simulation.courseTrack;
     if (track) this.officialCourse.addCheckpointGate(track, gate);
   }
-  /** Name of the top-level course node under the cursor, if any. */
+  /** Name of the top-level course/prop/comic node under the cursor. */
   pickCourseSolid(clientX: number, clientY: number): string | null {
     const rect = this.renderer.domElement.getBoundingClientRect();
     if (rect.width < 1 || rect.height < 1) return null;
@@ -554,10 +554,14 @@ export class GameView {
     );
     const ray = new T.Raycaster();
     ray.setFromCamera(ndc, this.camera);
-    const hits = ray.intersectObjects(this.officialCourse.children, true);
+    const groups: T.Group[] = [this.officialCourse, this.props, this.comic];
+    const hits = ray.intersectObjects(
+      groups.flatMap((g) => g.children),
+      true,
+    );
     if (!hits.length) return null;
     let node = hits[0].object;
-    while (node.parent && node.parent !== this.officialCourse)
+    while (node.parent && !groups.includes(node.parent as T.Group))
       node = node.parent;
     return node.name || null;
   }
@@ -572,6 +576,15 @@ export class GameView {
   }
   retextureCourseSolid(s: CourseSolid) {
     this.officialCourse.retextureSolidMesh(s);
+  }
+  moveComicModel(id: string, dx: number, dy: number, dz: number) {
+    this.comic.moveModel(id, dx, dy, dz);
+  }
+  removeComicModel(id: string) {
+    this.comic.removeModel(id);
+  }
+  removePropModel(id: string) {
+    this.props.removeModel(id);
   }
   stats() {
     const [lightA, lightB] = this.lightIntensities();

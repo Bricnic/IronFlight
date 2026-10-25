@@ -9,6 +9,9 @@ import * as T from "three";
 import {
   placeInLevel,
   appendCheckpoint,
+  editPrefabInLevel,
+  deletePrefabInLevel,
+  duplicatePrefabInLevel,
   editSolidInLevel,
   deleteSolidInLevel,
   duplicateSolidInLevel,
@@ -30,7 +33,7 @@ import {
   removeLevel,
   registerStoredTracks,
 } from "./level-store";
-import type { CustomLevel } from "./custom-level";
+import type { CustomLevel, CustomPrefab } from "./custom-level";
 import "./style.css";
 import { Simulation, initPhysics, type Stage, type Input } from "./simulation";
 import { FixedClock } from "./clock";
@@ -315,13 +318,28 @@ async function boot() {
   );
   selBox.visible = false;
   let selectedId: string | null = null;
+  let selectedKind: "solid" | "prefab" | null = null;
+  const PREFAB_BOX: Record<string, [number, number, number]> = {
+    snowman: [2.6, 3.4, 2.6],
+    book: [4, 2.4, 5],
+    hydrant: [1.6, 2.2, 1.6],
+  };
+  function selectedNode() {
+    const level = sim.courseTrack?.custom;
+    if (!level || !selectedId || !selectedKind) return null;
+    if (selectedKind === "solid") {
+      const solid = level.solids.find((s) => s.id === selectedId);
+      return solid ? { kind: selectedKind, solid } : null;
+    }
+    const prefab = level.prefabs.find((p) => p.id === selectedId);
+    return prefab ? { kind: selectedKind, prefab } : null;
+  }
   function refreshSelBox() {
-    const solid = sim.courseTrack?.custom?.solids.find(
-      (s) => s.id === selectedId,
-    );
-    if (!solid) {
+    const node = selectedNode();
+    if (!node) {
       selBox.visible = false;
-    } else {
+    } else if (node.kind === "solid" && node.solid) {
+      const solid = node.solid;
       selBox.visible = editing;
       selBox.position.set(solid.x, solid.y, solid.z);
       selBox.scale.set(solid.w, solid.h, solid.d);
@@ -333,14 +351,22 @@ async function boot() {
             solid.yaw ?? 0,
           ),
         );
+    } else if (node.prefab) {
+      const prefab = node.prefab;
+      const box = PREFAB_BOX[prefab.kind] ?? [2, 2, 2];
+      selBox.visible = editing;
+      selBox.position.set(prefab.x, (prefab.y ?? 0) + box[1] / 2, prefab.z);
+      selBox.scale.set(box[0], box[1], box[2]);
+      selBox.quaternion.identity();
     }
-    const on = editing && !!solid;
-    selRotate.disabled = !on;
+    const on = editing && !!node;
+    selRotate.disabled = !(on && node?.kind === "solid");
     selDuplicate.disabled = !on;
     selDelete.disabled = !on;
   }
-  function selectSolid(id: string | null) {
+  function selectSolid(id: string | null, kind: "solid" | "prefab" = "solid") {
     selectedId = id;
+    selectedKind = id ? kind : null;
     refreshSelBox();
   }
   let editing = false;
@@ -373,10 +399,38 @@ async function boot() {
     const track = sim.courseTrack;
     const level = track?.custom;
     const solid =
-      selectedId && level
+      selectedId && selectedKind === "solid" && level
         ? level.solids.find((s) => s.id === selectedId)
         : undefined;
     return track && level && solid ? { track, level, solid } : null;
+  }
+  function selectedPrefab() {
+    const track = sim.courseTrack;
+    const level = track?.custom;
+    const prefab =
+      selectedId && selectedKind === "prefab" && level
+        ? level.prefabs.find((p) => p.id === selectedId)
+        : undefined;
+    return track && level && prefab ? { track, level, prefab } : null;
+  }
+  function liveAddPrefab(prefab: CustomPrefab) {
+    if (prefab.kind === "snowman")
+      sim.props.addProp({
+        id: prefab.id,
+        kind: "snowman",
+        x: prefab.x,
+        z: prefab.z,
+        ground: prefab.y ?? 0,
+      });
+    else
+      sim.comic.addHazard({
+        id: prefab.id,
+        kind: prefab.kind as "book" | "hydrant",
+        x: prefab.x,
+        z: prefab.z,
+        phase: 0,
+        ...(prefab.y === undefined ? {} : { y: prefab.y }),
+      });
   }
   async function saveLiveEdit(next: CustomLevel) {
     const track = sim.courseTrack!;
@@ -385,6 +439,36 @@ async function boot() {
     editorScreens.syncStore(track.custom);
   }
   async function moveSelected(point: T.Vector3) {
+    const prefabCtx = selectedPrefab();
+    if (prefabCtx) {
+      try {
+        const y = Math.max(0, point.y);
+        await saveLiveEdit(
+          editPrefabInLevel(prefabCtx.level, prefabCtx.prefab.id, {
+            x: point.x,
+            y,
+            z: point.z,
+          }),
+        );
+        const updated = sim.courseTrack!.custom!.prefabs.find(
+          (p) => p.id === prefabCtx.prefab.id,
+        )!;
+        if (updated.kind === "snowman")
+          sim.props.moveProp(updated.id, updated.x, y, updated.z);
+        else {
+          const dx = updated.x - prefabCtx.prefab.x;
+          const dy = y - (prefabCtx.prefab.y ?? 0);
+          const dz = updated.z - prefabCtx.prefab.z;
+          sim.comic.moveHazard(updated.id, updated.x, y, updated.z);
+          view.moveComicModel(updated.id, dx, dy, dz);
+        }
+        refreshSelBox();
+        say(`Moved ${prefabCtx.prefab.id}`);
+      } catch (e) {
+        say(e instanceof Error ? e.message : "Move failed");
+      }
+      return;
+    }
     const ctx = selectedSolid();
     if (!ctx) return;
     try {
@@ -424,6 +508,26 @@ async function boot() {
     }
   }
   async function deleteSelected() {
+    const prefabCtx = selectedPrefab();
+    if (prefabCtx) {
+      try {
+        await saveLiveEdit(
+          deletePrefabInLevel(prefabCtx.level, prefabCtx.prefab.id),
+        );
+        if (prefabCtx.prefab.kind === "snowman") {
+          sim.props.removeProp(prefabCtx.prefab.id);
+          view.removePropModel(prefabCtx.prefab.id);
+        } else {
+          sim.comic.removeHazard(prefabCtx.prefab.id);
+          view.removeComicModel(prefabCtx.prefab.id);
+        }
+        selectSolid(null);
+        say(`Deleted ${prefabCtx.prefab.id}`);
+      } catch (e) {
+        say(e instanceof Error ? e.message : "Delete failed");
+      }
+      return;
+    }
     const ctx = selectedSolid();
     if (!ctx) return;
     try {
@@ -437,6 +541,21 @@ async function boot() {
     }
   }
   async function duplicateSelected() {
+    const prefabCtx = selectedPrefab();
+    if (prefabCtx) {
+      try {
+        await saveLiveEdit(
+          duplicatePrefabInLevel(prefabCtx.level, prefabCtx.prefab.id),
+        );
+        const copy = sim.courseTrack!.custom!.prefabs.at(-1)!;
+        liveAddPrefab(copy);
+        selectSolid(copy.id, "prefab");
+        say(`Duplicated ${prefabCtx.prefab.id} → ${copy.id}`);
+      } catch (e) {
+        say(e instanceof Error ? e.message : "Duplicate failed");
+      }
+      return;
+    }
     const ctx = selectedSolid();
     if (!ctx) return;
     try {
@@ -476,13 +595,23 @@ async function boot() {
     const solid = picked
       ? level?.solids.find((s) => s.id === picked)
       : undefined;
-    if (solid && solid.kind !== "ground" && solid.kind !== "road") {
-      if (solid.id === selectedId) {
+    const prefab =
+      !solid && picked
+        ? level?.prefabs.find((p) => p.id === picked)
+        : undefined;
+    const node =
+      solid && solid.kind !== "ground" && solid.kind !== "road"
+        ? { kind: "solid" as const, id: solid.id }
+        : prefab
+          ? { kind: "prefab" as const, id: prefab.id }
+          : null;
+    if (node) {
+      if (node.id === selectedId) {
         selectSolid(null);
         say("Deselected");
       } else {
-        selectSolid(solid.id);
-        say(`Selected ${solid.id}`);
+        selectSolid(node.id, node.kind);
+        say(`Selected ${node.id}`);
       }
     } else if (selectedId && point) {
       await moveSelected(point);
@@ -539,23 +668,7 @@ async function boot() {
         await saveLevel(undefined, track.custom);
         editorScreens.syncStore(track.custom);
         const prefab = track.custom.prefabs.at(-1)!;
-        if (kind === "snowman")
-          sim.props.addProp({
-            id: prefab.id,
-            kind: "snowman",
-            x: prefab.x,
-            z: prefab.z,
-            ground: prefab.y ?? 0,
-          });
-        else
-          sim.comic.addHazard({
-            id: prefab.id,
-            kind: kind as "book" | "hydrant",
-            x: prefab.x,
-            z: prefab.z,
-            phase: 0,
-            ...(prefab.y === undefined ? {} : { y: prefab.y }),
-          });
+        liveAddPrefab(prefab);
         say(`${kind} saved (${prefab.id})`);
       }
     } catch (e) {
@@ -801,6 +914,7 @@ async function boot() {
         palette: placeKind.value,
         texture: placeTexture.value,
         selected: selectedId,
+        selectedKind,
       }),
       project: (point: { x: number; y: number; z: number }) => {
         const v = new T.Vector3(point.x, point.y, point.z).project(

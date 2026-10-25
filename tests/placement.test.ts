@@ -10,6 +10,9 @@ import {
   editSolidInLevel,
   deleteSolidInLevel,
   duplicateSolidInLevel,
+  editPrefabInLevel,
+  deletePrefabInLevel,
+  duplicatePrefabInLevel,
 } from "../src/custom-level";
 import { gates } from "../src/tracks";
 beforeAll(initPhysics);
@@ -137,4 +140,24 @@ it("edits, deletes and duplicates solids by id", () => {
   expect(() => editSolidInLevel(level, "missing", { x: 0 })).toThrow(/solid/);
   expect(() => deleteSolidInLevel(level, "missing")).toThrow(/solid/);
   expect(() => duplicateSolidInLevel(level, "missing")).toThrow(/solid/);
+});
+it("edits, deletes and duplicates prefabs by id", () => {
+  let level = blankLevel("Edit Prefabs");
+  level = placeInLevel(level, { type: "prefab", kind: "snowman", x: 1, z: 2 });
+  const id = level.prefabs.at(-1)!.id;
+  level = editPrefabInLevel(level, id, { x: 10, z: 20 });
+  expect(level.prefabs.at(-1)).toMatchObject({ x: 10, z: 20 });
+  expect(() => validateCustomLevel(level)).not.toThrow();
+  const copy = duplicatePrefabInLevel(level, id);
+  expect(copy.prefabs).toHaveLength(level.prefabs.length + 1);
+  expect(copy.prefabs.at(-1)!.x).toBeGreaterThan(10);
+  expect(copy.prefabs.at(-1)!.id).not.toBe(id);
+  expect(new Set(copy.prefabs.map((p) => p.id)).size).toBe(
+    copy.prefabs.length,
+  );
+  const cut = deletePrefabInLevel(copy, id);
+  expect(cut.prefabs.find((p) => p.id === id)).toBeUndefined();
+  expect(() => editPrefabInLevel(level, "missing", { x: 0 })).toThrow(/prefab/);
+  expect(() => deletePrefabInLevel(level, "missing")).toThrow(/prefab/);
+  expect(() => duplicatePrefabInLevel(level, "missing")).toThrow(/prefab/);
 });

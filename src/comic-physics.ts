@@ -171,6 +171,47 @@ export class ComicPhysics {
       }
     }
   }
+  /** Live editing: shift one hazard and all its bodies by delta. */
+  moveHazard(id: string, x: number, y: number, z: number) {
+    const m = this.mechanisms.find((mm) => mm.h.id === id);
+    if (!m) return;
+    const dx = x - m.h.x;
+    const dy = y - (m.h.y ?? 0);
+    const dz = z - m.h.z;
+    m.h.x = x;
+    m.h.y = y;
+    m.h.z = z;
+    const shift = (t: { x: number; y: number; z: number }) => ({
+      x: t.x + dx,
+      y: t.y + dy,
+      z: t.z + dz,
+    });
+    for (const c of [...m.colliders, ...m.sensors]) {
+      const p = c.translation();
+      c.setTranslation(shift(p));
+    }
+    if (m.ramp) {
+      const p = m.ramp.translation();
+      m.ramp.setTranslation(shift(p));
+    }
+    for (const b of m.bodies) {
+      const p = b.translation();
+      b.setTranslation(shift(p), true);
+      b.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      b.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    }
+  }
+  /** Live editing: drop one hazard and its bodies. */
+  removeHazard(id: string) {
+    const at = this.mechanisms.findIndex((mm) => mm.h.id === id);
+    if (at < 0) return;
+    const [m] = this.mechanisms.splice(at, 1);
+    this.consumed.delete(id);
+    const world = this.sim.world;
+    for (const c of [...m.colliders, ...m.sensors]) world.removeCollider(c, true);
+    if (m.ramp) world.removeCollider(m.ramp, true);
+    for (const b of m.bodies) world.removeRigidBody(b);
+  }
   before() {
     const s = this.sim;
     this.incomingSpeed = Math.hypot(s.body.linvel().x, s.body.linvel().z) * 3.6;

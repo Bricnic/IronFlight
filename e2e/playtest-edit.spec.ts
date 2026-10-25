@@ -150,3 +150,87 @@ test("playtest select relocates, rotates, retextures, duplicates, deletes", asyn
     "Edit Shop",
   );
 });
+const seedPrefabs = (name: string): CustomLevel => ({
+  ...seedLevel(name),
+  solids: seedLevel(name).solids.slice(0, 2),
+  prefabs: [
+    { id: "snow-1", kind: "snowman", x: 10, y: 0, z: -20 },
+    { id: "book-1", kind: "book", x: -10, y: 0, z: -20 },
+  ],
+});
+
+test("playtest select moves, duplicates and deletes prefabs", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(async (level) => {
+    const g = window.__game!;
+    await g.customLevels.remove(level.name).catch(() => {});
+    await g.customLevels.save(level);
+  }, seedPrefabs("Edit Prefabs"));
+  await page.evaluate(() => {
+    const g = window.__game!;
+    g.pause(true);
+    g.startTrack("custom:edit-prefabs");
+  });
+  await expect(page.locator("#placement-bar")).toBeVisible();
+  await page.locator("#edit-toggle").click();
+  await page.locator("#place-kind").selectOption("select");
+  const selected = () =>
+    page.evaluate(() => window.__game!.placement().selected);
+  const prefabs = () =>
+    page.evaluate(
+      async () =>
+        (await window.__game!.customLevels.load("Edit Prefabs")).prefabs,
+    );
+  // Move the snowman into the lane; the truck smashes it.
+  await clickAt(page, 10, 1.5, -20);
+  await expect(page.locator("#place-status")).toContainText("Selected snow-1");
+  await expect.poll(selected, { timeout: 15000 }).toBe("snow-1");
+  await expect(page.locator("#sel-rotate")).toBeDisabled();
+  await clickAt(page, 0, 0, -20);
+  await expect(page.locator("#place-status")).toContainText("Moved snow-1");
+  await page.locator("#edit-toggle").click();
+  await page.evaluate(() => {
+    const g = window.__game!;
+    for (let i = 0; i < 30; i++)
+      g.driveFrames(4, 16, () => ({ throttle: 1, steer: 0, brake: 0 }), false);
+  });
+  const smashed = await page.evaluate(
+    () =>
+      window
+        .__game!.snapshot()
+        .props.find((p) => p.id === "snow-1")?.broken,
+  );
+  expect(smashed).toBe(true);
+  // The unimpeded truck finished the run; reboot to the play surface.
+  await page.evaluate(() => {
+    window.__game!.startTrack("custom:edit-prefabs");
+  });
+  await expect(page.locator("#placement-bar")).toBeVisible();
+  // Duplicate and delete the book.
+  await page.locator("#edit-toggle").click();
+  await page.locator("#place-kind").selectOption("select");
+  await clickAt(page, -10, 0.5, -20);
+  await expect(page.locator("#place-status")).toContainText("Selected book-1");
+  await page.locator("#sel-duplicate").click();
+  await expect(page.locator("#place-status")).toContainText("Duplicated");
+  await expect
+    .poll(async () => (await prefabs()).length, { timeout: 15000 })
+    .toBe(3);
+  await clickAt(page, -10, 0.5, -20);
+  await expect(page.locator("#place-status")).toContainText("Selected book-1");
+  await page.locator("#sel-delete").click();
+  await expect(page.locator("#place-status")).toContainText("Deleted book-1");
+  await expect
+    .poll(async () => (await prefabs()).length, { timeout: 15000 })
+    .toBe(2);
+  const final = await prefabs();
+  expect(final.find((p) => p.id === "book-1")).toBeUndefined();
+  expect(final.filter((p) => p.kind === "book")).toHaveLength(1);
+  await page.evaluate(
+    (name) => window.__game!.customLevels.remove(name),
+    "Edit Prefabs",
+  );
+});

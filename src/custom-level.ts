@@ -499,6 +499,56 @@ export function duplicateSolidInLevel(
     ],
   };
 }
+export interface PrefabPatch {
+  x?: number;
+  y?: number;
+  z?: number;
+}
+function prefabById(level: CustomLevel, id: string): CustomPrefab {
+  const prefab = level.prefabs.find((p) => p.id === id);
+  if (!prefab) throw new Error(`Unknown prefab: ${id}`);
+  return prefab;
+}
+/** Relocate one prefab by id; the caller revalidates. */
+export function editPrefabInLevel(
+  level: CustomLevel,
+  id: string,
+  patch: PrefabPatch,
+): CustomLevel {
+  prefabById(level, id);
+  return {
+    ...level,
+    prefabs: level.prefabs.map((p) =>
+      p.id === id ? { ...p, ...patch } : p,
+    ),
+  };
+}
+export function deletePrefabInLevel(
+  level: CustomLevel,
+  id: string,
+): CustomLevel {
+  prefabById(level, id);
+  return { ...level, prefabs: level.prefabs.filter((p) => p.id !== id) };
+}
+/** Clone a prefab beside itself with a fresh id. */
+export function duplicatePrefabInLevel(
+  level: CustomLevel,
+  id: string,
+): CustomLevel {
+  const prefab = prefabById(level, id);
+  const taken = new Set(level.prefabs.map((p) => p.id));
+  return {
+    ...level,
+    prefabs: [
+      ...level.prefabs,
+      {
+        ...prefab,
+        id: nextPlacementId(prefab.kind, taken),
+        x: prefab.x + 4,
+      },
+    ],
+  };
+}
 /** Append a live gate to a playable track, mirroring gates() math. */
 export function appendCheckpoint(
   track: Track,

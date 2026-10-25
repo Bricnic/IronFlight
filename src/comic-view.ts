@@ -688,6 +688,33 @@ function build(h: ComicHazard): Model {
 export class ComicView extends T.Group {
   private key = "";
   private models: Model[] = [];
+  /** Live editing: shift one hazard model by delta. */
+  moveModel(id: string, dx: number, dy: number, dz: number) {
+    const m = this.models.find((m) => m.h.id === id);
+    if (m) m.root.position.add(new T.Vector3(dx, dy, dz));
+  }
+  /** Live editing: drop one hazard model by id. */
+  removeModel(id: string) {
+    const at = this.models.findIndex((m) => m.h.id === id);
+    if (at < 0) return;
+    const [m] = this.models.splice(at, 1);
+    m.root.traverse((o) => {
+      if (o instanceof T.Mesh) {
+        o.geometry.dispose();
+        for (const mat of Array.isArray(o.material)
+          ? o.material
+          : [o.material]) {
+          if (
+            mat instanceof T.MeshBasicMaterial &&
+            mat.map instanceof T.CanvasTexture
+          )
+            mat.map.dispose();
+          mat.dispose();
+        }
+      }
+    });
+    m.root.removeFromParent();
+  }
   update(s: Simulation) {
     const key = s.courseTrack?.id ?? "";
     if (key !== this.key) {

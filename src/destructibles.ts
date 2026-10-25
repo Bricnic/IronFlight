@@ -39,6 +39,13 @@ export function propDefinitions(lab = false): PropDefinition[] {
     })),
   );
 }
+function propHeight(kind: string) {
+  if (kind === "sign") return 1.6;
+  if (kind === "snowman") return 1.4;
+  if (kind === "gravestone") return 0.9;
+  if (kind === "trash") return 0.65;
+  return 0.7;
+}
 export class Destructibles {
   readonly props: PropState[] = [];
   private incoming = new Map<PropState, Vector3>();
@@ -66,15 +73,7 @@ export class Destructibles {
       const { kind, x, z, ground } = definition,
         sign = kind === "sign",
         stone = kind === "gravestone",
-        height = sign
-          ? 1.6
-          : kind === "snowman"
-            ? 1.4
-            : stone
-              ? 0.9
-              : kind === "trash"
-                ? 0.65
-                : 0.7;
+        height = propHeight(kind);
       const body = world.createRigidBody(
         (kind === "snowman"
           ? RAPIER.RigidBodyDesc.fixed()
@@ -156,6 +155,29 @@ export class Destructibles {
         lastHit: -1,
       });
     }
+  }
+  /** Live editing: relocate one prop body, stopping it dead. */
+  moveProp(id: string, x: number, ground: number, z: number) {
+    const prop = this.props.find((p) => p.definition.id === id);
+    if (!prop) return;
+    prop.definition = { ...prop.definition, x, z, ground };
+    prop.body.setTranslation(
+      { x, y: ground + propHeight(prop.definition.kind), z },
+      true,
+    );
+    prop.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    prop.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+  }
+  /** Live editing: drop one prop and its bodies. */
+  removeProp(id: string) {
+    const at = this.props.findIndex((p) => p.definition.id === id);
+    if (at < 0) return;
+    const [prop] = this.props.splice(at, 1);
+    this.incoming.delete(prop);
+    for (const c of prop.colliders) this.world.removeCollider(c, true);
+    for (const p of prop.pieces) this.world.removeRigidBody(p.body);
+    if (prop.joint) this.world.removeImpulseJoint(prop.joint, true);
+    this.world.removeRigidBody(prop.body);
   }
   update(
     truck: RAPIER.RigidBody,

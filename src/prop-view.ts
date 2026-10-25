@@ -3,6 +3,26 @@ import { Destructibles, type PropState } from "./destructibles";
 import { flameMaterial } from "./materials";
 export class PropView extends T.Group {
   private source?: Destructibles;
+  /** Live editing: drop one prop model by definition id. */
+  removeModel(id: string) {
+    for (const [prop, model] of this.models) {
+      if (prop.definition.id !== id) continue;
+      for (const m of [model.root, model.fire, ...model.trash]) {
+        m.traverse((o) => {
+          if (o instanceof T.Mesh) {
+            o.geometry.dispose();
+            for (const mat of Array.isArray(o.material)
+              ? o.material
+              : [o.material])
+              mat.dispose();
+          }
+        });
+        m.removeFromParent();
+      }
+      this.models.delete(prop);
+      return;
+    }
+  }
   private models = new Map<
     PropState,
     { root: T.Group; fire: T.Group; trash: T.Mesh[] }

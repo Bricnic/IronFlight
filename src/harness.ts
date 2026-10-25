@@ -29,6 +29,7 @@ export interface GameHarness {
     palette: string;
     texture: string;
     selected: string | null;
+    selectedKind: "solid" | "prefab" | null;
   };
   project(point: { x: number; y: number; z: number }): { x: number; y: number };
   customLevels: {
