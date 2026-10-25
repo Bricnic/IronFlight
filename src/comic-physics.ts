@@ -2,6 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import type { Simulation } from "./simulation";
+import { getVehicle } from "./vehicles";
 import {
   comicHazards,
   BURNER_RAMP,
@@ -187,15 +188,10 @@ export class ComicPhysics {
           });
         }
       }
-      const points = [
-        [1.65, -0.35, 1.65],
-        [-1.65, -0.35, 1.65],
-        [1.65, -0.35, -1.65],
-        [-1.65, -0.35, -1.65],
-      ];
-      points.forEach((p, i) => {
-        s.vehicle.setWheelRadius(i, 1.05 * y);
-        s.vehicle.setWheelSuspensionRestLength(i, 0.6 * y);
+      const ride = getVehicle(this.sim.vehicleId);
+      ride.suspension.forEach((p, i) => {
+        s.vehicle.setWheelRadius(i, ride.wheelRadius * y);
+        s.vehicle.setWheelSuspensionRestLength(i, ride.suspensionRest * y);
         s.vehicle.setWheelChassisConnectionPointCs(i, {
           x: p[0] * x,
           y: p[1] * y,

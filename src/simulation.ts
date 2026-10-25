@@ -272,13 +272,14 @@ export class Simulation {
     this.vehicle = this.world.createVehicleController(this.body);
     this.vehicle.indexUpAxis = 1;
     this.vehicle.setIndexForwardAxis = 2;
+    const ride = getVehicle(this.vehicleId);
     this.wheelPositions().forEach((p, i) => {
       this.vehicle.addWheel(
         p,
         { x: 0, y: -1, z: 0 },
         { x: -1, y: 0, z: 0 },
-        0.6,
-        1.05,
+        ride.suspensionRest,
+        ride.wheelRadius,
       );
       this.vehicle.setWheelSuspensionStiffness(i, 35);
       this.vehicle.setWheelSuspensionCompression(i, 12);
@@ -795,12 +796,15 @@ export class Simulation {
             time: this.time,
           });
         }
+    const drive = getVehicle(this.vehicleId);
     const barrelExposure = this.props.update(
       this.body,
       this.parts,
       this.wheelPositions(),
       before,
       this.time,
+      drive.wheelRadius,
+      drive.suspensionRest,
     );
     if (barrelExposure > 0) {
       this.inFlames = true;

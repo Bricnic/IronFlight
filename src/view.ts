@@ -484,11 +484,14 @@ export class GameView {
     this.lastCameraTime = 0;
     for (const def of this.simulation.partDefs)
       this.meshes.set(def.id, this.truck.getObjectByName(def.id) as T.Group);
+    const doorDef = this.simulation.partDefs.find(
+      (d) => d.id === "door-left",
+    )!;
     for (const side of [-1, 1]) {
       const decal = this.label("IRON FLIGHT", "#fff0ce", "#ac401e", 512, 128);
       decal.scale.set(1.25, 0.31, 1);
       decal.rotation.y = (side * Math.PI) / 2;
-      decal.position.set(side * 0.116, 0.03, 0);
+      decal.position.set(side * (doorDef.size[0] / 2 + 0.026), 0.03, 0);
       this.meshes.get(side > 0 ? "door-left" : "door-right")!.add(decal);
     }
     this.truck.updateMatrixWorld(true);
@@ -662,7 +665,10 @@ export class GameView {
           local.copy(s.wheelPositions()[wi]);
         }
         local.multiply(shape);
-        if (wi >= 0) local.y -= s.vehicle.wheelSuspensionLength(wi) ?? 0.6;
+        if (wi >= 0)
+          local.y -=
+            s.vehicle.wheelSuspensionLength(wi) ??
+            getVehicle(this.simulation.vehicleId).suspensionRest;
         g.position.copy(local.applyQuaternion(q).add(root));
         g.quaternion.copy(q);
         if (wi >= 0) {

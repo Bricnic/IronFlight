@@ -158,6 +158,8 @@ export class Destructibles {
     wheels: Vector3[],
     incoming: Vector3,
     time: number,
+    wheelRadius = 1.05,
+    suspensionRest = 0.6,
   ) {
     const truckColliders = new Set(
       [...parts.values()].flatMap((p) =>
@@ -195,10 +197,10 @@ export class Destructibles {
         for (let i = 0; i < 4 && !contact; i++) {
           if (parts.get(PARTS[i + 2].id)!.body) continue;
           const center = wheels[i].clone();
-          center.y -= 0.6;
+          center.y -= suspensionRest;
           center.applyQuaternion(q).add(root);
           const hit = collider.contactShape(
-            new RAPIER.Ball(1.05),
+            new RAPIER.Ball(wheelRadius),
             center,
             new Quaternion(),
             0,

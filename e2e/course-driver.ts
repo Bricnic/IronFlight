@@ -1,13 +1,18 @@
 import type { Page } from "@playwright/test";
 import { getTrack, type TrackId } from "../src/tracks";
-export async function driveTrack(page: Page, id: TrackId, start = true) {
+export async function driveTrack(
+  page: Page,
+  id: TrackId,
+  start = true,
+  vehicle?: string,
+) {
   if (start) await page.goto(`/?test=course-${id}`);
   await page.waitForFunction(() => !!window.__game);
   return page.evaluate(
-    ({ track, start }) => {
+    ({ track, start, vehicle }) => {
       const g = window.__game!;
       g.pause(true);
-      if (start) g.startTrack(track.id);
+      if (start) g.startTrack(track.id, undefined, vehicle);
       const initial = g.stats().officialCourse;
       let peakY = 0;
       for (
@@ -155,6 +160,6 @@ export async function driveTrack(page: Page, id: TrackId, start = true) {
         peakY,
       };
     },
-    { track: getTrack(id), start },
+    { track: getTrack(id), start, vehicle },
   );
 }
