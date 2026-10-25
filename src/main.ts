@@ -208,7 +208,9 @@ async function boot() {
     showLevelSelect,
   );
   $("vehicle-select-button").onclick = showVehicleSelect;
-  editorScreens = createLevelEditor(app, showLevelSelect);
+  editorScreens = createLevelEditor(app, showLevelSelect, (id) =>
+    startOfficial(id),
+  );
   $("level-editor-button").onclick = showLevelEditor;
   // In-game placement for custom levels: ghost brick, live commit, disk save.
   app.insertAdjacentHTML(

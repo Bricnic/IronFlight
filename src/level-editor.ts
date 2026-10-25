@@ -4,6 +4,7 @@ import {
   TEXTURE_IDS,
   PREFAB_KINDS,
   SOLID_KINDS,
+  toTrack,
   validateCustomLevel,
   type CustomLevel,
   type SolidKind,
@@ -47,7 +48,11 @@ function numberField(
   props.append(row);
 }
 /** Traditional wireframe editing screen: list, viewport, properties. */
-export function createLevelEditor(host: HTMLElement, onBack: () => void) {
+export function createLevelEditor(
+  host: HTMLElement,
+  onBack: () => void,
+  onPlaytest: (id: `custom:${string}`) => void = () => {},
+) {
   const store = new EditorStore("Untitled");
   const screen = el("main", { id: "level-editor" });
   screen.hidden = true;
@@ -64,6 +69,7 @@ export function createLevelEditor(host: HTMLElement, onBack: () => void) {
   }) as HTMLSelectElement;
   const newButton = el("button", { id: "editor-new" }, "New");
   const saveButton = el("button", { id: "editor-save" }, "Save");
+  const playtestButton = el("button", { id: "editor-playtest" }, "Playtest");
   const deleteButton = el("button", { id: "editor-delete" }, "Delete");
   const backButton = el("button", { id: "editor-back" }, "Back");
   const status = el("span", { id: "editor-status" });
@@ -73,6 +79,7 @@ export function createLevelEditor(host: HTMLElement, onBack: () => void) {
     levelPicker,
     newButton,
     saveButton,
+    playtestButton,
     deleteButton,
     backButton,
     status,
@@ -342,6 +349,22 @@ export function createLevelEditor(host: HTMLElement, onBack: () => void) {
         store.openBlank("Untitled");
         showStatus(`Deleted ${name}`);
         return refreshLevels();
+      })
+      .catch((e: Error) => showError(e.message));
+  });
+  playtestButton.addEventListener("click", () => {
+    let valid: CustomLevel;
+    try {
+      valid = validateCustomLevel(store.level);
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "Invalid level");
+      return;
+    }
+    saveLevel(undefined, valid)
+      .then((saved) => {
+        store.markSaved();
+        showStatus(`Saved ${saved.name}`);
+        onPlaytest(toTrack(saved).id as `custom:${string}`);
       })
       .catch((e: Error) => showError(e.message));
   });
