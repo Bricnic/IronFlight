@@ -15,7 +15,18 @@ import {
   COP_SUSPENSION_REST,
   COP_WHEEL_RADIUS,
 } from "./cop-car";
-export type VehicleId = "monster-truck" | "sports-car" | "cop-car";
+import {
+  createAmbulance,
+  AMBULANCE_PARTS,
+  AMBULANCE_SUSPENSION,
+  AMBULANCE_SUSPENSION_REST,
+  AMBULANCE_WHEEL_RADIUS,
+} from "./ambulance";
+export type VehicleId =
+  | "monster-truck"
+  | "sports-car"
+  | "cop-car"
+  | "ambulance";
 export interface VehiclePart {
   id: string;
   pos: readonly [number, number, number];
@@ -74,6 +85,17 @@ export const VEHICLES: VehicleDef[] = [
     suspensionRest: COP_SUSPENSION_REST,
     build: (options) => createCopCar(options),
     lights: "police",
+  },
+  {
+    id: "ambulance",
+    name: "Ambulance",
+    blurb: "Box rig with a red stripe. Light bar wakes up past 90 mph.",
+    parts: AMBULANCE_PARTS,
+    suspension: AMBULANCE_SUSPENSION,
+    wheelRadius: AMBULANCE_WHEEL_RADIUS,
+    suspensionRest: AMBULANCE_SUSPENSION_REST,
+    build: (options) => createAmbulance(options),
+    lights: "ems",
   },
 ];
 /** Game mph everywhere: the HUD and comic hazards use m/s x 3.6. */
