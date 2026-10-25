@@ -14,6 +14,16 @@ export interface GameHarness {
     vehicle?: string,
   ): void;
   track(id: string): Track;
+  editor(): {
+    name: string;
+    solids: number;
+    prefabs: number;
+    checkpoints: number;
+    targets: number;
+    selection: string | null;
+    dirty: boolean;
+    levels: string[];
+  };
   customLevels: {
     list(): Promise<string[]>;
     save(level: CustomLevel): Promise<CustomLevel>;

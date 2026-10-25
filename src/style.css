@@ -563,6 +563,7 @@ kbd {
 
 #level-select-button,
 #vehicle-select-button,
+#level-editor-button,
 .menu-actions button {
   padding: 10px 14px;
   border: 1px solid #ffffff38;
@@ -920,4 +921,137 @@ kbd {
     transform: none;
     width: min(300px, calc(100vw - 28px));
   }
+}
+
+#level-editor {
+  position: fixed;
+  inset: 84px 0 0;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  background: #111c22;
+  color: #e8efec;
+}
+.editor-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #ffffff20;
+  flex-wrap: wrap;
+}
+.editor-top input,
+.editor-top select {
+  background: #1d3038;
+  color: #e8efec;
+  border: 1px solid #ffffff28;
+  padding: 8px 10px;
+  font: inherit;
+}
+.editor-top button,
+.editor-list button,
+.editor-props button {
+  padding: 8px 12px;
+  border: 1px solid #ffffff38;
+  background: #253941;
+  color: #e8efec;
+  font: 600 12px "Barlow", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#editor-status {
+  color: #8fa5a8;
+  font-size: 12px;
+}
+#editor-error {
+  color: #ff8a7a;
+  font-size: 12px;
+}
+.editor-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 260px 1fr 260px;
+}
+.editor-list {
+  border-right: 1px solid #ffffff20;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.editor-list select {
+  background: #1d3038;
+  color: #e8efec;
+  border: 1px solid #ffffff28;
+  padding: 8px;
+  font: inherit;
+}
+#editor-objects {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#editor-objects li {
+  padding: 6px 8px;
+  border: 1px solid #ffffff18;
+  background: #1a2a32;
+  font-size: 13px;
+  cursor: pointer;
+}
+#editor-objects li.selected {
+  border-color: #ffa762;
+}
+.editor-viewport {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+.editor-viewport canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.editor-props {
+  border-left: 1px solid #ffffff20;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.editor-props h3 {
+  margin: 4px 0;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #ffa762;
+}
+.prop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.prop-row input,
+.prop-row select {
+  width: 130px;
+  background: #1d3038;
+  color: #e8efec;
+  border: 1px solid #ffffff28;
+  padding: 6px 8px;
+  font: inherit;
+}
+.prop-row input[type="color"] {
+  padding: 2px;
+  height: 30px;
+}
+.prop-hint {
+  font-size: 12px;
+  color: #8fa5a8;
 }

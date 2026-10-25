@@ -1,6 +1,7 @@
 import { resultOpacity } from "./result-reveal";
 import { createLevelSelect } from "./level-select";
 import { createVehicleSelect } from "./vehicle-select";
+import { createLevelEditor } from "./level-editor";
 import { getVehicle } from "./vehicles";
 import { BestTimes } from "./best-times";
 import { getTrack, type CustomTrackId, type TrackId } from "./tracks";
@@ -54,6 +55,7 @@ async function boot() {
   let surface: "menu" | "play" | "result" = "menu";
   let screens: ReturnType<typeof createLevelSelect>;
   let vehicleScreens: ReturnType<typeof createVehicleSelect>;
+  let editorScreens: ReturnType<typeof createLevelEditor>;
   function applyStoredVehicle() {
     try {
       sim.vehicleId = getVehicle(
@@ -71,7 +73,7 @@ async function boot() {
   });
   header.insertAdjacentHTML(
     "beforeend",
-    '<button id="level-select-button">Level select</button><button id="vehicle-select-button">Select vehicle</button>',
+    '<button id="level-select-button">Level select</button><button id="vehicle-select-button">Select vehicle</button><button id="level-editor-button">Level editor</button>',
   );
   const keys = new Set<string>();
   let cameraTrace: CameraSample[] = [],
@@ -86,6 +88,7 @@ async function boot() {
     surface = "play";
     screens?.hide();
     vehicleScreens?.hide();
+    editorScreens?.hide();
     recordedRun = undefined;
     applyStoredVehicle();
     sim.reset(stage);
@@ -123,6 +126,7 @@ async function boot() {
     if (unpause) paused = false;
     screens?.hide();
     vehicleScreens?.hide();
+    editorScreens?.hide();
     $("lab").hidden = true;
     panel.hidden = true;
     $("routes").hidden = !getTrack(id).legacy;
@@ -140,7 +144,17 @@ async function boot() {
     keys.clear();
     clock.reset();
     vehicleScreens?.hide();
+    editorScreens?.hide();
     screens.show();
+    panel.hidden = true;
+  }
+  function showLevelEditor() {
+    surface = "menu";
+    keys.clear();
+    clock.reset();
+    screens.hide();
+    vehicleScreens?.hide();
+    editorScreens.show();
     panel.hidden = true;
   }
   function showVehicleSelect() {
@@ -148,6 +162,7 @@ async function boot() {
     keys.clear();
     clock.reset();
     screens.hide();
+    editorScreens?.hide();
     vehicleScreens.show();
     panel.hidden = true;
   }
@@ -181,6 +196,8 @@ async function boot() {
     showLevelSelect,
   );
   $("vehicle-select-button").onclick = showVehicleSelect;
+  editorScreens = createLevelEditor(app, showLevelSelect);
+  $("level-editor-button").onclick = showLevelEditor;
   function hud() {
     const s = sim.snapshot(false),
       r = ROUTES.find((r) => r.id === s.stage);
@@ -350,6 +367,7 @@ async function boot() {
         load: (name: string) => loadLevel(undefined, name),
         remove: (name: string) => removeLevel(undefined, name),
       },
+      editor: () => editorScreens.probe(),
       pause: (v) => (paused = v),
       advanceFrames: (frames, r, i) => {
         for (let f = 0; f < frames; f++) {
