@@ -544,6 +544,35 @@ export class GameView {
     const track = this.simulation.courseTrack;
     if (track) this.officialCourse.addCheckpointGate(track, gate);
   }
+  /** Name of the top-level course node under the cursor, if any. */
+  pickCourseSolid(clientX: number, clientY: number): string | null {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return null;
+    const ndc = new T.Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    const ray = new T.Raycaster();
+    ray.setFromCamera(ndc, this.camera);
+    const hits = ray.intersectObjects(this.officialCourse.children, true);
+    if (!hits.length) return null;
+    let node = hits[0].object;
+    while (node.parent && node.parent !== this.officialCourse)
+      node = node.parent;
+    return node.name || null;
+  }
+  moveCourseSolid(id: string, x: number, y: number, z: number) {
+    this.officialCourse.moveSolidMesh(id, x, y, z);
+  }
+  rotateCourseSolid(id: string, yaw: number, angle: number) {
+    this.officialCourse.rotateSolidMesh(id, yaw, angle);
+  }
+  removeCourseSolid(id: string) {
+    this.officialCourse.removeSolidMesh(id);
+  }
+  retextureCourseSolid(s: CourseSolid) {
+    this.officialCourse.retextureSolidMesh(s);
+  }
   stats() {
     const [lightA, lightB] = this.lightIntensities();
     return {

@@ -45,7 +45,7 @@ export class CourseView extends T.Group {
     );
     return mesh;
   }
-  private buildSolidMesh(track: Track, s: CourseSolid) {
+  private solidMaps(track: Track, s: CourseSolid) {
     const stone =
       s.id.startsWith("vault-wall") ||
       s.id.startsWith("vault-floor") ||
@@ -77,6 +77,13 @@ export class CourseView extends T.Group {
             : track.id === "scrapyard-sweep"
               ? 0xb8a990
               : 0xc4c8c8;
+    return { stone, cliff, groundMap, roadMap, groundTint };
+  }
+  private buildSolidMaterial(track: Track, s: CourseSolid) {
+    const { stone, cliff, groundMap, roadMap, groundTint } = this.solidMaps(
+      track,
+      s,
+    );
     const mat =
       s.kind === "lava"
         ? lavaMaterial()
@@ -117,6 +124,11 @@ export class CourseView extends T.Group {
                     roughness: s.kind === "container" ? 0.65 : 0.95,
                     metalness: s.kind === "container" ? 0.3 : 0,
                   });
+    return mat;
+  }
+  private buildSolidMesh(track: Track, s: CourseSolid) {
+    const mat = this.buildSolidMaterial(track, s);
+    const { stone, cliff, groundMap, roadMap } = this.solidMaps(track, s);
     if (s.kind === "lava") this.lavaMaterials.push(mat);
     const geometry = new T.BoxGeometry(s.w, s.h, s.d);
     if (
@@ -252,6 +264,48 @@ export class CourseView extends T.Group {
     const mesh = this.buildSolidMesh(track, s);
     this.add(mesh);
     this.meshes.push(mesh);
+  }
+  private solidMesh(id: string) {
+    return this.meshes.find((m) => m.name === id);
+  }
+  /** Live editing: relocate one solid mesh by id. */
+  moveSolidMesh(id: string, x: number, y: number, z: number) {
+    this.solidMesh(id)?.position.set(x, y, z);
+  }
+  /** Live editing: rotate one solid mesh by id. */
+  rotateSolidMesh(id: string, yaw: number, angle: number) {
+    this.solidMesh(id)?.quaternion
+      .setFromAxisAngle(new T.Vector3(1, 0, 0), angle)
+      .multiply(
+        new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), yaw),
+      );
+  }
+  /** Live editing: drop one solid mesh by id. */
+  removeSolidMesh(id: string) {
+    const mesh = this.solidMesh(id);
+    if (!mesh) return;
+    const lava = this.lavaMaterials.indexOf(
+      mesh.material as T.MeshStandardMaterial,
+    );
+    if (lava >= 0) this.lavaMaterials.splice(lava, 1);
+    mesh.removeFromParent();
+    mesh.geometry.dispose();
+    (mesh.material as T.Material).dispose();
+    this.meshes.splice(this.meshes.indexOf(mesh), 1);
+  }
+  /** Live editing: re-skin one solid mesh by id. */
+  retextureSolidMesh(s: CourseSolid) {
+    const track = this.builtTrack;
+    const mesh = this.solidMesh(s.id);
+    if (!track || track.legacy || !mesh) return;
+    const lava = this.lavaMaterials.indexOf(
+      mesh.material as T.MeshStandardMaterial,
+    );
+    (mesh.material as T.Material).dispose();
+    mesh.material = this.buildSolidMaterial(track, s);
+    if (lava >= 0)
+      this.lavaMaterials[lava] =
+        mesh.material as T.MeshStandardMaterial;
   }
 
   update(sim: Simulation, camera?: T.Camera) {

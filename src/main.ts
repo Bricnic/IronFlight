@@ -9,6 +9,9 @@ import * as T from "three";
 import {
   placeInLevel,
   appendCheckpoint,
+  editSolidInLevel,
+  deleteSolidInLevel,
+  duplicateSolidInLevel,
   TEXTURE_IDS,
   validateCustomLevel,
 } from "./custom-level";
@@ -268,8 +271,12 @@ async function boot() {
         <option value="book">book</option>
         <option value="snowman">snowman</option>
         <option value="hydrant">hydrant</option>
+        <option value="select">select</option>
       </select>
       <select id="place-texture" aria-label="Brick texture"></select>
+      <button id="sel-rotate" disabled>Rotate</button>
+      <button id="sel-duplicate" disabled>Duplicate</button>
+      <button id="sel-delete" disabled>Delete</button>
       <span id="place-status"></span>
     </div>`,
   );
@@ -278,6 +285,9 @@ async function boot() {
   const placeKind = $("place-kind") as HTMLSelectElement;
   const placeTexture = $("place-texture") as HTMLSelectElement;
   const placeStatus = $("place-status");
+  const selRotate = $("sel-rotate") as HTMLButtonElement;
+  const selDuplicate = $("sel-duplicate") as HTMLButtonElement;
+  const selDelete = $("sel-delete") as HTMLButtonElement;
   placeTexture.append(new Option("(brick texture)", ""));
   for (const id of TEXTURE_IDS) placeTexture.append(new Option(id, id));
   const ghost = new T.Group();
@@ -299,13 +309,47 @@ async function boot() {
   );
   ghost.add(ghostBrick, ghostMark, ghostGate);
   ghost.visible = false;
+  const selBox = new T.Mesh(
+    new T.BoxGeometry(1, 1, 1),
+    new T.MeshBasicMaterial({ color: 0x7dffd4, wireframe: true }),
+  );
+  selBox.visible = false;
+  let selectedId: string | null = null;
+  function refreshSelBox() {
+    const solid = sim.courseTrack?.custom?.solids.find(
+      (s) => s.id === selectedId,
+    );
+    if (!solid) {
+      selBox.visible = false;
+    } else {
+      selBox.visible = editing;
+      selBox.position.set(solid.x, solid.y, solid.z);
+      selBox.scale.set(solid.w, solid.h, solid.d);
+      selBox.quaternion
+        .setFromAxisAngle(new T.Vector3(1, 0, 0), solid.angle ?? 0)
+        .multiply(
+          new T.Quaternion().setFromAxisAngle(
+            new T.Vector3(0, 1, 0),
+            solid.yaw ?? 0,
+          ),
+        );
+    }
+    const on = editing && !!solid;
+    selRotate.disabled = !on;
+    selDuplicate.disabled = !on;
+    selDelete.disabled = !on;
+  }
+  function selectSolid(id: string | null) {
+    selectedId = id;
+    refreshSelBox();
+  }
   let editing = false;
   let resumePaused = false;
   const say = (message: string) => {
     placeStatus.textContent = message;
   };
   function updateGhost(point: T.Vector3 | null) {
-    ghost.visible = editing && !!point;
+    ghost.visible = editing && !!point && placeKind.value !== "select";
     if (!point) return;
     const wall = placeKind.value === "wall";
     ghostBrick.visible =
@@ -325,7 +369,129 @@ async function boot() {
     ghostMark.position.y = 1.5;
     ghostGate.position.y = 0;
   }
+  function selectedSolid() {
+    const track = sim.courseTrack;
+    const level = track?.custom;
+    const solid =
+      selectedId && level
+        ? level.solids.find((s) => s.id === selectedId)
+        : undefined;
+    return track && level && solid ? { track, level, solid } : null;
+  }
+  async function saveLiveEdit(next: CustomLevel) {
+    const track = sim.courseTrack!;
+    track.custom = validateCustomLevel(next);
+    await saveLevel(undefined, track.custom);
+    editorScreens.syncStore(track.custom);
+  }
+  async function moveSelected(point: T.Vector3) {
+    const ctx = selectedSolid();
+    if (!ctx) return;
+    try {
+      await saveLiveEdit(
+        editSolidInLevel(ctx.level, ctx.solid.id, {
+          x: point.x,
+          y: point.y + ctx.solid.h / 2,
+          z: point.z,
+        }),
+      );
+      const updated = sim.courseTrack!.custom!.solids.find(
+        (s) => s.id === ctx.solid.id,
+      )!;
+      sim.updateSolidCollider(updated);
+      view.moveCourseSolid(updated.id, updated.x, updated.y, updated.z);
+      refreshSelBox();
+      say(`Moved ${ctx.solid.id}`);
+    } catch (e) {
+      say(e instanceof Error ? e.message : "Move failed");
+    }
+  }
+  async function rotateSelected() {
+    const ctx = selectedSolid();
+    if (!ctx) return;
+    try {
+      const yaw = (ctx.solid.yaw ?? 0) + Math.PI / 4;
+      await saveLiveEdit(editSolidInLevel(ctx.level, ctx.solid.id, { yaw }));
+      const updated = sim.courseTrack!.custom!.solids.find(
+        (s) => s.id === ctx.solid.id,
+      )!;
+      sim.updateSolidCollider(updated);
+      view.rotateCourseSolid(updated.id, yaw, updated.angle ?? 0);
+      refreshSelBox();
+      say(`Rotated ${ctx.solid.id} to ${Math.round((yaw * 180) / Math.PI)}°`);
+    } catch (e) {
+      say(e instanceof Error ? e.message : "Rotate failed");
+    }
+  }
+  async function deleteSelected() {
+    const ctx = selectedSolid();
+    if (!ctx) return;
+    try {
+      await saveLiveEdit(deleteSolidInLevel(ctx.level, ctx.solid.id));
+      sim.removeSolidCollider(ctx.solid.id);
+      view.removeCourseSolid(ctx.solid.id);
+      selectSolid(null);
+      say(`Deleted ${ctx.solid.id}`);
+    } catch (e) {
+      say(e instanceof Error ? e.message : "Delete failed");
+    }
+  }
+  async function duplicateSelected() {
+    const ctx = selectedSolid();
+    if (!ctx) return;
+    try {
+      await saveLiveEdit(duplicateSolidInLevel(ctx.level, ctx.solid.id));
+      const copy = sim.courseTrack!.custom!.solids.at(-1)!;
+      sim.addCustomSolid(copy);
+      view.addCourseSolid(copy);
+      selectSolid(copy.id);
+      say(`Duplicated ${ctx.solid.id} → ${copy.id}`);
+    } catch (e) {
+      say(e instanceof Error ? e.message : "Duplicate failed");
+    }
+  }
+  async function retextureSelected(texture: string) {
+    const ctx = selectedSolid();
+    if (!ctx) return;
+    try {
+      await saveLiveEdit(
+        editSolidInLevel(ctx.level, ctx.solid.id, { texture }),
+      );
+      const updated = sim.courseTrack!.custom!.solids.find(
+        (s) => s.id === ctx.solid.id,
+      )!;
+      view.retextureCourseSolid(updated);
+      say(`Retextured ${ctx.solid.id} → ${texture}`);
+    } catch (e) {
+      say(e instanceof Error ? e.message : "Retexture failed");
+    }
+  }
+  async function handleSelectClick(
+    clientX: number,
+    clientY: number,
+    point: T.Vector3 | null,
+  ) {
+    const level = sim.courseTrack?.custom;
+    const picked = view.pickCourseSolid(clientX, clientY);
+    const solid = picked
+      ? level?.solids.find((s) => s.id === picked)
+      : undefined;
+    if (solid && solid.kind !== "ground" && solid.kind !== "road") {
+      if (solid.id === selectedId) {
+        selectSolid(null);
+        say("Deselected");
+      } else {
+        selectSolid(solid.id);
+        say(`Selected ${solid.id}`);
+      }
+    } else if (selectedId && point) {
+      await moveSelected(point);
+    } else {
+      selectSolid(null);
+    }
+  }
   async function commitPlacement(point: T.Vector3) {
+    if (placeKind.value === "select") return;
     const track = sim.courseTrack;
     const level = track?.custom;
     if (!track || !level) return;
@@ -403,6 +569,8 @@ async function boot() {
     paused = true;
     keys.clear();
     view.scene.add(ghost);
+    view.scene.add(selBox);
+    refreshSelBox();
     editToggle.textContent = "Done";
     say("Click the course to place · Esc exits");
   }
@@ -411,11 +579,20 @@ async function boot() {
     editing = false;
     paused = resumePaused;
     view.scene.remove(ghost);
+    view.scene.remove(selBox);
+    selectSolid(null);
     ghost.visible = false;
     editToggle.textContent = "Edit";
     say("");
   }
   editToggle.onclick = () => (editing ? exitEdit() : enterEdit());
+  selRotate.onclick = () => void rotateSelected();
+  selDuplicate.onclick = () => void duplicateSelected();
+  selDelete.onclick = () => void deleteSelected();
+  placeTexture.addEventListener("change", () => {
+    if (editing && selectedId && placeTexture.value)
+      void retextureSelected(placeTexture.value);
+  });
   let downAt: [number, number] | null = null;
   view.renderer.domElement.addEventListener("pointermove", (e) => {
     if (!editing) return;
@@ -430,6 +607,10 @@ async function boot() {
     downAt = null;
     if (moved > 6) return;
     const point = view.aimPoint(e.clientX, e.clientY);
+    if (placeKind.value === "select") {
+      void handleSelectClick(e.clientX, e.clientY, point);
+      return;
+    }
     if (point) void commitPlacement(point);
   });
   function hud() {
@@ -619,6 +800,7 @@ async function boot() {
         editing,
         palette: placeKind.value,
         texture: placeTexture.value,
+        selected: selectedId,
       }),
       project: (point: { x: number; y: number; z: number }) => {
         const v = new T.Vector3(point.x, point.y, point.z).project(

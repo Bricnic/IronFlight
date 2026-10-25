@@ -447,6 +447,58 @@ export function placeInLevel(
     ],
   };
 }
+export interface SolidPatch {
+  x?: number;
+  y?: number;
+  z?: number;
+  yaw?: number;
+  texture?: string;
+}
+function solidById(level: CustomLevel, id: string): CustomSolid {
+  const solid = level.solids.find((s) => s.id === id);
+  if (!solid) throw new Error(`Unknown solid: ${id}`);
+  return solid;
+}
+/** Patch one solid's transform/texture by id; the caller revalidates. */
+export function editSolidInLevel(
+  level: CustomLevel,
+  id: string,
+  patch: SolidPatch,
+): CustomLevel {
+  solidById(level, id);
+  return {
+    ...level,
+    solids: level.solids.map((s) =>
+      s.id === id ? { ...s, ...patch } : s,
+    ),
+  };
+}
+export function deleteSolidInLevel(
+  level: CustomLevel,
+  id: string,
+): CustomLevel {
+  solidById(level, id);
+  return { ...level, solids: level.solids.filter((s) => s.id !== id) };
+}
+/** Clone a solid beside itself with a fresh id. */
+export function duplicateSolidInLevel(
+  level: CustomLevel,
+  id: string,
+): CustomLevel {
+  const solid = solidById(level, id);
+  const taken = new Set(level.solids.map((s) => s.id));
+  return {
+    ...level,
+    solids: [
+      ...level.solids,
+      {
+        ...solid,
+        id: nextPlacementId(solid.kind, taken),
+        x: solid.x + solid.w + 1,
+      },
+    ],
+  };
+}
 /** Append a live gate to a playable track, mirroring gates() math. */
 export function appendCheckpoint(
   track: Track,

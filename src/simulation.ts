@@ -92,6 +92,7 @@ export class Simulation {
   private hammerContacts = new Set<string>();
   private hammerColliderOwners = new Map<number, string>();
   private surfaceKinds = new Map<number, string>();
+  private solidColliders = new Map<string, RAPIER.Collider>();
   private visitedSurfaces = new Set<string>();
   previousPosition = new Vector3();
   previousRotation = new Quaternion();
@@ -161,6 +162,7 @@ export class Simulation {
     );
   }
   private addSolidCollider(s: {
+    id?: string;
     w: number;
     h: number;
     d: number;
@@ -188,10 +190,35 @@ export class Simulation {
         .setSensor(s.kind === "lava"),
     );
     this.surfaceKinds.set(collider.handle, s.kind);
+    if (s.id !== undefined) this.solidColliders.set(s.id, collider);
   }
   /** Live placement: add one solid collider without resetting the run. */
   addCustomSolid(s: CourseSolid) {
     this.addSolidCollider(s);
+  }
+  /** Live editing: move/rotate one solid collider by id. */
+  updateSolidCollider(s: CourseSolid) {
+    const collider = this.solidColliders.get(s.id);
+    if (!collider) return;
+    collider.setTranslation({ x: s.x, y: s.y, z: s.z });
+    collider.setRotation(
+      new Quaternion()
+        .setFromAxisAngle(new Vector3(1, 0, 0), s.angle ?? 0)
+        .multiply(
+          new Quaternion().setFromAxisAngle(
+            new Vector3(0, 1, 0),
+            s.yaw ?? 0,
+          ),
+        ),
+    );
+  }
+  /** Live editing: drop one solid collider by id. */
+  removeSolidCollider(id: string) {
+    const collider = this.solidColliders.get(id);
+    if (!collider) return;
+    this.surfaceKinds.delete(collider.handle);
+    this.solidColliders.delete(id);
+    this.world.removeCollider(collider, true);
   }
   reset(stage: Stage = this.stage) {
     this.trackRun = undefined;
@@ -244,6 +271,7 @@ export class Simulation {
     this.hammerContacts.clear();
     this.hammerColliderOwners.clear();
     this.surfaceKinds.clear();
+    this.solidColliders.clear();
     this.visitedSurfaces.clear();
     if (stage === "lab")
       this.world.createCollider(

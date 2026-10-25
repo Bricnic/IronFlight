@@ -24,7 +24,12 @@ export interface GameHarness {
     dirty: boolean;
     levels: string[];
   };
-  placement(): { editing: boolean; palette: string; texture: string };
+  placement(): {
+    editing: boolean;
+    palette: string;
+    texture: string;
+    selected: string | null;
+  };
   project(point: { x: number; y: number; z: number }): { x: number; y: number };
   customLevels: {
     list(): Promise<string[]>;

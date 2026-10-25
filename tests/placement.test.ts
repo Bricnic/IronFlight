@@ -7,6 +7,9 @@ import {
   registerCustomTrack,
   placeInLevel,
   appendCheckpoint,
+  editSolidInLevel,
+  deleteSolidInLevel,
+  duplicateSolidInLevel,
 } from "../src/custom-level";
 import { gates } from "../src/tracks";
 beforeAll(initPhysics);
@@ -114,4 +117,24 @@ it("live-added comic hazards register mechanisms", () => {
   for (let i = 0; i < 60; i++) s.step({});
   expect(s.comic.mechanisms.length).toBe(before + 1);
   s.dispose();
+});
+it("edits, deletes and duplicates solids by id", () => {
+  let level = blankLevel("Edit Land");
+  level = placeInLevel(level, { type: "solid", kind: "barrier", x: 1, z: 2 });
+  const id = level.solids.at(-1)!.id;
+  level = editSolidInLevel(level, id, { x: 10, z: 20, yaw: Math.PI / 4 });
+  expect(level.solids.at(-1)).toMatchObject({ x: 10, z: 20, yaw: Math.PI / 4 });
+  level = editSolidInLevel(level, id, { texture: "rock_06" });
+  expect(level.solids.at(-1)!.texture).toBe("rock_06");
+  expect(() => validateCustomLevel(level)).not.toThrow();
+  const copy = duplicateSolidInLevel(level, id);
+  expect(copy.solids).toHaveLength(level.solids.length + 1);
+  expect(copy.solids.at(-1)!.x).toBeGreaterThan(10);
+  expect(copy.solids.at(-1)!.id).not.toBe(id);
+  expect(new Set(copy.solids.map((s) => s.id)).size).toBe(copy.solids.length);
+  const cut = deleteSolidInLevel(copy, id);
+  expect(cut.solids.find((s) => s.id === id)).toBeUndefined();
+  expect(() => editSolidInLevel(level, "missing", { x: 0 })).toThrow(/solid/);
+  expect(() => deleteSolidInLevel(level, "missing")).toThrow(/solid/);
+  expect(() => duplicateSolidInLevel(level, "missing")).toThrow(/solid/);
 });
