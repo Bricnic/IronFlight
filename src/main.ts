@@ -1,5 +1,7 @@
 import { resultOpacity } from "./result-reveal";
 import { createLevelSelect } from "./level-select";
+import { createVehicleSelect } from "./vehicle-select";
+import { getVehicle } from "./vehicles";
 import { BestTimes } from "./best-times";
 import { getTrack, type TrackId } from "./tracks";
 import "./style.css";
@@ -43,6 +45,16 @@ async function boot() {
     paused = false;
   let surface: "menu" | "play" | "result" = "menu";
   let screens: ReturnType<typeof createLevelSelect>;
+  let vehicleScreens: ReturnType<typeof createVehicleSelect>;
+  function applyStoredVehicle() {
+    try {
+      sim.vehicleId = getVehicle(
+        localStorage.getItem("vehicle") ?? "monster-truck",
+      ).id;
+    } catch {
+      sim.vehicleId = "monster-truck";
+    }
+  }
   let recordedRun: Simulation["trackRun"];
   let resultStartedAt = 0;
   const scores = new BestTimes({
@@ -51,7 +63,7 @@ async function boot() {
   });
   header.insertAdjacentHTML(
     "beforeend",
-    '<button id="level-select-button">Level select</button>',
+    '<button id="level-select-button">Level select</button><button id="vehicle-select-button">Select vehicle</button>',
   );
   const keys = new Set<string>();
   let cameraTrace: CameraSample[] = [],
@@ -65,7 +77,9 @@ async function boot() {
   function select(stage: Stage) {
     surface = "play";
     screens?.hide();
+    vehicleScreens?.hide();
     recordedRun = undefined;
+    applyStoredVehicle();
     sim.reset(stage);
     view.resetTruck();
     clock.reset();
@@ -88,7 +102,10 @@ async function boot() {
     id: TrackId,
     lane: "easy" | "medium" | "hard" = "easy",
     unpause = true,
+    vehicle?: string,
   ) {
+    if (vehicle) sim.vehicleId = getVehicle(vehicle).id;
+    else applyStoredVehicle();
     sim.startTrack(id, lane);
     view.resetTruck();
     clock.reset();
@@ -97,6 +114,7 @@ async function boot() {
     recordedRun = undefined;
     if (unpause) paused = false;
     screens?.hide();
+    vehicleScreens?.hide();
     $("lab").hidden = true;
     panel.hidden = true;
     $("routes").hidden = !getTrack(id).legacy;
@@ -113,7 +131,16 @@ async function boot() {
     surface = "menu";
     keys.clear();
     clock.reset();
+    vehicleScreens?.hide();
     screens.show();
+    panel.hidden = true;
+  }
+  function showVehicleSelect() {
+    surface = "menu";
+    keys.clear();
+    clock.reset();
+    screens.hide();
+    vehicleScreens.show();
     panel.hidden = true;
   }
   function retryTrack() {
@@ -136,6 +163,15 @@ async function boot() {
     showLevelSelect,
   );
   $("level-select-button").onclick = showLevelSelect;
+  vehicleScreens = createVehicleSelect(
+    app,
+    (id) => {
+      localStorage.setItem("vehicle", id);
+      showLevelSelect();
+    },
+    showLevelSelect,
+  );
+  $("vehicle-select-button").onclick = showVehicleSelect;
   function hud() {
     const s = sim.snapshot(false),
       r = ROUTES.find((r) => r.id === s.stage);
@@ -144,7 +180,7 @@ async function boot() {
       .padStart(3, "0");
     $("time").textContent = (s.run?.elapsed ?? s.time).toFixed(2);
     $("integrity").textContent =
-      `${Math.round(([...sim.parts.values()].reduce((a, p) => a + p.health, 0) / PARTS.reduce((a, p) => a + p.hp, 0)) * 100)}%`;
+      `${Math.round(([...sim.parts.values()].reduce((a, p) => a + p.health, 0) / sim.partDefs.reduce((a, p) => a + p.hp, 0)) * 100)}%`;
     $("state-label").textContent =
       s.stage === "lab"
         ? "DESTRUCTION LAB"
@@ -296,7 +332,8 @@ async function boot() {
   if (import.meta.env.DEV)
     window.__game = {
       select,
-      startTrack: (id, lane) => startOfficial(id, lane, false),
+      startTrack: (id, lane, vehicle?) =>
+        startOfficial(id, lane, false, vehicle),
       pause: (v) => (paused = v),
       advanceFrames: (frames, r, i) => {
         for (let f = 0; f < frames; f++) {

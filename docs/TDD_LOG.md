@@ -156,3 +156,8 @@ GREEN: fetch script now keeps hash-verified cached assets (immune to API drift) 
 ## Expansion chunk 12 — Whole-release verification
 
 GREEN: all nine tracks driven end to end in the browser; reference times match physics exactly (canyon 174.2 s, hollow 151.7 s, slide 183.0 s, all silver), confirming provisional medals 150/210/270 with no changes. Full `npx playwright test`: 100 passed, 3 timed out; braking passes solo (parallel-load flake) and dragon-flame + inferno-jets fail identically on a pre-expansion worktree (pre-existing screenshot/font stall, not a regression). Smoke script extended to nine cards and passes solo against the production preview with zero page errors. Report checked in as docs/EXPANSION_VERIFICATION.md. Full `npm run check` passes 238/238 with the production build.
+
+## Vehicles/editor/perf chunk 1 — Vehicle platform + select screen
+
+RED: `tests/vehicles.test.ts` failed on the missing `src/vehicles` module, and `e2e/vehicle-select.spec.ts` timed out on the missing Select vehicle button.
+GREEN: new `src/vehicles.ts` catalog (`VEHICLES`, `getVehicle`, `validateVehicles`) with the monster-truck def sharing the 13 PARTS ids in order; `Simulation` owns `vehicleId` with a `partDefs` getter, `wheelPositions()` method (replacing the export), and `setVehicle()` reset; snapshot/stats carry `vehicleId`. `view.ts` builds via `getVehicle(...).build()`, `harness.startTrack(id, lane?, vehicle?)` threads the pick, and `src/vehicle-select.ts` adds a menu screen (cards, keyboard, localStorage `vehicle`) wired into `main.ts` with a header button. Full `npm run check` passes 252/252 with the production build; vehicle-select e2e 2/2 green.

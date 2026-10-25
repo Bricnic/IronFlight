@@ -562,6 +562,7 @@ kbd {
 }
 
 #level-select-button,
+#vehicle-select-button,
 .menu-actions button {
   padding: 10px 14px;
   border: 1px solid #ffffff38;
@@ -618,6 +619,53 @@ kbd {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
+}
+#vehicle-select {
+  position: fixed;
+  inset: 84px 0 0;
+  overflow: auto;
+  z-index: 12;
+  padding: 36px max(26px, calc((100vw - 1240px) / 2)) 22px;
+  background: radial-gradient(
+    ellipse at 85% 0,
+    #2e4546 0,
+    #15242b 48%,
+    #111c22 100%
+  );
+}
+.vehicle-card {
+  min-width: 0;
+  border: 1px solid #ffffff20;
+  border-radius: 8px;
+  background: #1d3038;
+  overflow: hidden;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+}
+.vehicle-card:hover {
+  border-color: #ffa762;
+  transform: translateY(-3px);
+}
+.vehicle-card.selected {
+  border-color: #ffa762;
+}
+.vehicle-card .picked {
+  display: none;
+}
+.vehicle-card.selected .picked {
+  display: inline;
+}
+.vehicle-pick {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
 }
 .track-card {
   min-width: 0;

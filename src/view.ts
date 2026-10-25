@@ -5,11 +5,12 @@ import { LavaPartEffects } from "./lava-effects";
 import { PropView } from "./prop-view";
 import * as T from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { PARTS, deformGeometry } from "./damage";
+import { deformGeometry } from "./damage";
 import { ROUTES, routeSolids } from "./routes";
-import { Simulation, wheelPositions } from "./simulation";
+import { Simulation } from "./simulation";
+import { getVehicle } from "./vehicles";
 import { HAZARDS, hammerAngle } from "./hazards";
-import { createTruck, truckStats } from "./truck";
+import { truckStats } from "./truck";
 import { pbr, flameMaterial, lavaMaterial } from "./materials";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { arenaSolids } from "./arena";
@@ -471,14 +472,17 @@ export class GameView {
       clearcoat: 0.8,
       clearcoatRoughness: 0.3,
     });
-    this.truck = createTruck({ paint, metal });
+    this.truck = getVehicle(this.simulation.vehicleId).build({
+      paint,
+      metal,
+    });
     this.scene.add(this.truck);
     this.meshes.clear();
     this.dentCounts.clear();
     this.snapCamera = true;
     this.chase.reset();
     this.lastCameraTime = 0;
-    for (const def of PARTS)
+    for (const def of this.simulation.partDefs)
       this.meshes.set(def.id, this.truck.getObjectByName(def.id) as T.Group);
     for (const side of [-1, 1]) {
       const decal = this.label("IRON FLIGHT", "#fff0ce", "#ac401e", 512, 128);
@@ -488,7 +492,7 @@ export class GameView {
       this.meshes.get(side > 0 ? "door-left" : "door-right")!.add(decal);
     }
     this.truck.updateMatrixWorld(true);
-    for (const def of PARTS) {
+    for (const def of this.simulation.partDefs) {
       const bounds = new T.Box3().setFromObject(this.meshes.get(def.id)!);
       const origin = new T.Vector3(...def.pos);
       this.simulation.partBounds.set(def.id, {
@@ -500,6 +504,7 @@ export class GameView {
   }
   stats() {
     return {
+      vehicleId: this.simulation.vehicleId,
       ...truckStats(this.truck),
       potions: {
         jets: this.nitro.visible,
@@ -639,7 +644,7 @@ export class GameView {
           }
         });
     }
-    for (const def of PARTS) {
+    for (const def of this.simulation.partDefs) {
       const state = s.parts.get(def.id)!,
         g = this.meshes.get(def.id)!;
       g.userData.detached = !!state.body;
@@ -650,9 +655,11 @@ export class GameView {
         g.quaternion.copy(state.body.rotation());
       } else {
         const local = new T.Vector3(...def.pos);
-        const wi = PARTS.slice(2, 6).findIndex((p) => p.id === def.id);
+        const wi = this.simulation.partDefs
+          .slice(2, 6)
+          .findIndex((p) => p.id === def.id);
         if (wi >= 0) {
-          local.copy(wheelPositions[wi]);
+          local.copy(s.wheelPositions()[wi]);
         }
         local.multiply(shape);
         if (wi >= 0) local.y -= s.vehicle.wheelSuspensionLength(wi) ?? 0.6;

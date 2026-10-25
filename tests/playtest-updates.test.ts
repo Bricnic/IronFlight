@@ -1,5 +1,5 @@
 import { beforeAll, expect, it } from "vitest";
-import { Simulation, initPhysics, wheelPositions } from "../src/simulation";
+import { Simulation, initPhysics } from "../src/simulation";
 import { PARTS } from "../src/damage";
 import { drivingInput } from "../src/controls";
 import { Quaternion, Vector3 } from "three";
@@ -9,8 +9,10 @@ beforeAll(initPhysics);
 it("left identities agree with A steering, wheels, and the cabin", () => {
   for (const p of PARTS)
     if (/left|wheel-[fr]l/.test(p.id)) expect(p.pos[0]).toBeGreaterThan(0);
+  const sim = new Simulation("lab");
   for (let i = 0; i < 4; i++)
-    expect(wheelPositions[i].x).toBe(PARTS[i + 2].pos[0]);
+    expect(sim.wheelPositions()[i].x).toBe(PARTS[i + 2].pos[0]);
+  sim.dispose();
   const truck = createTruck();
   expect(
     truck.getObjectByName("steering-wheel-left")!.position.x,

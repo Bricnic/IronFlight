@@ -1,5 +1,4 @@
 import * as T from "three";
-import { PARTS } from "./damage";
 import { flameMaterial } from "./materials";
 import { TruckFireView } from "./truck-fire";
 import type { Simulation } from "./simulation";
@@ -22,7 +21,7 @@ export class LavaPartEffects extends T.Group {
     this.effects.clear();
   }
   update(sim: Simulation) {
-    for (const def of PARTS) {
+    for (const def of sim.partDefs) {
       const state = sim.parts.get(def.id)!;
       const lava = state.lava;
       if (!lava) continue;

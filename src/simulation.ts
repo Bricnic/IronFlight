@@ -10,7 +10,8 @@ import RAPIER from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
-import { PARTS, type PartState } from "./damage";
+import { type PartState } from "./damage";
+import { getVehicle, type VehicleId } from "./vehicles";
 import {
   HAZARDS,
   hammerAngle,
@@ -40,12 +41,6 @@ export type Input = {
   steer?: number;
   handbrake?: number;
 };
-export const wheelPositions = [
-  new Vector3(1.65, -0.35, 1.65),
-  new Vector3(-1.65, -0.35, 1.65),
-  new Vector3(1.65, -0.35, -1.65),
-  new Vector3(-1.65, -0.35, -1.65),
-];
 let ready: Promise<void> | undefined;
 export function initPhysics() {
   return (ready ??= RAPIER.init());
@@ -61,6 +56,7 @@ export class Simulation {
   body!: RAPIER.RigidBody;
   vehicle!: RAPIER.DynamicRayCastVehicleController;
   stage: Stage;
+  vehicleId: VehicleId = "monster-truck";
   trackRun?: TrackRun;
   courseTrack?: ReturnType<typeof getTrack>;
   activeHazards: Hazard[] = [];
@@ -73,7 +69,7 @@ export class Simulation {
   // The view supplies complete model bounds, including cage, arches and tread.
   // Headless physics falls back to the matching collider dimensions.
   partBounds = new Map(
-    PARTS.map((def) => [
+    this.partDefs.map((def) => [
       def.id,
       {
         min: new Vector3(...def.size).multiplyScalar(-0.5),
@@ -123,6 +119,17 @@ export class Simulation {
     if (this.world)
       this.world.gravity = { x: 0, y: -9.81 * this.tuning.gravity, z: 0 };
   }
+  get partDefs() {
+    return getVehicle(this.vehicleId).parts;
+  }
+  setVehicle(id: string) {
+    this.vehicleId = getVehicle(id).id;
+    this.reset();
+  }
+  private suspensionCache: Vector3[] = [];
+  wheelPositions(): Vector3[] {
+    return this.suspensionCache;
+  }
   constructor(stage: Stage = "lab") {
     this.stage = stage;
     this.reset(stage);
@@ -157,6 +164,9 @@ export class Simulation {
     this.events?.free();
     this.events = new RAPIER.EventQueue(true);
     this.stage = stage;
+    this.suspensionCache = getVehicle(this.vehicleId).suspension.map(
+      ([x, y, z]) => new Vector3(x, y, z),
+    );
     this.time = 0;
     this.ticks = 0;
     this.airborneTicks = 0;
@@ -243,7 +253,7 @@ export class Simulation {
     }
     this.previousPosition.copy(this.body.translation());
     this.previousRotation.copy(this.body.rotation());
-    for (const def of PARTS) {
+    for (const def of this.partDefs) {
       const state: PartState = { health: def.hp, dents: [] };
       this.parts.set(def.id, state);
       if (!def.id.startsWith("wheel"))
@@ -262,7 +272,7 @@ export class Simulation {
     this.vehicle = this.world.createVehicleController(this.body);
     this.vehicle.indexUpAxis = 1;
     this.vehicle.setIndexForwardAxis = 2;
-    wheelPositions.forEach((p, i) => {
+    this.wheelPositions().forEach((p, i) => {
       this.vehicle.addWheel(
         p,
         { x: 0, y: -1, z: 0 },
@@ -384,7 +394,7 @@ export class Simulation {
     );
   }
   breakRandomPart(source: string) {
-    const remaining = PARTS.filter((p) => this.parts.get(p.id)!.health > 0);
+    const remaining = this.partDefs.filter((p) => this.parts.get(p.id)!.health > 0);
     // Shed bodywork before wheels and structural pieces so early hits remain survivable.
     const panels = remaining.filter(
       (p) => !p.id.startsWith("chassis") && !p.id.startsWith("wheel"),
@@ -423,7 +433,7 @@ export class Simulation {
       routeX !== undefined && position.z > LOOP.z - LOOP.radius - 5;
     this.body.setAngularDamping(strafeMode ? 8 : loopSuspension ? 0.25 : 1.2);
     for (let i = 0; i < 4; i++) {
-      if (this.parts.get(PARTS[i + 2].id)!.body) continue;
+      if (this.parts.get(this.partDefs[i + 2].id)!.body) continue;
       this.vehicle.setWheelMaxSuspensionForce(
         i,
         loopSuspension ? 500000 : 80000,
@@ -436,7 +446,7 @@ export class Simulation {
       position.y > 0 &&
       position.z >= LOOP.boostStart &&
       position.z <= LOOP.boostEnd &&
-      wheelPositions.filter((_, i) => this.vehicle.wheelIsInContact(i))
+      this.wheelPositions().filter((_, i) => this.vehicle.wheelIsInContact(i))
         .length >= 2 &&
       this.parts.get("chassis-front")!.health > 0 &&
       this.parts.get("chassis-rear")!.health > 0
@@ -460,7 +470,7 @@ export class Simulation {
       LOOP.dragonZ.some((z) => Math.abs(position.z - z) < 3)
     ) {
       this.inFlames = true;
-      for (const part of PARTS)
+      for (const part of this.partDefs)
         this.fireDamage(
           part.id,
           (part.hp * DT * this.tuning.dragonDamage * dragonIntensity) / 3,
@@ -482,7 +492,7 @@ export class Simulation {
     if (
       onLoop &&
       position.y > LOOP.radius * 1.8 &&
-      wheelPositions.filter((_, i) => this.vehicle.wheelIsInContact(i))
+      this.wheelPositions().filter((_, i) => this.vehicle.wheelIsInContact(i))
         .length >= 2 &&
       new Vector3(0, 1, 0).applyQuaternion(
         new Quaternion().copy(this.body.rotation()),
@@ -494,12 +504,12 @@ export class Simulation {
       position.y < 3 &&
       longitudinal > 0 &&
       position.z > LOOP.z - 8 &&
-      wheelPositions.filter((_, i) => this.vehicle.wheelIsInContact(i))
+      this.wheelPositions().filter((_, i) => this.vehicle.wheelIsInContact(i))
         .length >= 2
     )
       this.loopCompleted = true;
-    const attachedWheels = wheelPositions.map(
-      (_, i) => !this.parts.get(PARTS[i + 2].id)!.body,
+    const attachedWheels = this.wheelPositions().map(
+      (_, i) => !this.parts.get(this.partDefs[i + 2].id)!.body,
     );
     const contactCount = attachedWheels.filter(
       (attached, i) => attached && this.vehicle.wheelIsInContact(i),
@@ -554,7 +564,7 @@ export class Simulation {
     const frontGrip =
       [0, 1].filter(
         (i) =>
-          !this.parts.get(PARTS[i + 2].id)!.body &&
+          !this.parts.get(this.partDefs[i + 2].id)!.body &&
           this.vehicle.wheelIsInContact(i),
       ).length / 2;
     const localUp = new Vector3(0, 1, 0).applyQuaternion(
@@ -773,7 +783,7 @@ export class Simulation {
               : ["hood", "roof", "door-left", "door-right"];
           if (h.kind === "fire") {
             const intensity = flameIntensity(h, this.time);
-            for (const def of PARTS)
+            for (const def of this.partDefs)
               this.fireDamage(
                 def.id,
                 (targets.includes(def.id) ? 18 : def.hp * 0.018) * intensity,
@@ -788,13 +798,13 @@ export class Simulation {
     const barrelExposure = this.props.update(
       this.body,
       this.parts,
-      wheelPositions,
+      this.wheelPositions(),
       before,
       this.time,
     );
     if (barrelExposure > 0) {
       this.inFlames = true;
-      for (const part of PARTS)
+      for (const part of this.partDefs)
         this.fireDamage(part.id, part.hp * 0.01 * DT * barrelExposure);
     }
     this.updateSmolder();
@@ -805,7 +815,7 @@ export class Simulation {
     const route = ROUTES.find((r) => r.id === this.stage),
       p = this.body.translation();
     if (route) {
-      const contacts = wheelPositions.filter((_, i) =>
+      const contacts = this.wheelPositions().filter((_, i) =>
         this.vehicle.wheelIsInContact(i),
       ).length;
       if (p.z > 13 && p.z < route.gapEnd && contacts === 0)
@@ -863,7 +873,7 @@ export class Simulation {
     const pools = (
       this.courseTrack ? courseSolids(this.courseTrack) : arenaSolids()
     ).filter((s) => s.kind === "lava");
-    for (const def of PARTS) {
+    for (const def of this.partDefs) {
       const state = this.parts.get(def.id)!;
       if (!state.lava) {
         const q = new Quaternion().copy((state.body ?? this.body).rotation());
@@ -945,7 +955,7 @@ export class Simulation {
         Math.abs(steer) > 0.4 &&
         Math.abs(lateral) > 0.4 &&
         Math.hypot(velocity.x, velocity.z) > 2 &&
-        !this.parts.get(PARTS[i + 2].id)!.body &&
+        !this.parts.get(this.partDefs[i + 2].id)!.body &&
         this.vehicle.wheelIsInContact(i) &&
         point &&
         ground &&
@@ -977,7 +987,7 @@ export class Simulation {
     const up = new Vector3(0, 1, 0).applyQuaternion(q);
     const left = new Vector3(1, 0, 0).applyQuaternion(q);
     const forward = new Vector3(0, 0, 1).applyQuaternion(q);
-    const contacts = wheelPositions.filter((_, i) =>
+    const contacts = this.wheelPositions().filter((_, i) =>
       this.vehicle.wheelIsInContact(i),
     ).length;
     if (
@@ -1021,7 +1031,7 @@ export class Simulation {
       forced.push(side === "left" ? "wheel-fl" : "wheel-fr");
     if (sideLanding && incoming.y < -11)
       forced.push(side === "left" ? "wheel-rl" : "wheel-rr");
-    const total = PARTS.reduce((n, p) => n + p.hp, 0);
+    const total = this.partDefs.reduce((n, p) => n + p.hp, 0);
     let budget = total * (roof ? 0.7 : 0.25);
     for (const id of forced) {
       budget -= this.parts.get(id)!.health;
@@ -1113,7 +1123,7 @@ export class Simulation {
         .clone()
         .sub(this.body.translation())
         .applyQuaternion(q);
-      const nearby = PARTS.filter(
+      const nearby = this.partDefs.filter(
         (p) => p.id !== hit.part && !this.parts.get(p.id)!.body,
       )
         .map((p) => ({ p, distance: new Vector3(...p.pos).distanceTo(local) }))
@@ -1124,7 +1134,7 @@ export class Simulation {
         [hit.part, strike.damage],
         ...nearby.map(({ p }) => [p.id, strike.damage * 0.65]),
       ] as [string, number][]) {
-        const def = PARTS.find((p) => p.id === id)!;
+        const def = this.partDefs.find((p) => p.id === id)!;
         const dent = local
           .clone()
           .sub(new Vector3(...def.pos))
@@ -1167,7 +1177,7 @@ export class Simulation {
     this.damage(id, amount);
     this.fireDamageTaken += (before - this.remainingHealth()) / this.fullHealth;
   }
-  private readonly fullHealth = PARTS.reduce((sum, p) => sum + p.hp, 0);
+  private readonly fullHealth = this.partDefs.reduce((sum, p) => sum + p.hp, 0);
   private remainingHealth() {
     return [...this.parts.values()].reduce((sum, p) => sum + p.health, 0);
   }
@@ -1211,7 +1221,7 @@ export class Simulation {
         strength: Math.min(0.5, amount / 200, budget),
       });
     if (state.health > 0) return;
-    const def = PARTS.find((p) => p.id === id)!;
+    const def = this.partDefs.find((p) => p.id === id)!;
     const q = new Quaternion().copy(this.body.rotation());
     const pos = new Vector3(...def.pos)
       .applyQuaternion(q)
@@ -1238,7 +1248,7 @@ export class Simulation {
       shape.setMass(def.mass).setFriction(0.7),
       state.body,
     );
-    const wheel = PARTS.slice(2, 6).findIndex((p) => p.id === id);
+    const wheel = this.partDefs.slice(2, 6).findIndex((p) => p.id === id);
     if (wheel >= 0) {
       this.vehicle.setWheelMaxSuspensionForce(wheel, 0);
       this.vehicle.setWheelSuspensionStiffness(wheel, 0);
@@ -1246,7 +1256,7 @@ export class Simulation {
       this.vehicle.setWheelBrake(wheel, 0);
     }
     if (id === "chassis-front") {
-      for (const p of PARTS) if (p.id !== id) this.damage(p.id, 10000);
+      for (const p of this.partDefs) if (p.id !== id) this.damage(p.id, 10000);
       this.status = "wrecked";
       // All colliders now belong to debris. Keep the empty zero-mass root out of
       // dynamic integration while the detached pieces continue to fall and sink.
@@ -1255,7 +1265,7 @@ export class Simulation {
       this.body.setBodyType(RAPIER.RigidBodyType.Fixed, true);
     }
     if (id === "chassis-rear")
-      for (const p of PARTS)
+      for (const p of this.partDefs)
         if ("parent" in p && p.parent === id) this.damage(p.id, 10000);
   }
   snapshot(includeSkidPoints = true) {
@@ -1272,7 +1282,7 @@ export class Simulation {
       forward: new Vector3(0, 0, 1)
         .applyQuaternion(new Quaternion().copy(this.body.rotation()))
         .toArray(),
-      wheelContacts: wheelPositions.filter((_, i) =>
+      wheelContacts: this.wheelPositions().filter((_, i) =>
         this.vehicle.wheelIsInContact(i),
       ).length,
       dragonFiring: dragonFlame(this.time).opacity > 0,
@@ -1291,18 +1301,19 @@ export class Simulation {
         new Quaternion().copy(this.body.rotation()),
       ).y,
       time: this.time,
+      vehicleId: this.vehicleId,
       tuning: { ...this.tuning },
       steeringAngle: this.steeringAngle,
       boostTicks: this.boostTicks,
       skidStrokes: (includeSkidPoints ? this.skidStrokes : []).map((s) => ({
-        wheel: PARTS[s.wheel + 2].id,
+        wheel: this.partDefs[s.wheel + 2].id,
         points: s.points.map((p) => p.toArray()),
       })),
       loopApex: this.loopApex,
       loopCompleted: this.loopCompleted,
       integrity:
         [...this.parts.values()].reduce((sum, p) => sum + p.health, 0) /
-        PARTS.reduce((sum, p) => sum + p.hp, 0),
+        this.partDefs.reduce((sum, p) => sum + p.hp, 0),
       ticks: this.ticks,
       stage: this.stage,
       airborneTicks: this.airborneTicks,

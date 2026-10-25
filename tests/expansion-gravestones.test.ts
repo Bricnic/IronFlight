@@ -1,10 +1,6 @@
 import { beforeAll, expect, it } from "vitest";
 import { Quaternion, Vector3 } from "three";
-import {
-  Simulation,
-  initPhysics,
-  wheelPositions,
-} from "../src/simulation";
+import { Simulation, initPhysics } from "../src/simulation";
 import { Destructibles } from "../src/destructibles";
 import { courseProps } from "../src/course";
 import { getTrack } from "../src/tracks";
@@ -69,7 +65,7 @@ it("destroyed ids drain exactly once through takeDestroyed", () => {
   sim.props.update(
     sim.body,
     sim.parts,
-    wheelPositions,
+    sim.wheelPositions(),
     new Vector3(0, 0, 15),
     sim.time,
   );

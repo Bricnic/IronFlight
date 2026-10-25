@@ -7,7 +7,11 @@ export type CameraSample = ReturnType<GameView["inspectCamera"]> & {
 };
 export interface GameHarness {
   select(stage: Stage): void;
-  startTrack(id: TrackId, lane?: "easy" | "medium" | "hard"): void;
+  startTrack(
+    id: TrackId,
+    lane?: "easy" | "medium" | "hard",
+    vehicle?: string,
+  ): void;
   pause(value: boolean): void;
   advanceFrames(frames: number, rate: number, input?: Input): void;
   driveFrames(
@@ -38,6 +42,7 @@ export interface GameHarness {
     lavaScorch: number;
   };
   stats(): {
+    vehicleId: string;
     comicHazards: {
       id: string;
       kind: string;

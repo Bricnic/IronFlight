@@ -1,6 +1,5 @@
 import R from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
-import { PARTS } from "./damage";
 import { DT } from "./clock";
 import type { Simulation } from "./simulation";
 import {
@@ -173,7 +172,7 @@ export class ComicPhysics {
     if (this.appliedEffect !== this.effect) {
       this.appliedEffect = this.effect;
       const [x, y, z] = potionScale(this.effect);
-      for (const def of PARTS) {
+      for (const def of this.sim.partDefs) {
         const c = s.parts.get(def.id)?.collider;
         if (c) {
           c.setHalfExtents({
@@ -278,7 +277,8 @@ export class ComicPhysics {
         if (this.intersects(m.sensors[0])) {
           m.contacts++;
           s.inFlames = true;
-          for (const part of PARTS) s.fireDamage(part.id, part.hp * DT * 0.85);
+          for (const part of this.sim.partDefs)
+            s.fireDamage(part.id, part.hp * DT * 0.85);
           if (s.time - m.triggered > 0.15) {
             m.triggered = s.time;
             s.damageEvents.push({
@@ -315,7 +315,8 @@ export class ComicPhysics {
           } else {
             m.sinking += DT;
             s.body.setLinvel({ x: v.x * 0.9, y: -1.8, z: v.z * 0.9 }, true);
-            for (const part of PARTS) s.damage(part.id, part.hp * DT * 0.45);
+            for (const part of this.sim.partDefs)
+              s.damage(part.id, part.hp * DT * 0.45);
             if (m.sinking > 2.5) s.damage("chassis-front", 10000);
           }
         } else {
