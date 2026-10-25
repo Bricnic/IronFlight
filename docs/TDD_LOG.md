@@ -181,3 +181,8 @@ GREEN: new `src/ambulance.ts` with a box-rig collider set on the shared 13 slots
 
 RED: `tests/school-bus.test.ts` failed to collect on the missing `src/school-bus` module.
 GREEN: new `src/school-bus.ts` with a tall transit collider set on the shared 13 slots (same hp), a 190,956-triangle yellow bus (8-window bands, bench rows, stop sign, crossing arm, destination box, roof ribs) with deformable first child per part and no light bar. The mid-drive screenshot caught the roof ribs rotated into vertical hoops (a stray torus rotation); fixed to span the roof width and re-shot clean. The bus completes Harbor Sprint headlessly and in the browser, and the e2e asserts `stats().lights` stays `{a: 0, b: 0}`. Full `npm run check` passes 276/276 with the production build; bus + vehicle-select e2e 3/3 green.
+
+## Vehicles/editor/perf chunk 6 — 9x5 completion matrix
+
+RED: `tests/vehicle-matrix.test.ts` is new; any vehicle/track combo that cannot complete fails it.
+GREEN: headless matrix 45/45 in 80 s and browser matrix 45/45 in 15.3 min, all `completed` with integrity > 0 — every vehicle (truck, sports, cop, ambulance, bus) beats every track (8 courses + triple-loop easy) with zero physics fixes needed. No new source code; the two matrix specs plus this log entry are the chunk.
