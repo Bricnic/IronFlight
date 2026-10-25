@@ -403,6 +403,11 @@ export function createLevelEditor(
       viewport.resize();
       viewport.frameSpawn(store.level);
     },
+    /** Adopt an externally-saved level (e.g. after in-game placement). */
+    syncStore(level: CustomLevel) {
+      store.openLevel(structuredClone(level));
+      refresh();
+    },
     hide() {
       screen.hidden = true;
       host.classList.remove("at-level-select");

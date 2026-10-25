@@ -226,3 +226,8 @@ GREEN: settings screen uses dedicated `settings-intro`/`settings-grid`/`settings
 
 RED: `tests/tracks.test.ts` step test fails on the missing `stepTrackId`; `e2e/level-keys.spec.ts` is new.
 GREEN: new `stepTrackId(current, dir)` in `src/tracks.ts` cycles the nine official levels with wraparound (sky-slide -> triple-loop, triple-loop -> sky-slide; customs/empty fall off the ends), wired to N/P in the main keydown handler alongside R (menu surfaces excluded, lane preserved like retry), and documented in the level-select footnote. Unit 4/4, e2e 1/1.
+
+## Editor refinement chunk 1 -- Playtest/wireframe sync
+
+RED: `tests/editor-state.test.ts` fails on the missing `shouldSyncFromSession`; `e2e/editor-sync.spec.ts` shows the wireframe missing a playtest-placed brick (2 solids, not 3).
+GREEN: the editor store is now the single source of truth -- every in-game commit writes through via a new `syncStore` (cloned), and opening the editor adopts the live session level when the store is clean and names match (`shouldSyncFromSession`, unit-guarded). Round trip proven: place wall in playtest -> wireframe lists it -> playtest again -> the truck is still blocked by its collider. E2E 2/2 in 1.2 min; full unit 361/361 with the production build (includes the user's ghost-toggle commit underneath).

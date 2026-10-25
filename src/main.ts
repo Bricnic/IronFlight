@@ -2,6 +2,7 @@ import { resultOpacity } from "./result-reveal";
 import { createLevelSelect } from "./level-select";
 import { createVehicleSelect } from "./vehicle-select";
 import { createLevelEditor } from "./level-editor";
+import { shouldSyncFromSession } from "./editor-state";
 import { createSettings } from "./settings-screen";
 import { loadSettings } from "./settings";
 import * as T from "three";
@@ -178,6 +179,10 @@ async function boot() {
     screens.hide();
     vehicleScreens?.hide();
     settingsScreens?.hide();
+    const live = sim.courseTrack?.custom;
+    const probe = editorScreens.probe();
+    if (live && shouldSyncFromSession(probe.dirty, probe.name, live.name))
+      editorScreens.syncStore(live);
     editorScreens.show();
     panel.hidden = true;
   }
@@ -338,6 +343,7 @@ async function boot() {
         });
         track.custom = validateCustomLevel(next);
         await saveLevel(undefined, track.custom);
+        editorScreens.syncStore(track.custom);
         const solid = track.custom.solids.at(-1)!;
         sim.addCustomSolid(solid);
         view.addCourseSolid(solid);
@@ -350,6 +356,7 @@ async function boot() {
         });
         track.custom = validateCustomLevel(next);
         await saveLevel(undefined, track.custom);
+        editorScreens.syncStore(track.custom);
         const gate = appendCheckpoint(track, point.x, point.z);
         view.addCheckpointGate(gate);
         say(`Checkpoint gate ${track.checkpoints.length} saved`);
@@ -364,6 +371,7 @@ async function boot() {
         });
         track.custom = validateCustomLevel(next);
         await saveLevel(undefined, track.custom);
+        editorScreens.syncStore(track.custom);
         const prefab = track.custom.prefabs.at(-1)!;
         if (kind === "snowman")
           sim.props.addProp({

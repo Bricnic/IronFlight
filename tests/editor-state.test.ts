@@ -1,5 +1,8 @@
 import { expect, it } from "vitest";
-import { EditorStore } from "../src/editor-state";
+import {
+  EditorStore,
+  shouldSyncFromSession,
+} from "../src/editor-state";
 it("opens a named blank level, clean", () => {
   const store = new EditorStore("Sprint");
   expect(store.level.name).toBe("Sprint");
@@ -105,4 +108,10 @@ it("renames to blank safely and replaces state on open", () => {
   expect(store.level.name).toBe("B");
   expect(store.level.prefabs).toEqual([]);
   expect(store.dirty).toBe(false);
+});
+it("syncs the store from a live session only when safe", () => {
+  expect(shouldSyncFromSession(false, "A", "A")).toBe(true);
+  expect(shouldSyncFromSession(true, "A", "A")).toBe(false);
+  expect(shouldSyncFromSession(false, "A", "B")).toBe(false);
+  expect(shouldSyncFromSession(false, "A", undefined)).toBe(false);
 });

@@ -14,6 +14,17 @@ export type EditorSelection =
   | { kind: "target"; index: number }
   | { kind: "spawn" }
   | null;
+/**
+ * The editor store may adopt a live session's level only when it has no
+ * unsaved work of its own and both sides name the same level.
+ */
+export function shouldSyncFromSession(
+  storeDirty: boolean,
+  storeName: string,
+  sessionName: string | undefined,
+) {
+  return !storeDirty && sessionName !== undefined && storeName === sessionName;
+}
 /** Mutable level-editing state with dirty tracking. The DOM screen observes it. */
 export class EditorStore {
   level: CustomLevel;
