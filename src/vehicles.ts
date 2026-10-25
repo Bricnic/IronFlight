@@ -22,11 +22,19 @@ import {
   AMBULANCE_SUSPENSION_REST,
   AMBULANCE_WHEEL_RADIUS,
 } from "./ambulance";
+import {
+  createSchoolBus,
+  BUS_PARTS,
+  BUS_SUSPENSION,
+  BUS_SUSPENSION_REST,
+  BUS_WHEEL_RADIUS,
+} from "./school-bus";
 export type VehicleId =
   | "monster-truck"
   | "sports-car"
   | "cop-car"
-  | "ambulance";
+  | "ambulance"
+  | "school-bus";
 export interface VehiclePart {
   id: string;
   pos: readonly [number, number, number];
@@ -96,6 +104,16 @@ export const VEHICLES: VehicleDef[] = [
     suspensionRest: AMBULANCE_SUSPENSION_REST,
     build: (options) => createAmbulance(options),
     lights: "ems",
+  },
+  {
+    id: "school-bus",
+    name: "School Bus",
+    blurb: "Tall transit bus with bench rows and a stop sign.",
+    parts: BUS_PARTS,
+    suspension: BUS_SUSPENSION,
+    wheelRadius: BUS_WHEEL_RADIUS,
+    suspensionRest: BUS_SUSPENSION_REST,
+    build: (options) => createSchoolBus(options),
   },
 ];
 /** Game mph everywhere: the HUD and comic hazards use m/s x 3.6. */

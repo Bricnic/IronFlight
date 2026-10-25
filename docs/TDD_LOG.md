@@ -176,3 +176,8 @@ GREEN: new `src/cop-car.ts` with a sedan collider set on the shared 13 slots (sa
 
 RED: `tests/ambulance.test.ts` failed to collect on the missing `src/ambulance` module.
 GREEN: new `src/ambulance.ts` with a box-rig collider set on the shared 13 slots (same hp), a 152,880-triangle white ambulance (compartment walls, Star of Life decals, AC pod, rear double doors, red/white `lightbar-a/b` domes on the cab roof) with deformable first child per part. Reuses the chunk-3 `lightBarState`/view/`stats().lights` pipeline with `lights: "ems"`. A headless cruise test guards the 90 mph threshold (peak > 25 m/s); the ambulance completes Harbor Sprint headlessly and in the browser, and the lab full-throttle e2e proves the same dim/flash/alternation contract as the cop car. Mid-drive screenshot confirms box, beacons and rear doors. Full `npm run check` passes 271/271 with the production build; ambulance + vehicle-select e2e 4/4 green.
+
+## Vehicles/editor/perf chunk 5 — School bus
+
+RED: `tests/school-bus.test.ts` failed to collect on the missing `src/school-bus` module.
+GREEN: new `src/school-bus.ts` with a tall transit collider set on the shared 13 slots (same hp), a 190,956-triangle yellow bus (8-window bands, bench rows, stop sign, crossing arm, destination box, roof ribs) with deformable first child per part and no light bar. The mid-drive screenshot caught the roof ribs rotated into vertical hoops (a stray torus rotation); fixed to span the roof width and re-shot clean. The bus completes Harbor Sprint headlessly and in the browser, and the e2e asserts `stats().lights` stays `{a: 0, b: 0}`. Full `npm run check` passes 276/276 with the production build; bus + vehicle-select e2e 3/3 green.
