@@ -80,3 +80,14 @@ it("invalid and negative damage cannot heal or corrupt state", () => {
   expect(() => s.damage("hood", NaN)).toThrow();
   s.dispose();
 });
+it("drain-scale micro-damage wears health without dent spam", () => {
+  const s = new Simulation();
+  const hp = s.parts.get("hood")!.health;
+  for (let i = 0; i < 30; i++) s.damage("hood", hp * (1 / 120) * 0.03);
+  expect(s.parts.get("hood")!.health).toBeLessThan(hp);
+  expect(s.parts.get("hood")!.dents).toHaveLength(0);
+  s.damage("hood", 60);
+  expect(s.parts.get("hood")!.dents).toHaveLength(1);
+  s.dispose();
+});
+

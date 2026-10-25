@@ -721,6 +721,10 @@ export class GameView {
           }
         });
     }
+    // Deformation rebuilds are per-dent full-mesh CPU passes: cap them per
+    // frame so multi-part bursts (hard landings) spread over frames instead
+    // of stuttering one frame.
+    let dentBudget = 2;
     for (const def of this.simulation.partDefs) {
       const state = s.parts.get(def.id)!,
         g = this.meshes.get(def.id)!;
@@ -751,7 +755,8 @@ export class GameView {
         }
       }
       const old = this.dentCounts.get(def.id) ?? 0;
-      for (let i = old; i < state.dents.length; i++) {
+      const fresh = Math.min(state.dents.length - old, dentBudget);
+      for (let i = old; i < old + fresh; i++) {
         const mesh = g.children[0] as T.Mesh;
         deformGeometry(
           mesh.geometry,
@@ -759,7 +764,8 @@ export class GameView {
           state.dents[i].strength,
         );
       }
-      this.dentCounts.set(def.id, state.dents.length);
+      dentBudget -= fresh;
+      this.dentCounts.set(def.id, old + fresh);
     }
     if (getVehicle(s.vehicleId).lights) {
       const v = s.body.linvel();

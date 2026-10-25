@@ -1244,11 +1244,11 @@ export class Simulation {
       0,
       0.65 - state.dents.reduce((sum, d) => sum + d.strength, 0),
     );
-    if (budget > 0 && state.dents.length < 8)
-      state.dents.push({
-        point: point.clone(),
-        strength: Math.min(0.5, amount / 200, budget),
-      });
+    const strength = Math.min(0.5, amount / 200, budget);
+    // Drain-scale hits (ghost/lava/fire per-step damage) are invisible as
+    // dents; skip them so they never spam full-mesh deformation rebuilds.
+    if (budget > 0 && strength >= 0.01 && state.dents.length < 8)
+      state.dents.push({ point: point.clone(), strength });
     if (state.health > 0) return;
     const def = this.partDefs.find((p) => p.id === id)!;
     const q = new Quaternion().copy(this.body.rotation());

@@ -17,6 +17,27 @@ export default defineConfig({
       ],
     },
   },
+  projects: [
+    { name: "swiftshader", testIgnore: ["**/fps.spec.ts"] },
+    {
+      // Frame-rate probes need the real machine GPU; SwiftShader measures
+      // the software rasterizer, not game performance.
+      name: "gpu",
+      testMatch: ["**/fps.spec.ts"],
+      use: {
+        launchOptions: {
+          channel: "chromium",
+          args: [
+            "--enable-webgl",
+            "--use-gl=angle",
+            "--use-angle=default",
+            "--enable-gpu",
+            "--ignore-gpu-blocklist",
+          ],
+        },
+      },
+    },
+  ],
   webServer: {
     command: "npm run dev",
     url: "http://127.0.0.1:5173",
