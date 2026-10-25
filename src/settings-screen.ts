@@ -28,12 +28,12 @@ export function createSettings(
   const screen = document.createElement("main");
   screen.id = "settings-screen";
   screen.hidden = true;
-  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / SETUP</div><h1>Settings.</h1><p>Tune the game to your machine.</p></div><div class="menu-actions"><button id="settings-back">Level select</button></div></div><section class="settings-section" aria-label="Video"><h2>Video</h2><div class="track-grid" role="radiogroup" aria-label="Video quality"></div><p class="selection-footnote">Applies instantly and is remembered.</p></section>`;
-  const grid = screen.querySelector<HTMLElement>(".track-grid")!;
+  screen.innerHTML = `<div class="settings-intro"><div><div class="eyebrow">IRON FLIGHT / SETUP</div><h1>Settings.</h1><p>Tune the game to your machine.</p></div><div class="menu-actions"><button id="settings-back">Level select</button></div></div><section class="settings-section" aria-label="Video"><h2>Video</h2><div class="settings-grid" role="radiogroup" aria-label="Video quality"></div><p class="selection-footnote">Applies instantly and is remembered.</p></section>`;
+  const grid = screen.querySelector<HTMLElement>(".settings-grid")!;
   const cards = new Map<VideoQuality, HTMLElement>();
   for (const tier of TIERS) {
     const card = document.createElement("article");
-    card.className = "vehicle-card";
+    card.className = "settings-card";
     card.dataset.video = tier.id;
     card.innerHTML = `<button class="vehicle-pick" role="radio" aria-label="Video quality ${tier.name}" aria-checked="false"><div class="track-card-body"><div class="track-card-heading"><h2>${tier.name}</h2><span class="best-medal picked">PICKED</span></div><p>${tier.blurb}</p></div></button>`;
     card.querySelector("button")!.onclick = () => {

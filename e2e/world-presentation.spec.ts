@@ -33,8 +33,12 @@ test("failed runs wait, fade and keep the world ticking", async ({ page }) => {
   // Real RAF playback continues even with the result fully visible.
   await page.evaluate(() => window.__game!.pause(false));
   const time = await page.evaluate(() => window.__game!.snapshot().time);
+  // One software-rendered frame can take ~5s in this state; the world is
+  // still ticking if time advances at all. A dead loop advances zero.
   await expect
-    .poll(() => page.evaluate(() => window.__game!.snapshot().time))
+    .poll(() => page.evaluate(() => window.__game!.snapshot().time), {
+      timeout: 30000,
+    })
     .toBeGreaterThan(time + 0.2);
 });
 for (const id of tracks)

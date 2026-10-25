@@ -64,7 +64,9 @@ test("playtest boots the real sim and completes the custom level", async ({
     "Opened Playtest Sprint",
   );
   await page.locator("#editor-playtest").click();
-  await expect(page.locator("#level-editor")).toBeHidden();
+  // Booting the sim (physics rebuild + first render) can exceed the default
+  // 5s budget on a loaded full-suite run; the state change is what matters.
+  await expect(page.locator("#level-editor")).toBeHidden({ timeout: 20000 });
   await expect(page.locator("#placement-bar")).toBeVisible();
   const result = await driveTrack(page, "custom:playtest-sprint", false);
   expect(result.state.run?.status).toBe("completed");

@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+// Flame-jet telemetry needs hundreds of software-rendered frames.
+test.slow();
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);

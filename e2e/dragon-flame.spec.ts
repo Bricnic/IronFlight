@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+// SwiftShader renders + readbacks make this spec exceed the default 90s.
+test.slow();
 test("dragon flame advances from its mouth and the shutdown tail clears outward", async ({
   page,
 }, info) => {

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
-
+// The sinking-chassis camera soak exceeds the default 90s under SwiftShader.
+test.slow();
 test("arrow keys navigate the responsive level grid, Space plays, and L returns", async ({
   page,
 }) => {
@@ -10,7 +11,7 @@ test("arrow keys navigate the responsive level grid, Space plays, and L returns"
   await page.keyboard.press("ArrowRight");
   await expect(cards.nth(1)).toBeFocused();
   const columns = await page
-    .locator(".track-grid")
+    .locator("#level-select .track-grid")
     .evaluate((e) => getComputedStyle(e).gridTemplateColumns.split(" ").length);
   await page.keyboard.press("ArrowDown");
   await expect(cards.nth(1 + columns)).toBeFocused();

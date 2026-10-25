@@ -12,9 +12,9 @@ async function startCourse(page: Page, id: TrackId) {
 test("menu counts nine places with per-mode labels", async ({ page }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-select-intro")).toContainText(
-    "Nine places to send it.",
-  );
+  await expect(
+    page.locator("#level-select .track-select-intro"),
+  ).toContainText("Nine places to send it.");
   await expect(page.locator(".track-card")).toHaveCount(9);
   const mode = (id: string) =>
     page.locator(`[data-track="${id}"] .track-mode`);

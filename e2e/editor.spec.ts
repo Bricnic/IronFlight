@@ -78,7 +78,9 @@ test("wireframe editor reloads and deletes from disk", async ({ page }) => {
   await page.locator('#editor-objects li[data-key="solid:barrier-1"]').click();
   await page.locator("#editor-remove").click();
   await page.locator("#editor-save").click();
-  await expect(page.locator("#editor-status")).toContainText("Saved e2e-edit");
+  await expect(page.locator("#editor-status")).toContainText("Saved e2e-edit", {
+    timeout: 15000,
+  });
   probe = await page.evaluate(() => window.__game!.editor());
   expect(probe.solids).toBe(1);
   const loaded = await page.evaluate(() =>
