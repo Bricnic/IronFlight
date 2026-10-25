@@ -1,13 +1,22 @@
 import type { Page } from "@playwright/test";
-import { getTrack, type TrackId } from "../src/tracks";
+import { getTrack, type Track } from "../src/tracks";
 export async function driveTrack(
   page: Page,
-  id: TrackId,
+  id: string,
   start = true,
   vehicle?: string,
 ) {
   if (start) await page.goto(`/?test=course-${id}`);
   await page.waitForFunction(() => !!window.__game);
+  let track: Track;
+  try {
+    track = getTrack(id);
+  } catch {
+    track = await page.evaluate(
+      (tid) => window.__game!.track(tid),
+      id,
+    );
+  }
   return page.evaluate(
     ({ track, start, vehicle }) => {
       const g = window.__game!;
@@ -160,6 +169,6 @@ export async function driveTrack(
         peakY,
       };
     },
-    { track: getTrack(id), start, vehicle },
+    { track, start, vehicle },
   );
 }

@@ -186,3 +186,8 @@ GREEN: new `src/school-bus.ts` with a tall transit collider set on the shared 13
 
 RED: `tests/vehicle-matrix.test.ts` is new; any vehicle/track combo that cannot complete fails it.
 GREEN: headless matrix 45/45 in 80 s and browser matrix 45/45 in 15.3 min, all `completed` with integrity > 0 — every vehicle (truck, sports, cop, ambulance, bus) beats every track (8 courses + triple-loop easy) with zero physics fixes needed. No new source code; the two matrix specs plus this log entry are the chunk.
+
+## Vehicles/editor/perf chunk 7 — Level format + storage
+
+RED: `tests/custom-level.test.ts` + `tests/level-store.test.ts` failed to collect on the missing modules.
+GREEN: new `src/custom-level.ts` (`CustomLevel` JSON, strict `validateCustomLevel`, `toTrack` adapter to `custom:<slug>`, checkpoint-prefab gate merging, arena/demolition mapping, `blankLevel`, registry) and `src/level-store.ts` (dev `/__levels` endpoint first, localStorage mirror + export/import). `Track.id` widens to `TrackId | CustomTrackId` with `OfficialTrack` keeping the menu typed; `courseSolids`/`courseProps`/`comicHazards` serve embedded customs; `CourseView` maps per-solid texture ids with world-tiled UVs and reports them in `surfaces`; sim/harness/main/driveTrack accept custom ids; boot registers stored levels. New vite `/__levels` plugin (list/get/save/delete under `levels/`, localhost guard, atomic writes, server-side validation); `levels/` gitignored; `public/tracks/custom.svg` thumbnail. A tiny custom sprint completes headlessly and in the browser from disk; disk round-trip e2e asserts real server persistence (GET 200 then 404). Full `npm run check` passes 337/337 with the production build; custom-levels e2e 2/2 green.

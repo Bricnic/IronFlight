@@ -3,7 +3,15 @@ import { createLevelSelect } from "./level-select";
 import { createVehicleSelect } from "./vehicle-select";
 import { getVehicle } from "./vehicles";
 import { BestTimes } from "./best-times";
-import { getTrack, type TrackId } from "./tracks";
+import { getTrack, type CustomTrackId, type TrackId } from "./tracks";
+import {
+  listLevels,
+  saveLevel,
+  loadLevel,
+  removeLevel,
+  registerStoredTracks,
+} from "./level-store";
+import type { CustomLevel } from "./custom-level";
 import "./style.css";
 import { Simulation, initPhysics, type Stage, type Input } from "./simulation";
 import { FixedClock } from "./clock";
@@ -99,7 +107,7 @@ async function boot() {
     hud();
   }
   function startOfficial(
-    id: TrackId,
+    id: TrackId | CustomTrackId,
     lane: "easy" | "medium" | "hard" = "easy",
     unpause = true,
     vehicle?: string,
@@ -153,6 +161,7 @@ async function boot() {
       );
     else select(sim.stage);
   }
+  await registerStoredTracks();
   screens = createLevelSelect(
     app,
     scores,
@@ -334,6 +343,13 @@ async function boot() {
       select,
       startTrack: (id, lane, vehicle?) =>
         startOfficial(id, lane, false, vehicle),
+      track: (id) => getTrack(id),
+      customLevels: {
+        list: () => listLevels(),
+        save: (level: CustomLevel) => saveLevel(undefined, level),
+        load: (name: string) => loadLevel(undefined, name),
+        remove: (name: string) => removeLevel(undefined, name),
+      },
       pause: (v) => (paused = v),
       advanceFrames: (frames, r, i) => {
         for (let f = 0; f < frames; f++) {

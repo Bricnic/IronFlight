@@ -2,7 +2,11 @@ import { comicHazards } from "./comic-hazards.ts";
 import { slideProfileY } from "./tracks.ts";
 import type { Track, TrackId } from "./tracks.ts";
 import type { Hazard } from "./hazards.ts";
-import type { PropDefinition } from "./destructibles.ts";
+import type { PropDefinition, PropKind } from "./destructibles.ts";
+import {
+  PROP_PREFAB_KINDS,
+  customTrackIds,
+} from "./custom-level.ts";
 export type CourseSolid = {
   id: string;
   kind:
@@ -22,8 +26,9 @@ export type CourseSolid = {
   yaw?: number;
   angle?: number;
   color: number;
+  texture?: string;
 };
-export const courseAvailable = (id: TrackId) =>
+export const courseAvailable = (id: string) =>
   [
     "harbor-sprint",
     "foundry-run",
@@ -33,8 +38,9 @@ export const courseAvailable = (id: TrackId) =>
     "canyon-plunge",
     "haunted-hollow",
     "sky-slide",
-  ].includes(id);
+  ].includes(id) || customTrackIds().includes(id);
 export function courseSolids(track: Track): CourseSolid[] {
+  if (track.custom) return track.custom.solids.map((s) => ({ ...s }));
   if (!courseAvailable(track.id))
     throw new Error(`Course not implemented: ${track.id}`);
   const solids: CourseSolid[] = [
@@ -848,6 +854,7 @@ export function courseSolids(track: Track): CourseSolid[] {
   return result;
 }
 export function courseHazards(track: Track): Hazard[] {
+  if (track.custom) return [];
   if (track.id === "inferno-vault")
     return [
       {
@@ -893,6 +900,27 @@ export function courseHazards(track: Track): Hazard[] {
     : [];
 }
 export function courseProps(track: Track): PropDefinition[] {
+  if (track.custom) {
+    const stones = (track.custom.demolish ?? []).map((p, i) => ({
+      id: `stone-${i + 1}`,
+      kind: "gravestone" as const,
+      x: p.x,
+      z: p.z,
+      ground: 0,
+    }));
+    const prefabs = track.custom.prefabs
+      .filter((p) =>
+        (PROP_PREFAB_KINDS as readonly string[]).includes(p.kind),
+      )
+      .map((p) => ({
+        id: p.id,
+        kind: p.kind as PropKind,
+        x: p.x,
+        z: p.z,
+        ground: p.y ?? 0,
+      }));
+    return [...stones, ...prefabs];
+  }
   if (track.id === "sky-slide") {
     const lengths = track.path
       .slice(1)

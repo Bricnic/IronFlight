@@ -1,3 +1,5 @@
+import type { CustomLevel } from "./custom-level";
+import { getCustomTrack } from "./custom-level";
 export const TRACK_IDS = [
   "triple-loop",
   "harbor-sprint",
@@ -10,6 +12,7 @@ export const TRACK_IDS = [
   "sky-slide",
 ] as const;
 export type TrackId = (typeof TRACK_IDS)[number];
+export type CustomTrackId = `custom:${string}`;
 export type Point = { x: number; z: number };
 export type Checkpoint = Point & {
   id: string;
@@ -22,7 +25,7 @@ export type Checkpoint = Point & {
 export type Collectible = Point & { id: string; y: number; radius: number };
 export type Demolishable = Point & { id: string; y: number; radius: number };
 export type Track = {
-  id: TrackId;
+  id: TrackId | CustomTrackId;
   name: string;
   mode: "race" | "arena" | "demolition";
   controls?: "drive" | "strafe";
@@ -40,7 +43,9 @@ export type Track = {
   medals: { gold: number; silver: number; bronze: number };
   limit?: number;
   feasibility?: number;
+  custom?: CustomLevel;
 };
+export type OfficialTrack = Track & { id: TrackId };
 const points = (pairs: number[][]): Point[] =>
   pairs.map(([x, z]) => ({ x, z }));
 export function gates(path: Point[], width = 24): Checkpoint[] {
@@ -158,7 +163,7 @@ function race(
   times: number[],
   yaw = 0,
   limit?: number,
-): Track {
+): OfficialTrack {
   return {
     id,
     name,
@@ -182,7 +187,7 @@ function arena(
   path: Point[],
   limit: number,
   times: number[],
-): Track {
+): OfficialTrack {
   const t = race(
     id,
     name,
@@ -213,7 +218,7 @@ function demo(
   targets: Point[],
   limit: number,
   times: number[],
-): Track {
+): OfficialTrack {
   const t = race(id, name, description, color, [{ x: 0, z: -90 }], times);
   return {
     ...t,
@@ -229,7 +234,7 @@ function demo(
     })),
   };
 }
-export const TRACKS: Track[] = [
+export const TRACKS: OfficialTrack[] = [
   {
     ...race(
       "triple-loop",
@@ -337,7 +342,7 @@ export const TRACKS: Track[] = [
   },
 ];
 export function getTrack(id: string): Track {
-  const track = TRACKS.find((t) => t.id === id);
+  const track = TRACKS.find((t) => t.id === id) ?? getCustomTrack(id);
   if (!track) throw new RangeError(`Unknown track: ${id}`);
   return track;
 }

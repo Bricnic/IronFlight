@@ -1,17 +1,25 @@
-import type { TrackId } from "./tracks";
+import type { CustomTrackId, Track, TrackId } from "./tracks";
 import type { Tuning } from "./tuning";
 import type { Simulation, Stage, Input } from "./simulation";
 import type { GameView } from "./view";
+import type { CustomLevel } from "./custom-level";
 export type CameraSample = ReturnType<GameView["inspectCamera"]> & {
   state: ReturnType<Simulation["snapshot"]>;
 };
 export interface GameHarness {
   select(stage: Stage): void;
   startTrack(
-    id: TrackId,
+    id: TrackId | CustomTrackId,
     lane?: "easy" | "medium" | "hard",
     vehicle?: string,
   ): void;
+  track(id: string): Track;
+  customLevels: {
+    list(): Promise<string[]>;
+    save(level: CustomLevel): Promise<CustomLevel>;
+    load(name: string): Promise<CustomLevel>;
+    remove(name: string): Promise<void>;
+  };
   pause(value: boolean): void;
   advanceFrames(frames: number, rate: number, input?: Input): void;
   driveFrames(

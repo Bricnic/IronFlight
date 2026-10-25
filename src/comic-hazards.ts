@@ -1,4 +1,5 @@
 import type { Track } from "./tracks.ts";
+import { COMIC_PREFAB_KINDS } from "./custom-level.ts";
 export type ComicKind =
   | "book"
   | "teeth"
@@ -18,6 +19,19 @@ export type ComicHazard = {
 };
 /** Alternating road-edge threats leave a readable ordinary-driving bypass. */
 export function comicHazards(track: Track): ComicHazard[] {
+  if (track.custom)
+    return track.custom.prefabs
+      .filter((p) =>
+        (COMIC_PREFAB_KINDS as readonly string[]).includes(p.kind),
+      )
+      .map((p) => ({
+        id: p.id,
+        kind: p.kind as ComicKind,
+        x: p.x,
+        z: p.z,
+        phase: 0,
+        ...(p.y === undefined ? {} : { y: p.y }),
+      }));
   if (track.id === "canyon-plunge")
     return Array.from({ length: 10 }, (_, i) => {
       const z = -100 + (i + 0.5) * 94.5;

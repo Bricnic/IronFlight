@@ -113,7 +113,9 @@ export class CourseView extends T.Group {
             const mat =
               s.kind === "lava"
                 ? lavaMaterial()
-                : cliff
+                : s.texture
+                  ? pbr(s.texture, 1, { color: s.color, roughness: 0.9 })
+                  : cliff
                   ? pbr("dark_rock_02", 1, { color: 0xd89060, roughness: 0.95 })
                   : stone
                     ? pbr(
@@ -150,7 +152,12 @@ export class CourseView extends T.Group {
                           });
             if (s.kind === "lava") this.lavaMaterials.push(mat);
             const geometry = new T.BoxGeometry(s.w, s.h, s.d);
-            if (stone || cliff || ["ground", "road", "ramp"].includes(s.kind)) {
+            if (
+              stone ||
+              cliff ||
+              s.texture ||
+              ["ground", "road", "ramp"].includes(s.kind)
+            ) {
               const pos = geometry.attributes.position,
                 normals = geometry.attributes.normal,
                 uv = geometry.attributes.uv;
@@ -167,7 +174,9 @@ export class CourseView extends T.Group {
                 );
               }
               uv.needsUpdate = true;
-              mat.userData.surface = stone
+              mat.userData.surface = s.texture
+                ? s.texture
+                : stone
                 ? "stone"
                 : cliff
                   ? "cliff"

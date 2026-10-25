@@ -3,7 +3,7 @@ import { GhostSwarm } from "./ghosts";
 import { AxeArray } from "./axes";
 import { SlideSystems } from "./slide";
 import { courseSolids, courseHazards, courseProps } from "./course";
-import { getTrack, type TrackId } from "./tracks";
+import { getTrack, type CustomTrackId, type TrackId } from "./tracks";
 import { TrackRun } from "./track-run";
 import { Destructibles } from "./destructibles";
 import RAPIER from "@dimforge/rapier3d-compat";
@@ -34,7 +34,8 @@ export type Stage =
   | "medium"
   | "hard"
   | "lab"
-  | Exclude<TrackId, "triple-loop">;
+  | Exclude<TrackId, "triple-loop">
+  | CustomTrackId;
 export type Input = {
   throttle?: number;
   brake?: number;
@@ -134,7 +135,10 @@ export class Simulation {
     this.stage = stage;
     this.reset(stage);
   }
-  startTrack(id: TrackId, lane: "easy" | "medium" | "hard" = "easy") {
+  startTrack(
+    id: TrackId | CustomTrackId,
+    lane: "easy" | "medium" | "hard" = "easy",
+  ) {
     const track = getTrack(id);
     this.reset(track.legacy ? lane : (id as Stage));
     if (!track.legacy) {
