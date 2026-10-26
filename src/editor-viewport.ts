@@ -1,6 +1,34 @@
 import * as T from "three";
 import type { CustomLevel } from "./custom-level";
-import type { EditorSelection } from "./editor-state";
+import type { EditorSelection, EditorStore } from "./editor-state";
+/** Resolve a pick from raycast hits by walking to tagged ancestors. */
+export function resolveViewportPick(
+  hits: { object: unknown }[],
+): EditorSelection {
+  for (const hit of hits) {
+    let node: unknown = hit.object;
+    while (node !== null && node !== undefined) {
+      const record = node as {
+        userData?: { pick?: EditorSelection };
+        parent?: unknown;
+      };
+      if (record.userData?.pick != null) return record.userData.pick;
+      node = record.parent;
+    }
+  }
+  return null;
+}
+/** Intersect a ray with a horizontal plane; null when parallel/upward. */
+export function planeHit(
+  origin: { x: number; y: number; z: number },
+  dir: { x: number; y: number; z: number },
+  planeY: number,
+): { x: number; z: number } | null {
+  if (Math.abs(dir.y) < 1e-9) return null;
+  const t = (planeY - origin.y) / dir.y;
+  if (!(t > 0)) return null;
+  return { x: origin.x + dir.x * t, z: origin.z + dir.z * t };
+}
 const PREFAB_COLORS: Record<string, number> = {
   book: 0xc86ae0,
   teeth: 0xffffff,
@@ -23,6 +51,7 @@ function attachOrbit(
   dom: HTMLElement,
   target: T.Vector3,
   draw: () => void,
+  canStart?: (e: PointerEvent) => boolean,
 ) {
   const spherical = new T.Spherical(60, 1.1, 0);
   const apply = () => {
@@ -37,6 +66,7 @@ function attachOrbit(
   let px = 0;
   let py = 0;
   dom.addEventListener("pointerdown", (e) => {
+    if (canStart && !canStart(e)) return;
     dragging = true;
     panning = e.shiftKey || e.button === 2;
     px = e.clientX;
@@ -92,7 +122,7 @@ function attachOrbit(
   };
 }
 /** Wireframe level preview. Rebuilds on demand; never touches the game view. */
-export function createEditorViewport(host: HTMLElement) {
+export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   const renderer = new T.WebGLRenderer({ antialias: true });
   renderer.setClearColor(0x111c22);
   host.append(renderer.domElement);
@@ -102,8 +132,81 @@ export function createEditorViewport(host: HTMLElement) {
   const camera = new T.PerspectiveCamera(55, 1, 0.1, 2000);
   const target = new T.Vector3(0, 0, 0);
   const draw = () => renderer.render(scene, camera);
-  const orbit = attachOrbit(camera, renderer.domElement, target, draw);
   let group: T.Group | null = null;
+  const raycaster = new T.Raycaster();
+  const ndcAt = (clientX: number, clientY: number) => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    return new T.Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1,
+    );
+  };
+  const pickAt = (clientX: number, clientY: number) => {
+    raycaster.setFromCamera(ndcAt(clientX, clientY), camera);
+    const hits = group
+      ? raycaster.intersectObjects(group.children, true)
+      : [];
+    const first = hits[0];
+    return {
+      selection: resolveViewportPick(hits),
+      point: first ? first.point.clone() : null,
+    };
+  };
+  let drag: { planeY: number; offX: number; offZ: number } | null = null;
+  let downEmpty = false;
+  let downX = 0;
+  let downY = 0;
+  let moved = false;
+  const canStart = (e: PointerEvent) => {
+    if (e.button === 2) return true;
+    const { selection, point } = pickAt(e.clientX, e.clientY);
+    downX = e.clientX;
+    downY = e.clientY;
+    moved = false;
+    if (!selection || !point) {
+      downEmpty = true;
+      return true;
+    }
+    downEmpty = false;
+    store.select(selection);
+    const item = store.selectedItem()?.item;
+    drag = {
+      planeY: point.y,
+      offX: item ? point.x - item.x : 0,
+      offZ: item ? point.z - item.z : 0,
+    };
+    renderer.domElement.setPointerCapture(e.pointerId);
+    return false;
+  };
+  const orbit = attachOrbit(
+    camera,
+    renderer.domElement,
+    target,
+    draw,
+    canStart,
+  );
+  renderer.domElement.addEventListener("pointermove", (e) => {
+    if (Math.hypot(e.clientX - downX, e.clientY - downY) >= 4) moved = true;
+    if (!drag) return;
+    raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
+    const hit = planeHit(
+      raycaster.ray.origin,
+      raycaster.ray.direction,
+      drag.planeY,
+    );
+    if (hit)
+      store.updateSelected({ x: hit.x - drag.offX, z: hit.z - drag.offZ });
+  });
+  const endGesture = (e: PointerEvent) => {
+    if (drag) {
+      drag = null;
+      return;
+    }
+    if (downEmpty && !moved && e.button !== 2) store.select(null);
+    downEmpty = false;
+  };
+  renderer.domElement.addEventListener("pointerup", endGesture);
+  renderer.domElement.addEventListener("pointercancel", endGesture);
   const resize = () => {
     const w = Math.max(1, host.clientWidth);
     const h = Math.max(1, host.clientHeight);
@@ -154,6 +257,7 @@ export function createEditorViewport(host: HTMLElement) {
       group = new T.Group();
       for (const s of level.solids) {
         const holder = new T.Group();
+        holder.userData.pick = { kind: "solid", id: s.id };
         holder.position.set(s.x, s.y, s.z);
         holder.rotation.set(
           s.angle ?? 0,
@@ -187,6 +291,7 @@ export function createEditorViewport(host: HTMLElement) {
           }),
         );
         gate.position.set(cp.x, cp.y ?? 2, cp.z);
+        gate.userData.pick = { kind: "checkpoint", index: i };
         group.add(gate);
       }
       for (const p of level.prefabs) {
@@ -198,6 +303,7 @@ export function createEditorViewport(host: HTMLElement) {
           }),
         );
         marker.position.set(p.x, (p.y ?? 0) + 1.5, p.z);
+        marker.userData.pick = { kind: "prefab", id: p.id };
         if (selection != null && "id" in selection && selection.id === p.id)
           marker.scale.setScalar(1.6);
         group.add(marker);
@@ -211,6 +317,7 @@ export function createEditorViewport(host: HTMLElement) {
           new T.MeshBasicMaterial({ color: 0xffd24a, wireframe: true }),
         );
         marker.position.set(t.x, (t.y ?? 0) + 1.5, t.z);
+        marker.userData.pick = { kind: "target", index: i };
         if (
           selection != null &&
           "index" in selection &&
@@ -226,9 +333,18 @@ export function createEditorViewport(host: HTMLElement) {
       );
       spawn.position.set(level.spawn.x, level.spawn.y + 1.5, level.spawn.z);
       spawn.rotation.y = level.spawn.yaw;
+      spawn.userData.pick = { kind: "spawn" };
       group.add(spawn);
       scene.add(group);
       draw();
+    },
+    project(point: { x: number; y: number; z: number }) {
+      const v = new T.Vector3(point.x, point.y, point.z).project(camera);
+      const rect = renderer.domElement.getBoundingClientRect();
+      return {
+        x: rect.left + ((v.x + 1) / 2) * rect.width,
+        y: rect.top + ((1 - v.y) / 2) * rect.height,
+      };
     },
     frameSpawn(level: CustomLevel) {
       orbit.frame(new T.Vector3(level.spawn.x, level.spawn.y, level.spawn.z));

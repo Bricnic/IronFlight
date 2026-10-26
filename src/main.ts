@@ -1045,6 +1045,8 @@ async function boot() {
         remove: (name: string) => removeLevel(undefined, name),
       },
       editor: () => editorScreens.probe(),
+      editorProject: (point: { x: number; y: number; z: number }) =>
+        editorScreens.projectViewport(point),
       placement: () => ({
         editing,
         palette: placeKind.value,

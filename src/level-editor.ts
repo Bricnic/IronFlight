@@ -123,7 +123,7 @@ export function createLevelEditor(
   body.append(listPane, viewportHost, props);
   screen.append(top, body);
   host.append(screen);
-  const viewport = createEditorViewport(viewportHost);
+  const viewport = createEditorViewport(viewportHost, store);
   const showError = (message: string) => {
     error.textContent = message;
   };
@@ -411,6 +411,9 @@ export function createLevelEditor(
     hide() {
       screen.hidden = true;
       host.classList.remove("at-level-select");
+    },
+    projectViewport(point: { x: number; y: number; z: number }) {
+      return viewport.project(point);
     },
     probe() {
       const targets = store.targetList().length;

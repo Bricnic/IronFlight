@@ -24,6 +24,10 @@ export interface GameHarness {
     dirty: boolean;
     levels: string[];
   };
+  editorProject(point: { x: number; y: number; z: number }): {
+    x: number;
+    y: number;
+  };
   placement(): {
     editing: boolean;
     palette: string;

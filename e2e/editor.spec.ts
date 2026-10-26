@@ -134,3 +134,58 @@ test("wireframe editor blocks invalid saves with an error", async ({
   probe = await page.evaluate(() => window.__game!.editor());
   expect(probe.levels).not.toContain("e2e-bad");
 });
+test("wireframe viewport selects, moves and deselects with the mouse", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await page.evaluate(() =>
+    window.__game!.customLevels.remove("e2e-viewport").catch(() => {}),
+  );
+  await page.locator("#editor-name").fill("e2e-viewport");
+  await page.locator("#editor-new").click();
+  await page.locator("#editor-solid-kind").selectOption("barrier");
+  await page.locator("#editor-add-solid").click();
+  const probeSel = () =>
+    page.evaluate(() => window.__game!.editor().selection);
+  await expect.poll(probeSel, { timeout: 15000 }).toBe("solid:barrier-3");
+  const canvas = page.locator("#level-editor canvas");
+  const box = (await canvas.boundingBox())!;
+  // An empty corner click clears the list-driven selection.
+  await page.mouse.click(box.x + 10, box.y + 10);
+  await expect.poll(probeSel, { timeout: 15000 }).toBe(null);
+  // Clicking the barrier wirebox selects it.
+  const at = await page.evaluate(() =>
+    window.__game!.editorProject({ x: 4, y: 0.8, z: 0 }),
+  );
+  await page.mouse.click(at.x, at.y);
+  await expect.poll(probeSel, { timeout: 15000 }).toBe("solid:barrier-3");
+  const xInput = page.locator('#editor-props input[data-prop="x"]');
+  const before = await xInput.inputValue();
+  // Dragging relocates it on its own height plane.
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down();
+  await page.mouse.move(at.x + 80, at.y + 40, { steps: 10 });
+  await page.mouse.up();
+  await expect
+    .poll(async () => xInput.inputValue(), { timeout: 15000 })
+    .not.toBe(before);
+  const dirty = await page.evaluate(() => window.__game!.editor().dirty);
+  expect(dirty).toBe(true);
+  expect(await probeSel()).toBe("solid:barrier-3");
+  // Empty click deselects; the move persists to disk.
+  await page.mouse.click(box.x + 10, box.y + 10);
+  await expect.poll(probeSel, { timeout: 15000 }).toBe(null);
+  await page.locator("#editor-save").click();
+  await expect(page.locator("#editor-status")).toContainText(
+    "Saved e2e-viewport",
+    { timeout: 15000 },
+  );
+  const loaded = await page.evaluate(() =>
+    window.__game!.customLevels.load("e2e-viewport"),
+  );
+  expect(loaded.solids.find((s) => s.id === "barrier-3")?.x).not.toBe(4);
+  await page.evaluate(
+    (name) => window.__game!.customLevels.remove(name),
+    "e2e-viewport",
+  );
+});
