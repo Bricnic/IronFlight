@@ -175,10 +175,28 @@ function customLevels(): Plugin {
           if (!LEVEL_NAME.test(name ?? "")) throw new Error("Invalid level name");
           const valid = validateCustomLevel(level);
           if (valid.name !== name) throw new Error("Name and level disagree");
-          await mkdir(levelsDir, { recursive: true });
-          const file = levelFile(name);
-          await writeFile(file + ".tmp", JSON.stringify(valid, null, 2) + "\n", "utf8");
-          await rename(file + ".tmp", file);
+          try {
+            await mkdir(levelsDir, { recursive: true });
+            const file = levelFile(name);
+            await writeFile(
+              file + ".tmp",
+              JSON.stringify(valid, null, 2) + "\n",
+              "utf8",
+            );
+            await rename(file + ".tmp", file);
+          } catch (error) {
+            // Storage failures (locks, transient fs errors) are retryable.
+            res.statusCode = 500;
+            res.end(
+              JSON.stringify({
+                error:
+                  error instanceof Error
+                    ? error.message
+                    : "Unable to store level",
+              }),
+            );
+            return;
+          }
           res.end(JSON.stringify(valid));
         } catch (error) {
           res.statusCode = 400;

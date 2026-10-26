@@ -29,7 +29,10 @@ export interface GameHarness {
     palette: string;
     texture: string;
     selected: string | null;
-    selectedKind: "solid" | "prefab" | null;
+    selectedKind: "solid" | "prefab" | "checkpoint" | null;
+    checkpoints: { id: string; x: number; y: number; z: number }[];
+    checkpointLabels: string[];
+    runCheckpoint: number | null;
   };
   project(point: { x: number; y: number; z: number }): { x: number; y: number };
   customLevels: {

@@ -2,6 +2,7 @@ import {
   validateCustomLevel,
   toTrack,
   registerCustomTrack,
+  getCustomTrack,
   type CustomLevel,
 } from "./custom-level";
 export interface LevelStorage {
@@ -61,17 +62,23 @@ export async function saveLevel(
   storage.setItem(levelKey(valid.name), JSON.stringify(valid));
   const names = readIndex(storage);
   if (!names.includes(valid.name)) writeIndex(storage, [...names, valid.name]);
-  try {
-    const res = await fetchFn("/__levels", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: valid.name, level: valid }),
-    });
-    if (!res.ok) throw new Error(`server kept ${res.status}`);
-  } catch {
-    // Local mirror is the guarantee; disk sync is best-effort here.
+  // Transient disk hiccups (file locks, slow AV scans) retry; deterministic
+  // rejections (400) and total outages still fall back to the local mirror.
+  const body = JSON.stringify({ name: valid.name, level: valid });
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetchFn("/__levels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      if (res.ok || (res.status >= 400 && res.status < 500)) return valid;
+    } catch {
+      // Fall through to the retry below.
+    }
+    if (attempt >= 3) return valid;
+    await new Promise((resolve) => setTimeout(resolve, 50));
   }
-  return valid;
 }
 /** Load from disk, falling back to the local mirror, and register the track. */
 export async function loadLevel(
@@ -92,7 +99,10 @@ export async function loadLevel(
   }
   if (!raw) throw new Error(`Unknown custom level: ${name}`);
   const level = validateCustomLevel(raw);
-  registerCustomTrack(toTrack(level));
+  // Reads must not clobber a live-registered track (in-playtest edits keep
+  // stable gate ids that a fresh positional build would renumber).
+  const track = toTrack(level);
+  if (!getCustomTrack(track.id)) registerCustomTrack(track);
   return level;
 }
 export async function removeLevel(

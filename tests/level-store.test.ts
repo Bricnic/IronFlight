@@ -145,3 +145,53 @@ it("registers the playable track on save, replacing stale versions", async () =>
   await saveLevel(d, revised);
   expect(getTrack("custom:fresh-play").checkpoints).toHaveLength(2);
 });
+it("retries the disk sync on transient failures", async () => {
+  const d = deps();
+  let calls = 0;
+  const flaky = vi.fn(async (url: string, init?: RequestInit) => {
+    calls++;
+    if (calls < 3) return { ok: false, status: 500 } as Response;
+    return d.backend.fetchFn(url, init);
+  });
+  await saveLevel(
+    { ...d, fetchFn: flaky as unknown as typeof fetch },
+    level("Flaky"),
+  );
+  expect(flaky).toHaveBeenCalledTimes(3);
+  expect(d.backend.files.has("Flaky")).toBe(true);
+});
+it("gives up cleanly when the disk stays down", async () => {
+  const d = deps();
+  const dead = vi.fn(async () => ({ ok: false, status: 500 }) as Response);
+  await saveLevel(
+    { ...d, fetchFn: dead as unknown as typeof fetch },
+    level("Down"),
+  );
+  expect(dead).toHaveBeenCalledTimes(3);
+  expect(await loadLevel(d, "Down")).toMatchObject({ name: "Down" });
+});
+it("does not retry deterministic rejections", async () => {
+  const d = deps();
+  const bad = vi.fn(async () => ({ ok: false, status: 400 }) as Response);
+  await saveLevel(
+    { ...d, fetchFn: bad as unknown as typeof fetch },
+    level("Nope"),
+  );
+  expect(bad).toHaveBeenCalledTimes(1);
+});
+it("loads absent tracks into the registry without clobbering live ones", async () => {
+  const d = deps();
+  const { getCustomTrack, registerCustomTrack } = await import(
+    "../src/custom-level"
+  );
+  await saveLevel(d, level("Absent Track Xyz"));
+  expect(getCustomTrack("custom:absent-track-xyz")).toBeDefined();
+  const live = getCustomTrack("custom:absent-track-xyz")!;
+  const marker = { ...live.checkpoints[0]!, x: 12345 };
+  registerCustomTrack({ ...live, checkpoints: [marker] });
+  const loaded = await loadLevel(d, "Absent Track Xyz");
+  expect(loaded.checkpoints[0]).not.toMatchObject({ x: 12345 });
+  expect(getCustomTrack("custom:absent-track-xyz")!.checkpoints[0]).toMatchObject(
+    { x: 12345 },
+  );
+});

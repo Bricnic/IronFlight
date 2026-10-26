@@ -63,7 +63,7 @@ test("in-game bricks land live, save, and block the truck", async ({
     window.__game!.project({ x: 0, y: 0, z: -20 }),
   );
   await page.mouse.click(aim.x, aim.y);
-  await expect(page.locator("#place-status")).toContainText("Brick saved");
+  await expect(page.locator("#place-status")).toContainText("Brick saved", { timeout: 15000 });
   const solids = await page.evaluate(
     () => window.__game!.stats().officialCourse.solids,
   );
@@ -77,7 +77,7 @@ test("in-game bricks land live, save, and block the truck", async ({
   expect(Math.abs(brick.z + 20)).toBeLessThan(3);
   await page.locator("#place-kind").selectOption("wall");
   await page.mouse.click(aim.x, aim.y);
-  await expect(page.locator("#place-status")).toContainText("Wall saved");
+  await expect(page.locator("#place-status")).toContainText("Wall saved", { timeout: 15000 });
   await expect
     .poll(
       async () =>
@@ -115,7 +115,7 @@ test("in-game palette places snowmen, books, hydrants, checkpoints", async ({
   const cy = box.y + box.height / 2;
   await page.locator("#place-kind").selectOption("snowman");
   await page.mouse.click(cx, cy);
-  await expect(page.locator("#place-status")).toContainText("snowman saved");
+  await expect(page.locator("#place-status")).toContainText("snowman saved", { timeout: 15000 });
   let loaded = await page.evaluate(() =>
     window.__game!.customLevels.load("Prefab Zone"),
   );
@@ -124,10 +124,10 @@ test("in-game palette places snowmen, books, hydrants, checkpoints", async ({
   expect(props.length).toBe(1);
   await page.locator("#place-kind").selectOption("book");
   await page.mouse.click(cx, cy);
-  await expect(page.locator("#place-status")).toContainText("book saved");
+  await expect(page.locator("#place-status")).toContainText("book saved", { timeout: 15000 });
   await page.locator("#place-kind").selectOption("hydrant");
   await page.mouse.click(cx, cy);
-  await expect(page.locator("#place-status")).toContainText("hydrant saved");
+  await expect(page.locator("#place-status")).toContainText("hydrant saved", { timeout: 15000 });
   await expect
     .poll(
       async () =>
@@ -142,7 +142,7 @@ test("in-game palette places snowmen, books, hydrants, checkpoints", async ({
     .toEqual(["book", "hydrant"]);
   await page.locator("#place-kind").selectOption("checkpoint");
   await page.mouse.click(cx, cy);
-  await expect(page.locator("#place-status")).toContainText("Checkpoint gate");
+  await expect(page.locator("#place-status")).toContainText("Checkpoint gate", { timeout: 15000 });
   loaded = await page.evaluate(() =>
     window.__game!.customLevels.load("Prefab Zone"),
   );

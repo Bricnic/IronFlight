@@ -576,6 +576,103 @@ export function appendCheckpoint(
   track.checkpoints.push(gate);
   return gate;
 }
+function checkpointPointAt(level: CustomLevel, index: number): CustomPoint {
+  const point = level.checkpoints[index];
+  if (!point) throw new Error(`Unknown checkpoint index: ${index}`);
+  return point;
+}
+/** Live editing: relocate one checkpoint by index (pure, level JSON). */
+export function moveCheckpointInLevel(
+  level: CustomLevel,
+  index: number,
+  x: number,
+  y: number,
+  z: number,
+): CustomLevel {
+  checkpointPointAt(level, index);
+  return {
+    ...level,
+    checkpoints: level.checkpoints.map((p, i) =>
+      i === index ? { ...p, x, y, z } : p,
+    ),
+  };
+}
+/** Live editing: drop one checkpoint by index (pure, level JSON). */
+export function deleteCheckpointInLevel(
+  level: CustomLevel,
+  index: number,
+): CustomLevel {
+  checkpointPointAt(level, index);
+  return {
+    ...level,
+    checkpoints: level.checkpoints.filter((_, i) => i !== index),
+  };
+}
+/** Live editing: copy one checkpoint by index (pure, level JSON). */
+export function duplicateCheckpointInLevel(
+  level: CustomLevel,
+  index: number,
+): CustomLevel {
+  const point = checkpointPointAt(level, index);
+  return {
+    ...level,
+    checkpoints: [
+      ...level.checkpoints.slice(0, index + 1),
+      { ...point, x: point.x + 4 },
+      ...level.checkpoints.slice(index + 1),
+    ],
+  };
+}
+function gateAt(track: Track, index: number) {
+  const gate = track.checkpoints[index];
+  if (!gate) throw new Error(`Unknown checkpoint index: ${index}`);
+  return gate;
+}
+/** Recompute one gate normal from its path segment, mirroring gates(). */
+function refreshGateNormal(track: Track, index: number) {
+  const gate = track.checkpoints[index];
+  const previous = track.path[index];
+  const point = track.path[index + 1];
+  if (!gate || !previous || !point) return;
+  const length = Math.hypot(point.x - previous.x, point.z - previous.z);
+  if (length <= 1e-6) return; // degenerate segment: keep the old heading
+  gate.nx = (point.x - previous.x) / length;
+  gate.nz = (point.z - previous.z) / length;
+}
+/** Live editing: move one gate, refreshing its neighbors' headings. */
+export function moveCheckpointOnTrack(
+  track: Track,
+  index: number,
+  x: number,
+  z: number,
+) {
+  const gate = gateAt(track, index);
+  gate.x = x;
+  gate.z = z;
+  track.path[index + 1] = { x, z };
+  refreshGateNormal(track, index);
+  refreshGateNormal(track, index + 1);
+}
+/** Live editing: cut one gate, keeping survivor ids stable. */
+export function deleteCheckpointOnTrack(track: Track, index: number) {
+  gateAt(track, index);
+  track.checkpoints.splice(index, 1);
+  track.path.splice(index + 1, 1);
+  refreshGateNormal(track, index);
+}
+/** Live editing: copy one gate after itself with a fresh id. */
+export function duplicateCheckpointOnTrack(track: Track, index: number) {
+  const gate = gateAt(track, index);
+  const taken = new Set(track.checkpoints.map((g) => g.id));
+  let n = track.checkpoints.length + 1;
+  while (taken.has(`gate-${n}`)) n++;
+  const fresh = { ...gate, id: `gate-${n}`, x: gate.x + 4 };
+  track.path.splice(index + 2, 0, { x: fresh.x, z: fresh.z });
+  track.checkpoints.splice(index + 1, 0, fresh);
+  refreshGateNormal(track, index + 1);
+  refreshGateNormal(track, index + 2);
+  return fresh;
+}
 const registry = new Map<string, Track>();
 export function registerCustomTrack(track: Track) {
   if (!track.id.startsWith("custom:"))

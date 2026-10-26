@@ -13,6 +13,12 @@ import {
   editPrefabInLevel,
   deletePrefabInLevel,
   duplicatePrefabInLevel,
+  moveCheckpointInLevel,
+  deleteCheckpointInLevel,
+  duplicateCheckpointInLevel,
+  moveCheckpointOnTrack,
+  deleteCheckpointOnTrack,
+  duplicateCheckpointOnTrack,
 } from "../src/custom-level";
 import { gates } from "../src/tracks";
 beforeAll(initPhysics);
@@ -160,4 +166,71 @@ it("edits, deletes and duplicates prefabs by id", () => {
   expect(() => editPrefabInLevel(level, "missing", { x: 0 })).toThrow(/prefab/);
   expect(() => deletePrefabInLevel(level, "missing")).toThrow(/prefab/);
   expect(() => duplicatePrefabInLevel(level, "missing")).toThrow(/prefab/);
+});
+it("moves, deletes and duplicates checkpoints by index", () => {
+  let level = blankLevel("Checkpoint Land");
+  level = placeInLevel(level, { type: "checkpoint", x: 0, z: 80 });
+  expect(level.checkpoints).toHaveLength(2);
+  level = moveCheckpointInLevel(level, 0, 10, 2, 40);
+  expect(level.checkpoints[0]).toMatchObject({ x: 10, y: 2, z: 40 });
+  expect(level.checkpoints[1]).toMatchObject({ x: 0, z: 80 });
+  const copy = duplicateCheckpointInLevel(level, 0);
+  expect(copy.checkpoints).toHaveLength(3);
+  expect(copy.checkpoints[1]).toMatchObject({ x: 14, y: 2, z: 40 });
+  const cut = deleteCheckpointInLevel(copy, 0);
+  expect(cut.checkpoints).toHaveLength(2);
+  expect(cut.checkpoints[0]).toMatchObject({ x: 14, z: 40 });
+  expect(() => moveCheckpointInLevel(level, 9, 0, 0, 0)).toThrow(/checkpoint/);
+  expect(() => deleteCheckpointInLevel(level, 9)).toThrow(/checkpoint/);
+  expect(() => duplicateCheckpointInLevel(level, 9)).toThrow(/checkpoint/);
+});
+it("moves checkpoint gates and refreshes neighbor normals", () => {
+  const track = toTrack(validateCustomLevel(blankLevel("Gate Land")));
+  appendCheckpoint(track, 0, 80);
+  moveCheckpointOnTrack(track, 0, 10, 40);
+  expect(track.checkpoints.map((g) => g.id)).toEqual(["gate-1", "gate-2"]);
+  expect(track.path[1]).toEqual({ x: 10, z: 40 });
+  const first = track.checkpoints[0];
+  expect(first.nx).toBeCloseTo(10 / Math.hypot(10, 80), 6);
+  expect(first.nz).toBeCloseTo(80 / Math.hypot(10, 80), 6);
+  const second = track.checkpoints[1];
+  expect(second.nx).toBeCloseTo(-10 / Math.hypot(10, 40), 6);
+  expect(second.nz).toBeCloseTo(40 / Math.hypot(10, 40), 6);
+  moveCheckpointOnTrack(track, 1, 0, 120);
+  expect(track.checkpoints[1].nx).toBeCloseTo(-10 / Math.hypot(10, 80), 6);
+  expect(track.checkpoints[1].nz).toBeCloseTo(80 / Math.hypot(10, 80), 6);
+  moveCheckpointOnTrack(track, 0, 0, -40);
+  expect(track.checkpoints[0].nx).toBeCloseTo(10 / Math.hypot(10, 80), 6);
+});
+it("deletes gates keeping survivor ids and path aligned", () => {
+  const track = toTrack(validateCustomLevel(blankLevel("Cut Land")));
+  appendCheckpoint(track, 0, 80);
+  deleteCheckpointOnTrack(track, 0);
+  expect(track.checkpoints.map((g) => g.id)).toEqual(["gate-2"]);
+  expect(track.path).toEqual([
+    { x: 0, z: -40 },
+    { x: 0, z: 80 },
+  ]);
+  expect(track.checkpoints[0].nx).toBeCloseTo(0, 6);
+  expect(track.checkpoints[0].nz).toBeCloseTo(1, 6);
+  expect(() => deleteCheckpointOnTrack(track, 5)).toThrow(/checkpoint/);
+});
+it("duplicates gates with fresh ids between neighbors", () => {
+  const track = toTrack(validateCustomLevel(blankLevel("Copy Land")));
+  appendCheckpoint(track, 0, 80);
+  const gate = duplicateCheckpointOnTrack(track, 0);
+  expect(gate.id).toBe("gate-3");
+  expect(track.checkpoints.map((g) => g.id)).toEqual([
+    "gate-1",
+    "gate-3",
+    "gate-2",
+  ]);
+  expect(track.path).toHaveLength(4);
+  expect(track.checkpoints[1]).toMatchObject({ x: 4, z: 40 });
+  expect(track.checkpoints[1].nx).toBeCloseTo(1, 6);
+  expect(track.checkpoints[1].nz).toBeCloseTo(0, 6);
+  expect(
+    Number.isFinite(track.checkpoints[2].nx + track.checkpoints[2].nz),
+  ).toBe(true);
+  expect(() => duplicateCheckpointOnTrack(track, 5)).toThrow(/checkpoint/);
 });

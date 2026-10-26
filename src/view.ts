@@ -577,6 +577,16 @@ export class GameView {
   retextureCourseSolid(s: CourseSolid) {
     this.officialCourse.retextureSolidMesh(s);
   }
+  moveCheckpointGate(index: number, gate: Checkpoint) {
+    this.officialCourse.moveGateModel(index, gate);
+  }
+  rebuildCheckpointGates() {
+    const track = this.simulation.courseTrack;
+    if (track) this.officialCourse.rebuildCheckpointGates(track);
+  }
+  checkpointGateLabels(): string[] {
+    return this.officialCourse.gateLabels();
+  }
   moveComicModel(id: string, dx: number, dy: number, dz: number) {
     this.comic.moveModel(id, dx, dy, dz);
   }

@@ -223,12 +223,12 @@ export class CourseView extends T.Group {
     );
     banner.position.y = 5.1;
     g.add(banner);
-    const label = this.label(
+    const caption =
       index === total - 1 && !track.ring
         ? "FINISH"
-        : `CHECKPOINT ${index + 1}`,
-      track.color,
-    );
+        : `CHECKPOINT ${index + 1}`;
+    g.userData.label = caption;
+    const label = this.label(caption, track.color);
     label.position.y = 5.7;
     label.rotation.y = Math.PI;
     g.add(label);
@@ -249,13 +249,49 @@ export class CourseView extends T.Group {
         const material = old.material as T.MeshBasicMaterial;
         (material.map as T.CanvasTexture | null)?.dispose();
         material.dispose();
-        const label = this.label(`CHECKPOINT ${this.gateModels.length}`, track.color);
+        prev.userData.label = `CHECKPOINT ${this.gateModels.length}`;
+        const label = this.label(prev.userData.label, track.color);
         label.position.y = 5.7;
         label.rotation.y = Math.PI;
         prev.add(label);
       }
     }
     this.addGateModel(this.buildGate(track, gate, this.gateModels.length, track.checkpoints.length));
+  }
+  /** Live editing: reposition one gate model by index. */
+  moveGateModel(index: number, gate: Checkpoint) {
+    const g = this.gateModels[index];
+    if (!g) return;
+    g.position.set(gate.x, Math.max(0, gate.y - 2.6), gate.z);
+    g.rotation.y = Math.atan2(gate.nx, gate.nz);
+  }
+  /** Live editing: rebuild gate models so delete/duplicate relabels. */
+  rebuildCheckpointGates(track: Track) {
+    for (const g of this.gateModels) {
+      g.traverse((o) => {
+        if (o instanceof T.Mesh) {
+          o.geometry.dispose();
+          for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+            if (
+              m instanceof T.MeshBasicMaterial &&
+              m.map instanceof T.CanvasTexture
+            )
+              m.map.dispose();
+            m.dispose();
+          }
+        }
+      });
+      g.removeFromParent();
+    }
+    this.gateModels = [];
+    for (const [i, gate] of track.checkpoints.entries())
+      this.addGateModel(
+        this.buildGate(track, gate, i, track.checkpoints.length),
+      );
+  }
+  /** Test hook: gate label captions in track order. */
+  gateLabels(): string[] {
+    return this.gateModels.map((g) => g.userData.label as string);
   }
   /** Live placement: add one solid mesh without rebuilding. */
   addSolidMesh(s: CourseSolid) {

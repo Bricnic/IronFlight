@@ -15,6 +15,13 @@ import {
   editSolidInLevel,
   deleteSolidInLevel,
   duplicateSolidInLevel,
+  moveCheckpointInLevel,
+  deleteCheckpointInLevel,
+  duplicateCheckpointInLevel,
+  moveCheckpointOnTrack,
+  deleteCheckpointOnTrack,
+  duplicateCheckpointOnTrack,
+  registerCustomTrack,
   TEXTURE_IDS,
   validateCustomLevel,
 } from "./custom-level";
@@ -318,21 +325,27 @@ async function boot() {
   );
   selBox.visible = false;
   let selectedId: string | null = null;
-  let selectedKind: "solid" | "prefab" | null = null;
+  let selectedKind: "solid" | "prefab" | "checkpoint" | null = null;
   const PREFAB_BOX: Record<string, [number, number, number]> = {
     snowman: [2.6, 3.4, 2.6],
     book: [4, 2.4, 5],
     hydrant: [1.6, 2.2, 1.6],
   };
   function selectedNode() {
-    const level = sim.courseTrack?.custom;
-    if (!level || !selectedId || !selectedKind) return null;
+    const track = sim.courseTrack;
+    const level = track?.custom;
+    if (!track || !level || !selectedId || !selectedKind) return null;
     if (selectedKind === "solid") {
       const solid = level.solids.find((s) => s.id === selectedId);
       return solid ? { kind: selectedKind, solid } : null;
     }
-    const prefab = level.prefabs.find((p) => p.id === selectedId);
-    return prefab ? { kind: selectedKind, prefab } : null;
+    if (selectedKind === "prefab") {
+      const prefab = level.prefabs.find((p) => p.id === selectedId);
+      return prefab ? { kind: selectedKind, prefab } : null;
+    }
+    const index = track.checkpoints.findIndex((g) => g.id === selectedId);
+    if (index < 0) return null;
+    return { kind: selectedKind, gate: track.checkpoints[index]!, index };
   }
   function refreshSelBox() {
     const node = selectedNode();
@@ -351,20 +364,32 @@ async function boot() {
             solid.yaw ?? 0,
           ),
         );
-    } else if (node.prefab) {
+    } else if (node.kind === "prefab" && node.prefab) {
       const prefab = node.prefab;
       const box = PREFAB_BOX[prefab.kind] ?? [2, 2, 2];
       selBox.visible = editing;
       selBox.position.set(prefab.x, (prefab.y ?? 0) + box[1] / 2, prefab.z);
       selBox.scale.set(box[0], box[1], box[2]);
       selBox.quaternion.identity();
+    } else if (node.kind === "checkpoint" && node.gate) {
+      const gate = node.gate;
+      selBox.visible = editing;
+      selBox.position.set(gate.x, gate.y, gate.z);
+      selBox.scale.set(gate.width, gate.height, 2);
+      selBox.quaternion.setFromAxisAngle(
+        new T.Vector3(0, 1, 0),
+        Math.atan2(gate.nx, gate.nz),
+      );
     }
     const on = editing && !!node;
     selRotate.disabled = !(on && node?.kind === "solid");
     selDuplicate.disabled = !on;
     selDelete.disabled = !on;
   }
-  function selectSolid(id: string | null, kind: "solid" | "prefab" = "solid") {
+  function selectSolid(
+    id: string | null,
+    kind: "solid" | "prefab" | "checkpoint" = "solid",
+  ) {
     selectedId = id;
     selectedKind = id ? kind : null;
     refreshSelBox();
@@ -413,6 +438,24 @@ async function boot() {
         : undefined;
     return track && level && prefab ? { track, level, prefab } : null;
   }
+  function selectedCheckpoint() {
+    const track = sim.courseTrack;
+    const level = track?.custom;
+    const index =
+      track && selectedId && selectedKind === "checkpoint"
+        ? track.checkpoints.findIndex((g) => g.id === selectedId)
+        : -1;
+    return track && level && index >= 0 ? { track, level, index } : null;
+  }
+  /** Level-checkpoint gates come first; checkpoint prefabs follow. */
+  function checkpointSource(level: CustomLevel, index: number) {
+    if (index < level.checkpoints.length)
+      return { type: "point" as const, index };
+    const prefabs = level.prefabs.filter((p) => p.kind === "checkpoint");
+    const prefab = prefabs[index - level.checkpoints.length];
+    if (!prefab) throw new Error(`Unknown checkpoint index: ${index}`);
+    return { type: "prefab" as const, prefab };
+  }
   function liveAddPrefab(prefab: CustomPrefab) {
     if (prefab.kind === "snowman")
       sim.props.addProp({
@@ -436,9 +479,42 @@ async function boot() {
     const track = sim.courseTrack!;
     track.custom = validateCustomLevel(next);
     await saveLevel(undefined, track.custom);
+    // saveLevel registers a fresh positional track; the live track keeps
+    // stable ids, so re-register it as the in-session truth.
+    registerCustomTrack(track);
     editorScreens.syncStore(track.custom);
   }
   async function moveSelected(point: T.Vector3) {
+    const cpCtx = selectedCheckpoint();
+    if (cpCtx) {
+      try {
+        const source = checkpointSource(cpCtx.level, cpCtx.index);
+        const next =
+          source.type === "point"
+            ? moveCheckpointInLevel(
+                cpCtx.level,
+                source.index,
+                point.x,
+                cpCtx.level.checkpoints[source.index]?.y ?? 2,
+                point.z,
+              )
+            : editPrefabInLevel(cpCtx.level, source.prefab.id, {
+                x: point.x,
+                z: point.z,
+              });
+        await saveLiveEdit(next);
+        moveCheckpointOnTrack(cpCtx.track, cpCtx.index, point.x, point.z);
+        view.moveCheckpointGate(
+          cpCtx.index,
+          cpCtx.track.checkpoints[cpCtx.index]!,
+        );
+        refreshSelBox();
+        say(`Moved ${cpCtx.track.checkpoints[cpCtx.index]!.id}`);
+      } catch (e) {
+        say(e instanceof Error ? e.message : "Move failed");
+      }
+      return;
+    }
     const prefabCtx = selectedPrefab();
     if (prefabCtx) {
       try {
@@ -508,6 +584,33 @@ async function boot() {
     }
   }
   async function deleteSelected() {
+    const cpCtx = selectedCheckpoint();
+    if (cpCtx) {
+      try {
+        const source = checkpointSource(cpCtx.level, cpCtx.index);
+        const id = cpCtx.track.checkpoints[cpCtx.index]!.id;
+        const next =
+          source.type === "point"
+            ? deleteCheckpointInLevel(cpCtx.level, source.index)
+            : deletePrefabInLevel(cpCtx.level, source.prefab.id);
+        await saveLiveEdit(next);
+        deleteCheckpointOnTrack(cpCtx.track, cpCtx.index);
+        view.rebuildCheckpointGates();
+        const run = sim.trackRun;
+        if (run) {
+          if (cpCtx.index < run.checkpoint) run.checkpoint--;
+          run.checkpoint = Math.min(
+            run.checkpoint,
+            Math.max(0, cpCtx.track.checkpoints.length - 1),
+          );
+        }
+        selectSolid(null);
+        say(`Deleted ${id}`);
+      } catch (e) {
+        say(e instanceof Error ? e.message : "Delete failed");
+      }
+      return;
+    }
     const prefabCtx = selectedPrefab();
     if (prefabCtx) {
       try {
@@ -541,6 +644,31 @@ async function boot() {
     }
   }
   async function duplicateSelected() {
+    const cpCtx = selectedCheckpoint();
+    if (cpCtx) {
+      try {
+        const source = checkpointSource(cpCtx.level, cpCtx.index);
+        const id = cpCtx.track.checkpoints[cpCtx.index]!.id;
+        const next =
+          source.type === "point"
+            ? duplicateCheckpointInLevel(cpCtx.level, source.index)
+            : duplicatePrefabInLevel(cpCtx.level, source.prefab.id);
+        if (source.type === "prefab") {
+          const prefs = next.prefabs;
+          const copy = prefs.pop()!;
+          const at = prefs.findIndex((p) => p.id === source.prefab.id);
+          prefs.splice(at + 1, 0, copy);
+        }
+        await saveLiveEdit(next);
+        const gate = duplicateCheckpointOnTrack(cpCtx.track, cpCtx.index);
+        view.rebuildCheckpointGates();
+        selectSolid(gate.id, "checkpoint");
+        say(`Duplicated ${id} → ${gate.id}`);
+      } catch (e) {
+        say(e instanceof Error ? e.message : "Duplicate failed");
+      }
+      return;
+    }
     const prefabCtx = selectedPrefab();
     if (prefabCtx) {
       try {
@@ -590,7 +718,8 @@ async function boot() {
     clientY: number,
     point: T.Vector3 | null,
   ) {
-    const level = sim.courseTrack?.custom;
+    const track = sim.courseTrack;
+    const level = track?.custom;
     const picked = view.pickCourseSolid(clientX, clientY);
     const solid = picked
       ? level?.solids.find((s) => s.id === picked)
@@ -599,8 +728,15 @@ async function boot() {
       !solid && picked
         ? level?.prefabs.find((p) => p.id === picked)
         : undefined;
-    const node =
-      solid && solid.kind !== "ground" && solid.kind !== "road"
+    const gate =
+      picked?.startsWith("checkpoint-") && track
+        ? track.checkpoints.find(
+            (g) => g.id === picked.slice("checkpoint-".length),
+          )
+        : undefined;
+    const node = gate
+      ? { kind: "checkpoint" as const, id: gate.id }
+      : solid && solid.kind !== "ground" && solid.kind !== "road"
         ? { kind: "solid" as const, id: solid.id }
         : prefab
           ? { kind: "prefab" as const, id: prefab.id }
@@ -915,6 +1051,15 @@ async function boot() {
         texture: placeTexture.value,
         selected: selectedId,
         selectedKind,
+        checkpoints:
+          sim.courseTrack?.checkpoints.map((g) => ({
+            id: g.id,
+            x: g.x,
+            y: g.y,
+            z: g.z,
+          })) ?? [],
+        checkpointLabels: view.checkpointGateLabels(),
+        runCheckpoint: sim.trackRun?.checkpoint ?? null,
       }),
       project: (point: { x: number; y: number; z: number }) => {
         const v = new T.Vector3(point.x, point.y, point.z).project(
