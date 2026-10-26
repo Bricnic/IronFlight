@@ -84,6 +84,14 @@ export function createLevelEditor(
     button.addEventListener("click", () => store.setTool(tool));
     return { tool, button };
   });
+  const previewButton = el(
+    "button",
+    { id: "editor-preview" },
+    "Preview",
+  ) as HTMLButtonElement;
+  previewButton.addEventListener("click", () =>
+    store.setPreview(!store.preview),
+  );
   const status = el("span", { id: "editor-status" });
   const error = el("span", { id: "editor-error", role: "alert" });
   top.append(
@@ -95,6 +103,7 @@ export function createLevelEditor(
     deleteButton,
     backButton,
     ...toolButtons.map(({ button }) => button),
+    previewButton,
     status,
     error,
   );
@@ -330,9 +339,10 @@ export function createLevelEditor(
     showStatus(store.dirty ? "Unsaved changes" : "Saved");
     for (const { tool, button } of toolButtons)
       button.classList.toggle("selected", store.tool === tool);
+    previewButton.classList.toggle("selected", store.preview);
     refreshList();
     refreshProps();
-    viewport.render(store.level, store.selection);
+    viewport.render(store.level, store.selection, store.preview);
   }
   store.onChange(refresh);
   nameInput.addEventListener("input", () => store.updateName(nameInput.value));
@@ -441,6 +451,9 @@ export function createLevelEditor(
     projectViewport(point: { x: number; y: number; z: number }) {
       return viewport.project(point);
     },
+    inspectPreview() {
+      return viewport.inspectPreview();
+    },
     probe() {
       const targets = store.targetList().length;
       return {
@@ -458,6 +471,7 @@ export function createLevelEditor(
                 ? "spawn"
                 : `${store.selection.kind}:${store.selection.index}`,
         tool: store.tool,
+        preview: store.preview,
         dirty: store.dirty,
         levels: Array.from(levelPicker.options)
           .map((o) => o.value)

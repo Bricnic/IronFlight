@@ -1,7 +1,13 @@
 import * as T from "three";
-import { PROP_PREFAB_KINDS, type CustomLevel } from "./custom-level";
+import {
+  PROP_PREFAB_KINDS,
+  type CustomLevel,
+  type CustomSolid,
+} from "./custom-level";
 import type { EditorSelection, EditorStore } from "./editor-state";
 import { trackballEuler } from "./euler";
+import { pbr } from "./materials";
+import { scaleSolidUVs } from "./solid-uv";
 /** Resolve a pick from raycast hits by walking to tagged ancestors. */
 export function resolveViewportPick(
   hits: { object: unknown }[],
@@ -135,8 +141,14 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   renderer.setClearColor(0x111c22);
   host.append(renderer.domElement);
   const scene = new T.Scene();
-  scene.add(new T.GridHelper(400, 40, 0x3a5a5a, 0x22393e));
-  scene.add(new T.AxesHelper(10));
+  const grid = new T.GridHelper(400, 40, 0x3a5a5a, 0x22393e);
+  const axes = new T.AxesHelper(10);
+  scene.add(grid, axes);
+  // Preview-only lighting; the wireframe pass uses unlit materials.
+  scene.add(new T.HemisphereLight(0xffffff, 0x334455, 0.9));
+  const sun = new T.DirectionalLight(0xffffff, 1.6);
+  sun.position.set(40, 80, 20);
+  scene.add(sun);
   const camera = new T.PerspectiveCamera(55, 1, 0.1, 2000);
   const target = new T.Vector3(0, 0, 0);
   const draw = () => renderer.render(scene, camera);
@@ -290,6 +302,26 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     camera.updateProjectionMatrix();
     draw();
   };
+  /** Textured preview solid: opaque, depth-tested, course-view UVs. */
+  const previewSolid = (parent: T.Group, s: CustomSolid, selected: boolean) => {
+    const geometry = new T.BoxGeometry(s.w, s.h, s.d);
+    scaleSolidUVs(geometry, s);
+    const mesh = new T.Mesh(
+      geometry,
+      s.texture
+        ? pbr(s.texture, 1, {
+            color: s.color,
+            roughness: 0.9,
+            emissive: selected ? 0x4a3a00 : 0x000000,
+          })
+        : new T.MeshStandardMaterial({
+            color: s.color,
+            roughness: 0.9,
+            emissive: selected ? 0x4a3a00 : 0x000000,
+          }),
+    );
+    parent.add(mesh);
+  };
   const wireBox = (
     parent: T.Group,
     w: number,
@@ -317,9 +349,20 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     );
     parent.add(fill, wire);
   };
+  let previewOn = false;
+  let generation = 0;
+  let settleTimer: ReturnType<typeof setTimeout> | null = null;
   return {
     dom: renderer.domElement,
-    render(level: CustomLevel, selection: EditorSelection) {
+    render(level: CustomLevel, selection: EditorSelection, preview = false) {
+      previewOn = preview;
+      grid.visible = !preview;
+      axes.visible = !preview;
+      generation++;
+      if (settleTimer) {
+        clearTimeout(settleTimer);
+        settleTimer = null;
+      }
       if (group) {
         group.traverse((o) => {
           if (o instanceof T.Mesh) {
@@ -340,14 +383,10 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           s.roll ?? 0,
           "YXZ",
         );
-        wireBox(
-          holder,
-          s.w,
-          s.h,
-          s.d,
-          s.color,
-          selection != null && "id" in selection && selection.id === s.id,
-        );
+        const selected =
+          selection != null && "id" in selection && selection.id === s.id;
+        if (preview) previewSolid(holder, s, selected);
+        else wireBox(holder, s.w, s.h, s.d, s.color, selected);
         group.add(holder);
       }
       for (const [i, cp] of level.checkpoints.entries()) {
@@ -413,6 +452,68 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       group.add(spawn);
       scene.add(group);
       draw();
+      // Textures pop in asynchronously; redraw until they arrive.
+      if (preview) {
+        const seen = generation;
+        let tries = 0;
+        const maps: (T.Texture | null)[] = [];
+        group.traverse((o) => {
+          if (o instanceof T.Mesh) {
+            const mat = o.material as T.MeshStandardMaterial;
+            if ("map" in mat) maps.push(mat.map ?? null);
+          }
+        });
+        const settle = () => {
+          if (seen !== generation) return;
+          draw();
+          tries++;
+          const pending = maps.some((m) => m && !m.image);
+          if (pending && tries < 40) {
+            settleTimer = setTimeout(settle, 150);
+          } else {
+            settleTimer = null;
+          }
+        };
+        if (maps.some((m) => m && !m.image))
+          settleTimer = setTimeout(settle, 150);
+      }
+    },
+    /** Render-state probe for tests: materials, occlusion, center pick. */
+    inspectPreview() {
+      const solids: {
+        id: string;
+        textured: boolean;
+        opaque: boolean;
+        depthTest: boolean;
+        depthWrite: boolean;
+      }[] = [];
+      group?.traverse((o) => {
+        const pick = (o as T.Group).userData?.pick as
+          | EditorSelection
+          | undefined;
+        if (pick?.kind !== "solid") return;
+        const mesh = (o as T.Group).children.find(
+          (c): c is T.Mesh => c instanceof T.Mesh,
+        );
+        const mat = mesh?.material as T.Material & { map?: unknown };
+        solids.push({
+          id: pick.id,
+          textured: !!mat?.map,
+          opaque: mat ? !mat.transparent : false,
+          depthTest: mat ? mat.depthTest : false,
+          depthWrite: mat ? mat.depthWrite : false,
+        });
+      });
+      raycaster.setFromCamera(new T.Vector2(0, 0), camera);
+      const hits = group
+        ? raycaster.intersectObjects(group.children, true)
+        : [];
+      return {
+        preview: previewOn,
+        gridVisible: grid.visible,
+        solids,
+        centerPick: resolveViewportPick(hits),
+      };
     },
     project(point: { x: number; y: number; z: number }) {
       const v = new T.Vector3(point.x, point.y, point.z).project(camera);
@@ -427,6 +528,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     },
     resize,
     dispose() {
+      if (settleTimer) clearTimeout(settleTimer);
       renderer.dispose();
       renderer.domElement.remove();
     },

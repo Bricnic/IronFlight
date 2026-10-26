@@ -5,6 +5,7 @@ import { pbr, lavaMaterial } from "./materials";
 import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
 import { solidQuaternion } from "./euler";
+import { scaleSolidUVs } from "./solid-uv";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
 export class CourseView extends T.Group {
@@ -138,22 +139,7 @@ export class CourseView extends T.Group {
       s.texture ||
       ["ground", "road", "ramp"].includes(s.kind)
     ) {
-      const pos = geometry.attributes.position,
-        normals = geometry.attributes.normal,
-        uv = geometry.attributes.uv;
-      for (let i = 0; i < pos.count; i++) {
-        const top = Math.abs(normals.getY(i)) > 0.5;
-        uv.setXY(
-          i,
-          (top
-            ? pos.getX(i) + (s.kind === "ground" ? s.x : 0)
-            : pos.getX(i) + pos.getZ(i)) / 3,
-          (top
-            ? pos.getZ(i) + (s.kind === "ground" ? s.z : 0)
-            : pos.getY(i)) / 3,
-        );
-      }
-      uv.needsUpdate = true;
+      scaleSolidUVs(geometry, s);
       mat.userData.surface = s.texture
         ? s.texture
         : stone

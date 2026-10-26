@@ -22,8 +22,21 @@ export interface GameHarness {
     targets: number;
     selection: string | null;
     tool: string;
+    preview: boolean;
     dirty: boolean;
     levels: string[];
+  };
+  inspectPreview(): {
+    preview: boolean;
+    gridVisible: boolean;
+    solids: {
+      id: string;
+      textured: boolean;
+      opaque: boolean;
+      depthTest: boolean;
+      depthWrite: boolean;
+    }[];
+    centerPick: unknown;
   };
   editorProject(point: { x: number; y: number; z: number }): {
     x: number;

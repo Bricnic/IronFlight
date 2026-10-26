@@ -115,6 +115,19 @@ it("syncs the store from a live session only when safe", () => {
   expect(shouldSyncFromSession(false, "A", "B")).toBe(false);
   expect(shouldSyncFromSession(false, "A", undefined)).toBe(false);
 });
+it("toggles textured preview without dirtying the level", () => {
+  const store = new EditorStore("Preview");
+  expect(store.preview).toBe(false);
+  let notified = 0;
+  store.onChange(() => notified++);
+  store.setPreview(true);
+  expect(store.preview).toBe(true);
+  expect(notified).toBe(1);
+  expect(store.dirty).toBe(false);
+  store.setPreview(false);
+  expect(store.preview).toBe(false);
+  expect(store.dirty).toBe(false);
+});
 it("switches viewport tools without dirtying the level", () => {
   const store = new EditorStore("Tools");
   expect(store.tool).toBe("select");

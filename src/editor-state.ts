@@ -31,6 +31,7 @@ export class EditorStore {
   level: CustomLevel;
   selection: EditorSelection = null;
   tool: EditorTool = "select";
+  preview = false;
   dirty = false;
   private listeners = new Set<() => void>();
   constructor(name: string) {
@@ -70,6 +71,10 @@ export class EditorStore {
   }
   setTool(tool: EditorTool) {
     this.tool = tool;
+    this.emit(false);
+  }
+  setPreview(preview: boolean) {
+    this.preview = preview;
     this.emit(false);
   }
   private nextId(prefix: string, taken: Set<string>) {

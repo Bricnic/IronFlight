@@ -1042,6 +1042,7 @@ async function boot() {
       editor: () => editorScreens.probe(),
       editorProject: (point: { x: number; y: number; z: number }) =>
         editorScreens.projectViewport(point),
+      inspectPreview: () => editorScreens.inspectPreview(),
       placement: () => ({
         editing,
         palette: placeKind.value,
