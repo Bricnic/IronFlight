@@ -477,17 +477,21 @@ export class CourseView extends T.Group {
           });
           this.add(this.ghostGroup);
         }
-        if (track.ring) {
+        if (track.trampoline) {
           const tramp = buildTrampolineMesh();
-          tramp.position.set(
-            track.trampoline?.x ?? track.ring.x,
-            -0.5,
-            track.trampoline?.z ?? track.ring.z,
-          );
+          tramp.position.set(track.trampoline.x, -0.5, track.trampoline.z);
           this.add(tramp);
           this.trampolineModels.push(tramp);
+        }
+        if (track.ring) {
           const ringMesh = buildRingMesh(track.ring.radius);
           ringMesh.position.set(track.ring.x, track.ring.y, track.ring.z);
+          this.add(ringMesh);
+          this.ringModels.push(ringMesh);
+        }
+        for (const r of track.rings ?? []) {
+          const ringMesh = buildRingMesh(r.radius);
+          ringMesh.position.set(r.x, r.y, r.z);
           this.add(ringMesh);
           this.ringModels.push(ringMesh);
         }

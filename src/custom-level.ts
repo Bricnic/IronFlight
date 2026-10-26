@@ -75,6 +75,13 @@ export interface CustomPoint {
   z: number;
   y?: number;
 }
+export interface CustomRing {
+  x: number;
+  y: number;
+  z: number;
+  radius: number;
+  goal?: boolean;
+}
 export type CustomMode = "race" | "arena" | "demolition";
 export interface CustomLevel {
   name: string;
@@ -83,6 +90,7 @@ export interface CustomLevel {
   checkpoints: CustomPoint[];
   collectibles?: CustomPoint[];
   demolish?: CustomPoint[];
+  rings?: CustomRing[];
   solids: CustomSolid[];
   prefabs: CustomPrefab[];
   medals: { gold: number; silver: number; bronze: number };
@@ -171,6 +179,13 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     check(errors, demolish.length >= 1, "demolition levels need a target");
     check(errors, typeof limit === "number" && limit > 0, "demolition levels need a time limit");
   }
+  const rings = (level as CustomLevel)?.rings ?? [];
+  check(errors, Array.isArray(rings), "rings must be an array");
+  rings.forEach((r, i) => {
+    check(errors, r && finite(r.x) && finite(r.y) && finite(r.z), `ring ${i} needs finite x/y/z`);
+    check(errors, r?.radius > 0, `ring ${i} needs a positive radius`);
+    check(errors, r?.goal === undefined || typeof r.goal === "boolean", `ring ${i} needs a boolean goal`);
+  });
   const solids = Array.isArray((level as CustomLevel)?.solids)
     ? (level as CustomLevel).solids
     : [];
@@ -258,6 +273,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     checkpoints: checkpoints.map((p) => ({ ...p })),
     ...(collectibles.length ? { collectibles: collectibles.map((p) => ({ ...p })) } : {}),
     ...(demolish.length ? { demolish: demolish.map((p) => ({ ...p })) } : {}),
+    ...(rings.length ? { rings: rings.map((r) => ({ ...r })) } : {}),
     solids: solids.map((s) => ({ ...s })),
     prefabs: prefabs.map((p) => ({ ...p })),
     medals: { ...medals },
@@ -301,6 +317,17 @@ export function toTrack(level: CustomLevel): Track {
     path,
     medals: { ...level.medals },
     custom: level,
+    ...(level.rings?.length
+      ? {
+          rings: level.rings.map((r) => ({
+            x: r.x,
+            y: r.y,
+            z: r.z,
+            radius: r.radius,
+            goal: r.goal ?? false,
+          })),
+        }
+      : {}),
   };
   if (level.mode === "arena")
     return {
@@ -337,7 +364,13 @@ export function toTrack(level: CustomLevel): Track {
     ...base,
     mode: "race",
     checkpoints,
-    collectibles: [],
+    collectibles: (level.collectibles ?? []).map((p, i) => ({
+      x: p.x,
+      z: p.z,
+      y: p.y ?? 1.7,
+      id: `pickup-${i + 1}`,
+      radius: 3.5,
+    })),
     ...(level.limit === undefined
       ? {}
       : { limit: level.limit, feasibility: level.limit * 0.75 }),

@@ -211,6 +211,27 @@ it("serves embedded solids, props and comic prefabs for customs", () => {
   registerCustomTrack(snowy);
   expect(courseProps(snowy).map((p) => p.kind)).toEqual(["snowman"]);
 });
+it("validates custom rings and maps them with race collectibles", () => {
+  const level = minimal();
+  level.collectibles = [{ x: 0, z: -50 }];
+  level.rings = [
+    { x: 0, y: 3, z: 50, radius: 6 },
+    { x: 0, y: 3, z: 90, radius: 6, goal: true },
+  ];
+  const track = toTrack(validateCustomLevel(level));
+  expect(track.collectibles).toHaveLength(1);
+  expect(track.rings).toHaveLength(2);
+  expect(track.rings![1]).toMatchObject({ goal: true, radius: 6 });
+  expect(() =>
+    validateCustomLevel({
+      ...minimal(),
+      rings: [{ x: 0, y: 3, z: 1, radius: 0 }],
+    }),
+  ).toThrow();
+  expect(() =>
+    validateCustomLevel({ ...minimal(), rings: [{ x: 0, y: 3, z: 1 }] }),
+  ).toThrow();
+});
 it("blank levels are valid editable skeletons", () => {
   const level = validateCustomLevel(blankLevel("My Level"));
   expect(level.name).toBe("My Level");

@@ -48,6 +48,7 @@ export class TrackRun {
   destroyed = new Set<string>();
   bounced = false;
   ringDone = false;
+  ringsDone = new Set<number>();
   constructor(
     readonly track: Track,
     readonly variant = "default",
@@ -89,6 +90,16 @@ export class TrackRun {
         if (Math.hypot(x - r.x, y - r.y) <= r.radius) this.ringDone = true;
       }
     }
+    const customRings = this.track.rings ?? [];
+    customRings.forEach((r, i) => {
+      if (this.ringsDone.has(i)) return;
+      if (previous.z < r.z && current.z >= r.z) {
+        const t = (r.z - previous.z) / (current.z - previous.z);
+        const x = previous.x + (current.x - previous.x) * t;
+        const y = previous.y + (current.y - previous.y) * t;
+        if (Math.hypot(x - r.x, y - r.y) <= r.radius) this.ringsDone.add(i);
+      }
+    });
     if (this.track.mode === "arena") {
       for (const p of this.track.collectibles)
         if (
@@ -103,6 +114,12 @@ export class TrackRun {
       if (targets.length && targets.every((t) => this.destroyed.has(t.id)))
         this.status = "completed";
     } else {
+      for (const p of this.track.collectibles)
+        if (
+          !this.collected.has(p.id) &&
+          segmentDistance(previous, current, p) <= p.radius
+        )
+          this.collected.add(p.id);
       while (this.checkpoint < this.track.checkpoints.length) {
         if (
           this.track.legacy &&
@@ -122,7 +139,8 @@ export class TrackRun {
       }
       if (
         this.checkpoint === this.track.checkpoints.length &&
-        (!this.track.ring || this.ringDone)
+        (!this.track.ring || this.ringDone) &&
+        customRings.every((r, i) => !r.goal || this.ringsDone.has(i))
       )
         this.status = "completed";
     }
@@ -150,6 +168,8 @@ export class TrackRun {
       demolishCount: this.track.demolish?.length ?? 0,
       bounced: this.bounced,
       ringDone: this.ringDone,
+      ringsDone: [...this.ringsDone],
+      ringCount: (this.track.rings ?? []).length,
       remaining: this.track.limit
         ? Math.max(0, this.track.limit - this.elapsed)
         : null,

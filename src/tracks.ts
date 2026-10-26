@@ -24,6 +24,7 @@ export type Checkpoint = Point & {
 };
 export type Collectible = Point & { id: string; y: number; radius: number };
 export type Demolishable = Point & { id: string; y: number; radius: number };
+export type TrackRing = Point & { y: number; radius: number; goal: boolean };
 export type Track = {
   id: TrackId | CustomTrackId;
   name: string;
@@ -31,6 +32,7 @@ export type Track = {
   controls?: "drive" | "strafe";
   trampoline?: Point & { y: number };
   ring?: Point & { y: number; radius: number };
+  rings?: TrackRing[];
   demolish?: Demolishable[];
   description: string;
   legacy?: boolean;

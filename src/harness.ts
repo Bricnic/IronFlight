@@ -20,6 +20,7 @@ export interface GameHarness {
     prefabs: number;
     checkpoints: number;
     targets: number;
+    rings: number;
     selection: string | null;
     tool: string;
     preview: boolean;

@@ -87,7 +87,10 @@ it("tracks dirtiness across edits and saves", () => {
 });
 it("manages arena targets and clears limits", () => {
   const store = new EditorStore("Arena");
-  expect(store.addTarget()).toBeUndefined();
+  expect(store.addTarget(4, 5)).toMatchObject({ x: 4, z: 5 });
+  expect(store.level.collectibles).toHaveLength(1);
+  store.deleteSelected();
+  expect(store.level.collectibles).toHaveLength(0);
   store.updateLevel({ mode: "arena", limit: 120 });
   const target = store.addTarget(4, 5);
   expect(target).toMatchObject({ x: 4, z: 5 });
@@ -114,6 +117,23 @@ it("syncs the store from a live session only when safe", () => {
   expect(shouldSyncFromSession(true, "A", "A")).toBe(false);
   expect(shouldSyncFromSession(false, "A", "B")).toBe(false);
   expect(shouldSyncFromSession(false, "A", undefined)).toBe(false);
+});
+it("adds and edits rings, and targets in race mode", () => {
+  const store = new EditorStore("Rings");
+  const ring = store.addRing(4, 6);
+  expect(ring).toMatchObject({ x: 4, z: 6, y: 4, radius: 6, goal: false });
+  expect(store.selection).toEqual({ kind: "ring", index: 0 });
+  store.updateSelected({ radius: 8, goal: true });
+  expect(store.level.rings![0]).toMatchObject({ radius: 8, goal: true });
+  const target = store.addTarget(1, 2);
+  expect(target).toMatchObject({ x: 1, z: 2 });
+  expect(store.level.collectibles).toHaveLength(1);
+  store.select({ kind: "ring", index: 0 });
+  const copy = store.duplicateSelected();
+  expect(copy).toMatchObject({ x: 6 });
+  expect(store.level.rings).toHaveLength(2);
+  store.deleteSelected();
+  expect(store.level.rings).toHaveLength(1);
 });
 it("toggles textured preview without dirtying the level", () => {
   const store = new EditorStore("Preview");

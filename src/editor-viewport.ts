@@ -442,6 +442,25 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           marker.scale.setScalar(1.6);
         group.add(marker);
       }
+      for (const [i, r] of (level.rings ?? []).entries()) {
+        const marker = new T.Mesh(
+          new T.TorusGeometry(r.radius, 0.4, 8, 32),
+          new T.MeshBasicMaterial({
+            color: r.goal ? 0xffd34d : 0x4fb8ff,
+            wireframe: true,
+          }),
+        );
+        marker.position.set(r.x, r.y, r.z);
+        marker.userData.pick = { kind: "ring", index: i };
+        if (
+          selection != null &&
+          "index" in selection &&
+          selection.kind === "ring" &&
+          selection.index === i
+        )
+          marker.scale.setScalar(1.6);
+        group.add(marker);
+      }
       const spawn = new T.Mesh(
         new T.ConeGeometry(1, 2.5, 4),
         new T.MeshBasicMaterial({ color: 0xffa762, wireframe: true }),

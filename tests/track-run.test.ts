@@ -75,6 +75,51 @@ it("the preserved stunt race requires actual jump and loop flags", () => {
   });
   expect(run.status).toBe("completed");
 });
+it("triggers custom rings without a bounce and gates race goal rings", () => {
+  const track: Track = {
+    ...race,
+    rings: [
+      { x: 0, z: 5, y: 2, radius: 4, goal: false },
+      { x: 0, z: 15, y: 2, radius: 4, goal: true },
+    ],
+  };
+  const run = new TrackRun(track);
+  run.step(1, p(0), p(21), 1);
+  expect(run.status).toBe("completed");
+  expect(run.snapshot().ringsDone).toEqual([0, 1]);
+});
+it("holds race completion until the goal ring is crossed", () => {
+  const track: Track = {
+    ...race,
+    rings: [{ x: 50, z: 5, y: 2, radius: 4, goal: true }],
+  };
+  const run = new TrackRun(track);
+  run.step(1, p(0), p(21), 1);
+  expect(run.status).toBe("running");
+  run.step(1, { x: 50, y: 2, z: 0 }, { x: 50, y: 2, z: 10 }, 1);
+  expect(run.status).toBe("completed");
+  expect(run.snapshot().ringsDone).toEqual([0]);
+});
+it("leaves non-goal rings out of race completion", () => {
+  const track: Track = {
+    ...race,
+    rings: [{ x: 50, z: 5, y: 2, radius: 4, goal: false }],
+  };
+  const run = new TrackRun(track);
+  run.step(1, p(0), p(21), 1);
+  expect(run.status).toBe("completed");
+  expect(run.snapshot().ringsDone).toEqual([]);
+});
+it("gathers race collectibles without gating completion", () => {
+  const track: Track = {
+    ...race,
+    collectibles: [{ id: "a", x: 0, z: 5, y: 2, radius: 2 }],
+  };
+  const run = new TrackRun(track);
+  run.step(1, p(0), p(21), 1);
+  expect(run.status).toBe("completed");
+  expect(run.snapshot().collected).toEqual(["a"]);
+});
 it("medals include exact thresholds and reject invalid times", () => {
   const t = race.medals;
   expect(medalFor(t.gold, t)).toBe("gold");

@@ -124,6 +124,7 @@ export function createLevelEditor(
   const addPrefab = el("button", { id: "editor-add-prefab" }, "Add prefab");
   const addCheckpoint = el("button", { id: "editor-add-checkpoint" }, "Add checkpoint");
   const addTarget = el("button", { id: "editor-add-target" }, "Add target");
+  const addRing = el("button", { id: "editor-add-ring" }, "Add ring");
   const objects = el("ul", { id: "editor-objects" });
   const duplicateButton = el("button", { id: "editor-duplicate" }, "Duplicate");
   const removeButton = el("button", { id: "editor-remove" }, "Delete selected");
@@ -135,6 +136,7 @@ export function createLevelEditor(
     addPrefab,
     addCheckpoint,
     addTarget,
+    addRing,
     objects,
     duplicateButton,
     removeButton,
@@ -221,9 +223,14 @@ export function createLevelEditor(
             ? "Spawn"
             : current.kind === "target"
               ? "Target"
-              : "Checkpoint",
+              : current.kind === "ring"
+                ? "Ring"
+                : "Checkpoint",
     );
-    const item = current.item as Record<string, number | string | undefined>;
+    const item = current.item as Record<
+      string,
+      number | string | boolean | undefined
+    >;
     const commit = (prop: string) => (n: number) =>
       store.updateSelected({ [prop]: n });
     for (const key of ["x", "y", "z"]) {
@@ -278,6 +285,26 @@ export function createLevelEditor(
     }
     if (current.kind === "checkpoint" || current.kind === "target")
       numberField(props, "Y", "y", item.y as number | undefined, commit("y"));
+    if (current.kind === "ring") {
+      numberField(
+        props,
+        "Radius",
+        "radius",
+        item.radius as number,
+        commit("radius"),
+      );
+      const goalRow = el("label", { class: "prop-row" }, "Goal ");
+      const goal = el("input", {
+        type: "checkbox",
+        "data-prop": "goal",
+      }) as HTMLInputElement;
+      goal.checked = item.goal as boolean;
+      goal.addEventListener("change", () =>
+        store.updateSelected({ goal: goal.checked }),
+      );
+      goalRow.append(goal);
+      props.append(goalRow);
+    }
   }
   function refreshList() {
     objects.innerHTML = "";
@@ -335,6 +362,15 @@ export function createLevelEditor(
           (store.selection as { index: number }).index === i,
         () => store.select({ kind: "target", index: i }),
         `target:${i}`,
+      ),
+    );
+    (level.rings ?? []).forEach((r, i) =>
+      row(
+        `Ring ${i + 1} (${r.x}, ${r.z})`,
+        store.selection?.kind === "ring" &&
+          (store.selection as { index: number }).index === i,
+        () => store.select({ kind: "ring", index: i }),
+        `ring:${i}`,
       ),
     );
     row(
@@ -449,8 +485,9 @@ export function createLevelEditor(
   );
   addCheckpoint.addEventListener("click", () => store.addCheckpoint());
   addTarget.addEventListener("click", () => {
-    if (!store.addTarget()) showError("Targets need arena or demolition mode");
+    if (!store.addTarget()) showError("Targets need a level mode");
   });
+  addRing.addEventListener("click", () => store.addRing());
   duplicateButton.addEventListener("click", () => store.duplicateSelected());
   removeButton.addEventListener("click", () => store.deleteSelected());
   spawnButton.addEventListener("click", () => store.select({ kind: "spawn" }));
@@ -498,6 +535,7 @@ export function createLevelEditor(
         prefabs: store.level.prefabs.length,
         checkpoints: store.level.checkpoints.length,
         targets,
+        rings: (store.level.rings ?? []).length,
         selection:
           store.selection === null
             ? null

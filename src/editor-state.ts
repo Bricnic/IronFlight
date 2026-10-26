@@ -4,6 +4,7 @@ import {
   type CustomLevel,
   type CustomPrefab,
   type CustomPoint,
+  type CustomRing,
   type CustomSolid,
   type SolidKind,
 } from "./custom-level";
@@ -12,6 +13,7 @@ export type EditorSelection =
   | { kind: "prefab"; id: string }
   | { kind: "checkpoint"; index: number }
   | { kind: "target"; index: number }
+  | { kind: "ring"; index: number }
   | { kind: "spawn" }
   | null;
 export type EditorTool = "select" | "pan" | "eyedropper" | "rotator";
@@ -126,17 +128,29 @@ export class EditorStore {
     this.emit();
     return point;
   }
-  /** Arena collectibles and demolition targets share one list UI. */
+  /** Arena/race collectibles and demolition targets share one list UI. */
   targetList(): CustomPoint[] {
-    if (this.level.mode === "arena")
+    if (this.level.mode === "arena" || this.level.mode === "race")
       return (this.level.collectibles ??= []);
     if (this.level.mode === "demolition")
       return (this.level.demolish ??= []);
     return [];
   }
+  addRing(x = 0, z = 0): CustomRing {
+    const ring: CustomRing = { x, y: 4, z, radius: 6, goal: false };
+    const rings = (this.level.rings ??= []);
+    rings.push(ring);
+    this.selection = { kind: "ring", index: rings.length - 1 };
+    this.emit();
+    return ring;
+  }
   addTarget(x = 0, z = 0): CustomPoint | undefined {
     const list = this.targetList();
-    if (this.level.mode !== "arena" && this.level.mode !== "demolition")
+    if (
+      this.level.mode !== "arena" &&
+      this.level.mode !== "demolition" &&
+      this.level.mode !== "race"
+    )
       return undefined;
     const point = { x, z };
     list.push(point);
@@ -149,6 +163,7 @@ export class EditorStore {
     | { kind: "prefab"; item: CustomPrefab }
     | { kind: "checkpoint"; item: CustomPoint }
     | { kind: "target"; item: CustomPoint }
+    | { kind: "ring"; item: CustomRing }
     | { kind: "spawn"; item: CustomLevel["spawn"] }
     | null {
     const sel = this.selection;
@@ -169,9 +184,13 @@ export class EditorStore {
       const item = this.targetList()[sel.index];
       return item ? { kind: "target", item } : null;
     }
+    if (sel.kind === "ring") {
+      const item = (this.level.rings ?? [])[sel.index];
+      return item ? { kind: "ring", item } : null;
+    }
     return { kind: "spawn", item: this.level.spawn };
   }
-  updateSelected(patch: Record<string, number | string | undefined>) {
+  updateSelected(patch: Record<string, number | string | boolean | undefined>) {
     const current = this.selectedItem();
     if (!current) return;
     Object.assign(current.item, patch);
@@ -205,13 +224,28 @@ export class EditorStore {
       this.level.prefabs = this.level.prefabs.filter((p) => p.id !== sel.id);
     else if (sel.kind === "checkpoint")
       this.level.checkpoints.splice(sel.index, 1);
+    else if (sel.kind === "ring")
+      (this.level.rings ?? []).splice(sel.index, 1);
     else this.targetList().splice(sel.index, 1);
     this.selection = null;
     this.emit();
   }
-  duplicateSelected(): CustomSolid | CustomPrefab | CustomPoint | undefined {
+  duplicateSelected():
+    | CustomSolid
+    | CustomPrefab
+    | CustomPoint
+    | CustomRing
+    | undefined {
     const current = this.selectedItem();
     if (!current || current.kind === "spawn") return undefined;
+    if (current.kind === "ring") {
+      const copy = { ...current.item, x: current.item.x + 2 };
+      const rings = (this.level.rings ??= []);
+      rings.push(copy);
+      this.selection = { kind: "ring", index: rings.length - 1 };
+      this.emit();
+      return copy;
+    }
     if (current.kind === "checkpoint" || current.kind === "target") {
       const copy = { ...current.item, x: current.item.x + 2 };
       const list =
