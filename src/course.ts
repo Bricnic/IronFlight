@@ -25,6 +25,7 @@ export type CourseSolid = {
   d: number;
   yaw?: number;
   angle?: number;
+  roll?: number;
   color: number;
   texture?: string;
 };
@@ -918,6 +919,7 @@ export function courseProps(track: Track): PropDefinition[] {
         x: p.x,
         z: p.z,
         ground: p.y ?? 0,
+        ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
       }));
     return [...stones, ...prefabs];
   }

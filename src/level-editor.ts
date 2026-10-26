@@ -3,6 +3,7 @@ import { createEditorViewport } from "./editor-viewport";
 import {
   TEXTURE_IDS,
   PREFAB_KINDS,
+  PROP_PREFAB_KINDS,
   SOLID_KINDS,
   toTrack,
   validateCustomLevel,
@@ -216,7 +217,8 @@ export function createLevelEditor(
       for (const key of ["w", "h", "d"])
         numberField(props, key.toUpperCase(), key, item[key] as number, commit(key));
       numberField(props, "Yaw", "yaw", item.yaw as number | undefined, commit("yaw"));
-      numberField(props, "Angle", "angle", item.angle as number | undefined, commit("angle"));
+      numberField(props, "Pitch", "angle", item.angle as number | undefined, commit("angle"));
+      numberField(props, "Roll", "roll", item.roll as number | undefined, commit("roll"));
       const colorRow = el("label", { class: "prop-row" }, "Color ");
       const color = el("input", {
         type: "color",
@@ -244,6 +246,16 @@ export function createLevelEditor(
         el("p", { class: "prop-hint" }, `Kind: ${current.item.kind}`),
       );
       numberField(props, "Y", "y", item.y as number | undefined, commit("y"));
+      if (
+        (PROP_PREFAB_KINDS as readonly string[]).includes(current.item.kind)
+      )
+        numberField(
+          props,
+          "Yaw",
+          "yaw",
+          item.yaw as number | undefined,
+          commit("yaw"),
+        );
     }
     if (current.kind === "checkpoint" || current.kind === "target")
       numberField(props, "Y", "y", item.y as number | undefined, commit("y"));

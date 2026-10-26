@@ -568,8 +568,8 @@ export class GameView {
   moveCourseSolid(id: string, x: number, y: number, z: number) {
     this.officialCourse.moveSolidMesh(id, x, y, z);
   }
-  rotateCourseSolid(id: string, yaw: number, angle: number) {
-    this.officialCourse.rotateSolidMesh(id, yaw, angle);
+  rotateCourseSolid(id: string, yaw: number, angle: number, roll: number) {
+    this.officialCourse.rotateSolidMesh(id, yaw, angle, roll);
   }
   removeCourseSolid(id: string) {
     this.officialCourse.removeSolidMesh(id);

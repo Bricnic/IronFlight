@@ -4,6 +4,7 @@ import { flameIntensity, type Hazard } from "./hazards";
 import { pbr, lavaMaterial } from "./materials";
 import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
+import { solidQuaternion } from "./euler";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
 export class CourseView extends T.Group {
@@ -174,14 +175,7 @@ export class CourseView extends T.Group {
     }
     const mesh = new T.Mesh(geometry, mat);
     mesh.position.set(s.x, s.y, s.z);
-    mesh.quaternion
-      .setFromAxisAngle(new T.Vector3(1, 0, 0), s.angle ?? 0)
-      .multiply(
-        new T.Quaternion().setFromAxisAngle(
-          new T.Vector3(0, 1, 0),
-          s.yaw ?? 0,
-        ),
-      );
+    mesh.quaternion.copy(solidQuaternion(s));
     mesh.castShadow = s.kind !== "ground" && s.kind !== "road";
     mesh.receiveShadow = true;
     mesh.name = s.id;
@@ -309,12 +303,10 @@ export class CourseView extends T.Group {
     this.solidMesh(id)?.position.set(x, y, z);
   }
   /** Live editing: rotate one solid mesh by id. */
-  rotateSolidMesh(id: string, yaw: number, angle: number) {
-    this.solidMesh(id)?.quaternion
-      .setFromAxisAngle(new T.Vector3(1, 0, 0), angle)
-      .multiply(
-        new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), yaw),
-      );
+  rotateSolidMesh(id: string, yaw: number, angle: number, roll: number) {
+    this.solidMesh(id)?.quaternion.copy(
+      solidQuaternion({ yaw, angle, roll }),
+    );
   }
   /** Live editing: drop one solid mesh by id. */
   removeSolidMesh(id: string) {

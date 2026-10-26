@@ -9,6 +9,7 @@ export type PropDefinition = {
   x: number;
   z: number;
   ground: number;
+  yaw?: number;
 };
 export type TrashPiece = {
   lid?: boolean;
@@ -70,7 +71,7 @@ export class Destructibles {
   addProp(definition: PropDefinition) {
     const world = this.world;
     {
-      const { kind, x, z, ground } = definition,
+      const { kind, x, z, ground, yaw } = definition,
         sign = kind === "sign",
         stone = kind === "gravestone",
         height = propHeight(kind);
@@ -80,6 +81,12 @@ export class Destructibles {
           : RAPIER.RigidBodyDesc.dynamic()
         )
           .setTranslation(x, ground + height, z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 1, 0),
+              yaw ?? 0,
+            ),
+          )
           .setLinearDamping(0.12)
           .setAngularDamping(0.3)
           .setCcdEnabled(true),

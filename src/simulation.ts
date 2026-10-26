@@ -13,6 +13,7 @@ import { TrackRun } from "./track-run";
 import { Destructibles } from "./destructibles";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
+import { solidQuaternion } from "./euler";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
 import { type PartState } from "./damage";
@@ -171,21 +172,13 @@ export class Simulation {
     z: number;
     angle?: number;
     yaw?: number;
+    roll?: number;
     kind: string;
   }) {
     const collider = this.world.createCollider(
       RAPIER.ColliderDesc.cuboid(s.w / 2, s.h / 2, s.d / 2)
         .setTranslation(s.x, s.y, s.z)
-        .setRotation(
-          new Quaternion()
-            .setFromAxisAngle(new Vector3(1, 0, 0), s.angle ?? 0)
-            .multiply(
-              new Quaternion().setFromAxisAngle(
-                new Vector3(0, 1, 0),
-                "yaw" in s ? (s.yaw ?? 0) : 0,
-              ),
-            ),
-        )
+        .setRotation(solidQuaternion(s))
         .setFriction(1)
         .setSensor(s.kind === "lava"),
     );
@@ -201,16 +194,7 @@ export class Simulation {
     const collider = this.solidColliders.get(s.id);
     if (!collider) return;
     collider.setTranslation({ x: s.x, y: s.y, z: s.z });
-    collider.setRotation(
-      new Quaternion()
-        .setFromAxisAngle(new Vector3(1, 0, 0), s.angle ?? 0)
-        .multiply(
-          new Quaternion().setFromAxisAngle(
-            new Vector3(0, 1, 0),
-            s.yaw ?? 0,
-          ),
-        ),
-    );
+    collider.setRotation(solidQuaternion(s));
   }
   /** Live editing: drop one solid collider by id. */
   removeSolidCollider(id: string) {

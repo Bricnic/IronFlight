@@ -58,6 +58,7 @@ export interface CustomSolid {
   d: number;
   yaw?: number;
   angle?: number;
+  roll?: number;
   color: number;
   texture?: string;
 }
@@ -67,6 +68,7 @@ export interface CustomPrefab {
   x: number;
   z: number;
   y?: number;
+  yaw?: number;
 }
 export interface CustomPoint {
   x: number;
@@ -202,6 +204,11 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     );
     check(
       errors,
+      s?.roll === undefined || finite(s.roll),
+      `solid ${s?.id ?? i} needs a finite roll`,
+    );
+    check(
+      errors,
       Number.isInteger(s?.color) && (s?.color ?? -1) >= 0 && (s?.color ?? -1) <= 0xffffff,
       `solid ${s?.id ?? i} needs an integer color`,
     );
@@ -230,6 +237,17 @@ export function validateCustomLevel(input: unknown): CustomLevel {
       errors,
       finite(p?.x) && finite(p?.z) && (p?.y === undefined || finite(p.y)),
       `prefab ${p?.id ?? i} needs finite x/z`,
+    );
+    check(
+      errors,
+      p?.yaw === undefined || finite(p.yaw),
+      `prefab ${p?.id ?? i} needs a finite yaw`,
+    );
+    check(
+      errors,
+      p?.yaw === undefined ||
+        (PROP_PREFAB_KINDS as readonly string[]).includes(p?.kind),
+      `prefab ${p?.id ?? i} yaw is only supported on prop kinds`,
     );
   }
   if (errors.length) throw new Error(`Invalid custom level: ${errors.join("; ")}`);

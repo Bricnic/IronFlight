@@ -234,3 +234,136 @@ it("duplicates gates with fresh ids between neighbors", () => {
   ).toBe(true);
   expect(() => duplicateCheckpointOnTrack(track, 5)).toThrow(/checkpoint/);
 });
+it("validates roll and prop-prefab yaw", () => {
+  const level = blankLevel("Euler Format");
+  level.solids.push({
+    id: "r-1",
+    kind: "barrier",
+    x: 0,
+    y: 1,
+    z: 0,
+    w: 2,
+    h: 2,
+    d: 2,
+    color: 0,
+    yaw: 1,
+    angle: 0.5,
+    roll: -0.25,
+  });
+  level.prefabs.push({ id: "s-1", kind: "snowman", x: 0, z: 0, yaw: 1 });
+  expect(() => validateCustomLevel(level)).not.toThrow();
+  const track = toTrack(validateCustomLevel(level));
+  expect(track.custom!.solids.at(-1)).toMatchObject({ roll: -0.25 });
+  expect(track.custom!.prefabs.at(-1)).toMatchObject({ yaw: 1 });
+  const badRoll = blankLevel("Bad Roll");
+  badRoll.solids.push({
+    id: "r-2",
+    kind: "barrier",
+    x: 0,
+    y: 1,
+    z: 0,
+    w: 2,
+    h: 2,
+    d: 2,
+    color: 0,
+    roll: Number.NaN,
+  });
+  expect(() => validateCustomLevel(badRoll)).toThrow(/roll/);
+  const comicYaw = blankLevel("Comic Yaw");
+  comicYaw.prefabs.push({ id: "b-1", kind: "book", x: 0, z: 0, yaw: 1 });
+  expect(() => validateCustomLevel(comicYaw)).toThrow(/yaw/);
+});
+it("launches the truck off pitched walls", () => {
+  const level = blankLevel("Pitch Launch");
+  level.solids.push({
+    id: "ramp-1",
+    kind: "barrier",
+    x: 0,
+    y: 1.5,
+    z: 20,
+    w: 24,
+    h: 3,
+    d: 2,
+    color: 0,
+    angle: 0.5,
+  });
+  const track = toTrack(validateCustomLevel(level));
+  registerCustomTrack(track);
+  const s = new Simulation();
+  s.startTrack(track.id);
+  let maxY = 0;
+  for (let i = 0; i < 60 * 8; i++) {
+    s.step({ throttle: 1 });
+    maxY = Math.max(maxY, s.body.translation().y);
+  }
+  expect(maxY).toBeGreaterThan(2);
+  s.dispose();
+});
+it("yaws walls open and shut", () => {
+  const drive = (name: string, yaw: number) => {
+    const level = blankLevel(name);
+    level.solids.push({
+      id: "gate-1",
+      kind: "barrier",
+      x: 3,
+      y: 1.5,
+      z: 20,
+      w: 24,
+      h: 3,
+      d: 1,
+      color: 0,
+      yaw,
+    });
+    const track = toTrack(validateCustomLevel(level));
+    registerCustomTrack(track);
+    const s = new Simulation();
+    s.startTrack(track.id);
+    for (let i = 0; i < 60 * 10; i++) s.step({ throttle: 1 });
+    const z = s.body.translation().z;
+    s.dispose();
+    return z;
+  };
+  expect(drive("Shut Wall", 0)).toBeLessThan(19);
+  expect(drive("Open Wall", Math.PI / 2)).toBeGreaterThan(21);
+});
+it("swings a roadside pillar across the lane with roll", () => {
+  const clear = blankLevel("Clear Lane");
+  clear.solids.push({
+    id: "pillar-1",
+    kind: "barrier",
+    x: 3,
+    y: 4,
+    z: 20,
+    w: 2,
+    h: 8,
+    d: 2,
+    color: 0,
+  });
+  const clearTrack = toTrack(validateCustomLevel(clear));
+  registerCustomTrack(clearTrack);
+  const a = new Simulation();
+  a.startTrack(clearTrack.id);
+  for (let i = 0; i < 60 * 8; i++) a.step({ throttle: 1 });
+  expect(a.body.translation().z).toBeGreaterThan(21);
+  a.dispose();
+  const tipped = blankLevel("Tipped Block");
+  tipped.solids.push({
+    id: "pillar-2",
+    kind: "barrier",
+    x: 3,
+    y: 1,
+    z: 20,
+    w: 2,
+    h: 8,
+    d: 2,
+    color: 0,
+    roll: Math.PI / 2,
+  });
+  const tippedTrack = toTrack(validateCustomLevel(tipped));
+  registerCustomTrack(tippedTrack);
+  const b = new Simulation();
+  b.startTrack(tippedTrack.id);
+  for (let i = 0; i < 60 * 8; i++) b.step({ throttle: 1 });
+  expect(b.body.translation().z).toBeLessThan(19);
+  b.dispose();
+});

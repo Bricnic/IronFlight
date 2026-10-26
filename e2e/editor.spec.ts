@@ -256,3 +256,122 @@ test("wireframe tools pan, sample textures and rotate", async ({ page }) => {
     "e2e-tools",
   );
 });
+test("wireframe rotator spins euler angles and drives the yawed wall", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(async () => {
+    const g = window.__game!;
+    await g.customLevels.remove("e2e-euler").catch(() => {});
+    await g.customLevels.save({
+      name: "e2e-euler",
+      mode: "race",
+      spawn: { x: 0, y: 2.1, z: -40, yaw: 0 },
+      checkpoints: [{ x: 0, z: 40 }],
+      solids: [
+        {
+          id: "ground",
+          kind: "ground",
+          x: 0,
+          y: -0.6,
+          z: 0,
+          w: 200,
+          h: 1.2,
+          d: 200,
+          color: 0x6d817c,
+          texture: "grass_ground",
+        },
+        {
+          id: "road-1",
+          kind: "road",
+          x: 0,
+          y: 0.015,
+          z: 0,
+          w: 24,
+          h: 0.03,
+          d: 110,
+          color: 0x303e49,
+          texture: "asphalt_02",
+        },
+        {
+          id: "yaw-1",
+          kind: "barrier",
+          x: 3,
+          y: 1.5,
+          z: 20,
+          w: 24,
+          h: 3,
+          d: 1,
+          color: 0xe6c16a,
+        },
+        {
+          id: "spin-1",
+          kind: "barrier",
+          x: 10,
+          y: 0.8,
+          z: -20,
+          w: 6,
+          h: 1.6,
+          d: 5,
+          color: 0xe6c16a,
+        },
+      ],
+      prefabs: [],
+      medals: { gold: 30, silver: 45, bronze: 60 },
+    });
+  });
+  await page.getByRole("button", { name: "Level editor" }).click();
+  await expect(page.locator("#level-editor")).toBeVisible();
+  await expect(page.locator("#level-editor canvas")).toHaveCount(1);
+  await page.locator("#editor-levels").selectOption("e2e-euler");
+  await expect(page.locator("#editor-status")).toContainText(
+    "Opened e2e-euler",
+    { timeout: 15000 },
+  );
+  // A diagonal rotator drag spins yaw, pitch and roll together.
+  await page.locator("#editor-tool-rotator").click();
+  const at = await page.evaluate((p) => window.__game!.editorProject(p), {
+    x: 10,
+    y: 0.8,
+    z: -20,
+  });
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down();
+  await page.mouse.move(at.x + 70, at.y + 50, { steps: 10 });
+  await page.mouse.up();
+  // The yaw numeric swings the road-blocking wall open.
+  await page.locator('#editor-objects li[data-key="solid:yaw-1"]').click();
+  await page.locator('#editor-props input[data-prop="yaw"]').fill("1.5708");
+  await page.locator("#editor-save").click();
+  await expect(page.locator("#editor-status")).toContainText(
+    "Saved e2e-euler",
+    { timeout: 15000 },
+  );
+  const loaded = await page.evaluate(() =>
+    window.__game!.customLevels.load("e2e-euler"),
+  );
+  const spin = loaded.solids.find((s) => s.id === "spin-1")!;
+  expect(Math.abs(spin.yaw ?? 0)).toBeGreaterThan(0.02);
+  expect(Math.abs(spin.angle ?? 0)).toBeGreaterThan(0.02);
+  expect(spin.roll).toBeDefined();
+  expect(
+    loaded.solids.find((s) => s.id === "yaw-1")?.yaw,
+  ).toBeCloseTo(Math.PI / 2, 3);
+  // The opened wall lets the truck through in a real playtest.
+  await page.locator("#editor-playtest").click();
+  await expect(page.locator("#level-editor")).toBeHidden({ timeout: 20000 });
+  await expect(page.locator("#placement-bar")).toBeVisible();
+  const endZ = await page.evaluate(() => {
+    const g = window.__game!;
+    g.pause(true);
+    for (let i = 0; i < 30; i++)
+      g.driveFrames(1, 16, () => ({ throttle: 1, steer: 0, brake: 0 }), false);
+    return g.snapshot().position.z;
+  });
+  expect(endZ).toBeGreaterThan(21);
+  await page.evaluate(
+    (name) => window.__game!.customLevels.remove(name),
+    "e2e-euler",
+  );
+});

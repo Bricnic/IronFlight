@@ -6,6 +6,7 @@ import { shouldSyncFromSession } from "./editor-state";
 import { createSettings } from "./settings-screen";
 import { loadSettings } from "./settings";
 import * as T from "three";
+import { solidQuaternion } from "./euler";
 import {
   placeInLevel,
   appendCheckpoint,
@@ -356,14 +357,7 @@ async function boot() {
       selBox.visible = editing;
       selBox.position.set(solid.x, solid.y, solid.z);
       selBox.scale.set(solid.w, solid.h, solid.d);
-      selBox.quaternion
-        .setFromAxisAngle(new T.Vector3(1, 0, 0), solid.angle ?? 0)
-        .multiply(
-          new T.Quaternion().setFromAxisAngle(
-            new T.Vector3(0, 1, 0),
-            solid.yaw ?? 0,
-          ),
-        );
+      selBox.quaternion.copy(solidQuaternion(solid));
     } else if (node.kind === "prefab" && node.prefab) {
       const prefab = node.prefab;
       const box = PREFAB_BOX[prefab.kind] ?? [2, 2, 2];
@@ -464,6 +458,7 @@ async function boot() {
         x: prefab.x,
         z: prefab.z,
         ground: prefab.y ?? 0,
+        ...(prefab.yaw === undefined ? {} : { yaw: prefab.yaw }),
       });
     else
       sim.comic.addHazard({
@@ -576,7 +571,7 @@ async function boot() {
         (s) => s.id === ctx.solid.id,
       )!;
       sim.updateSolidCollider(updated);
-      view.rotateCourseSolid(updated.id, yaw, updated.angle ?? 0);
+      view.rotateCourseSolid(updated.id, yaw, updated.angle ?? 0, updated.roll ?? 0);
       refreshSelBox();
       say(`Rotated ${ctx.solid.id} to ${Math.round((yaw * 180) / Math.PI)}°`);
     } catch (e) {

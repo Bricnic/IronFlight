@@ -1,6 +1,7 @@
 import * as T from "three";
-import type { CustomLevel } from "./custom-level";
+import { PROP_PREFAB_KINDS, type CustomLevel } from "./custom-level";
 import type { EditorSelection, EditorStore } from "./editor-state";
+import { trackballEuler } from "./euler";
 /** Resolve a pick from raycast hits by walking to tagged ancestors. */
 export function resolveViewportPick(
   hits: { object: unknown }[],
@@ -160,7 +161,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     };
   };
   let drag: { planeY: number; offX: number; offZ: number } | null = null;
-  let rotate: { startX: number; startYaw: number } | null = null;
+  let rotate = false;
   let pan = false;
   let downEmpty = false;
   let downX = 0;
@@ -198,9 +199,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     }
     store.select(selection);
     if (store.tool === "rotator") {
-      const current = store.selectedItem();
-      if (current?.kind === "solid")
-        rotate = { startX: e.clientX, startYaw: current.item.yaw ?? 0 };
+      rotate = true;
       renderer.domElement.setPointerCapture(e.pointerId);
       return false;
     }
@@ -229,9 +228,36 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       return;
     }
     if (rotate) {
-      store.updateSelected({
-        yaw: rotate.startYaw + (e.clientX - rotate.startX) * 0.01,
-      });
+      const dx = e.clientX - downX;
+      const dy = e.clientY - downY;
+      downX = e.clientX;
+      downY = e.clientY;
+      const current = store.selectedItem();
+      if (current?.kind === "solid") {
+        const right = new T.Vector3().setFromMatrixColumn(camera.matrix, 0);
+        const up = new T.Vector3().setFromMatrixColumn(camera.matrix, 1);
+        const out = trackballEuler(
+          {
+            yaw: current.item.yaw ?? 0,
+            pitch: current.item.angle ?? 0,
+            roll: current.item.roll ?? 0,
+          },
+          dx,
+          dy,
+          right,
+          up,
+        );
+        store.updateSelected({
+          yaw: out.yaw,
+          angle: out.pitch,
+          roll: out.roll,
+        });
+      } else if (
+        current?.kind === "prefab" &&
+        (PROP_PREFAB_KINDS as readonly string[]).includes(current.item.kind)
+      ) {
+        store.updateSelected({ yaw: (current.item.yaw ?? 0) + dx * 0.01 });
+      }
       return;
     }
     if (!drag) return;
@@ -247,7 +273,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   const endGesture = (e: PointerEvent) => {
     if (drag || rotate || pan) {
       drag = null;
-      rotate = null;
+      rotate = false;
       pan = false;
       return;
     }
@@ -311,7 +337,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         holder.rotation.set(
           s.angle ?? 0,
           s.yaw ?? 0,
-          0,
+          s.roll ?? 0,
           "YXZ",
         );
         wireBox(
@@ -352,6 +378,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           }),
         );
         marker.position.set(p.x, (p.y ?? 0) + 1.5, p.z);
+        marker.rotation.y = p.yaw ?? 0;
         marker.userData.pick = { kind: "prefab", id: p.id };
         if (selection != null && "id" in selection && selection.id === p.id)
           marker.scale.setScalar(1.6);
