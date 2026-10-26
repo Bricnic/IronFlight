@@ -189,3 +189,70 @@ test("wireframe viewport selects, moves and deselects with the mouse", async ({
     "e2e-viewport",
   );
 });
+test("wireframe tools pan, sample textures and rotate", async ({ page }) => {
+  await openEditor(page);
+  await page.evaluate(() =>
+    window.__game!.customLevels.remove("e2e-tools").catch(() => {}),
+  );
+  await page.locator("#editor-name").fill("e2e-tools");
+  await page.locator("#editor-new").click();
+  await page.locator("#editor-solid-kind").selectOption("barrier");
+  await page.locator("#editor-add-solid").click();
+  const tool = () => page.evaluate(() => window.__game!.editor().tool);
+  const sel = () => page.evaluate(() => window.__game!.editor().selection);
+  await expect.poll(sel, { timeout: 15000 }).toBe("solid:barrier-3");
+  expect(await tool()).toBe("select");
+  const canvas = page.locator("#level-editor canvas");
+  const box = (await canvas.boundingBox())!;
+  const project = (point: { x: number; y: number; z: number }) =>
+    page.evaluate((p) => window.__game!.editorProject(p), point);
+  // Pan drags move the camera target without touching selection.
+  await page.locator("#editor-tool-pan").click();
+  await expect.poll(tool, { timeout: 15000 }).toBe("pan");
+  const before = await project({ x: 4, y: 0.8, z: 0 });
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  const after = await project({ x: 4, y: 0.8, z: 0 });
+  expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(
+    5,
+  );
+  expect(await sel()).toBe("solid:barrier-3");
+  // Eyedropper copies the ground texture onto the selected barrier.
+  await page.locator("#editor-tool-select").click();
+  await page.locator("#editor-tool-eyedropper").click();
+  await expect.poll(tool, { timeout: 15000 }).toBe("eyedropper");
+  const ground = await project({ x: -30, y: 0, z: -30 });
+  await page.mouse.click(ground.x, ground.y);
+  const texture = page.locator('#editor-props select[data-prop="texture"]');
+  await expect
+    .poll(async () => texture.inputValue(), { timeout: 15000 })
+    .toBe("grass_ground");
+  expect(await sel()).toBe("solid:barrier-3");
+  // Rotator drags yaw the selection; it persists to disk.
+  await page.locator("#editor-tool-rotator").click();
+  await expect.poll(tool, { timeout: 15000 }).toBe("rotator");
+  const at = await project({ x: 4, y: 0.8, z: 0 });
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down();
+  await page.mouse.move(at.x + 60, at.y, { steps: 8 });
+  await page.mouse.up();
+  await page.locator("#editor-save").click();
+  await expect(page.locator("#editor-status")).toContainText(
+    "Saved e2e-tools",
+    { timeout: 15000 },
+  );
+  const loaded = await page.evaluate(() =>
+    window.__game!.customLevels.load("e2e-tools"),
+  );
+  expect(
+    loaded.solids.find((s) => s.id === "barrier-3")?.yaw ?? 0,
+  ).toBeGreaterThan(0.1);
+  await page.evaluate(
+    (name) => window.__game!.customLevels.remove(name),
+    "e2e-tools",
+  );
+});

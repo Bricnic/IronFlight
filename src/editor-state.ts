@@ -14,6 +14,7 @@ export type EditorSelection =
   | { kind: "target"; index: number }
   | { kind: "spawn" }
   | null;
+export type EditorTool = "select" | "pan" | "eyedropper" | "rotator";
 /**
  * The editor store may adopt a live session's level only when it has no
  * unsaved work of its own and both sides name the same level.
@@ -29,6 +30,7 @@ export function shouldSyncFromSession(
 export class EditorStore {
   level: CustomLevel;
   selection: EditorSelection = null;
+  tool: EditorTool = "select";
   dirty = false;
   private listeners = new Set<() => void>();
   constructor(name: string) {
@@ -64,6 +66,10 @@ export class EditorStore {
   }
   select(selection: EditorSelection) {
     this.selection = selection;
+    this.emit(false);
+  }
+  setTool(tool: EditorTool) {
+    this.tool = tool;
     this.emit(false);
   }
   private nextId(prefix: string, taken: Set<string>) {

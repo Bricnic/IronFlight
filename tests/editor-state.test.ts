@@ -115,3 +115,17 @@ it("syncs the store from a live session only when safe", () => {
   expect(shouldSyncFromSession(false, "A", "B")).toBe(false);
   expect(shouldSyncFromSession(false, "A", undefined)).toBe(false);
 });
+it("switches viewport tools without dirtying the level", () => {
+  const store = new EditorStore("Tools");
+  expect(store.tool).toBe("select");
+  let notified = 0;
+  store.onChange(() => notified++);
+  store.setTool("pan");
+  expect(store.tool).toBe("pan");
+  expect(notified).toBe(1);
+  expect(store.dirty).toBe(false);
+  store.setTool("eyedropper");
+  store.setTool("rotator");
+  expect(store.tool).toBe("rotator");
+  expect(store.dirty).toBe(false);
+});

@@ -65,6 +65,13 @@ function attachOrbit(
   let panning = false;
   let px = 0;
   let py = 0;
+  const panPixels = (dx: number, dy: number) => {
+    const scale = spherical.radius / 400;
+    const right = new T.Vector3().setFromMatrixColumn(camera.matrix, 0);
+    const up = new T.Vector3().setFromMatrixColumn(camera.matrix, 1);
+    target.addScaledVector(right, -dx * scale);
+    target.addScaledVector(up, dy * scale);
+  };
   dom.addEventListener("pointerdown", (e) => {
     if (canStart && !canStart(e)) return;
     dragging = true;
@@ -80,11 +87,7 @@ function attachOrbit(
     px = e.clientX;
     py = e.clientY;
     if (panning) {
-      const scale = spherical.radius / 400;
-      const right = new T.Vector3().setFromMatrixColumn(camera.matrix, 0);
-      const up = new T.Vector3().setFromMatrixColumn(camera.matrix, 1);
-      target.addScaledVector(right, -dx * scale);
-      target.addScaledVector(up, dy * scale);
+      panPixels(dx, dy);
     } else {
       spherical.theta -= dx * 0.008;
       spherical.phi = Math.max(
@@ -117,6 +120,10 @@ function attachOrbit(
     frame(point: T.Vector3) {
       target.copy(point);
       spherical.radius = 90;
+      apply();
+    },
+    panBy(dx: number, dy: number) {
+      panPixels(dx, dy);
       apply();
     },
   };
@@ -153,22 +160,50 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     };
   };
   let drag: { planeY: number; offX: number; offZ: number } | null = null;
+  let rotate: { startX: number; startYaw: number } | null = null;
+  let pan = false;
   let downEmpty = false;
   let downX = 0;
   let downY = 0;
   let moved = false;
   const canStart = (e: PointerEvent) => {
     if (e.button === 2) return true;
-    const { selection, point } = pickAt(e.clientX, e.clientY);
     downX = e.clientX;
     downY = e.clientY;
     moved = false;
+    downEmpty = false;
+    if (store.tool === "pan") {
+      pan = true;
+      renderer.domElement.setPointerCapture(e.pointerId);
+      return false;
+    }
+    const { selection, point } = pickAt(e.clientX, e.clientY);
     if (!selection || !point) {
       downEmpty = true;
       return true;
     }
-    downEmpty = false;
+    if (store.tool === "eyedropper") {
+      const current = store.selectedItem();
+      if (
+        selection.kind === "solid" &&
+        current?.kind === "solid" &&
+        current.item.id !== selection.id
+      ) {
+        const source = store.level.solids.find((s) => s.id === selection.id);
+        store.updateSelected({ texture: source?.texture });
+      } else {
+        store.select(selection);
+      }
+      return false;
+    }
     store.select(selection);
+    if (store.tool === "rotator") {
+      const current = store.selectedItem();
+      if (current?.kind === "solid")
+        rotate = { startX: e.clientX, startYaw: current.item.yaw ?? 0 };
+      renderer.domElement.setPointerCapture(e.pointerId);
+      return false;
+    }
     const item = store.selectedItem()?.item;
     drag = {
       planeY: point.y,
@@ -187,6 +222,18 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   );
   renderer.domElement.addEventListener("pointermove", (e) => {
     if (Math.hypot(e.clientX - downX, e.clientY - downY) >= 4) moved = true;
+    if (pan) {
+      orbit.panBy(e.clientX - downX, e.clientY - downY);
+      downX = e.clientX;
+      downY = e.clientY;
+      return;
+    }
+    if (rotate) {
+      store.updateSelected({
+        yaw: rotate.startYaw + (e.clientX - rotate.startX) * 0.01,
+      });
+      return;
+    }
     if (!drag) return;
     raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
     const hit = planeHit(
@@ -198,8 +245,10 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       store.updateSelected({ x: hit.x - drag.offX, z: hit.z - drag.offZ });
   });
   const endGesture = (e: PointerEvent) => {
-    if (drag) {
+    if (drag || rotate || pan) {
       drag = null;
+      rotate = null;
+      pan = false;
       return;
     }
     if (downEmpty && !moved && e.button !== 2) store.select(null);

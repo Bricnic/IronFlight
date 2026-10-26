@@ -72,6 +72,17 @@ export function createLevelEditor(
   const playtestButton = el("button", { id: "editor-playtest" }, "Playtest");
   const deleteButton = el("button", { id: "editor-delete" }, "Delete");
   const backButton = el("button", { id: "editor-back" }, "Back");
+  const toolButtons = (
+    ["select", "pan", "eyedropper", "rotator"] as const
+  ).map((tool) => {
+    const button = el(
+      "button",
+      { id: `editor-tool-${tool}` },
+      tool[0].toUpperCase() + tool.slice(1),
+    ) as HTMLButtonElement;
+    button.addEventListener("click", () => store.setTool(tool));
+    return { tool, button };
+  });
   const status = el("span", { id: "editor-status" });
   const error = el("span", { id: "editor-error", role: "alert" });
   top.append(
@@ -82,6 +93,7 @@ export function createLevelEditor(
     playtestButton,
     deleteButton,
     backButton,
+    ...toolButtons.map(({ button }) => button),
     status,
     error,
   );
@@ -304,6 +316,8 @@ export function createLevelEditor(
   function refresh() {
     if (document.activeElement !== nameInput) nameInput.value = store.level.name;
     showStatus(store.dirty ? "Unsaved changes" : "Saved");
+    for (const { tool, button } of toolButtons)
+      button.classList.toggle("selected", store.tool === tool);
     refreshList();
     refreshProps();
     viewport.render(store.level, store.selection);
@@ -431,6 +445,7 @@ export function createLevelEditor(
               : store.selection.kind === "spawn"
                 ? "spawn"
                 : `${store.selection.kind}:${store.selection.index}`,
+        tool: store.tool,
         dirty: store.dirty,
         levels: Array.from(levelPicker.options)
           .map((o) => o.value)

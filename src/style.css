@@ -975,6 +975,10 @@ kbd {
   cursor: pointer;
   white-space: nowrap;
 }
+.editor-top button.selected {
+  border-color: #ffa762;
+  background: #3a2f22;
+}
 #editor-status {
   color: #8fa5a8;
   font-size: 12px;

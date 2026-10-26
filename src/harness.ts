@@ -21,6 +21,7 @@ export interface GameHarness {
     checkpoints: number;
     targets: number;
     selection: string | null;
+    tool: string;
     dirty: boolean;
     levels: string[];
   };
