@@ -1,0 +1,190 @@
+{
+  "name": "Clone Triple Loop",
+  "mode": "race",
+  "spawn": {
+    "x": -24,
+    "z": -65,
+    "y": 2.1,
+    "yaw": 0
+  },
+  "checkpoints": [
+    {
+      "x": -24,
+      "z": 85
+    },
+    {
+      "x": -24,
+      "z": 195
+    },
+    {
+      "x": -12,
+      "z": 390
+    }
+  ],
+  "solids": [
+    {
+      "id": "route-0",
+      "kind": "road",
+      "x": -24,
+      "y": -0.6,
+      "z": -55,
+      "w": 14,
+      "h": 1.2,
+      "d": 110,
+      "color": 3161673
+    },
+    {
+      "id": "route-1",
+      "kind": "ramp",
+      "x": -24,
+      "y": 2.25,
+      "z": 6,
+      "w": 14,
+      "h": 0.5,
+      "d": 13,
+      "angle": -0.39479111969976155,
+      "color": 3161673
+    },
+    {
+      "id": "route-2",
+      "kind": "road",
+      "x": -24,
+      "y": -0.6,
+      "z": 81,
+      "w": 14,
+      "h": 1.2,
+      "d": 108,
+      "color": 3161673
+    },
+    {
+      "id": "bed-0",
+      "kind": "road",
+      "x": -24,
+      "y": -0.6,
+      "z": 290,
+      "w": 14,
+      "h": 1.2,
+      "d": 310,
+      "color": 3161673
+    },
+    {
+      "id": "bed-1",
+      "kind": "road",
+      "x": -12,
+      "y": -0.6,
+      "z": 355,
+      "w": 12,
+      "h": 1.2,
+      "d": 140,
+      "color": 3161673
+    },
+    {
+      "id": "gap-lava",
+      "kind": "lava",
+      "x": -24,
+      "y": -7.0125,
+      "z": 19.5,
+      "w": 13,
+      "h": 2.175,
+      "d": 15,
+      "color": 16738848
+    },
+    {
+      "id": "arena-floor",
+      "kind": "ground",
+      "x": 0,
+      "y": -9.2,
+      "z": 140,
+      "w": 340,
+      "h": 1,
+      "d": 630,
+      "color": 13098930,
+      "texture": "grass_ground"
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "loop-1",
+      "kind": "loop",
+      "x": -24,
+      "z": 290
+    },
+    {
+      "id": "dragon-213--1",
+      "kind": "dragon",
+      "x": -34,
+      "z": 213
+    },
+    {
+      "id": "dragon-213-1",
+      "kind": "dragon",
+      "x": -14,
+      "z": 213
+    },
+    {
+      "id": "dragon-232--1",
+      "kind": "dragon",
+      "x": -34,
+      "z": 232
+    },
+    {
+      "id": "dragon-232-1",
+      "kind": "dragon",
+      "x": -14,
+      "z": 232
+    },
+    {
+      "id": "stand-west",
+      "kind": "grandstand",
+      "x": -83,
+      "z": 10
+    },
+    {
+      "id": "stand-east",
+      "kind": "grandstand",
+      "x": 65,
+      "z": 10
+    },
+    {
+      "id": "lamp--57--90",
+      "kind": "lamp",
+      "x": -57,
+      "z": -90
+    },
+    {
+      "id": "lamp--57-0",
+      "kind": "lamp",
+      "x": -57,
+      "z": 0
+    },
+    {
+      "id": "lamp--57-95",
+      "kind": "lamp",
+      "x": -57,
+      "z": 95
+    },
+    {
+      "id": "lamp-57--90",
+      "kind": "lamp",
+      "x": 57,
+      "z": -90
+    },
+    {
+      "id": "lamp-57-0",
+      "kind": "lamp",
+      "x": 57,
+      "z": 0
+    },
+    {
+      "id": "lamp-57-95",
+      "kind": "lamp",
+      "x": 57,
+      "z": 95
+    }
+  ],
+  "medals": {
+    "gold": 35,
+    "silver": 50,
+    "bronze": 75
+  }
+}

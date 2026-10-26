@@ -7,7 +7,7 @@ import {
   textureLoadErrors,
   dragonFlameMaterial,
 } from "./materials";
-import { dragonFlame } from "./loop";
+import { dragonFlame, dragonFiring } from "./loop";
 import { buildDragonStatue, addDragonJetFan } from "./loop-view";
 import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
@@ -31,6 +31,11 @@ export class CourseView extends T.Group {
   private ringModels: T.Group[] = [];
   private dragonModels: T.Group[] = [];
   private dragonJets: T.Group[] = [];
+  private dragonGlow: {
+    bronze: T.MeshStandardMaterial;
+    horn: T.MeshStandardMaterial;
+    eyes: T.MeshStandardMaterial;
+  }[] = [];
   private lampModels: T.Group[] = [];
   private grandstandModels: T.Group[] = [];
   private loopSegmentModels = 0;
@@ -386,6 +391,7 @@ export class CourseView extends T.Group {
       this.ringModels = [];
       this.dragonModels = [];
       this.dragonJets = [];
+      this.dragonGlow = [];
       this.lampModels = [];
       this.grandstandModels = [];
       this.loopSegmentModels = 0;
@@ -542,20 +548,27 @@ export class CourseView extends T.Group {
         for (const p of track.custom?.prefabs ?? []) {
           if (p.kind !== "dragon") continue;
           const baseY = p.y ?? 0;
+          const bronze = pbr("green_metal_rust", 1, {
+            color: 0x15191b,
+            metalness: 0.65,
+            roughness: 0.48,
+          });
+          const horn = new T.MeshStandardMaterial({
+            color: 0xd7c7a0,
+            roughness: 0.7,
+          });
+          const eyes = new T.MeshStandardMaterial({
+            color: 0x73f5bc,
+            emissive: 0x1bbf8e,
+            emissiveIntensity: 3,
+          });
           const statue = buildDragonStatue(
             pbr("rock_06", 2, { color: 0x626b66, roughness: 0.88 }),
-            pbr("green_metal_rust", 1, {
-              color: 0x15191b,
-              metalness: 0.65,
-              roughness: 0.48,
-            }),
-            new T.MeshStandardMaterial({ color: 0xd7c7a0, roughness: 0.7 }),
-            new T.MeshStandardMaterial({
-              color: 0xff5a0a,
-              emissive: 0xff3500,
-              emissiveIntensity: 3,
-            }),
+            bronze,
+            horn,
+            eyes,
           );
+          this.dragonGlow.push({ bronze, horn, eyes });
           statue.position.set(p.x, baseY, p.z);
           statue.rotation.y = -Math.PI / 2;
           this.add(statue);
@@ -708,6 +721,14 @@ export class CourseView extends T.Group {
       g.position.y = p.y + Math.sin(sim.time * 3) * 0.2;
       g.children[0].rotation.y = sim.time;
       if (camera) g.children[1].quaternion.copy(camera.quaternion);
+    }
+    const danger = dragonFiring(sim.time);
+    for (const g of this.dragonGlow) {
+      g.bronze.emissive.setHex(danger ? 0xff3500 : 0x1bbf8e);
+      g.bronze.color.setHex(danger ? 0xff5a0a : 0x15191b);
+      g.horn.color.setHex(danger ? 0xff5a0a : 0xd7c7a0);
+      g.eyes.emissive.setHex(danger ? 0xff3500 : 0x1bbf8e);
+      g.eyes.color.setHex(danger ? 0xff5a0a : 0x73f5bc);
     }
     const packet = dragonFlame(sim.time);
     for (const jets of this.dragonJets) {
