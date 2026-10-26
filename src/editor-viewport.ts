@@ -50,6 +50,9 @@ const PREFAB_COLORS: Record<string, number> = {
   barrel: 0xc25a3a,
   gravestone: 0x9aa2a8,
   snowman: 0xdfe8ff,
+  hammer: 0xb08d57,
+  trampoline: 0x7af2ff,
+  ghost: 0xc9b8ff,
   checkpoint: 0x6ae08a,
 };
 /** Minimal orbit: drag rotates, wheel zooms, shift-drag pans. */

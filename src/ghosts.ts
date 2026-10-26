@@ -6,8 +6,24 @@ export const GHOST_SPEED = 6;
 export const GHOST_MAX_SPEED = 50 / 3.6;
 export const GHOST_RADIUS = 4;
 export const GHOST_DRAIN = 0.03;
-export type GhostDef = { id: string; x: number; z: number; phase: number };
+export type GhostDef = {
+  id: string;
+  x: number;
+  z: number;
+  phase: number;
+  y?: number;
+};
 export function ghostDefs(track?: Track): GhostDef[] {
+  if (track?.custom)
+    return (track.custom.prefabs ?? [])
+      .filter((p) => p.kind === "ghost")
+      .map((p, i) => ({
+        id: p.id,
+        x: p.x,
+        z: p.z,
+        phase: i * 1.6,
+        ...(p.y === undefined ? {} : { y: p.y }),
+      }));
   if (track?.id !== "haunted-hollow") return [];
   return [
     [-55, -40],
@@ -64,7 +80,7 @@ export class GhostSwarm {
     for (const def of ghostDefs(track))
       this.ghosts.push({
         ...def,
-        y: 3,
+        y: def.y ?? 3,
         overlapping: false,
         contacts: 0,
         lastEvent: -100,

@@ -6,8 +6,11 @@ import {
   courseSolids,
   courseProps,
   courseAvailable,
+  courseHazards,
 } from "../src/course";
 import { comicHazards } from "../src/comic-hazards";
+import { slideDefs } from "../src/slide";
+import { ghostDefs } from "../src/ghosts";
 import {
   TEXTURE_IDS,
   PREFAB_KINDS,
@@ -253,6 +256,83 @@ it("headlessly completes a tiny custom race", () => {
   s.dispose();
 });
 it("knows every prefab kind the palette needs", () => {
-  for (const kind of ["book", "snowman", "hydrant", "checkpoint"])
+  for (const kind of [
+    "book",
+    "snowman",
+    "hydrant",
+    "checkpoint",
+    "hammer",
+    "trampoline",
+    "ghost",
+  ])
     expect(PREFAB_KINDS).toContain(kind);
+});
+it("maps course prefabs to hazards, trampolines and ghosts", () => {
+  const level = minimal();
+  level.prefabs.push(
+    { id: "ham-1", kind: "hammer", x: 5, z: 50 },
+    { id: "tramp-1", kind: "trampoline", x: 0, z: 60 },
+    { id: "gh-1", kind: "ghost", x: -5, z: -50 },
+  );
+  const track = toTrack(validateCustomLevel(level));
+  expect(track.trampolines).toHaveLength(1);
+  expect(track.trampolines![0]).toMatchObject({ x: 0, z: 60 });
+  const hazards = courseHazards(track);
+  expect(hazards).toHaveLength(1);
+  expect(hazards[0]).toMatchObject({
+    id: "ham-1",
+    kind: "hammer",
+    x: 5,
+    z: 50,
+  });
+  expect(slideDefs(track).trampolines).toHaveLength(1);
+  expect(ghostDefs(track)).toHaveLength(1);
+  expect(ghostDefs(track)[0]).toMatchObject({ id: "gh-1", x: -5, z: -50 });
+});
+it("headless hammer strikes a parked car", () => {
+  const level = minimal();
+  level.name = "Hammer Park";
+  level.prefabs.push({ id: "ham-1", kind: "hammer", x: 0, z: 0 });
+  const track = toTrack(validateCustomLevel(level));
+  registerCustomTrack(track);
+  const s = new Simulation();
+  s.startTrack(track.id);
+  s.body.setTranslation({ x: 2, y: 2.1, z: 0 }, true);
+  s.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+  s.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+  for (let i = 0; i < 240; i++) s.step({});
+  expect(s.hammerImpacts.length).toBeGreaterThan(0);
+  expect(s.snapshot().integrity).toBeLessThan(1);
+  s.dispose();
+});
+it("headless trampoline bounces a parked car", () => {
+  const level = minimal();
+  level.name = "Tramp Park";
+  level.prefabs.push({ id: "tramp-1", kind: "trampoline", x: 0, z: 20 });
+  const track = toTrack(validateCustomLevel(level));
+  registerCustomTrack(track);
+  const s = new Simulation();
+  s.startTrack(track.id);
+  s.body.setTranslation({ x: 0, y: 2.1, z: 20 }, true);
+  s.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+  s.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+  for (let i = 0; i < 120; i++) s.step({});
+  expect(s.slide.snapshot().trampolines[0].bounces).toBeGreaterThan(0);
+  expect(s.trackRun?.snapshot().bounced).toBe(true);
+  s.dispose();
+});
+it("headless ghost chases and drains a parked car", () => {
+  const level = minimal();
+  level.name = "Ghost Park";
+  level.prefabs.push({ id: "gh-1", kind: "ghost", x: 0, z: -90 });
+  const track = toTrack(validateCustomLevel(level));
+  registerCustomTrack(track);
+  const s = new Simulation();
+  s.startTrack(track.id);
+  for (let i = 0; i < 400; i++) s.step({});
+  const ghosts = s.ghosts.snapshot();
+  expect(ghosts.ghosts).toHaveLength(1);
+  expect(ghosts.ghosts[0].contacts).toBeGreaterThan(0);
+  expect(s.snapshot().integrity).toBeLessThan(1);
+  s.dispose();
 });

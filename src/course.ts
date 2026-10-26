@@ -855,7 +855,17 @@ export function courseSolids(track: Track): CourseSolid[] {
   return result;
 }
 export function courseHazards(track: Track): Hazard[] {
-  if (track.custom) return [];
+  if (track.custom)
+    return track.custom.prefabs
+      .filter((p) => p.kind === "hammer")
+      .map((p) => ({
+        id: p.id,
+        route: track.id,
+        kind: "hammer" as const,
+        x: p.x,
+        y: p.y ?? 3.5,
+        z: p.z,
+      }));
   if (track.id === "inferno-vault")
     return [
       {

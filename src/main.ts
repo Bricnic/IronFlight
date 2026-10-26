@@ -24,6 +24,7 @@ import {
   deleteCheckpointOnTrack,
   duplicateCheckpointOnTrack,
   registerCustomTrack,
+  COMIC_PREFAB_KINDS,
   TEXTURE_IDS,
   validateCustomLevel,
 } from "./custom-level";
@@ -461,7 +462,9 @@ async function boot() {
         ground: prefab.y ?? 0,
         ...(prefab.yaw === undefined ? {} : { yaw: prefab.yaw }),
       });
-    else
+    else if (
+      (COMIC_PREFAB_KINDS as readonly string[]).includes(prefab.kind)
+    )
       sim.comic.addHazard({
         id: prefab.id,
         kind: prefab.kind as "book" | "hydrant",

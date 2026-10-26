@@ -31,9 +31,15 @@ export const COMIC_PREFAB_KINDS = [
   "water",
   "potion",
 ] as const;
+export const COURSE_PREFAB_KINDS = [
+  "hammer",
+  "trampoline",
+  "ghost",
+] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,
   ...COMIC_PREFAB_KINDS,
+  ...COURSE_PREFAB_KINDS,
   "checkpoint",
 ] as const;
 export type PrefabKind = (typeof PREFAB_KINDS)[number];
@@ -307,6 +313,9 @@ export function toTrack(level: CustomLevel): Track {
     ...g,
     y: gatePoints[i].y ?? 2,
   }));
+  const trampolines = level.prefabs
+    .filter((p) => p.kind === "trampoline")
+    .map((p) => ({ x: p.x, y: p.y ?? 0, z: p.z }));
   const base = {
     id: `custom:${customSlug(level.name)}` as CustomTrackId,
     name: level.name,
@@ -317,6 +326,7 @@ export function toTrack(level: CustomLevel): Track {
     path,
     medals: { ...level.medals },
     custom: level,
+    ...(trampolines.length ? { trampolines } : {}),
     ...(level.rings?.length
       ? {
           rings: level.rings.map((r) => ({

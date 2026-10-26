@@ -19,6 +19,7 @@ export type FlowBox = {
 export type TrampDef = { x: number; y: number; z: number };
 export type SlideDef = { flows: FlowBox[]; trampolines: TrampDef[] };
 export function slideDefs(track?: Track): SlideDef {
+  if (track?.custom) return { flows: [], trampolines: track.trampolines ?? [] };
   if (track?.id !== "sky-slide") return { flows: [], trampolines: [] };
   const flows: FlowBox[] = [];
   for (let i = 1; i < track.path.length; i++) {

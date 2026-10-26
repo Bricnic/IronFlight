@@ -11,6 +11,11 @@ import {
   GHOST_DRAIN,
 } from "../src/ghosts";
 import { buildGhostMeshes, ghostStats } from "../src/course-view";
+import {
+  blankLevel,
+  toTrack,
+  validateCustomLevel,
+} from "../src/custom-level";
 beforeAll(initPhysics);
 it("haunts the hollow with three distant ghosts and nowhere else", () => {
   const defs = ghostDefs(getTrack("haunted-hollow"));
@@ -23,6 +28,14 @@ it("haunts the hollow with three distant ghosts and nowhere else", () => {
   }
   expect(ghostDefs(getTrack("harbor-sprint"))).toEqual([]);
   expect(ghostDefs()).toEqual([]);
+});
+it("spawns custom ghost prefabs and nowhere else", () => {
+  const level = blankLevel("Ghost Yard");
+  level.prefabs.push({ id: "gh-1", kind: "ghost", x: -9, z: 12 });
+  const track = toTrack(validateCustomLevel(level));
+  const defs = ghostDefs(track);
+  expect(defs).toHaveLength(1);
+  expect(defs[0]).toMatchObject({ id: "gh-1", x: -9, z: 12 });
 });
 it("seek steering closes distance at a capped, escapable speed", () => {
   expect(GHOST_SPEED).toBeLessThan(25 * DEFAULT_TUNING.topSpeed);

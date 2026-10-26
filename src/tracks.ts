@@ -31,6 +31,7 @@ export type Track = {
   mode: "race" | "arena" | "demolition";
   controls?: "drive" | "strafe";
   trampoline?: Point & { y: number };
+  trampolines?: { x: number; y: number; z: number }[];
   ring?: Point & { y: number; radius: number };
   rings?: TrackRing[];
   demolish?: Demolishable[];

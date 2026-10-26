@@ -439,6 +439,17 @@ export class CourseView extends T.Group {
                 rotor.add(spike);
               }
             }
+            if (h.y > 0.3)
+              for (const side of [-1, 1]) {
+                root.add(box(0.6, h.y, 0.6, 0, -h.y / 2, side * 2.5));
+                root.add(box(1.6, 0.3, 1.6, 0, -h.y + 0.15, side * 2.5));
+              }
+            const axle = new T.Mesh(
+              new T.CylinderGeometry(0.25, 0.25, 5.6, 12),
+              material,
+            );
+            axle.rotation.x = Math.PI / 2;
+            root.add(axle);
             this.hazards.push({ h, root, rotor });
           } else if (h.kind === "fire") {
             root.add(box(12, 0.25, 0.6, 0, -1.2));
@@ -480,6 +491,12 @@ export class CourseView extends T.Group {
         if (track.trampoline) {
           const tramp = buildTrampolineMesh();
           tramp.position.set(track.trampoline.x, -0.5, track.trampoline.z);
+          this.add(tramp);
+          this.trampolineModels.push(tramp);
+        }
+        for (const t of track.trampolines ?? []) {
+          const tramp = buildTrampolineMesh();
+          tramp.position.set(t.x, t.y - 0.5, t.z);
           this.add(tramp);
           this.trampolineModels.push(tramp);
         }

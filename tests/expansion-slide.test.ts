@@ -3,6 +3,11 @@ import { Simulation, initPhysics } from "../src/simulation";
 import { getTrack } from "../src/tracks";
 import { SlideSystems, slideDefs, inFlow, type FlowBox } from "../src/slide";
 import {
+  blankLevel,
+  toTrack,
+  validateCustomLevel,
+} from "../src/custom-level";
+import {
   buildTrampolineMesh,
   trampolineStats,
   buildRingMesh,
@@ -35,6 +40,15 @@ it("defines flow zones along the slide and a trampoline ahead of the ring", () =
     trampolines: [],
   });
   expect(slideDefs()).toEqual({ flows: [], trampolines: [] });
+});
+it("maps custom trampoline prefabs without flows", () => {
+  const level = blankLevel("Tramp Yard");
+  level.prefabs.push({ id: "tramp-1", kind: "trampoline", x: 3, z: 30 });
+  const track = toTrack(validateCustomLevel(level));
+  const defs = slideDefs(track);
+  expect(defs.flows).toEqual([]);
+  expect(defs.trampolines).toHaveLength(1);
+  expect(defs.trampolines[0]).toMatchObject({ x: 3, z: 30 });
 });
 it("flow boxes rotate with the slide", () => {
   const box: FlowBox = {
