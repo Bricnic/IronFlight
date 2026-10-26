@@ -1,6 +1,12 @@
 import { beforeAll, expect, it } from "vitest";
 import { initPhysics, Simulation } from "../src/simulation";
-import { LOOP, dragonFiring, loopScenerySolids } from "../src/loop";
+import {
+  LOOP,
+  dragonFiring,
+  loopScenerySolids,
+  loopRingSolids,
+  loopSupportSolids,
+} from "../src/loop";
 import { DEFAULT_TUNING } from "../src/tuning";
 import { loopDriver } from "./loop-driver";
 beforeAll(initPhysics);
@@ -17,6 +23,26 @@ it("dragon ignition delays center damage while prolonged exposure burns the truc
   expect(s.snapshot().integrity).toBeGreaterThan(0.55);
   expect(s.snapshot().integrity).toBeLessThan(0.58);
   s.dispose();
+});
+it("builds parameterized loop rings and supports for custom levels", () => {
+  const segs = loopRingSolids(10, 0, 100);
+  expect(segs).toHaveLength(96);
+  for (const s of segs) expect(s.x).toBe(10);
+  expect(segs[0].angle).toBeCloseTo(-0.0327, 3);
+  expect(segs[0].y).toBeCloseTo(-0.18, 1);
+  expect(segs[0].z).toBeCloseTo(101.5, 0);
+  expect(Math.max(...segs.map((s) => s.y))).toBeCloseTo(90.2, 0);
+  expect(segs[95].z).toBeCloseTo(98.5, 0);
+  const posts = loopSupportSolids(10, 0, 100);
+  expect(posts).toHaveLength(4);
+  expect(posts.map((p) => [p.x, p.y, p.z]).sort()).toEqual(
+    [
+      [3, 12.5, 66],
+      [3, 12.5, 134],
+      [17, 12.5, 66],
+      [17, 12.5, 134],
+    ].sort(),
+  );
 });
 it("the safe interval causes no dragon damage and an off-pad truck gets no boost", () => {
   const s = new Simulation("easy");

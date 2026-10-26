@@ -31,6 +31,7 @@ import {
   LOOP,
   dragonFlame,
   dragonExposure,
+  dragonExposureAt,
   loopSolids,
   loopScenerySolids,
 } from "./loop";
@@ -449,6 +450,22 @@ export class Simulation {
     this.damage(part.id, this.parts.get(part.id)!.health);
     this.damageEvents.push({ source, part: part.id, time: this.time });
   }
+  private burnDragonFire(intensity: number) {
+    this.inFlames = true;
+    for (const part of this.partDefs)
+      this.fireDamage(
+        part.id,
+        (part.hp * DT * this.tuning.dragonDamage * intensity) / 3,
+      );
+    if (this.time - (this.cooldown.get("dragon-fire") ?? -1) > 0.15) {
+      this.cooldown.set("dragon-fire", this.time);
+      this.damageEvents.push({
+        source: "dragon-fire",
+        part: "chassis-front",
+        time: this.time,
+      });
+    }
+  }
   step(input: Input = {}) {
     this.previousPosition.copy(this.body.translation());
     this.previousRotation.copy(this.body.rotation());
@@ -507,22 +524,20 @@ export class Simulation {
       dragonIntensity > 0 &&
       position.y < 5 &&
       LOOP.dragonZ.some((z) => Math.abs(position.z - z) < 3)
-    ) {
-      this.inFlames = true;
-      for (const part of this.partDefs)
-        this.fireDamage(
-          part.id,
-          (part.hp * DT * this.tuning.dragonDamage * dragonIntensity) / 3,
+    )
+      this.burnDragonFire(dragonIntensity);
+    const customs = this.courseTrack?.custom;
+    if (customs)
+      for (const p of customs.prefabs) {
+        if (p.kind !== "dragon") continue;
+        const jet = dragonExposureAt(
+          this.time,
+          position,
+          { x: p.x - 3.55, y: (p.y ?? 0) + 3.25, z: p.z },
+          { x: -1, z: 0 },
         );
-      if (this.time - (this.cooldown.get("dragon-fire") ?? -1) > 0.15) {
-        this.cooldown.set("dragon-fire", this.time);
-        this.damageEvents.push({
-          source: "dragon-fire",
-          part: "chassis-front",
-          time: this.time,
-        });
+        if (jet > 0) this.burnDragonFire(jet);
       }
-    }
     const onLoop =
       routeX !== undefined &&
       Math.abs(position.x - routeX - 6) < 14 &&

@@ -7,6 +7,7 @@ import {
   PROP_PREFAB_KINDS,
   customTrackIds,
 } from "./custom-level.ts";
+import { loopRingSolids, loopSupportSolids } from "./loop.ts";
 export type CourseSolid = {
   id: string;
   kind:
@@ -16,7 +17,10 @@ export type CourseSolid = {
     | "barrier"
     | "ramp"
     | "support"
-    | "lava";
+    | "lava"
+    | "loop"
+    | "lamp"
+    | "grandstand";
   x: number;
   y: number;
   z: number;
@@ -41,7 +45,55 @@ export const courseAvailable = (id: string) =>
     "sky-slide",
   ].includes(id) || customTrackIds().includes(id);
 export function courseSolids(track: Track): CourseSolid[] {
-  if (track.custom) return track.custom.solids.map((s) => ({ ...s }));
+  if (track.custom) {
+    const solids: CourseSolid[] = track.custom.solids.map((s) => ({ ...s }));
+    for (const p of track.custom.prefabs) {
+      if (p.kind === "loop") {
+        const baseY = p.y ?? 0;
+        loopRingSolids(p.x, baseY, p.z).forEach((s, i) =>
+          solids.push({
+            ...s,
+            id: `${p.id}-loop-${i}`,
+            kind: "loop",
+            color: 0xb0b8b8,
+          }),
+        );
+        loopSupportSolids(p.x, baseY, p.z).forEach((s, i) =>
+          solids.push({
+            ...s,
+            id: `${p.id}-post-${i}`,
+            kind: "support",
+            color: 0x767c76,
+          }),
+        );
+      } else if (p.kind === "lamp") {
+        solids.push({
+          id: `${p.id}-pole`,
+          kind: "lamp",
+          x: p.x,
+          y: (p.y ?? 0) + 12.5,
+          z: p.z,
+          w: 0.5,
+          h: 25,
+          d: 0.5,
+          color: 0x767c76,
+        });
+      } else if (p.kind === "grandstand") {
+        solids.push({
+          id: `${p.id}-bank`,
+          kind: "grandstand",
+          x: p.x + 8.5,
+          y: (p.y ?? 0) + 2.2,
+          z: p.z,
+          w: 17,
+          h: 7.6,
+          d: 80,
+          color: 0x767c76,
+        });
+      }
+    }
+    return solids;
+  }
   if (!courseAvailable(track.id))
     throw new Error(`Course not implemented: ${track.id}`);
   const solids: CourseSolid[] = [

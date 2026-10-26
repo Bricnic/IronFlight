@@ -65,7 +65,7 @@ it("commits solids, prefabs and checkpoints with unique ids", () => {
   expect(level.checkpoints).toHaveLength(2);
   expect(() => validateCustomLevel(level)).not.toThrow();
   expect(() =>
-    placeInLevel(level, { type: "prefab", kind: "dragon", x: 0, z: 0 }),
+    placeInLevel(level, { type: "prefab", kind: "kraken", x: 0, z: 0 }),
   ).toThrow(/prefab/);
   level = placeInLevel(level, {
     type: "solid",

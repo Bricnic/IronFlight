@@ -135,3 +135,49 @@ export function loopScenerySolids(): Solid[] {
     ),
   ]);
 }
+
+/** Vertical loop ring segments around (cx, cz); the car enters along +z. */
+export function loopRingSolids(cx: number, baseY: number, cz: number, radius = LOOP.radius, segments = 96) {
+  return Array.from({ length: segments }, (_, i) => {
+    const theta = ((i + 0.5) / segments) * Math.PI * 2;
+    return {
+      x: cx,
+      y: baseY + radius * (1 - Math.cos(theta)) - 0.2 * Math.cos(theta),
+      z: cz + (radius + 0.2) * Math.sin(theta),
+      w: 12,
+      h: 0.4,
+      d: 2 * radius * Math.tan(Math.PI / segments) + 0.035,
+      angle: -theta,
+    };
+  });
+}
+/** Four support columns flanking the ring. */
+export function loopSupportSolids(cx: number, baseY: number, cz: number) {
+  return [cz - 34, cz + 34].flatMap((z) =>
+    [-1, 1].map((side) => ({
+      x: cx + side * 7,
+      y: baseY + 12.5,
+      z,
+      w: 0.6,
+      h: 25,
+      d: 0.6,
+    })),
+  );
+}
+/** Flame exposure along one aimed jet, for custom dragon statues. */
+export function dragonExposureAt(
+  time: number,
+  car: { x: number; y: number; z: number },
+  mouth: { x: number; y: number; z: number },
+  dir: { x: number; z: number },
+) {
+  const flame = dragonFlame(time);
+  if (flame.opacity <= 0 || flame.head <= flame.tail) return 0;
+  if (Math.abs(car.y - mouth.y) > 3) return 0;
+  const along = (car.x - mouth.x) * dir.x + (car.z - mouth.z) * dir.z;
+  const near = DRAGON_FLAME_LENGTH * (1 - flame.head);
+  const far = DRAGON_FLAME_LENGTH * (1 - flame.tail);
+  if (along < near || along > far) return 0;
+  const lateral = Math.abs((car.x - mouth.x) * dir.z - (car.z - mouth.z) * dir.x);
+  return lateral <= 2.5 ? flame.opacity : 0;
+}

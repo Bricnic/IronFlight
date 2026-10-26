@@ -35,6 +35,10 @@ export const COURSE_PREFAB_KINDS = [
   "hammer",
   "trampoline",
   "ghost",
+  "loop",
+  "dragon",
+  "lamp",
+  "grandstand",
 ] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,

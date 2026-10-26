@@ -96,7 +96,7 @@ it("rejects malformed levels with specific errors", () => {
   expect(() =>
     validateCustomLevel({
       ...minimal(),
-      prefabs: [{ id: "x", kind: "dragon", x: 0, z: 0 }],
+      prefabs: [{ id: "x", kind: "kraken", x: 0, z: 0 }],
     }),
   ).toThrow(/prefab/);
   expect(() =>
@@ -264,8 +264,52 @@ it("knows every prefab kind the palette needs", () => {
     "hammer",
     "trampoline",
     "ghost",
+    "loop",
+    "dragon",
+    "lamp",
+    "grandstand",
   ])
     expect(PREFAB_KINDS).toContain(kind);
+});
+it("maps structure prefabs to solids", () => {
+  const level = minimal();
+  level.prefabs.push(
+    { id: "loop-1", kind: "loop", x: 0, z: 0 },
+    { id: "lamp-1", kind: "lamp", x: 20, z: 10 },
+    { id: "stand-1", kind: "grandstand", x: -30, z: 40 },
+    { id: "drag-1", kind: "dragon", x: 10, z: 0 },
+  );
+  const track = toTrack(validateCustomLevel(level));
+  const solids = courseSolids(track);
+  expect(solids.filter((s) => s.kind === "loop")).toHaveLength(96);
+  expect(
+    solids.filter((s) => s.id.startsWith("loop-1-post-")),
+  ).toHaveLength(4);
+  expect(solids.find((s) => s.id === "lamp-1-pole")).toMatchObject({
+    kind: "lamp",
+    x: 20,
+    z: 10,
+  });
+  expect(solids.find((s) => s.id === "stand-1-bank")).toMatchObject({
+    kind: "grandstand",
+  });
+  expect(solids.some((s) => s.id.includes("drag-1"))).toBe(false);
+});
+it("headless dragon burns a car in its jet", () => {
+  const level = minimal();
+  level.name = "Dragon Park";
+  level.prefabs.push({ id: "drag-1", kind: "dragon", x: 10, z: 0 });
+  const track = toTrack(validateCustomLevel(level));
+  registerCustomTrack(track);
+  const s = new Simulation();
+  s.startTrack(track.id);
+  s.body.setTranslation({ x: 2, y: 2.1, z: 0 }, true);
+  s.run(2);
+  expect(
+    s.damageEvents.filter((e) => e.source === "dragon-fire").length,
+  ).toBeGreaterThan(0);
+  expect(s.snapshot().integrity).toBeLessThan(1);
+  s.dispose();
 });
 it("maps course prefabs to hazards, trampolines and ghosts", () => {
   const level = minimal();

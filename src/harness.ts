@@ -117,6 +117,10 @@ export interface GameHarness {
       ghosts: number;
       trampolines: number;
       rings: number;
+      loopSegments: number;
+      dragons: number;
+      lamps: number;
+      grandstands: number;
       gates: number;
       pickups: number;
       solids: number;

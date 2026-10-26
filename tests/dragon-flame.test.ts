@@ -1,5 +1,5 @@
 import { beforeAll, it, expect } from "vitest";
-import { dragonFlame, dragonExposure } from "../src/loop";
+import { dragonFlame, dragonExposure, dragonExposureAt } from "../src/loop";
 import { Simulation, initPhysics } from "../src/simulation";
 beforeAll(initPhysics);
 it("ignition reaches the requested lengths and opacity at 50ms intervals", () => {
@@ -49,6 +49,25 @@ it("center is safe before the leading flame arrives; the mouth clears before the
   expect(dragonExposure(3.1, 0)).toBeCloseTo(0.75);
   expect(dragonExposure(3.25, 0)).toBe(0);
   expect(dragonExposure(0.1, 5.5)).toBe(dragonExposure(0.1, -5.5));
+});
+it("exposes custom dragon jets along their facing", () => {
+  const mouth = { x: 6.45, y: 3.25, z: 0 };
+  const dir = { x: -1, z: 0 };
+  expect(
+    dragonExposureAt(1, { x: 2, y: 2.1, z: 0 }, mouth, dir),
+  ).toBe(1);
+  expect(
+    dragonExposureAt(1, { x: 20, y: 2.1, z: 0 }, mouth, dir),
+  ).toBe(0);
+  expect(
+    dragonExposureAt(1, { x: 2, y: 2.1, z: 5 }, mouth, dir),
+  ).toBe(0);
+  expect(
+    dragonExposureAt(1, { x: 2, y: 20, z: 0 }, mouth, dir),
+  ).toBe(0);
+  expect(
+    dragonExposureAt(5, { x: 2, y: 2.1, z: 0 }, mouth, dir),
+  ).toBe(0);
 });
 it("actual truck fire damage waits for the visible jet and ends when its tail clears", () => {
   const s = new Simulation("easy");

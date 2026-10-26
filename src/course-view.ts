@@ -1,7 +1,14 @@
 import * as T from "three";
 import { courseHazards } from "./course";
 import { flameIntensity, type Hazard } from "./hazards";
-import { pbr, lavaMaterial, textureLoadErrors } from "./materials";
+import {
+  pbr,
+  lavaMaterial,
+  textureLoadErrors,
+  dragonFlameMaterial,
+} from "./materials";
+import { dragonFlame } from "./loop";
+import { buildDragonStatue, addDragonJetFan } from "./loop-view";
 import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
 import { solidQuaternion } from "./euler";
@@ -22,6 +29,11 @@ export class CourseView extends T.Group {
   private gateModels: T.Group[] = [];
   private trampolineModels: T.Group[] = [];
   private ringModels: T.Group[] = [];
+  private dragonModels: T.Group[] = [];
+  private dragonJets: T.Group[] = [];
+  private lampModels: T.Group[] = [];
+  private grandstandModels: T.Group[] = [];
+  private loopSegmentModels = 0;
   private axeModels: { root: T.Group; rotor: T.Group }[] = [];
   private ghostGroup: T.Group | null = null;
   private pickupModels = new Map<string, T.Group>();
@@ -101,7 +113,7 @@ export class CourseView extends T.Group {
                 1,
                 { color: 0xb9b2a7, roughness: 0.94 },
               )
-            : s.kind === "road" || s.kind === "ramp"
+            : s.kind === "road" || s.kind === "ramp" || s.kind === "loop"
               ? pbr(roadMap, 1, {
                   color:
                     roadMap === "blue_plaster_wall"
@@ -137,7 +149,7 @@ export class CourseView extends T.Group {
       stone ||
       cliff ||
       s.texture ||
-      ["ground", "road", "ramp"].includes(s.kind)
+      ["ground", "road", "ramp", "loop"].includes(s.kind)
     ) {
       scaleSolidUVs(geometry, s);
       mat.userData.surface = s.texture
@@ -372,6 +384,11 @@ export class CourseView extends T.Group {
       this.gateModels = [];
       this.trampolineModels = [];
       this.ringModels = [];
+      this.dragonModels = [];
+      this.dragonJets = [];
+      this.lampModels = [];
+      this.grandstandModels = [];
+      this.loopSegmentModels = 0;
       this.axeModels = [];
       this.ghostGroup = null;
       this.hazards = [];
@@ -382,9 +399,19 @@ export class CourseView extends T.Group {
         const track = run.track;
         if (!track.legacy)
           for (const s of courseSolids(track)) {
+            if (s.kind === "lamp" || s.kind === "grandstand") {
+              const g =
+                s.kind === "lamp" ? buildLampPost() : buildGrandstand();
+              g.position.set(s.x, s.y, s.z);
+              this.add(g);
+              if (s.kind === "lamp") this.lampModels.push(g);
+              else this.grandstandModels.push(g);
+              continue;
+            }
             const mesh = this.buildSolidMesh(track, s);
             this.add(mesh);
             this.meshes.push(mesh);
+            if (s.kind === "loop") this.loopSegmentModels++;
           }
         for (const h of courseHazards(track)) {
           const root = new T.Group();
@@ -511,6 +538,34 @@ export class CourseView extends T.Group {
           ringMesh.position.set(r.x, r.y, r.z);
           this.add(ringMesh);
           this.ringModels.push(ringMesh);
+        }
+        for (const p of track.custom?.prefabs ?? []) {
+          if (p.kind !== "dragon") continue;
+          const baseY = p.y ?? 0;
+          const statue = buildDragonStatue(
+            pbr("rock_06", 2, { color: 0x626b66, roughness: 0.88 }),
+            pbr("green_metal_rust", 1, {
+              color: 0x15191b,
+              metalness: 0.65,
+              roughness: 0.48,
+            }),
+            new T.MeshStandardMaterial({ color: 0xd7c7a0, roughness: 0.7 }),
+            new T.MeshStandardMaterial({
+              color: 0xff5a0a,
+              emissive: 0xff3500,
+              emissiveIntensity: 3,
+            }),
+          );
+          statue.position.set(p.x, baseY, p.z);
+          statue.rotation.y = -Math.PI / 2;
+          this.add(statue);
+          this.dragonModels.push(statue);
+          const jets = new T.Group();
+          jets.position.set(p.x - 3.55, baseY + 3.25, p.z);
+          jets.rotation.y = Math.PI;
+          addDragonJetFan(jets, 1, dragonFlameMaterial());
+          this.add(jets);
+          this.dragonJets.push(jets);
         }
         if (track.id === "sky-slide") {
           const foamMat = new T.MeshBasicMaterial({
@@ -654,6 +709,18 @@ export class CourseView extends T.Group {
       g.children[0].rotation.y = sim.time;
       if (camera) g.children[1].quaternion.copy(camera.quaternion);
     }
+    const packet = dragonFlame(sim.time);
+    for (const jets of this.dragonJets) {
+      jets.visible = packet.opacity > 0 && packet.head > packet.tail;
+      jets.children.forEach((jet) => {
+        const uniforms = ((jet as T.Mesh).material as T.ShaderMaterial)
+          .uniforms;
+        uniforms.time.value = sim.time;
+        uniforms.head.value = packet.head;
+        uniforms.tail.value = packet.tail;
+        uniforms.opacity.value = packet.opacity;
+      });
+    }
   }
   inspect() {
     return {
@@ -662,6 +729,10 @@ export class CourseView extends T.Group {
       ghosts: this.ghostGroup?.visible ? this.ghostGroup.children.length : 0,
       trampolines: this.trampolineModels.length,
       rings: this.ringModels.length,
+      loopSegments: this.loopSegmentModels,
+      dragons: this.dragonModels.length,
+      lamps: this.lampModels.length,
+      grandstands: this.grandstandModels.length,
       gates: this.gateModels.filter((g) => g.visible).length,
       pickups: [...this.pickupModels.values()].filter((g) => g.visible).length,
       solids: this.meshes.length,
@@ -900,5 +971,36 @@ export function buildPumpkinMesh() {
   );
   stem.position.y = 0.6;
   group.add(body, stem);
+  return group;
+}
+
+/** Arena light tower: concrete pole with an emissive lamp bar on top. */
+export function buildLampPost() {
+  const group = new T.Group();
+  const pole = new T.Mesh(
+    new T.BoxGeometry(0.3, 25, 0.3),
+    new T.MeshStandardMaterial({ color: 0x767c76, roughness: 0.9 }),
+  );
+  pole.castShadow = true;
+  const bar = new T.Mesh(
+    new T.BoxGeometry(5, 1, 0.7),
+    new T.MeshStandardMaterial({ color: 0xfaf8e8, emissive: 0xfff5cd, emissiveIntensity: 2 }),
+  );
+  bar.position.y = 13;
+  group.add(pole, bar);
+  return group;
+}
+/** Five stepped seating rows, sized for custom levels. */
+export function buildGrandstand() {
+  const group = new T.Group();
+  const concrete = new T.MeshStandardMaterial({ color: 0x767c76, roughness: 0.9 });
+  const seat = new T.MeshStandardMaterial({ color: 0x50626b, roughness: 0.8 });
+  for (let i = 0; i < 5; i++) {
+    const row = new T.Mesh(new T.BoxGeometry(5, 1.2, 80), i % 2 ? seat : concrete);
+    row.position.set(i * 3 - 6, i * 1.6 - 3.2, 0);
+    row.castShadow = true;
+    row.receiveShadow = true;
+    group.add(row);
+  }
   return group;
 }
