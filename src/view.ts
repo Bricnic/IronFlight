@@ -577,6 +577,9 @@ export class GameView {
   retextureCourseSolid(s: CourseSolid) {
     this.officialCourse.retextureSolidMesh(s);
   }
+  inspectSolids() {
+    return this.officialCourse.inspectSolids();
+  }
   moveCheckpointGate(index: number, gate: Checkpoint) {
     this.officialCourse.moveGateModel(index, gate);
   }

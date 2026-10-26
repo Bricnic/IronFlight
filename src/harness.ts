@@ -26,6 +26,17 @@ export interface GameHarness {
     dirty: boolean;
     levels: string[];
   };
+  inspectSolids(): {
+    id: string;
+    visible: boolean;
+    transparent: boolean;
+    opacity: number;
+    map: string;
+    normalMap: string;
+    roughnessMap: string;
+  }[];
+  textureLoadErrors(): string[];
+  loadedTextureIds(): string[];
   inspectPreview(): {
     preview: boolean;
     gridVisible: boolean;

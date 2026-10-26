@@ -5,6 +5,7 @@ import { createLevelEditor } from "./level-editor";
 import { shouldSyncFromSession } from "./editor-state";
 import { createSettings } from "./settings-screen";
 import { loadSettings } from "./settings";
+import { loadedTextureIds, textureLoadErrors } from "./materials";
 import * as T from "three";
 import { solidQuaternion } from "./euler";
 import {
@@ -1043,6 +1044,9 @@ async function boot() {
       editorProject: (point: { x: number; y: number; z: number }) =>
         editorScreens.projectViewport(point),
       inspectPreview: () => editorScreens.inspectPreview(),
+      inspectSolids: () => view.inspectSolids(),
+      textureLoadErrors: () => textureLoadErrors(),
+      loadedTextureIds: () => loadedTextureIds(),
       placement: () => ({
         editing,
         palette: placeKind.value,

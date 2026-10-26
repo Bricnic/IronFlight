@@ -1,7 +1,7 @@
 import * as T from "three";
 import { courseHazards } from "./course";
 import { flameIntensity, type Hazard } from "./hazards";
-import { pbr, lavaMaterial } from "./materials";
+import { pbr, lavaMaterial, textureLoadErrors } from "./materials";
 import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
 import { solidQuaternion } from "./euler";
@@ -306,6 +306,30 @@ export class CourseView extends T.Group {
     mesh.geometry.dispose();
     (mesh.material as T.Material).dispose();
     this.meshes.splice(this.meshes.indexOf(mesh), 1);
+  }
+  /** DEV/test probe: per-solid render state for the texture audit. */
+  inspectSolids() {
+    const errors = textureLoadErrors();
+    return this.meshes.map((mesh) => {
+      const mat = mesh.material as T.MeshStandardMaterial;
+      const status = (tex: T.Texture | null | undefined) =>
+        !tex
+          ? "none"
+          : tex.image
+            ? "loaded"
+            : errors.includes(tex.userData.url as string)
+              ? "error"
+              : "pending";
+      return {
+        id: mesh.name,
+        visible: mesh.visible,
+        transparent: mat.transparent,
+        opacity: mat.opacity,
+        map: status(mat.map),
+        normalMap: status(mat.normalMap),
+        roughnessMap: status(mat.roughnessMap),
+      };
+    });
   }
   /** Live editing: re-skin one solid mesh by id. */
   retextureSolidMesh(s: CourseSolid) {

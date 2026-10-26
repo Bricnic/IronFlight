@@ -1,11 +1,16 @@
 import * as T from "three";
 const loader = new T.TextureLoader();
 const cache = new Map<string, T.Texture>();
+const failures = new Set<string>();
 function texture(id: string, role: string, repeat: number) {
   const key = `${id}/${role}/${repeat}`;
+  const url = `/textures/${id}_${role}.jpg`;
   let t = cache.get(key);
   if (!t) {
-    t = loader.load(`/textures/${id}_${role}.jpg`);
+    t = loader.load(url, undefined, undefined, () => {
+      failures.add(url);
+    });
+    t.userData.url = url;
     t.wrapS = t.wrapT = T.RepeatWrapping;
     t.repeat.set(repeat, repeat);
     t.anisotropy = 4;
@@ -13,6 +18,14 @@ function texture(id: string, role: string, repeat: number) {
     cache.set(key, t);
   }
   return t;
+}
+/** URLs whose texture loads failed (DEV/test probe). */
+export function textureLoadErrors(): string[] {
+  return [...failures];
+}
+/** Texture ids currently in the cache (DEV/test probe). */
+export function loadedTextureIds(): string[] {
+  return [...new Set([...cache.keys()].map((k) => k.split("/")[0]))];
 }
 export function pbr(
   id: string,
@@ -50,7 +63,9 @@ vec3 color=mix(vec3(1.0,.12,.015),vec3(1.0,.85,.25),clamp((1.0-uv.y)*1.1-x*2.0,0
 
 /** User-authored tiled lava, drifting diagonally with localized heat refraction. */
 export function lavaMaterial() {
-  const map = loader.load("/textures/custom-lava.jfif");
+  const map = loader.load("/textures/custom-lava.jfif", undefined, undefined, () => {
+    failures.add("/textures/custom-lava.jfif");
+  });
   map.wrapS = map.wrapT = T.RepeatWrapping;
   map.colorSpace = T.SRGBColorSpace;
   map.anisotropy = 8;
