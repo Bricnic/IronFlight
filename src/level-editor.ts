@@ -143,7 +143,17 @@ export function createLevelEditor(
   const viewportHost = el("div", { class: "editor-viewport" });
   const props = el("div", { class: "editor-props", id: "editor-props" });
   body.append(listPane, viewportHost, props);
-  screen.append(top, body);
+  const unsaved = el("div", { id: "editor-unsaved", class: "editor-modal" });
+  unsaved.hidden = true;
+  const unsavedBox = el("div", { class: "editor-modal-box" });
+  unsavedBox.append(
+    el("p", {}, "Unsaved changes. Save before leaving?"),
+    el("button", { id: "editor-unsaved-save" }, "Save"),
+    el("button", { id: "editor-unsaved-discard" }, "Discard"),
+    el("button", { id: "editor-unsaved-cancel" }, "Cancel"),
+  );
+  unsaved.append(unsavedBox);
+  screen.append(top, body, unsaved);
   host.append(screen);
   const viewport = createEditorViewport(viewportHost, store);
   const showError = (message: string) => {
@@ -336,6 +346,7 @@ export function createLevelEditor(
   }
   function refresh() {
     if (document.activeElement !== nameInput) nameInput.value = store.level.name;
+    if (!store.dirty) unsaved.hidden = true;
     showStatus(store.dirty ? "Unsaved changes" : "Saved");
     for (const { tool, button } of toolButtons)
       button.classList.toggle("selected", store.tool === tool);
@@ -363,7 +374,7 @@ export function createLevelEditor(
     viewport.frameSpawn(store.level);
     showStatus("New level");
   });
-  saveButton.addEventListener("click", () => {
+  function doSave(after: () => void) {
     try {
       const valid = validateCustomLevel(store.level);
       saveLevel(undefined, valid)
@@ -373,11 +384,13 @@ export function createLevelEditor(
           showStatus(`Saved ${valid.name}`);
           return refreshLevels();
         })
+        .then(after)
         .catch((e: Error) => showError(e.message));
     } catch (e) {
       showError(e instanceof Error ? e.message : "Invalid level");
     }
-  });
+  }
+  saveButton.addEventListener("click", () => doSave(() => {}));
   deleteButton.addEventListener("click", () => {
     const name = store.level.name;
     removeLevel(undefined, name)
@@ -404,7 +417,30 @@ export function createLevelEditor(
       })
       .catch((e: Error) => showError(e.message));
   });
-  backButton.addEventListener("click", onBack);
+  backButton.addEventListener("click", () => {
+    if (!store.dirty) {
+      onBack();
+      return;
+    }
+    unsaved.hidden = false;
+  });
+  unsaved.querySelector("#editor-unsaved-save")!.addEventListener("click", () =>
+    doSave(() => {
+      unsaved.hidden = true;
+      onBack();
+    }),
+  );
+  unsaved
+    .querySelector("#editor-unsaved-discard")!
+    .addEventListener("click", () => {
+      unsaved.hidden = true;
+      onBack();
+    });
+  unsaved
+    .querySelector("#editor-unsaved-cancel")!
+    .addEventListener("click", () => {
+      unsaved.hidden = true;
+    });
   addSolid.addEventListener("click", () =>
     store.addSolid(solidKind.value as SolidKind),
   );

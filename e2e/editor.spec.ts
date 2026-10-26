@@ -375,3 +375,55 @@ test("wireframe rotator spins euler angles and drives the yawed wall", async ({
     "e2e-euler",
   );
 });
+test("back leaves immediately when clean", async ({ page }) => {
+  await openEditor(page);
+  await page.locator("#editor-back").click();
+  await expect(page.locator("#level-editor")).toBeHidden();
+  await expect(page.locator("#editor-unsaved")).toBeHidden();
+});
+test("back prompts on unsaved changes", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() =>
+    window.__game!.customLevels.remove("e2e-back").catch(() => {}),
+  );
+  await page.getByRole("button", { name: "Level editor" }).click();
+  await expect(page.locator("#level-editor")).toBeVisible();
+  await page.locator("#editor-name").fill("e2e-back");
+  await page.locator("#editor-new").click();
+  await page.locator("#editor-solid-kind").selectOption("barrier");
+  await page.locator("#editor-add-solid").click();
+  await expect(page.locator("#editor-status")).toContainText("Unsaved changes");
+  // Cancel stays in the editor.
+  await page.locator("#editor-back").click();
+  await expect(page.locator("#editor-unsaved")).toBeVisible();
+  await page.locator("#editor-unsaved-cancel").click();
+  await expect(page.locator("#editor-unsaved")).toBeHidden();
+  await expect(page.locator("#level-editor")).toBeVisible();
+  // Discard leaves without saving.
+  await page.locator("#editor-back").click();
+  await page.locator("#editor-unsaved-discard").click();
+  await expect(page.locator("#level-editor")).toBeHidden();
+  const names = await page.evaluate(() =>
+    window.__game!.customLevels.list(),
+  );
+  expect(names).not.toContain("e2e-back");
+  // Save leaves and persists.
+  await page.getByRole("button", { name: "Level editor" }).click();
+  await expect(page.locator("#level-editor")).toBeVisible();
+  await page.locator("#editor-name").fill("e2e-back");
+  await page.locator("#editor-new").click();
+  await page.locator("#editor-solid-kind").selectOption("barrier");
+  await page.locator("#editor-add-solid").click();
+  await page.locator("#editor-back").click();
+  await page.locator("#editor-unsaved-save").click();
+  await expect(page.locator("#level-editor")).toBeHidden({ timeout: 20000 });
+  const loaded = await page.evaluate(() =>
+    window.__game!.customLevels.load("e2e-back"),
+  );
+  expect(loaded.solids.some((s) => s.kind === "barrier")).toBe(true);
+  await page.evaluate(
+    (name) => window.__game!.customLevels.remove(name),
+    "e2e-back",
+  );
+});

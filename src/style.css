@@ -1067,6 +1067,37 @@ kbd {
   padding: 6px 8px;
   font: inherit;
 }
+.editor-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #060c0ecc;
+}
+.editor-modal[hidden] {
+  display: none;
+}
+.editor-modal-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1d3038;
+  border: 1px solid #ffffff38;
+  padding: 20px 24px;
+}
+.editor-modal-box p {
+  margin: 0 8px 0 0;
+  color: #e8efec;
+}
+.editor-modal-box button {
+  padding: 8px 12px;
+  border: 1px solid #ffffff38;
+  background: #253941;
+  color: #e8efec;
+  font: 600 12px "Barlow", sans-serif;
+}
 .prop-row input[type="color"] {
   padding: 2px;
   height: 30px;
