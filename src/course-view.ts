@@ -15,6 +15,50 @@ import { solidQuaternion } from "./euler";
 import { scaleSolidUVs } from "./solid-uv";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
+/** Implicit ground texture per track; shared by the renderer and the editor. */
+export function groundMapForTrack(trackId: string) {
+  return trackId === "canyon-plunge"
+    ? "cracked_red_ground"
+    : trackId === "haunted-hollow"
+      ? "brown_mud_leaves_01"
+      : trackId === "sky-slide"
+        ? "grass_ground"
+        : ["foundry-run", "inferno-vault"].includes(trackId)
+          ? "concrete_layers_02"
+          : "concrete_floor_02";
+}
+/** Implicit road/ramp/loop texture per track; shared by renderer and editor. */
+export function roadMapForTrack(trackId: string) {
+  return trackId === "canyon-plunge"
+    ? "coast_sand_rocks_02"
+    : trackId === "sky-slide"
+      ? "blue_plaster_wall"
+      : "asphalt_02";
+}
+function isStoneId(id: string) {
+  return (
+    id.startsWith("vault-wall") ||
+    id.startsWith("vault-floor") ||
+    (id.startsWith("crypt-") && id !== "crypt-door")
+  );
+}
+/**
+ * Implicit texture for a solid without an explicit override; undefined when
+ * the renderer uses a plain material. Mirrors buildSolidMaterial.
+ */
+export function defaultTextureFor(
+  trackId: string,
+  s: { id: string; kind: string },
+) {
+  if (s.kind === "lava") return undefined;
+  if (s.id.startsWith("gorge-")) return "dark_rock_02";
+  if (isStoneId(s.id))
+    return trackId === "haunted-hollow" ? "monastery_stone_floor" : "rock_06";
+  if (s.kind === "road" || s.kind === "ramp" || s.kind === "loop")
+    return roadMapForTrack(trackId);
+  if (s.kind === "ground") return groundMapForTrack(trackId);
+  return undefined;
+}
 export class CourseView extends T.Group {
   private key = "";
   private hazardTime = 0;
@@ -65,27 +109,10 @@ export class CourseView extends T.Group {
     return mesh;
   }
   private solidMaps(track: Track, s: CourseSolid) {
-    const stone =
-      s.id.startsWith("vault-wall") ||
-      s.id.startsWith("vault-floor") ||
-      (s.id.startsWith("crypt-") && s.id !== "crypt-door");
+    const stone = isStoneId(s.id);
     const cliff = s.id.startsWith("gorge-");
-    const groundMap =
-      track.id === "canyon-plunge"
-        ? "cracked_red_ground"
-        : track.id === "haunted-hollow"
-          ? "brown_mud_leaves_01"
-          : track.id === "sky-slide"
-            ? "grass_ground"
-            : ["foundry-run", "inferno-vault"].includes(track.id)
-              ? "concrete_layers_02"
-              : "concrete_floor_02";
-    const roadMap =
-      track.id === "canyon-plunge"
-        ? "coast_sand_rocks_02"
-        : track.id === "sky-slide"
-          ? "blue_plaster_wall"
-          : "asphalt_02";
+    const groundMap = groundMapForTrack(track.id);
+    const roadMap = roadMapForTrack(track.id);
     const groundTint =
       groundMap === "cracked_red_ground"
         ? 0xffffff

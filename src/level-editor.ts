@@ -1,5 +1,6 @@
 import { EditorStore } from "./editor-state";
 import { createEditorViewport } from "./editor-viewport";
+import { defaultTextureFor } from "./course-view";
 import {
   TEXTURE_IDS,
   PREFAB_KINDS,
@@ -264,7 +265,13 @@ export function createLevelEditor(
       props.append(colorRow);
       const texRow = el("label", { class: "prop-row" }, "Texture ");
       const tex = el("select", { "data-prop": "texture" }) as HTMLSelectElement;
-      tex.append(el("option", { value: "" }, "(none)"));
+      const fallback =
+        item.texture == null
+          ? defaultTextureFor(`custom:${store.level.name}`, current.item)
+          : undefined;
+      tex.append(
+        el("option", { value: "" }, fallback ? `(default: ${fallback})` : "(none)"),
+      );
       for (const id of TEXTURE_IDS) tex.append(el("option", { value: id }, id));
       tex.value = (item.texture as string | undefined) ?? "";
       tex.addEventListener("change", () =>

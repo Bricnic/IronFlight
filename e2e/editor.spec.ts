@@ -61,6 +61,37 @@ test("wireframe editor undoes and redoes changes", async ({ page }) => {
     "e2e-undo",
   );
 });
+test("texture box names the implicit default texture", async ({ page }) => {
+  await openEditor(page);
+  await page.evaluate(() =>
+    window.__game!.customLevels.remove("e2e-deftex").catch(() => {}),
+  );
+  await page.locator("#editor-name").fill("e2e-deftex");
+  await page.locator("#editor-new").click();
+  const shown = () =>
+    page.evaluate(() => {
+      const select = document.querySelector(
+        '#editor-props select[data-prop="texture"]',
+      ) as HTMLSelectElement;
+      return select.selectedOptions[0].text;
+    });
+  const texture = page.locator('#editor-props select[data-prop="texture"]');
+  await page.locator('#editor-objects li[data-key="solid:ground"]').click();
+  await expect.poll(shown, { timeout: 15000 }).toBe("grass_ground");
+  await texture.selectOption("");
+  await expect.poll(shown, { timeout: 15000 }).toBe(
+    "(default: concrete_floor_02)",
+  );
+  await page.locator("#editor-solid-kind").selectOption("barrier");
+  await page.locator("#editor-add-solid").click();
+  await expect.poll(shown, { timeout: 15000 }).toBe("(none)");
+  await texture.selectOption("grass_ground");
+  await expect.poll(shown, { timeout: 15000 }).toBe("grass_ground");
+  await page.evaluate(
+    (name) => window.__game!.customLevels.remove(name).catch(() => {}),
+    "e2e-deftex",
+  );
+});
 test("wireframe editor reloads and deletes from disk", async ({ page }) => {
   await openEditor(page);
   await page.evaluate(async () => {

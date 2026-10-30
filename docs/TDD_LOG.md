@@ -313,3 +313,6 @@ RED: tests/editor-rotator.test.ts failed (2 tests): rotatorAxisForButton/applyRo
 
 ## Update2 chunk 4 - Undo/redo rolling 100
 RED: tests/editor-undo.test.ts failed (5 tests): undo/redo missing on EditorStore. GREEN: 5/5 pass; snapshot stacks capped at 100 on both sides, new edits clear redo, undo restores selection and keeps dirty, opening a level clears history. Undo/Redo buttons added to the editor top bar; new e2e test passes on swiftshader.
+
+## Update2 chunk 5 - Default texture display
+RED: tests/default-texture.test.ts failed (3 tests): defaultTextureFor missing. GREEN: 3/3 pass; shared groundMapForTrack/roadMapForTrack/defaultTextureFor mirror buildSolidMaterial (custom ground concrete_floor_02, road asphalt_02). Texture box shows (default: <name>) when no override. New e2e test passes on swiftshader; course suites 54/54.
