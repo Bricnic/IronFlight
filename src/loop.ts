@@ -181,3 +181,12 @@ export function dragonExposureAt(
   const lateral = Math.abs((car.x - mouth.x) * dir.z - (car.z - mouth.z) * dir.x);
   return lateral <= 2.5 ? flame.opacity : 0;
 }
+/** Mouth offset and jet direction for a custom dragon with the given yaw. */
+export function dragonAim(yaw: number) {
+  return {
+    mx: -3.55 * Math.cos(yaw),
+    mz: 3.55 * Math.sin(yaw),
+    dx: -Math.cos(yaw),
+    dz: Math.sin(yaw),
+  };
+}

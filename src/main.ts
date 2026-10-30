@@ -1048,6 +1048,7 @@ async function boot() {
         editorScreens.projectViewport(point),
       inspectPreview: () => editorScreens.inspectPreview(),
       inspectSolids: () => view.inspectSolids(),
+      inspectDragons: () => view.inspectDragons(),
       textureLoadErrors: () => textureLoadErrors(),
       loadedTextureIds: () => loadedTextureIds(),
       placement: () => ({

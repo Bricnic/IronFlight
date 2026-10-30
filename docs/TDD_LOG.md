@@ -316,3 +316,6 @@ RED: tests/editor-undo.test.ts failed (5 tests): undo/redo missing on EditorStor
 
 ## Update2 chunk 5 - Default texture display
 RED: tests/default-texture.test.ts failed (3 tests): defaultTextureFor missing. GREEN: 3/3 pass; shared groundMapForTrack/roadMapForTrack/defaultTextureFor mirror buildSolidMaterial (custom ground concrete_floor_02, road asphalt_02). Texture box shows (default: <name>) when no override. New e2e test passes on swiftshader; course suites 54/54.
+
+## Update2 chunk 6 - Prefab rotation + dragon fix
+RED: tests/prefab-rotation.test.ts failed (6 of 7): angle/roll validation, dragonAim, tilt, clone facing. GREEN: 7/7 pass. CustomPrefab gains angle/roll (props get all three axes, dragons yaw; loop/hammer/comic/lamp/grandstand reject rotation). dragonAim shared by renderer + sim; physics bodies stay yaw-only with a visual-only prop-tilt group. Clone west dragons fixed with yaw PI via the generator; new inspectDragons probe + e2e render coverage passes on swiftshader. Related suites 74/74.

@@ -96,3 +96,21 @@ test("triple-loop clone matches mid-track", async ({ page }) => {
   await shoot(page, slug, at, "artifacts/showcase-triple-mid-clone.png");
   await removeClone(page, name);
 });
+test("triple-loop clone dragons face the track", async ({ page }) => {
+  const { name, slug } = await loadClone(page, "clone-triple-loop.json");
+  await page.evaluate((track) => {
+    const g = window.__game!;
+    g.pause(true);
+    g.startTrack(track as `custom:${string}`);
+    g.advanceFrames(30, 1, {});
+  }, slug);
+  const dragons = await page.evaluate(() => window.__game!.inspectDragons());
+  expect(dragons).toHaveLength(4);
+  for (const d of dragons) {
+    // Easy route x is -24; reference statues use rotation.y = -side * PI / 2.
+    const side = Math.sign(d.x - -24);
+    expect(side).not.toBe(0);
+    expect(d.rotationY).toBeCloseTo((-side * Math.PI) / 2, 6);
+  }
+  await removeClone(page, name);
+});

@@ -7,7 +7,7 @@ import {
   textureLoadErrors,
   dragonFlameMaterial,
 } from "./materials";
-import { dragonFlame, dragonFiring } from "./loop";
+import { dragonAim, dragonFlame, dragonFiring } from "./loop";
 import { buildDragonStatue, addDragonJetFan } from "./loop-view";
 import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
@@ -352,6 +352,14 @@ export class CourseView extends T.Group {
     this.meshes.splice(this.meshes.indexOf(mesh), 1);
   }
   /** DEV/test probe: per-solid render state for the texture audit. */
+  inspectDragons() {
+    return this.dragonModels.map((statue) => ({
+      id: statue.name,
+      x: statue.position.x,
+      z: statue.position.z,
+      rotationY: statue.rotation.y,
+    }));
+  }
   inspectSolids() {
     const errors = textureLoadErrors();
     return this.meshes.map((mesh) => {
@@ -596,13 +604,15 @@ export class CourseView extends T.Group {
             eyes,
           );
           this.dragonGlow.push({ bronze, horn, eyes });
+          const aim = dragonAim(p.yaw ?? 0);
+          statue.name = p.id;
           statue.position.set(p.x, baseY, p.z);
-          statue.rotation.y = -Math.PI / 2;
+          statue.rotation.y = -Math.PI / 2 + (p.yaw ?? 0);
           this.add(statue);
           this.dragonModels.push(statue);
           const jets = new T.Group();
-          jets.position.set(p.x - 3.55, baseY + 3.25, p.z);
-          jets.rotation.y = Math.PI;
+          jets.position.set(p.x + aim.mx, baseY + 3.25, p.z + aim.mz);
+          jets.rotation.y = Math.PI + (p.yaw ?? 0);
           addDragonJetFan(jets, 1, dragonFlameMaterial());
           this.add(jets);
           this.dragonJets.push(jets);

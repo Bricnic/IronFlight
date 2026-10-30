@@ -982,6 +982,8 @@ export function courseProps(track: Track): PropDefinition[] {
         z: p.z,
         ground: p.y ?? 0,
         ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
+        ...(p.angle === undefined ? {} : { angle: p.angle }),
+        ...(p.roll === undefined ? {} : { roll: p.roll }),
       }));
     return [...stones, ...prefabs];
   }

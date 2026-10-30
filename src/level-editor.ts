@@ -285,9 +285,10 @@ export function createLevelEditor(
         el("p", { class: "prop-hint" }, `Kind: ${current.item.kind}`),
       );
       numberField(props, "Y", "y", item.y as number | undefined, commit("y"));
-      if (
-        (PROP_PREFAB_KINDS as readonly string[]).includes(current.item.kind)
-      )
+      const isProp = (PROP_PREFAB_KINDS as readonly string[]).includes(
+        current.item.kind,
+      );
+      if (isProp || current.item.kind === "dragon")
         numberField(
           props,
           "Yaw",
@@ -295,6 +296,22 @@ export function createLevelEditor(
           item.yaw as number | undefined,
           commit("yaw"),
         );
+      if (isProp) {
+        numberField(
+          props,
+          "Pitch",
+          "angle",
+          item.angle as number | undefined,
+          commit("angle"),
+        );
+        numberField(
+          props,
+          "Roll",
+          "roll",
+          item.roll as number | undefined,
+          commit("roll"),
+        );
+      }
     }
     if (current.kind === "checkpoint" || current.kind === "target")
       numberField(props, "Y", "y", item.y as number | undefined, commit("y"));

@@ -65,8 +65,8 @@ export function cloneHarborSprint(): CustomLevel {
 /**
  * Triple Loop translates the easy route: route solids plus the loop beds,
  * one loop prefab, four dragon statues, and a lava pit under the jump gap.
- * Known gaps: no boost pads, chevrons, or gap fire; east dragons face away
- * (prefabs have no yaw yet); loop/jump completion flags don't gate customs.
+ * Known gaps: no boost pads, chevrons, or gap fire; loop/jump
+ * completion flags don't gate customs.
  */
 export function cloneTripleLoop(): CustomLevel {
   const track = getTrack("triple-loop");
@@ -134,6 +134,9 @@ export function cloneTripleLoop(): CustomLevel {
         kind: "dragon",
         x: route.x + side * 10,
         z,
+        // Reference statues use rotation.y = -side * PI / 2; customs add
+        // prefab yaw to a -PI / 2 base, so the west pair needs yaw PI.
+        ...(side < 0 ? { yaw: Math.PI } : {}),
       })),
     ),
     { id: "stand-west", kind: "grandstand", x: -83, z: 10 },

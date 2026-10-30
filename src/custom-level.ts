@@ -79,6 +79,8 @@ export interface CustomPrefab {
   z: number;
   y?: number;
   yaw?: number;
+  angle?: number;
+  roll?: number;
 }
 export interface CustomPoint {
   x: number;
@@ -271,8 +273,31 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     check(
       errors,
       p?.yaw === undefined ||
+        (PROP_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
+        p?.kind === "dragon",
+      `prefab ${p?.id ?? i} yaw is only supported on prop and dragon kinds`,
+    );
+    check(
+      errors,
+      p?.angle === undefined || finite(p.angle),
+      `prefab ${p?.id ?? i} needs a finite pitch angle`,
+    );
+    check(
+      errors,
+      p?.angle === undefined ||
         (PROP_PREFAB_KINDS as readonly string[]).includes(p?.kind),
-      `prefab ${p?.id ?? i} yaw is only supported on prop kinds`,
+      `prefab ${p?.id ?? i} pitch is only supported on prop kinds`,
+    );
+    check(
+      errors,
+      p?.roll === undefined || finite(p.roll),
+      `prefab ${p?.id ?? i} needs a finite roll`,
+    );
+    check(
+      errors,
+      p?.roll === undefined ||
+        (PROP_PREFAB_KINDS as readonly string[]).includes(p?.kind),
+      `prefab ${p?.id ?? i} roll is only supported on prop kinds`,
     );
   }
   if (errors.length) throw new Error(`Invalid custom level: ${errors.join("; ")}`);

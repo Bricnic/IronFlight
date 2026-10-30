@@ -10,6 +10,8 @@ export type PropDefinition = {
   z: number;
   ground: number;
   yaw?: number;
+  angle?: number;
+  roll?: number;
 };
 export type TrashPiece = {
   lid?: boolean;

@@ -313,12 +313,17 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           angle: out.pitch,
           roll: out.roll,
         });
-      } else if (
-        current?.kind === "prefab" &&
-        rotateAxis === "yaw" &&
-        (PROP_PREFAB_KINDS as readonly string[]).includes(current.item.kind)
-      ) {
-        store.updateSelected({ yaw: (current.item.yaw ?? 0) + dx * 0.01 });
+      } else if (current?.kind === "prefab") {
+        const isProp = (PROP_PREFAB_KINDS as readonly string[]).includes(
+          current.item.kind,
+        );
+        const isDragon = current.item.kind === "dragon";
+        if (rotateAxis === "yaw" && (isProp || isDragon))
+          store.updateSelected({ yaw: (current.item.yaw ?? 0) + dx * 0.01 });
+        else if (rotateAxis === "pitch" && isProp)
+          store.updateSelected({ angle: (current.item.angle ?? 0) + dx * 0.01 });
+        else if (rotateAxis === "roll" && isProp)
+          store.updateSelected({ roll: (current.item.roll ?? 0) + dx * 0.01 });
       }
       return;
     }
@@ -468,7 +473,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           }),
         );
         marker.position.set(p.x, (p.y ?? 0) + 1.5, p.z);
-        marker.rotation.y = p.yaw ?? 0;
+        marker.rotation.set(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ");
         marker.userData.pick = { kind: "prefab", id: p.id };
         if (selection != null && "id" in selection && selection.id === p.id)
           marker.scale.setScalar(1.6);

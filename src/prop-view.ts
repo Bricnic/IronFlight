@@ -85,6 +85,15 @@ export class PropView extends T.Group {
       fire = new T.Group();
     root.name = prop.definition.id;
     fire.name = `${prop.definition.id}-flames`;
+    // Visual-only pitch/roll inside the physics-driven root (yaw only).
+    const tilt = new T.Group();
+    tilt.name = "prop-tilt";
+    tilt.rotation.set(
+      prop.definition.angle ?? 0,
+      0,
+      prop.definition.roll ?? 0,
+    );
+    root.add(tilt);
     this.add(root, fire);
     const material = new T.MeshStandardMaterial({
       color: prop.definition.kind === "barrel" ? 0xa13d21 : 0x526c59,
@@ -94,7 +103,7 @@ export class PropView extends T.Group {
     const mesh = (
       geometry: T.BufferGeometry,
       mat: T.Material = material,
-      parent: T.Object3D = root,
+      parent: T.Object3D = tilt,
     ) => {
       const m = new T.Mesh(geometry, mat);
       m.castShadow = true;
@@ -197,7 +206,7 @@ export class PropView extends T.Group {
       const seed = prop.definition.id
         .split("")
         .reduce((n, c) => n + c.charCodeAt(0), 0);
-      root.add(buildGravestoneMesh(seed));
+      tilt.add(buildGravestoneMesh(seed));
     } else {
       const h = prop.definition.kind === "trash" ? 1.3 : 1.4,
         r = prop.definition.kind === "trash" ? 0.48 : 0.5;

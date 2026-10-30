@@ -28,6 +28,12 @@ export interface GameHarness {
     levels: string[];
     cameraTarget: { x: number; y: number; z: number };
   };
+  inspectDragons(): {
+    id: string;
+    x: number;
+    z: number;
+    rotationY: number;
+  }[];
   inspectSolids(): {
     id: string;
     visible: boolean;

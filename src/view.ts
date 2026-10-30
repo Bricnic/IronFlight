@@ -580,6 +580,9 @@ export class GameView {
   inspectSolids() {
     return this.officialCourse.inspectSolids();
   }
+  inspectDragons() {
+    return this.officialCourse.inspectDragons();
+  }
   moveCheckpointGate(index: number, gate: Checkpoint) {
     this.officialCourse.moveGateModel(index, gate);
   }

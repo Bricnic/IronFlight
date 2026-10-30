@@ -31,6 +31,7 @@ import {
   LOOP,
   dragonFlame,
   dragonExposure,
+  dragonAim,
   dragonExposureAt,
   loopSolids,
   loopScenerySolids,
@@ -530,11 +531,12 @@ export class Simulation {
     if (customs)
       for (const p of customs.prefabs) {
         if (p.kind !== "dragon") continue;
+        const aim = dragonAim(p.yaw ?? 0);
         const jet = dragonExposureAt(
           this.time,
           position,
-          { x: p.x - 3.55, y: (p.y ?? 0) + 3.25, z: p.z },
-          { x: -1, z: 0 },
+          { x: p.x + aim.mx, y: (p.y ?? 0) + 3.25, z: p.z + aim.mz },
+          { x: aim.dx, z: aim.dz },
         );
         if (jet > 0) this.burnDragonFire(jet);
       }
