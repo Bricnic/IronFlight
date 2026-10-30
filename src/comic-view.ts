@@ -70,7 +70,44 @@ function consolidate(root: T.Group) {
     }
   }
 }
-function build(h: ComicHazard): Model {
+const labelMessages: Record<string, [string, string]> = {
+  book: ["CURSED CHAPTER", "WAIT FOR THE JAW / DRIVE AROUND"],
+  teeth: ["BITE CLUB", "WAIT FOR THE JAW / DRIVE AROUND"],
+  computer: ["FATAL ERROR", "CRUSHING LAPTOP / DRIVE AROUND"],
+  flippers: ["COLOUR SNAP", "TOUCH THE PAD AND IT SNAPS"],
+  hydrant: ["PRESSURE POP", "LAUNCHES YOU / 90 MPH RUPTURE"],
+  burner: ["HOT WHEELS", "JUMP THE FIRE / DRIVE AROUND"],
+  water: ["SKIM OR SWIM", "ENTER >200 MPH / KEEP 180+"],
+  potion: ["PICK YOUR POISON", "5 SECONDS / DO NOT MIX"],
+};
+/** Upright billboard label anchored above the model at the given local height. */
+export function buildComicLabel(h: ComicHazard, topY: number): T.Sprite {
+  const canvas = document.createElement("canvas");
+  canvas.width = 768;
+  canvas.height = 192;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#141b20";
+  ctx.fillRect(0, 0, 768, 192);
+  ctx.strokeStyle = "#ecb34e";
+  ctx.lineWidth = 8;
+  ctx.strokeRect(6, 6, 756, 180);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffd28d";
+  ctx.font = "bold 52px sans-serif";
+  ctx.fillText(labelMessages[h.kind][0], 384, 76);
+  ctx.fillStyle = "#eef0e4";
+  ctx.font = "bold 23px sans-serif";
+  ctx.fillText(labelMessages[h.kind][1], 384, 133);
+  const tex = new T.CanvasTexture(canvas);
+  tex.colorSpace = T.SRGBColorSpace;
+  const label = new T.Sprite(
+    new T.SpriteMaterial({ map: tex, depthTest: true }),
+  );
+  label.scale.set(6, 1.5, 1);
+  label.position.set(0, topY, 0);
+  return label;
+}
+export function buildComicModel(h: ComicHazard): Model {
   const root = new T.Group();
   root.name = h.id;
   root.position.set(h.x, h.y ?? 0, h.z);
@@ -641,43 +678,10 @@ function build(h: ComicHazard): Model {
         );
     }
   }
-  const messages: Record<string, [string, string]> = {
-    book: ["CURSED CHAPTER", "WAIT FOR THE JAW / DRIVE AROUND"],
-    teeth: ["BITE CLUB", "WAIT FOR THE JAW / DRIVE AROUND"],
-    computer: ["FATAL ERROR", "CRUSHING LAPTOP / DRIVE AROUND"],
-    flippers: ["COLOUR SNAP", "TOUCH THE PAD AND IT SNAPS"],
-    hydrant: ["PRESSURE POP", "LAUNCHES YOU / 90 MPH RUPTURE"],
-    burner: ["HOT WHEELS", "JUMP THE FIRE / DRIVE AROUND"],
-    water: ["SKIM OR SWIM", "ENTER >200 MPH / KEEP 180+"],
-    potion: ["PICK YOUR POISON", "5 SECONDS / DO NOT MIX"],
-  };
-  const canvas = document.createElement("canvas");
-  canvas.width = 768;
-  canvas.height = 192;
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#141b20";
-  ctx.fillRect(0, 0, 768, 192);
-  ctx.strokeStyle = "#ecb34e";
-  ctx.lineWidth = 8;
-  ctx.strokeRect(6, 6, 756, 180);
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#ffd28d";
-  ctx.font = "bold 52px sans-serif";
-  ctx.fillText(messages[h.kind][0], 384, 76);
-  ctx.fillStyle = "#eef0e4";
-  ctx.font = "bold 23px sans-serif";
-  ctx.fillText(messages[h.kind][1], 384, 133);
-  const tex = new T.CanvasTexture(canvas);
-  tex.colorSpace = T.SRGBColorSpace;
-  const label = add(
-    new T.PlaneGeometry(4.2, 1.3),
-    new T.MeshBasicMaterial({ map: tex, side: T.DoubleSide }),
-    0,
-    0.045,
-    h.kind === "burner" ? BURNER_RAMP.z - 8 : -20,
-  );
-  label.rotation.x = -Math.PI / 2;
   consolidate(root);
+  const top = new T.Box3().setFromObject(root);
+  const topY = top.isEmpty() ? 4 : top.max.y - root.position.y + 1.2;
+  root.add(buildComicLabel(h, topY));
   root.traverse((o) => {
     if (o instanceof T.Mesh)
       model.triangles +=
@@ -699,6 +703,12 @@ export class ComicView extends T.Group {
     if (at < 0) return;
     const [m] = this.models.splice(at, 1);
     m.root.traverse((o) => {
+      if (o instanceof T.Sprite) {
+        const mat = o.material as T.SpriteMaterial;
+        if (mat.map instanceof T.CanvasTexture) mat.map.dispose();
+        mat.dispose();
+        return;
+      }
       if (o instanceof T.Mesh) {
         o.geometry.dispose();
         for (const mat of Array.isArray(o.material)
@@ -719,6 +729,12 @@ export class ComicView extends T.Group {
     const key = s.courseTrack?.id ?? "";
     if (key !== this.key) {
       this.traverse((o) => {
+        if (o instanceof T.Sprite) {
+          const mat = o.material as T.SpriteMaterial;
+          if (mat.map instanceof T.CanvasTexture) mat.map.dispose();
+          mat.dispose();
+          return;
+        }
         if (o instanceof T.Mesh) {
           o.geometry.dispose();
           for (const m of Array.isArray(o.material)
@@ -738,14 +754,14 @@ export class ComicView extends T.Group {
       this.key = key;
       if (s.courseTrack)
         for (const h of comicHazards(s.courseTrack)) {
-          const m = build(h);
+          const m = buildComicModel(h);
           this.models.push(m);
           this.add(m.root);
         }
     }
     for (const mech of s.comic.mechanisms) {
       if (this.models.some((m) => m.h.id === mech.h.id)) continue;
-      const m = build(mech.h);
+      const m = buildComicModel(mech.h);
       this.models.push(m);
       this.add(m.root);
     }

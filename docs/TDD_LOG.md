@@ -301,3 +301,6 @@ GREEN: `src/showcase.ts` mechanically translates official tracks into custom-lev
 
 RED: full gates unrun on the finished tree.
 GREEN: everything green with zero code changes. Full unit suite 407/407 (65 files) including the 45/45 headless 9x5 vehicle/track matrix; full SwiftShader e2e suite 202/202 in 2.4h including the 45/45 in-browser matrix; `gpu`-project fps gate sustains 60fps median on low video for all 9 levels (60.0-60.1); production build clean. Prep: stopped a redundant second vite instance on 5174 (user chrome and the 5173 dev server untouched); reverted line-ending-only test churn on `src/tuning-defaults.json`. The `next_update.txt` program is complete: chunks 2c-13 plus the earlier 1-2b, one commit per chunk.
+
+## Update2 chunk 1 - Comic labels closer + upright
+RED: tests/comic-labels.test.ts failed (10 tests): buildComicLabel/buildComicModel did not exist. GREEN: 10/10 pass; labels are upright THREE.Sprite billboards anchored at model top + 1.2 m for all 8 comic kinds, no flat ground-plane labels remain. Full unit suite 417/417, tsc clean, e2e/comic-hazards.spec.ts 9/9 on swiftshader.
