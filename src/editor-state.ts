@@ -36,8 +36,49 @@ export class EditorStore {
   preview = false;
   dirty = false;
   private listeners = new Set<() => void>();
+  private past: { level: CustomLevel; selection: EditorSelection }[] = [];
+  private future: { level: CustomLevel; selection: EditorSelection }[] = [];
   constructor(name: string) {
     this.level = blankLevel(name);
+  }
+  get canUndo() {
+    return this.past.length > 0;
+  }
+  get canRedo() {
+    return this.future.length > 0;
+  }
+  private snapshot() {
+    return {
+      level: structuredClone(this.level),
+      selection: structuredClone(this.selection),
+    };
+  }
+  private pushHistory() {
+    this.past.push(this.snapshot());
+    if (this.past.length > 100) this.past.shift();
+    this.future = [];
+  }
+  /** Restore the previous change; false when history is empty. */
+  undo() {
+    const prev = this.past.pop();
+    if (!prev) return false;
+    this.future.push(this.snapshot());
+    if (this.future.length > 100) this.future.shift();
+    this.level = prev.level;
+    this.selection = prev.selection;
+    this.emit();
+    return true;
+  }
+  /** Re-apply an undone change; false when there is nothing to redo. */
+  redo() {
+    const next = this.future.pop();
+    if (!next) return false;
+    this.past.push(this.snapshot());
+    if (this.past.length > 100) this.past.shift();
+    this.level = next.level;
+    this.selection = next.selection;
+    this.emit();
+    return true;
   }
   onChange(listener: () => void) {
     this.listeners.add(listener);
@@ -51,12 +92,16 @@ export class EditorStore {
     this.level = blankLevel(name);
     this.selection = null;
     this.dirty = false;
+    this.past = [];
+    this.future = [];
     for (const listener of this.listeners) listener();
   }
   openLevel(level: CustomLevel) {
     this.level = level;
     this.selection = null;
     this.dirty = false;
+    this.past = [];
+    this.future = [];
     for (const listener of this.listeners) listener();
   }
   markSaved() {
@@ -64,6 +109,7 @@ export class EditorStore {
     for (const listener of this.listeners) listener();
   }
   updateName(name: string) {
+    this.pushHistory();
     this.level.name = name;
     this.emit();
   }
@@ -85,6 +131,7 @@ export class EditorStore {
     return `${prefix}-${n}`;
   }
   addSolid(kind: SolidKind, x = 0, z = 0): CustomSolid {
+    this.pushHistory();
     const defaults = solidDefaults(kind);
     const taken = new Set(this.level.solids.map((s) => s.id));
     const nudge = this.level.solids.length * 2;
@@ -106,6 +153,7 @@ export class EditorStore {
     return solid;
   }
   addPrefab(kind: string, x = 0, z = 0): CustomPrefab {
+    this.pushHistory();
     const taken = new Set(this.level.prefabs.map((p) => p.id));
     const prefab: CustomPrefab = {
       id: this.nextId(kind, taken),
@@ -119,6 +167,7 @@ export class EditorStore {
     return prefab;
   }
   addCheckpoint(x = 0, z = 0): CustomPoint {
+    this.pushHistory();
     const point = { x, z };
     this.level.checkpoints.push(point);
     this.selection = {
@@ -137,6 +186,7 @@ export class EditorStore {
     return [];
   }
   addRing(x = 0, z = 0): CustomRing {
+    this.pushHistory();
     const ring: CustomRing = { x, y: 4, z, radius: 6, goal: false };
     const rings = (this.level.rings ??= []);
     rings.push(ring);
@@ -153,6 +203,7 @@ export class EditorStore {
     )
       return undefined;
     const point = { x, z };
+    this.pushHistory();
     list.push(point);
     this.selection = { kind: "target", index: list.length - 1 };
     this.emit();
@@ -193,6 +244,7 @@ export class EditorStore {
   updateSelected(patch: Record<string, number | string | boolean | undefined>) {
     const current = this.selectedItem();
     if (!current) return;
+    this.pushHistory();
     Object.assign(current.item, patch);
     this.emit();
   }
@@ -205,6 +257,7 @@ export class EditorStore {
       }
     >,
   ) {
+    this.pushHistory();
     if (patch.mode) this.level.mode = patch.mode;
     if (patch.limit !== undefined) {
       if (Number.isNaN(patch.limit)) delete this.level.limit;
@@ -218,6 +271,7 @@ export class EditorStore {
   deleteSelected() {
     const sel = this.selection;
     if (!sel || sel.kind === "spawn") return;
+    this.pushHistory();
     if (sel.kind === "solid")
       this.level.solids = this.level.solids.filter((s) => s.id !== sel.id);
     else if (sel.kind === "prefab")
@@ -238,6 +292,7 @@ export class EditorStore {
     | undefined {
     const current = this.selectedItem();
     if (!current || current.kind === "spawn") return undefined;
+    this.pushHistory();
     if (current.kind === "ring") {
       const copy = { ...current.item, x: current.item.x + 2 };
       const rings = (this.level.rings ??= []);

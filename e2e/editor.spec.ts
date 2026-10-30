@@ -31,6 +31,36 @@ test("wireframe editor creates, edits and saves", async ({ page }) => {
     "e2e-edit",
   );
 });
+test("wireframe editor undoes and redoes changes", async ({ page }) => {
+  await openEditor(page);
+  await page.evaluate(() =>
+    window.__game!.customLevels.remove("e2e-undo").catch(() => {}),
+  );
+  await page.locator("#editor-name").fill("e2e-undo");
+  await page.locator("#editor-new").click();
+  const solids = () =>
+    page.evaluate(() => window.__game!.editor().solids);
+  await expect.poll(solids, { timeout: 15000 }).toBe(2);
+  await page.locator("#editor-solid-kind").selectOption("barrier");
+  await page.locator("#editor-add-solid").click();
+  await expect.poll(solids, { timeout: 15000 }).toBe(3);
+  await page.locator("#editor-undo").click();
+  await expect.poll(solids, { timeout: 15000 }).toBe(2);
+  await page.locator("#editor-redo").click();
+  await expect.poll(solids, { timeout: 15000 }).toBe(3);
+  // A new edit branches history: redo of the undone add is gone.
+  await page.locator("#editor-undo").click();
+  await expect.poll(solids, { timeout: 15000 }).toBe(2);
+  await page.locator("#editor-add-solid").click();
+  await expect.poll(solids, { timeout: 15000 }).toBe(3);
+  await page.locator("#editor-redo").click();
+  await page.waitForTimeout(500);
+  expect(await solids()).toBe(3);
+  await page.evaluate(
+    (name) => window.__game!.customLevels.remove(name).catch(() => {}),
+    "e2e-undo",
+  );
+});
 test("wireframe editor reloads and deletes from disk", async ({ page }) => {
   await openEditor(page);
   await page.evaluate(async () => {

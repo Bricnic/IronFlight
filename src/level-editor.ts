@@ -72,6 +72,10 @@ export function createLevelEditor(
   const saveButton = el("button", { id: "editor-save" }, "Save");
   const playtestButton = el("button", { id: "editor-playtest" }, "Playtest");
   const deleteButton = el("button", { id: "editor-delete" }, "Delete");
+  const undoButton = el("button", { id: "editor-undo" }, "Undo");
+  const redoButton = el("button", { id: "editor-redo" }, "Redo");
+  undoButton.addEventListener("click", () => store.undo());
+  redoButton.addEventListener("click", () => store.redo());
   const backButton = el("button", { id: "editor-back" }, "Back");
   const toolButtons = (
     ["select", "pan", "eyedropper", "rotator"] as const
@@ -101,6 +105,8 @@ export function createLevelEditor(
     saveButton,
     playtestButton,
     deleteButton,
+    undoButton,
+    redoButton,
     backButton,
     ...toolButtons.map(({ button }) => button),
     previewButton,

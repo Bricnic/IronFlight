@@ -310,3 +310,6 @@ RED: tests/editor-pan.test.ts failed (3 tests): panPlaneForButton/applyPan missi
 
 ## Update2 chunk 3 - Single-axis rotator
 RED: tests/editor-rotator.test.ts failed (2 tests): rotatorAxisForButton/applyRotator missing. GREEN: 2/2 pass; rotator drags drive exactly one axis (left yaw, right pitch, middle roll), replacing the trackball. Prefab yaw stays left-only until prefab pitch/roll land. e2e euler test rewritten for per-button isolation, passing on swiftshader.
+
+## Update2 chunk 4 - Undo/redo rolling 100
+RED: tests/editor-undo.test.ts failed (5 tests): undo/redo missing on EditorStore. GREEN: 5/5 pass; snapshot stacks capped at 100 on both sides, new edits clear redo, undo restores selection and keeps dirty, opening a level clears history. Undo/Redo buttons added to the editor top bar; new e2e test passes on swiftshader.
