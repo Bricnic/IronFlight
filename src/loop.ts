@@ -141,7 +141,8 @@ export function loopRingSolids(cx: number, baseY: number, cz: number, radius = L
   return Array.from({ length: segments }, (_, i) => {
     const theta = ((i + 0.5) / segments) * Math.PI * 2;
     return {
-      x: cx,
+      // Cycloid x-drift like the official ring: the exit lane sits +12 out.
+      x: loopX(cx, theta),
       y: baseY + radius * (1 - Math.cos(theta)) - 0.2 * Math.cos(theta),
       z: cz + (radius + 0.2) * Math.sin(theta),
       w: 12,

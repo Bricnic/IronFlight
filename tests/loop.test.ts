@@ -27,7 +27,9 @@ it("dragon ignition delays center damage while prolonged exposure burns the truc
 it("builds parameterized loop rings and supports for custom levels", () => {
   const segs = loopRingSolids(10, 0, 100);
   expect(segs).toHaveLength(96);
-  for (const s of segs) expect(s.x).toBe(10);
+  expect(segs[0].x).toBeCloseTo(10, 2);
+  expect(segs[95].x).toBeCloseTo(22, 2);
+  expect(Math.max(...segs.map((s) => s.x))).toBeCloseTo(22, 2);
   expect(segs[0].angle).toBeCloseTo(-0.0327, 3);
   expect(segs[0].y).toBeCloseTo(-0.18, 1);
   expect(segs[0].z).toBeCloseTo(101.5, 0);

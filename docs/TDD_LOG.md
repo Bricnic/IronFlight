@@ -319,3 +319,6 @@ RED: tests/default-texture.test.ts failed (3 tests): defaultTextureFor missing. 
 
 ## Update2 chunk 6 - Prefab rotation + dragon fix
 RED: tests/prefab-rotation.test.ts failed (6 of 7): angle/roll validation, dragonAim, tilt, clone facing. GREEN: 7/7 pass. CustomPrefab gains angle/roll (props get all three axes, dragons yaw; loop/hammer/comic/lamp/grandstand reject rotation). dragonAim shared by renderer + sim; physics bodies stay yaw-only with a visual-only prop-tilt group. Clone west dragons fixed with yaw PI via the generator; new inspectDragons probe + e2e render coverage passes on swiftshader. Related suites 74/74.
+
+## Update2 chunk 7 - Clone loop-de-loop E2E
+RED: tests/clone-loop.test.ts failed: clone car stalled at the loop base (z 274, boost 0, no apex). GREEN headless + e2e/clone-loop.spec.ts passes on swiftshader. Root causes fixed: (1) sim loop context (approach/boost/suspension/onLoop/apex/exit) now derives from the custom loop prefab instead of official-only routeX; official dragon gating stays stage-based; (2) loopRingSolids gains the official cycloid x-drift (fixed-x ring wedged the car under a segment). Full unit 438/438, tsc clean.

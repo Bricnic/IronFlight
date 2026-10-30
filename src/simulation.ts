@@ -482,12 +482,17 @@ export class Simulation {
       new Quaternion().copy(this.body.rotation()),
     );
     const longitudinal = forward.dot(speed);
-    const routeX = ROUTES.find((r) => r.id === this.stage)?.x;
+    const officialRouteX = ROUTES.find((r) => r.id === this.stage)?.x;
+    const customLoop = this.courseTrack?.custom?.prefabs.find(
+      (p) => p.kind === "loop",
+    );
+    const routeX = customLoop?.x ?? officialRouteX;
+    const loopZ = customLoop?.z ?? LOOP.z;
     const position = this.body.translation();
     const onApproach =
       routeX !== undefined && Math.abs(position.x - routeX) < 6;
     const loopSuspension =
-      routeX !== undefined && position.z > LOOP.z - LOOP.radius - 5;
+      routeX !== undefined && position.z > loopZ - LOOP.radius - 5;
     this.body.setAngularDamping(strafeMode ? 8 : loopSuspension ? 0.25 : 1.2);
     for (let i = 0; i < 4; i++) {
       if (this.parts.get(this.partDefs[i + 2].id)!.body) continue;
@@ -501,8 +506,8 @@ export class Simulation {
       onApproach &&
       position.y < 4 &&
       position.y > 0 &&
-      position.z >= LOOP.boostStart &&
-      position.z <= LOOP.boostEnd &&
+      position.z >= loopZ - (LOOP.z - LOOP.boostStart) &&
+      position.z <= loopZ - (LOOP.z - LOOP.boostEnd) &&
       this.wheelPositions().filter((_, i) => this.vehicle.wheelIsInContact(i))
         .length >= 2 &&
       this.parts.get("chassis-front")!.health > 0 &&
@@ -519,7 +524,9 @@ export class Simulation {
       this.boostTicks++;
     }
     const dragonIntensity =
-      routeX === undefined ? 0 : dragonExposure(this.time, position.x - routeX);
+      officialRouteX === undefined
+        ? 0
+        : dragonExposure(this.time, position.x - officialRouteX);
     if (
       onApproach &&
       dragonIntensity > 0 &&
@@ -544,7 +551,7 @@ export class Simulation {
       routeX !== undefined &&
       Math.abs(position.x - routeX - 6) < 14 &&
       position.y > 3 &&
-      Math.abs(position.z - LOOP.z) < LOOP.radius + 5;
+      Math.abs(position.z - loopZ) < LOOP.radius + 5;
     if (
       onLoop &&
       position.y > LOOP.radius * 1.8 &&
@@ -559,7 +566,7 @@ export class Simulation {
       this.loopApex &&
       position.y < 3 &&
       longitudinal > 0 &&
-      position.z > LOOP.z - 8 &&
+      position.z > loopZ - 8 &&
       this.wheelPositions().filter((_, i) => this.vehicle.wheelIsInContact(i))
         .length >= 2
     )
