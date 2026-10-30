@@ -5,7 +5,6 @@ import {
   type CustomSolid,
 } from "./custom-level";
 import type { EditorSelection, EditorStore } from "./editor-state";
-import { trackballEuler } from "./euler";
 import { pbr } from "./materials";
 import { scaleSolidUVs } from "./solid-uv";
 /** Resolve a pick from raycast hits by walking to tagged ancestors. */
@@ -29,6 +28,23 @@ export type PanPlane = "xz" | "xy";
 /** Pan tool: left drags stay on the ground plane, right/middle go vertical. */
 export function panPlaneForButton(button: number): PanPlane {
   return button === 0 ? "xz" : "xy";
+}
+export type RotatorAxis = "yaw" | "pitch" | "roll";
+/** Rotator tool: exactly one euler axis per mouse button. */
+export function rotatorAxisForButton(button: number): RotatorAxis {
+  return button === 0 ? "yaw" : button === 2 ? "pitch" : "roll";
+}
+/** Advance one euler axis by horizontal drag pixels; others untouched. */
+export function applyRotator(
+  current: { yaw: number; pitch: number; roll: number },
+  axis: RotatorAxis,
+  dx: number,
+) {
+  return {
+    yaw: current.yaw + (axis === "yaw" ? dx * 0.01 : 0),
+    pitch: current.pitch + (axis === "pitch" ? dx * 0.01 : 0),
+    roll: current.roll + (axis === "roll" ? dx * 0.01 : 0),
+  };
 }
 /** Grab-style world-axis pan of the orbit target. */
 export function applyPan(
@@ -201,7 +217,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     };
   };
   let drag: { planeY: number; offX: number; offZ: number } | null = null;
-  let rotate = false;
+  let rotateAxis: RotatorAxis | null = null;
   let pan = false;
   let panButton = 0;
   let downEmpty = false;
@@ -219,7 +235,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       renderer.domElement.setPointerCapture(e.pointerId);
       return false;
     }
-    if (e.button === 2) return true;
+    if (e.button === 2 && store.tool !== "rotator") return true;
     downX = e.clientX;
     downY = e.clientY;
     moved = false;
@@ -245,7 +261,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     }
     store.select(selection);
     if (store.tool === "rotator") {
-      rotate = true;
+      rotateAxis = rotatorAxisForButton(e.button);
       renderer.domElement.setPointerCapture(e.pointerId);
       return false;
     }
@@ -277,25 +293,20 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       downY = e.clientY;
       return;
     }
-    if (rotate) {
+    if (rotateAxis) {
       const dx = e.clientX - downX;
-      const dy = e.clientY - downY;
       downX = e.clientX;
       downY = e.clientY;
       const current = store.selectedItem();
       if (current?.kind === "solid") {
-        const right = new T.Vector3().setFromMatrixColumn(camera.matrix, 0);
-        const up = new T.Vector3().setFromMatrixColumn(camera.matrix, 1);
-        const out = trackballEuler(
+        const out = applyRotator(
           {
             yaw: current.item.yaw ?? 0,
             pitch: current.item.angle ?? 0,
             roll: current.item.roll ?? 0,
           },
+          rotateAxis,
           dx,
-          dy,
-          right,
-          up,
         );
         store.updateSelected({
           yaw: out.yaw,
@@ -304,6 +315,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         });
       } else if (
         current?.kind === "prefab" &&
+        rotateAxis === "yaw" &&
         (PROP_PREFAB_KINDS as readonly string[]).includes(current.item.kind)
       ) {
         store.updateSelected({ yaw: (current.item.yaw ?? 0) + dx * 0.01 });
@@ -321,9 +333,9 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       store.updateSelected({ x: hit.x - drag.offX, z: hit.z - drag.offZ });
   });
   const endGesture = (e: PointerEvent) => {
-    if (drag || rotate || pan) {
+    if (drag || rotateAxis || pan) {
       drag = null;
-      rotate = false;
+      rotateAxis = null;
       pan = false;
       panButton = 0;
       return;

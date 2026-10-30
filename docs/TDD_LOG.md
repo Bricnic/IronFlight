@@ -307,3 +307,6 @@ RED: tests/comic-labels.test.ts failed (10 tests): buildComicLabel/buildComicMod
 
 ## Update2 chunk 2 - Pan tool planes
 RED: tests/editor-pan.test.ts failed (3 tests): panPlaneForButton/applyPan missing. GREEN: 3/3 pass; left drags pan the orbit target on x/z, right/middle on x/y (grab-style world axes). Added cameraTarget to the editor probe + harness. e2e/editor.spec.ts pan test extended with per-button plane assertions, passing on swiftshader.
+
+## Update2 chunk 3 - Single-axis rotator
+RED: tests/editor-rotator.test.ts failed (2 tests): rotatorAxisForButton/applyRotator missing. GREEN: 2/2 pass; rotator drags drive exactly one axis (left yaw, right pitch, middle roll), replacing the trackball. Prefab yaw stays left-only until prefab pitch/roll land. e2e euler test rewritten for per-button isolation, passing on swiftshader.

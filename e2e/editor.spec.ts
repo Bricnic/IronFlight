@@ -283,7 +283,7 @@ test("wireframe tools pan, sample textures and rotate", async ({ page }) => {
     "e2e-tools",
   );
 });
-test("wireframe rotator spins euler angles and drives the yawed wall", async ({
+test("wireframe rotator drives one euler axis per button and drives the yawed wall", async ({
   page,
 }) => {
   await page.goto("/");
@@ -356,17 +356,54 @@ test("wireframe rotator spins euler angles and drives the yawed wall", async ({
     "Opened e2e-euler",
     { timeout: 15000 },
   );
-  // A diagonal rotator drag spins yaw, pitch and roll together.
+  // Each mouse button drives exactly one euler axis.
   await page.locator("#editor-tool-rotator").click();
   const at = await page.evaluate((p) => window.__game!.editorProject(p), {
     x: 10,
     y: 0.8,
     z: -20,
   });
-  await page.mouse.move(at.x, at.y);
-  await page.mouse.down();
-  await page.mouse.move(at.x + 70, at.y + 50, { steps: 10 });
-  await page.mouse.up();
+  const spinAngles = () =>
+    page.evaluate(async () => {
+      const loaded = await window.__game!.customLevels.load("e2e-euler");
+      const spin = loaded.solids.find((s) => s.id === "spin-1")!;
+      return {
+        yaw: spin.yaw ?? 0,
+        angle: spin.angle ?? 0,
+        roll: spin.roll ?? 0,
+      };
+    });
+  const save = () =>
+    page.locator("#editor-save").click().then(() =>
+      expect(page.locator("#editor-status")).toContainText("Saved e2e-euler", {
+        timeout: 15000,
+      }),
+    );
+  const dragSpin = async (button?: "left" | "right" | "middle") => {
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down(button ? { button } : undefined);
+    await page.mouse.move(at.x + 70, at.y + 50, { steps: 10 });
+    if (button) await page.mouse.up({ button });
+    else await page.mouse.up();
+  };
+  await dragSpin();
+  await save();
+  const yawed = await spinAngles();
+  expect(Math.abs(yawed.yaw)).toBeGreaterThan(0.02);
+  expect(yawed.angle).toBeCloseTo(0, 6);
+  expect(yawed.roll).toBeCloseTo(0, 6);
+  await dragSpin("right");
+  await save();
+  const pitched = await spinAngles();
+  expect(Math.abs(pitched.angle)).toBeGreaterThan(0.02);
+  expect(pitched.yaw).toBeCloseTo(yawed.yaw, 6);
+  expect(pitched.roll).toBeCloseTo(0, 6);
+  await dragSpin("middle");
+  await save();
+  const rolled = await spinAngles();
+  expect(Math.abs(rolled.roll)).toBeGreaterThan(0.02);
+  expect(rolled.yaw).toBeCloseTo(yawed.yaw, 6);
+  expect(rolled.angle).toBeCloseTo(pitched.angle, 6);
   // The yaw numeric swings the road-blocking wall open.
   await page.locator('#editor-objects li[data-key="solid:yaw-1"]').click();
   await page.locator('#editor-props input[data-prop="yaw"]').fill("1.5708");
@@ -378,10 +415,10 @@ test("wireframe rotator spins euler angles and drives the yawed wall", async ({
   const loaded = await page.evaluate(() =>
     window.__game!.customLevels.load("e2e-euler"),
   );
-  const spin = loaded.solids.find((s) => s.id === "spin-1")!;
-  expect(Math.abs(spin.yaw ?? 0)).toBeGreaterThan(0.02);
-  expect(Math.abs(spin.angle ?? 0)).toBeGreaterThan(0.02);
-  expect(spin.roll).toBeDefined();
+  const spinFinal = loaded.solids.find((s) => s.id === "spin-1")!;
+  expect(spinFinal.yaw ?? 0).toBeCloseTo(rolled.yaw, 6);
+  expect(spinFinal.angle ?? 0).toBeCloseTo(rolled.angle, 6);
+  expect(spinFinal.roll ?? 0).toBeCloseTo(rolled.roll, 6);
   expect(
     loaded.solids.find((s) => s.id === "yaw-1")?.yaw,
   ).toBeCloseTo(Math.PI / 2, 3);
