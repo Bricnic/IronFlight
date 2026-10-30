@@ -547,6 +547,7 @@ export function createLevelEditor(
         tool: store.tool,
         preview: store.preview,
         dirty: store.dirty,
+        cameraTarget: viewport.cameraTarget(),
         levels: Array.from(levelPicker.options)
           .map((o) => o.value)
           .filter(Boolean),

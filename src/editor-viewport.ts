@@ -25,6 +25,23 @@ export function resolveViewportPick(
   }
   return null;
 }
+export type PanPlane = "xz" | "xy";
+/** Pan tool: left drags stay on the ground plane, right/middle go vertical. */
+export function panPlaneForButton(button: number): PanPlane {
+  return button === 0 ? "xz" : "xy";
+}
+/** Grab-style world-axis pan of the orbit target. */
+export function applyPan(
+  target: { x: number; y: number; z: number },
+  dx: number,
+  dy: number,
+  scale: number,
+  plane: PanPlane,
+) {
+  target.x -= dx * scale;
+  if (plane === "xz") target.z -= dy * scale;
+  else target.y += dy * scale;
+}
 /** Intersect a ray with a horizontal plane; null when parallel/upward. */
 export function planeHit(
   origin: { x: number; y: number; z: number },
@@ -79,8 +96,12 @@ function attachOrbit(
   let panning = false;
   let px = 0;
   let py = 0;
-  const panPixels = (dx: number, dy: number) => {
+  const panPixels = (dx: number, dy: number, plane?: PanPlane) => {
     const scale = spherical.radius / 400;
+    if (plane) {
+      applyPan(target, dx, dy, scale, plane);
+      return;
+    }
     const right = new T.Vector3().setFromMatrixColumn(camera.matrix, 0);
     const up = new T.Vector3().setFromMatrixColumn(camera.matrix, 1);
     target.addScaledVector(right, -dx * scale);
@@ -136,8 +157,8 @@ function attachOrbit(
       spherical.radius = 90;
       apply();
     },
-    panBy(dx: number, dy: number) {
-      panPixels(dx, dy);
+    panBy(dx: number, dy: number, plane?: PanPlane) {
+      panPixels(dx, dy, plane);
       apply();
     },
   };
@@ -182,21 +203,27 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   let drag: { planeY: number; offX: number; offZ: number } | null = null;
   let rotate = false;
   let pan = false;
+  let panButton = 0;
   let downEmpty = false;
   let downX = 0;
   let downY = 0;
   let moved = false;
   const canStart = (e: PointerEvent) => {
+    if (store.tool === "pan") {
+      downX = e.clientX;
+      downY = e.clientY;
+      moved = false;
+      downEmpty = false;
+      pan = true;
+      panButton = e.button;
+      renderer.domElement.setPointerCapture(e.pointerId);
+      return false;
+    }
     if (e.button === 2) return true;
     downX = e.clientX;
     downY = e.clientY;
     moved = false;
     downEmpty = false;
-    if (store.tool === "pan") {
-      pan = true;
-      renderer.domElement.setPointerCapture(e.pointerId);
-      return false;
-    }
     const { selection, point } = pickAt(e.clientX, e.clientY);
     if (!selection || !point) {
       downEmpty = true;
@@ -241,7 +268,11 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   renderer.domElement.addEventListener("pointermove", (e) => {
     if (Math.hypot(e.clientX - downX, e.clientY - downY) >= 4) moved = true;
     if (pan) {
-      orbit.panBy(e.clientX - downX, e.clientY - downY);
+      orbit.panBy(
+        e.clientX - downX,
+        e.clientY - downY,
+        panPlaneForButton(panButton),
+      );
       downX = e.clientX;
       downY = e.clientY;
       return;
@@ -294,6 +325,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       drag = null;
       rotate = false;
       pan = false;
+      panButton = 0;
       return;
     }
     if (downEmpty && !moved && e.button !== 2) store.select(null);
@@ -551,6 +583,9 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     },
     frameSpawn(level: CustomLevel) {
       orbit.frame(new T.Vector3(level.spawn.x, level.spawn.y, level.spawn.z));
+    },
+    cameraTarget() {
+      return { x: target.x, y: target.y, z: target.z };
     },
     resize,
     dispose() {

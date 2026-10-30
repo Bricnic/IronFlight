@@ -304,3 +304,6 @@ GREEN: everything green with zero code changes. Full unit suite 407/407 (65 file
 
 ## Update2 chunk 1 - Comic labels closer + upright
 RED: tests/comic-labels.test.ts failed (10 tests): buildComicLabel/buildComicModel did not exist. GREEN: 10/10 pass; labels are upright THREE.Sprite billboards anchored at model top + 1.2 m for all 8 comic kinds, no flat ground-plane labels remain. Full unit suite 417/417, tsc clean, e2e/comic-hazards.spec.ts 9/9 on swiftshader.
+
+## Update2 chunk 2 - Pan tool planes
+RED: tests/editor-pan.test.ts failed (3 tests): panPlaneForButton/applyPan missing. GREEN: 3/3 pass; left drags pan the orbit target on x/z, right/middle on x/y (grab-style world axes). Added cameraTarget to the editor probe + harness. e2e/editor.spec.ts pan test extended with per-button plane assertions, passing on swiftshader.

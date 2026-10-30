@@ -26,6 +26,7 @@ export interface GameHarness {
     preview: boolean;
     dirty: boolean;
     levels: string[];
+    cameraTarget: { x: number; y: number; z: number };
   };
   inspectSolids(): {
     id: string;

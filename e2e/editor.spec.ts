@@ -251,6 +251,33 @@ test("wireframe tools pan, sample textures and rotate", async ({ page }) => {
   expect(
     loaded.solids.find((s) => s.id === "barrier-3")?.yaw ?? 0,
   ).toBeGreaterThan(0.1);
+  // Pan planes: left drags stay on x/z, right/middle switch to x/y.
+  await page.locator("#editor-tool-pan").click();
+  await expect.poll(tool, { timeout: 15000 }).toBe("pan");
+  const target = () =>
+    page.evaluate(() => window.__game!.editor().cameraTarget);
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  const targetBeforeLeft = await target();
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx, cy + 60, { steps: 8 });
+  await page.mouse.up();
+  const targetAfterLeft = await target();
+  expect(targetAfterLeft.z).not.toBeCloseTo(targetBeforeLeft.z, 3);
+  expect(targetAfterLeft.y).toBeCloseTo(targetBeforeLeft.y, 6);
+  for (const button of ["right", "middle"] as const) {
+    const beforeButton = await target();
+    await page.mouse.move(cx, cy);
+    await page.mouse.down({ button });
+    await page.mouse.move(cx, cy + 40, { steps: 8 });
+    await page.mouse.up({ button });
+    const afterButton = await target();
+    expect(afterButton.y).not.toBeCloseTo(beforeButton.y, 3);
+    expect(afterButton.z).toBeCloseTo(beforeButton.z, 6);
+    expect(await sel()).toBe("solid:barrier-3");
+  }
+  expect(await sel()).toBe("solid:barrier-3");
   await page.evaluate(
     (name) => window.__game!.customLevels.remove(name),
     "e2e-tools",
