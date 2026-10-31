@@ -1,0 +1,34 @@
+The level editor needs some refinement. Currently the objects placed when playtesting do not persist in the wireframe view of the level, and hence do not get saved when we save to disk. They also lose their collisions if you go back to the level editor and then resume playtesting (this is a bug). It should also be possible to edit an existing object in the playtest view, including rotating, relocating, deleting, changing textures, and duplicating.
+
+In the wireframe view, it should be possible to select objects with the mouse, and move them around. Add a panel with different tools, such as a pan tool, select tool, eyedropper (for texture), rotator. When the select tool is used and the user clicks on nothing, the current item should be deselected. When using the rotator tool, the item should by default act like a ball, allowing the user to rotate it along any axis depending on their camera position, position at which the object was grabbed, and drag direction. The yaw, pitch and roll of all objects should also be possible to edit on the right hand panel with numerical entries.
+
+In the wireframe view, there should also be a 'preview' button that renders the scene without actually playtesting it- in this mode, the car doesn't drive, and we continue to have our regular level editing capabilities.
+
+The level editor is missing a button to return to the level select screen. If there are unsaved changes when selecting this, the editor should offer to save unsaved changes first.
+
+I placed a ramp with the 'monastery_stone_floor' texture, and it did not render. Instead, it was an invisible ramp. Investigate and fix this. Make sure that all textures from the normal game can be rendered in a custom created level, and also test that all textures available in the level editor are actually able to render too.
+
+The level editor is missing the ability to place rings. It's also missing a button to add a collectible in general.
+It's also missing the ability to place several prefabs that are present in several levels:
+* spinning spike hammers with their built-in supports
+* loop-de-loops
+* goal ring
+* trampoline
+* ghosts
+* dragons
+* lamp posts
+* grandstands
+
+
+To prove that you have built a sufficiently full-featured level editor, construct an end-to-end test demonstrating that you are able to recreate the first and second levels. Take screenshots from various equivalent points when playtesting both the real level vs. your recreation. If there are differences in the screenshots, iterate on your version of the level or fix missing functionality in the level editor to allow your version to have sufficiently high fidelity. When you reach a high fidelity clone of both levels for the first time, save them to disk permanently- we will check these in to source control. You will then also have a regression test showing that you are able to recreate these same levels from scratch, along with being able to load and playtest the saved versions successfully.
+
+---
+
+Before writing any code, first write up a plan covering all of the above in a new markdown file on disk.
+
+Break down the work into small, independently testable chunks.
+Then implement each chunk in a formal, test-driven-development manner.
+
+Each chunk should be committed as a separate git commit.
+
+Proceed with the plan to completion, without asking for any more confirmation.

@@ -1,0 +1,18 @@
+Look at this image: D:\Code\DestructionDerby\direction\hydrant_upside_down.PNG
+I want that "pressure pop" label to be much closer to the hydrant. It's also currently upside down.
+The same change should be made to all of the other prefabs that have labels, like book, computer, teeth, flipper etc.
+
+For the 'pan' tool in the level editor, I don't like the x/y plane default. Instead, I want to move in the x/z plane when dragging with left mouse. We can switch to the x/y plane when holding the right or middle mouse buttons.
+
+For the 'rotator' tool in the level editor, I want to control exactly one of yaw, pitch and roll at a time.
+Yaw = left mouse
+Pitch = right mouse
+Roll = middle mouse
+
+The level editor needs 'undo' and 'redo' with a rolling history buffer of the latest 100 changes.
+
+Currently the texture for 'kind' is implicit. For example, "Clone Harbor Sprint.json" has a solid of "kind": "ground", and in game it renders with a texture. However, the level editor doesn't list this texture when the element is selected in the level editor, instead simply listing (none). We should display the name of the default texture that will be used for such objects in the level editor's texture box.
+
+Prefabs appear to be missing yaw, pitch and roll. This leads to a bug in "Clone Triple Loop.json"- two of the dragons are facing the wrong way, compared to the reference level. Add test coverage to ensure this part of the level renders correctly.
+
+It's also not possible to complete the loop-de-loop on "Clone Triple Loop.json". Add an E2E test showing it is possible, and iterate on the level until it is possible.
