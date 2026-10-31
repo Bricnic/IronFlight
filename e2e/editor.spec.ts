@@ -92,6 +92,47 @@ test("texture box names the implicit default texture", async ({ page }) => {
     "e2e-deftex",
   );
 });
+test("wireframe drag from mousedown to mouseup is one undo step", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await page.evaluate(() =>
+    window.__game!.customLevels.remove("e2e-gesture").catch(() => {}),
+  );
+  await page.locator("#editor-name").fill("e2e-gesture");
+  await page.locator("#editor-new").click();
+  await page.locator("#editor-solid-kind").selectOption("barrier");
+  await page.locator("#editor-add-solid").click();
+  const x = page.locator('#editor-props input[data-prop="x"]');
+  await expect.poll(() => x.inputValue(), { timeout: 15000 }).toBe("4");
+  const at = await page.evaluate((p) => window.__game!.editorProject(p), {
+    x: 4,
+    y: 0.8,
+    z: 0,
+  });
+  // A multi-move drag coalesces: one undo returns to the mousedown state.
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down();
+  await page.mouse.move(at.x + 30, at.y + 10, { steps: 6 });
+  await page.mouse.move(at.x + 60, at.y + 20, { steps: 6 });
+  await page.mouse.move(at.x + 90, at.y + 30, { steps: 6 });
+  await page.mouse.up();
+  const dragged = await x.inputValue();
+  expect(dragged).not.toBe("4");
+  await page.locator("#editor-undo").click();
+  await expect.poll(() => x.inputValue(), { timeout: 15000 }).toBe("4");
+  await page.locator("#editor-redo").click();
+  await expect.poll(() => x.inputValue(), { timeout: 15000 }).toBe(dragged);
+  // The whole drag was a single entry: the next undo removes the solid.
+  await page.locator("#editor-undo").click();
+  await page.locator("#editor-undo").click();
+  const solids = () => page.evaluate(() => window.__game!.editor().solids);
+  await expect.poll(solids, { timeout: 15000 }).toBe(2);
+  await page.evaluate(
+    (name) => window.__game!.customLevels.remove(name).catch(() => {}),
+    "e2e-gesture",
+  );
+});
 test("wireframe editor reloads and deletes from disk", async ({ page }) => {
   await openEditor(page);
   await page.evaluate(async () => {

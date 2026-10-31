@@ -38,6 +38,10 @@ export class EditorStore {
   private listeners = new Set<() => void>();
   private past: { level: CustomLevel; selection: EditorSelection }[] = [];
   private future: { level: CustomLevel; selection: EditorSelection }[] = [];
+  private gesture: {
+    snapshot: { level: CustomLevel; selection: EditorSelection };
+    dirty: boolean;
+  } | null = null;
   constructor(name: string) {
     this.level = blankLevel(name);
   }
@@ -54,9 +58,28 @@ export class EditorStore {
     };
   }
   private pushHistory() {
+    if (this.gesture) {
+      // A drag counts as one change: capture the pre-gesture state on the
+      // first mutation, then ignore the in-between states.
+      if (this.gesture.dirty) return;
+      this.gesture.dirty = true;
+      this.past.push(this.gesture.snapshot);
+      if (this.past.length > 100) this.past.shift();
+      this.future = [];
+      return;
+    }
     this.past.push(this.snapshot());
     if (this.past.length > 100) this.past.shift();
     this.future = [];
+  }
+  /** Open a coalescing gesture (mousedown); nested opens are ignored. */
+  beginGesture() {
+    if (this.gesture) return;
+    this.gesture = { snapshot: this.snapshot(), dirty: false };
+  }
+  /** Close the gesture (mouseup); gestures with no changes leave no history. */
+  endGesture() {
+    this.gesture = null;
   }
   /** Restore the previous change; false when history is empty. */
   undo() {
@@ -94,6 +117,7 @@ export class EditorStore {
     this.dirty = false;
     this.past = [];
     this.future = [];
+    this.gesture = null;
     for (const listener of this.listeners) listener();
   }
   openLevel(level: CustomLevel) {
@@ -102,6 +126,7 @@ export class EditorStore {
     this.dirty = false;
     this.past = [];
     this.future = [];
+    this.gesture = null;
     for (const listener of this.listeners) listener();
   }
   markSaved() {

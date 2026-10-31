@@ -262,6 +262,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     store.select(selection);
     if (store.tool === "rotator") {
       rotateAxis = rotatorAxisForButton(e.button);
+      store.beginGesture();
       renderer.domElement.setPointerCapture(e.pointerId);
       return false;
     }
@@ -271,6 +272,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       offX: item ? point.x - item.x : 0,
       offZ: item ? point.z - item.z : 0,
     };
+    store.beginGesture();
     renderer.domElement.setPointerCapture(e.pointerId);
     return false;
   };
@@ -343,6 +345,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       rotateAxis = null;
       pan = false;
       panButton = 0;
+      store.endGesture();
       return;
     }
     if (downEmpty && !moved && e.button !== 2) store.select(null);

@@ -322,3 +322,6 @@ RED: tests/prefab-rotation.test.ts failed (6 of 7): angle/roll validation, drago
 
 ## Update2 chunk 7 - Clone loop-de-loop E2E
 RED: tests/clone-loop.test.ts failed: clone car stalled at the loop base (z 274, boost 0, no apex). GREEN headless + e2e/clone-loop.spec.ts passes on swiftshader. Root causes fixed: (1) sim loop context (approach/boost/suspension/onLoop/apex/exit) now derives from the custom loop prefab instead of official-only routeX; official dragon gating stays stage-based; (2) loopRingSolids gains the official cycloid x-drift (fixed-x ring wedged the car under a segment). Full unit 438/438, tsc clean.
+
+## Update2 follow-up - Drag gesture coalescing
+RED: tests/editor-gesture.test.ts failed (5 tests): beginGesture/endGesture missing. GREEN: 5/5 pass; store captures one pre-gesture snapshot on first mutation, ignores in-between states, pushes nothing for empty gestures. Wireframe move/rotate drags bracket pointerdown/up. New e2e test proves mousedown-to-mouseup is a single undo step on swiftshader.
