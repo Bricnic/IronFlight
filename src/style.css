@@ -1017,6 +1017,10 @@ kbd {
   gap: 4px;
 }
 #editor-objects li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 6px 8px;
   border: 1px solid #ffffff18;
   background: #1a2a32;
@@ -1025,6 +1029,21 @@ kbd {
 }
 #editor-objects li.selected {
   border-color: #ffa762;
+}
+#editor-objects li[data-locked="true"] > span {
+  opacity: 0.55;
+}
+#editor-objects li > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#editor-objects li[data-locked="true"] {
+  cursor: default;
+}
+#editor-objects .editor-lock {
+  flex-shrink: 0;
+  padding: 4px 6px;
+  font-size: 11px;
 }
 .editor-viewport {
   position: relative;

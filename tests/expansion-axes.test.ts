@@ -43,6 +43,33 @@ it("pendulum angle and velocity follow amplitude, period and phase", () => {
   expect(axeAngularVelocity(0, 0)).toBeCloseTo(AXE_AMPLITUDE * omega, 9);
   expect(axeAngularVelocity(AXE_PERIOD / 4, 0)).toBeCloseTo(0, 9);
 });
+
+it("swing speed changes the period and impact velocity without jumping phase", () => {
+  const sim = rigged();
+  try {
+    sim.setTuning({ axeSpeed: 2 });
+    sim.run(0.25);
+    sim.axes.update();
+    let axe = sim.axes.snapshot().axes[0];
+    expect(axe.angle).toBeCloseTo(axeAngle(0.5, 0), 8);
+    expect(axe.velocity).toBeCloseTo(axeAngularVelocity(0.5, 0) * 2, 8);
+    sim.setTuning({ axeSpeed: 0.5 });
+    sim.axes.update();
+    expect(sim.axes.snapshot().axes[0].angle).toBeCloseTo(axe.angle, 8);
+    sim.run(0.5);
+    sim.axes.update();
+    axe = sim.axes.snapshot().axes[0];
+    expect(axe.angle).toBeCloseTo(axeAngle(0.75, 0), 8);
+    expect(axe.velocity).toBeCloseTo(axeAngularVelocity(0.75, 0) * 0.5, 8);
+    sim.startTrack("canyon-plunge");
+    expect(sim.tuning.axeSpeed).toBe(0.5);
+    sim.run(0.5);
+    sim.axes.update();
+    expect(sim.axes.snapshot().axes[0].angle).toBeCloseTo(axeAngle(0.25, 0), 8);
+  } finally {
+    sim.dispose();
+  }
+});
 it("a real blade impact launches the truck and registers one strike", () => {
   const sim = rigged();
   const target = sim.axes.snapshot().axes[0];

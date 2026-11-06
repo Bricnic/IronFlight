@@ -5,6 +5,19 @@ const tagged = (pick: unknown, parent: unknown = null) => ({
   userData: { pick },
   parent,
 });
+it("skips locked objects and their children when picking", () => {
+  const locked = {
+    userData: { pick: { kind: "solid", id: "wall" }, locked: true },
+    parent: null,
+  };
+  const child = { userData: {}, parent: locked };
+  expect(resolveViewportPick([{ object: locked }, { object: child }])).toBeNull();
+  expect(resolveViewportPick([
+    { object: child }, { object: tagged({ kind: "prefab", id: "axe" }) },
+  ])).toEqual({ kind: "prefab", id: "axe" });
+  locked.userData.locked = false;
+  expect(resolveViewportPick([{ object: child }])).toEqual({ kind: "solid", id: "wall" });
+});
 it("resolves viewport picks by walking to tagged ancestors", () => {
   const solid = tagged({ kind: "solid", id: "barrier-3" });
   const child = { userData: {}, parent: solid };

@@ -139,8 +139,18 @@ export class EditorStore {
     this.emit();
   }
   select(selection: EditorSelection) {
+    if (this.selectedItem(selection)?.item.locked) return;
     this.selection = selection;
     this.emit(false);
+  }
+  setLocked(selection: EditorSelection, locked: boolean) {
+    const current = this.selectedItem(selection);
+    if (!current || !!current.item.locked === locked) return;
+    this.pushHistory();
+    if (locked && this.selectedItem()?.item === current.item)
+      this.selection = null;
+    current.item.locked = locked;
+    this.emit();
   }
   setTool(tool: EditorTool) {
     this.tool = tool;
@@ -234,7 +244,7 @@ export class EditorStore {
     this.emit();
     return point;
   }
-  selectedItem():
+  selectedItem(sel: EditorSelection = this.selection):
     | { kind: "solid"; item: CustomSolid }
     | { kind: "prefab"; item: CustomPrefab }
     | { kind: "checkpoint"; item: CustomPoint }
@@ -242,7 +252,6 @@ export class EditorStore {
     | { kind: "ring"; item: CustomRing }
     | { kind: "spawn"; item: CustomLevel["spawn"] }
     | null {
-    const sel = this.selection;
     if (!sel) return null;
     if (sel.kind === "solid") {
       const item = this.level.solids.find((s) => s.id === sel.id);

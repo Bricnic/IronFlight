@@ -2,7 +2,60 @@ import { expect, it } from "vitest";
 import {
   EditorStore,
   shouldSyncFromSession,
+  type EditorSelection,
 } from "../src/editor-state";
+import { validateCustomLevel } from "../src/custom-level";
+
+it("persists locks for every object kind and unlocks selection with undo/redo", () => {
+  const store = new EditorStore("Locked Objects");
+  const prefab = store.addPrefab("axe");
+  store.addTarget();
+  store.addRing();
+  const selections: EditorSelection[] = [
+    { kind: "solid", id: "ground" },
+    { kind: "prefab", id: prefab.id },
+    { kind: "checkpoint", index: 0 },
+    { kind: "target", index: 0 },
+    { kind: "ring", index: 0 },
+    { kind: "spawn" },
+  ];
+  for (const selection of selections) {
+    store.select(selection);
+    store.setLocked(selection, true);
+    expect(store.selection).toBeNull();
+    store.select(selection);
+    expect(store.selection).toBeNull();
+  }
+  const restored = new EditorStore("Restored");
+  restored.openLevel(validateCustomLevel(JSON.parse(JSON.stringify(store.level))));
+  for (const selection of selections) {
+    expect(restored.selectedItem(selection)?.item.locked).toBe(true);
+    restored.select(selection);
+    expect(restored.selection).toBeNull();
+    restored.setLocked(selection, false);
+    restored.select(selection);
+    expect(restored.selection).toEqual(selection);
+    expect(restored.selectedItem()?.item.locked).toBe(false);
+    restored.undo();
+    expect(restored.selectedItem(selection)?.item.locked).toBe(true);
+    expect(restored.selection).toBeNull();
+    restored.redo();
+    restored.select(selection);
+    expect(restored.selection).toEqual(selection);
+    restored.select(null);
+  }
+});
+
+it("rejects invalid lock metadata and keeps older unlocked levels compatible", () => {
+  const store = new EditorStore("Old Level");
+  const old = validateCustomLevel(store.level);
+  expect(old.solids[0].locked).toBeUndefined();
+  store.select({ kind: "solid", id: "ground" });
+  expect(store.selection).toEqual({ kind: "solid", id: "ground" });
+  expect(() => validateCustomLevel({
+    ...old, spawn: { ...old.spawn, locked: "yes" },
+  })).toThrow(/locked must be a boolean/);
+});
 it("opens a named blank level, clean", () => {
   const store = new EditorStore("Sprint");
   expect(store.level.name).toBe("Sprint");
