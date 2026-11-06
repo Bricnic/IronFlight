@@ -402,8 +402,11 @@ export class CourseView extends T.Group {
     this.hazardTime = sim.time;
     const run = sim.trackRun;
     const key = run ? `${run.track.id}:${run.variant}` : "";
+    // Saving an edited custom level replaces its Track while retaining its id.
+    // Rebuild the visuals along with physics when that definition changes.
+    const trackChanged = this.builtTrack !== (run?.track ?? null);
     this.builtTrack = run?.track ?? null;
-    if (key !== this.key) {
+    if (key !== this.key || trackChanged) {
       this.traverse((o) => {
         if (o instanceof T.Mesh) {
           o.geometry.dispose();
