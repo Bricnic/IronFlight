@@ -126,12 +126,13 @@ export function createLevelEditor(
     id: "editor-prefab-kind",
     "aria-label": "Prefab kind",
   }) as HTMLSelectElement;
-  for (const kind of PREFAB_KINDS)
+  for (const kind of [...PREFAB_KINDS].sort())
     prefabKind.append(el("option", { value: kind }, kind));
   const addPrefab = el("button", { id: "editor-add-prefab" }, "Add prefab");
   const addCheckpoint = el("button", { id: "editor-add-checkpoint" }, "Add checkpoint");
-  const addTarget = el("button", { id: "editor-add-target" }, "Add target");
-  const addRing = el("button", { id: "editor-add-ring" }, "Add ring");
+  const addTarget = el("button", { id: "editor-add-target" }, "Add collectible");
+  const addRing = el("button", { id: "editor-add-ring" }, "Add stunt ring");
+  addRing.title = "Place a large ring to jump or drive through";
   const objects = el("ul", { id: "editor-objects" });
   const duplicateButton = el("button", { id: "editor-duplicate" }, "Duplicate");
   const removeButton = el("button", { id: "editor-remove" }, "Delete selected");
@@ -229,7 +230,9 @@ export function createLevelEditor(
           : current.kind === "spawn"
             ? "Spawn"
             : current.kind === "target"
-              ? "Target"
+              ? level.mode === "demolition"
+                ? "Demolition target"
+                : "Ring collectible"
               : current.kind === "ring"
                 ? "Ring"
                 : "Checkpoint",
@@ -241,6 +244,10 @@ export function createLevelEditor(
     const commit = (prop: string) => (n: number) =>
       store.updateSelected({ [prop]: n });
     for (const key of ["x", "y", "z"]) {
+      // Optional heights have their own field below, even when already set.
+      if (
+        key === "y" && ["prefab", "checkpoint", "target"].includes(current.kind)
+      ) continue;
       if (!(key in item)) continue;
       numberField(props, key.toUpperCase(), key, item[key] as number, commit(key));
     }
@@ -313,8 +320,10 @@ export function createLevelEditor(
         );
       }
     }
-    if (current.kind === "checkpoint" || current.kind === "target")
-      numberField(props, "Y", "y", item.y as number | undefined, commit("y"));
+    if (current.kind === "checkpoint" || current.kind === "target") {
+      const defaultY = current.kind === "checkpoint" ? 2 : level.mode === "demolition" ? 1.5 : 1.7;
+      numberField(props, "Y", "y", (item.y as number | undefined) ?? defaultY, commit("y"));
+    }
     if (current.kind === "ring") {
       numberField(
         props,
@@ -387,7 +396,7 @@ export function createLevelEditor(
     );
     store.targetList().forEach((t, i) =>
       row(
-        `Target ${i + 1} (${t.x}, ${t.z})`,
+        `${level.mode === "demolition" ? "Demolition target" : "Collectible"} ${i + 1} (${t.x}, ${t.z})`,
         store.selection?.kind === "target" &&
           (store.selection as { index: number }).index === i,
         () => store.select({ kind: "target", index: i }),
@@ -417,6 +426,14 @@ export function createLevelEditor(
     for (const { tool, button } of toolButtons)
       button.classList.toggle("selected", store.tool === tool);
     previewButton.classList.toggle("selected", store.preview);
+    addTarget.textContent =
+      store.level.mode === "demolition"
+        ? "Add demolition target"
+        : "Add collectible";
+    addTarget.title =
+      store.level.mode === "demolition"
+        ? "Place a destructible demolition target"
+        : "Place a ring collectible like those in Scrapyard Sweep";
     refreshList();
     refreshProps();
     viewport.render(store.level, store.selection, store.preview);

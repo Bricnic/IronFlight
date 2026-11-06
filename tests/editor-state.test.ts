@@ -126,7 +126,9 @@ it("adds and edits rings, and targets in race mode", () => {
   store.updateSelected({ radius: 8, goal: true });
   expect(store.level.rings![0]).toMatchObject({ radius: 8, goal: true });
   const target = store.addTarget(1, 2);
-  expect(target).toMatchObject({ x: 1, z: 2 });
+  expect(target).toMatchObject({ x: 1, y: 1.7, z: 2 });
+  store.updateSelected({ y: 5 });
+  expect(store.level.collectibles![0].y).toBe(5);
   expect(store.level.collectibles).toHaveLength(1);
   store.select({ kind: "ring", index: 0 });
   const copy = store.duplicateSelected();

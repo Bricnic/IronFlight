@@ -19,6 +19,16 @@ export type AxeDef = {
   phase: number;
 };
 export function axeDefs(track?: Track): AxeDef[] {
+  if (track?.custom)
+    return track.custom.prefabs
+      .filter((p) => p.kind === "axe")
+      .map((p) => ({
+        id: p.id,
+        x: p.x,
+        y: (p.y ?? 0) + 9,
+        z: p.z,
+        phase: 0,
+      }));
   if (track?.id !== "canyon-plunge") return [];
   return [950, 1050, 1400, 1600, 1800, 2000].map((z, i) => ({
     id: `axe-${i + 1}`,

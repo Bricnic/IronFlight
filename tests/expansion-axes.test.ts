@@ -10,6 +10,13 @@ import {
   AXE_PERIOD,
 } from "../src/axes";
 import { buildAxeMesh, axeStats } from "../src/course-view";
+import {
+  blankLevel,
+  toTrack,
+  validateCustomLevel,
+  registerCustomTrack,
+} from "../src/custom-level";
+import { courseSolids } from "../src/course";
 beforeAll(initPhysics);
 const canyon = () => getTrack("canyon-plunge");
 const rigged = () => {
@@ -99,4 +106,39 @@ it("axe meshes are high-poly steel blades on long handles", () => {
   expect(stats.meshes).toBeGreaterThanOrEqual(3);
   expect(stats.triangles).toBeGreaterThan(300);
   expect(stats.metallic).toBeGreaterThanOrEqual(1);
+});
+
+it("custom axe prefabs position the swing and collidable support frame together", () => {
+  const level = blankLevel("Custom Axe Height");
+  level.prefabs.push({ id: "custom-axe", kind: "axe", x: 20, y: 5, z: -10 });
+  const track = toTrack(validateCustomLevel(level));
+  expect(axeDefs(track)).toEqual([
+    { id: "custom-axe", x: 20, y: 14, z: -10, phase: 0 },
+  ]);
+  const supports = courseSolids(track).filter((s) =>
+    s.id.startsWith("custom-axe-"),
+  );
+  expect(supports).toHaveLength(4);
+  expect(supports.find((s) => s.id === "custom-axe-beam")).toMatchObject({
+    x: 20,
+    y: 18,
+    z: -10,
+    w: 32.5,
+  });
+  expect(supports.filter((s) => s.id.includes("post")).map((s) => s.x)).toEqual(
+    [4.5, 35.5],
+  );
+  registerCustomTrack(track);
+  const sim = new Simulation();
+  try {
+    sim.startTrack(track.id);
+    sim.body.setTranslation({ x: 22, y: 7.1, z: -10 }, true);
+    sim.run(0.1);
+    expect(sim.snapshot().axes.axes[0].angle).not.toBe(0);
+    expect(sim.snapshot().axeImpacts).toHaveLength(1);
+    expect(sim.snapshot().integrity).toBeLessThan(0.9);
+    expect(sim.snapshot().velocity.y).toBeGreaterThan(12);
+  } finally {
+    sim.dispose();
+  }
 });

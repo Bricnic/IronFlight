@@ -49,7 +49,7 @@ async function changedPixels(page: Page, before: Buffer, after: Buffer) {
   );
 }
 
-for (const kind of [...PREFAB_KINDS, "wall"] as const) {
+for (const kind of [...PREFAB_KINDS, "collectible", "wall"] as const) {
   test(`${kind} added in front of the player is visible on repeated playtest`, async ({
     page,
   }, info) => {
@@ -85,6 +85,14 @@ for (const kind of [...PREFAB_KINDS, "wall"] as const) {
         await editNumber(page, "h", 5);
         await editNumber(page, "d", 2);
         await editNumber(page, "y", 2.5);
+      } else if (kind === "collectible") {
+        await page
+          .getByRole("button", { name: "Add collectible", exact: true })
+          .click();
+        await expect(page.locator("#editor-props")).toContainText(
+          "Ring collectible",
+        );
+        await editNumber(page, "y", 2.5);
       } else {
         await page.locator("#editor-prefab-kind").selectOption(kind);
         await page.locator("#editor-add-prefab").click();
@@ -104,6 +112,35 @@ for (const kind of [...PREFAB_KINDS, "wall"] as const) {
         `${kind} must change visible game pixels`,
       ).toBeGreaterThan(100);
 
+      if (kind === "axe") {
+        expect(
+          await page.evaluate(() => window.__game!.stats().officialCourse.axes),
+        ).toBe(1);
+        const before = await page.evaluate(
+          () => window.__game!.snapshot().axes.axes[0],
+        );
+        await page.evaluate(() => window.__game!.advanceFrames(15, 1, {}));
+        const after = await page.evaluate(
+          () => window.__game!.snapshot().axes.axes[0],
+        );
+        expect(after.angle).not.toBe(before.angle);
+      } else if (kind === "collectible") {
+        expect(
+          await page.evaluate(
+            async (name) =>
+              (await window.__game!.customLevels.load(name)).collectibles,
+            name,
+          ),
+        ).toEqual([{ x: 0, y: 2.5, z: -18 }]);
+        await page.evaluate(() => {
+          window.__game!.place({ x: 0, y: 2.1, z: -18 }, 0);
+          window.__game!.advanceFrames(1, 1, {});
+        });
+        expect(
+          await page.evaluate(() => window.__game!.snapshot().run?.collected),
+        ).toEqual(["pickup-1"]);
+      }
+
       // Exercise another save/replay as well: deleted models must disappear,
       // rather than leaving stale geometry that could satisfy the first check.
       await page
@@ -113,14 +150,18 @@ for (const kind of [...PREFAB_KINDS, "wall"] as const) {
       const id = await page.evaluate(
         async ({ name, kind }) => {
           const level = await window.__game!.customLevels.load(name);
-          return kind === "wall"
-            ? level.solids.at(-1)!.id
-            : level.prefabs[0].id;
+          return kind === "collectible"
+            ? "0"
+            : kind === "wall"
+              ? level.solids.at(-1)!.id
+              : level.prefabs[0].id;
         },
         { name, kind },
       );
       await page
-        .locator(`li[data-key="${kind === "wall" ? "solid" : "prefab"}:${id}"]`)
+        .locator(
+          `li[data-key="${kind === "collectible" ? "target" : kind === "wall" ? "solid" : "prefab"}:${id}"]`,
+        )
         .click();
       await page.locator("#editor-remove").click();
       await playtest(page);
