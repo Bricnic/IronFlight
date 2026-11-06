@@ -9,6 +9,7 @@
   "maxSteeringAngle": 12,
   "dragonDamage": 3,
   "hammerSpeed": 4.1,
+  "axeSpeed": 1,
   "handbrakePower": 1,
   "shadowDarkness": 8.3,
   "gravity": 1.7,

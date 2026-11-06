@@ -127,3 +127,30 @@ test("turning power supports weaker steering, persists and resets to source defa
   await page.getByRole("button", { name: "Reset tuning", exact: true }).click();
   await expect(slider).toHaveValue(String(DEFAULT_TUNING.turningPower));
 });
+
+test("tuning sliders are alphabetical and axe speed persists", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => window.__game!.pause(true));
+  await page.keyboard.press("Backquote");
+  const menu = page.locator("#debug-menu");
+  await expect(menu).toBeVisible();
+  const labels = await menu.locator('label[for^="tune-"]').evaluateAll((nodes) =>
+    nodes.map((node) => node.firstChild!.textContent!.trim()),
+  );
+  expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
+  const speed = page.getByRole("slider", { name: "Axe swing speed" });
+  await expect(speed).toHaveAttribute("min", "0.1");
+  await expect(speed).toHaveAttribute("max", "10");
+  await expect(speed).toHaveValue("1");
+  await speed.fill("2.5");
+  await speed.dispatchEvent("input");
+  expect(await page.evaluate(() => window.__game!.snapshot().tuning.axeSpeed)).toBe(2.5);
+  await page.reload();
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => window.__game!.pause(true));
+  await page.keyboard.press("Backquote");
+  await expect(speed).toHaveValue("2.5");
+  await page.getByRole("button", { name: "Reset tuning", exact: true }).click();
+  await expect(speed).toHaveValue(String(DEFAULT_TUNING.axeSpeed));
+});

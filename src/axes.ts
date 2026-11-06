@@ -57,10 +57,13 @@ export type AxeImpact = {
 export class AxeArray {
   axes: Axe[] = [];
   impacts: AxeImpact[] = [];
+  private swingTime: number;
+  private lastTime: number;
   constructor(
     private sim: Simulation,
     track: Track | undefined = sim.courseTrack,
   ) {
+    this.swingTime = this.lastTime = sim.time;
     for (const def of axeDefs(track)) {
       const body = sim.world.createRigidBody(
         RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(
@@ -88,9 +91,12 @@ export class AxeArray {
     }
   }
   update() {
+    const speed = this.sim.tuning.axeSpeed;
+    this.swingTime += Math.max(0, this.sim.time - this.lastTime) * speed;
+    this.lastTime = this.sim.time;
     for (const axe of this.axes) {
-      axe.angle = axeAngle(this.sim.time, axe.def.phase);
-      axe.velocity = axeAngularVelocity(this.sim.time, axe.def.phase);
+      axe.angle = axeAngle(this.swingTime, axe.def.phase);
+      axe.velocity = axeAngularVelocity(this.swingTime, axe.def.phase) * speed;
       axe.body.setNextKinematicRotation(
         new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), axe.angle),
       );

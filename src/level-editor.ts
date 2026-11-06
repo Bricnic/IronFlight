@@ -1,4 +1,4 @@
-import { EditorStore } from "./editor-state";
+import { EditorStore, type EditorSelection } from "./editor-state";
 import { createEditorViewport } from "./editor-viewport";
 import { defaultTextureFor } from "./course-view";
 import {
@@ -351,17 +351,29 @@ export function createLevelEditor(
     const row = (
       label: string,
       selected: boolean,
-      onPick: () => void,
+      selection: EditorSelection,
       key: string,
     ) => {
+      const locked = !!store.selectedItem(selection)?.item.locked;
+      const onPick = () => store.select(selection);
       const li = el(
         "li",
-        { "data-key": key, class: selected ? "selected" : "" },
-        label,
+        { "data-key": key, "data-locked": String(locked), class: selected ? "selected" : "" },
       );
-      li.tabIndex = 0;
+      li.append(el("span", {}, label));
+      const lock = el("button", {
+        class: "editor-lock",
+        "aria-label": `${locked ? "Unlock" : "Lock"} ${label}`,
+      }, locked ? "Unlock" : "Lock");
+      lock.addEventListener("click", (event) => {
+        event.stopPropagation();
+        store.setLocked(selection, !locked);
+      });
+      li.append(lock);
+      li.tabIndex = locked ? -1 : 0;
       li.addEventListener("click", onPick);
       li.addEventListener("keydown", (e) => {
+        if (e.target !== li) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onPick();
@@ -374,7 +386,7 @@ export function createLevelEditor(
         `${s.id} · ${s.kind}`,
         store.selection?.kind === "solid" &&
           (store.selection as { id: string }).id === s.id,
-        () => store.select({ kind: "solid", id: s.id }),
+        { kind: "solid", id: s.id },
         `solid:${s.id}`,
       );
     for (const p of level.prefabs)
@@ -382,7 +394,7 @@ export function createLevelEditor(
         `${p.id} · ${p.kind}`,
         store.selection?.kind === "prefab" &&
           (store.selection as { id: string }).id === p.id,
-        () => store.select({ kind: "prefab", id: p.id }),
+        { kind: "prefab", id: p.id },
         `prefab:${p.id}`,
       );
     level.checkpoints.forEach((c, i) =>
@@ -390,7 +402,7 @@ export function createLevelEditor(
         `Checkpoint ${i + 1} (${c.x}, ${c.z})`,
         store.selection?.kind === "checkpoint" &&
           (store.selection as { index: number }).index === i,
-        () => store.select({ kind: "checkpoint", index: i }),
+        { kind: "checkpoint", index: i },
         `checkpoint:${i}`,
       ),
     );
@@ -399,7 +411,7 @@ export function createLevelEditor(
         `${level.mode === "demolition" ? "Demolition target" : "Collectible"} ${i + 1} (${t.x}, ${t.z})`,
         store.selection?.kind === "target" &&
           (store.selection as { index: number }).index === i,
-        () => store.select({ kind: "target", index: i }),
+        { kind: "target", index: i },
         `target:${i}`,
       ),
     );
@@ -408,14 +420,14 @@ export function createLevelEditor(
         `Ring ${i + 1} (${r.x}, ${r.z})`,
         store.selection?.kind === "ring" &&
           (store.selection as { index: number }).index === i,
-        () => store.select({ kind: "ring", index: i }),
+        { kind: "ring", index: i },
         `ring:${i}`,
       ),
     );
     row(
       "Spawn",
       store.selection?.kind === "spawn",
-      () => store.select({ kind: "spawn" }),
+      { kind: "spawn" },
       "spawn",
     );
   }

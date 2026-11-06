@@ -44,11 +44,14 @@ export async function createDebugMenu(sim: Simulation) {
     maxSteeringAngle: "Maximum tire angle",
     dragonDamage: "Dragon damage per tick",
     hammerSpeed: "Hammer spin rate",
+    axeSpeed: "Axe swing speed",
     handbrakePower: "Handbrake multiplier",
     shadowDarkness: "Truck shadow darkness",
     gravity: "Gravity strength",
   };
-  menu.innerHTML = `<div class="eyebrow">PLAYTEST TUNING <span>\u0060 TO CLOSE</span></div><h2>Make it your own.</h2><p>Live adjustments · saved on this browser</p><label class="debug-toggle" for="debug-ghosts"><span>Enable graveyard ghosts</span><input id="debug-ghosts" type="checkbox"></label><div id="truck-colors" class="truck-colors"></div>${(Object.keys(labels) as (keyof typeof labels)[]).map((key) => `<label for="tune-${key}">${labels[key]}<output id="value-${key}"></output></label><input id="tune-${key}" type="range" min="${tuningRange(key).min}" max="${tuningRange(key).max}" step="${tuningRange(key).step}" value="${sim.tuning[key]}">`).join("")}<button id="store-defaults">Store as Defaults</button><button id="reset-tuning">Reset tuning</button><p id="tuning-status" role="status" aria-live="polite"></p>`;
+  const sliderKeys = (Object.keys(labels) as (keyof typeof labels)[])
+    .sort((a, b) => labels[a].localeCompare(labels[b]));
+  menu.innerHTML = `<div class="eyebrow">PLAYTEST TUNING <span>\u0060 TO CLOSE</span></div><h2>Make it your own.</h2><p>Live adjustments · saved on this browser</p><label class="debug-toggle" for="debug-ghosts"><span>Enable graveyard ghosts</span><input id="debug-ghosts" type="checkbox"></label><div id="truck-colors" class="truck-colors"></div>${sliderKeys.map((key) => `<label for="tune-${key}">${labels[key]}<output id="value-${key}"></output></label><input id="tune-${key}" type="range" min="${tuningRange(key).min}" max="${tuningRange(key).max}" step="${tuningRange(key).step}" value="${sim.tuning[key]}">`).join("")}<button id="store-defaults">Store as Defaults</button><button id="reset-tuning">Reset tuning</button><p id="tuning-status" role="status" aria-live="polite"></p>`;
   document.getElementById("app")!.append(menu);
   const ghostToggle = menu.querySelector<HTMLInputElement>("#debug-ghosts")!;
   ghostToggle.addEventListener("change", () => {
@@ -57,7 +60,7 @@ export async function createDebugMenu(sim: Simulation) {
   });
   const sync = () => {
     ghostToggle.checked = sim.ghostsEnabled;
-    for (const key of Object.keys(labels) as (keyof typeof labels)[]) {
+    for (const key of sliderKeys) {
       (menu.querySelector(`#tune-${key}`) as HTMLInputElement).value = String(
         sim.tuning[key],
       );
@@ -83,7 +86,7 @@ export async function createDebugMenu(sim: Simulation) {
       sync();
     },
   );
-  for (const key of Object.keys(labels) as (keyof typeof labels)[]) {
+  for (const key of sliderKeys) {
     menu.querySelector(`#tune-${key}`)!.addEventListener("input", (e) => {
       sim.setTuning({ [key]: Number((e.target as HTMLInputElement).value) });
       sync();

@@ -15,9 +15,10 @@ export function resolveViewportPick(
     let node: unknown = hit.object;
     while (node !== null && node !== undefined) {
       const record = node as {
-        userData?: { pick?: EditorSelection };
+        userData?: { pick?: EditorSelection; locked?: boolean };
         parent?: unknown;
       };
+      if (record.userData?.locked) break;
       if (record.userData?.pick != null) return record.userData.pick;
       node = record.parent;
     }
@@ -433,6 +434,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       for (const s of level.solids) {
         const holder = new T.Group();
         holder.userData.pick = { kind: "solid", id: s.id };
+        holder.userData.locked = !!s.locked;
         holder.position.set(s.x, s.y, s.z);
         holder.rotation.set(
           s.angle ?? 0,
@@ -463,6 +465,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         );
         gate.position.set(cp.x, cp.y ?? 2, cp.z);
         gate.userData.pick = { kind: "checkpoint", index: i };
+        gate.userData.locked = !!cp.locked;
         group.add(gate);
       }
       for (const p of level.prefabs) {
@@ -476,6 +479,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         marker.position.set(p.x, (p.y ?? 0) + 1.5, p.z);
         marker.rotation.set(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ");
         marker.userData.pick = { kind: "prefab", id: p.id };
+        marker.userData.locked = !!p.locked;
         if (selection != null && "id" in selection && selection.id === p.id)
           marker.scale.setScalar(1.6);
         group.add(marker);
@@ -493,6 +497,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         );
         marker.position.set(t.x, t.y ?? (collectible ? 1.7 : 1.5), t.z);
         marker.userData.pick = { kind: "target", index: i };
+        marker.userData.locked = !!t.locked;
         if (
           selection != null &&
           "index" in selection &&
@@ -512,6 +517,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         );
         marker.position.set(r.x, r.y, r.z);
         marker.userData.pick = { kind: "ring", index: i };
+        marker.userData.locked = !!r.locked;
         if (
           selection != null &&
           "index" in selection &&
@@ -528,6 +534,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       spawn.position.set(level.spawn.x, level.spawn.y + 1.5, level.spawn.z);
       spawn.rotation.y = level.spawn.yaw;
       spawn.userData.pick = { kind: "spawn" };
+      spawn.userData.locked = !!level.spawn.locked;
       group.add(spawn);
       scene.add(group);
       draw();
