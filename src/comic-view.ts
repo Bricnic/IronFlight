@@ -691,6 +691,7 @@ export function buildComicModel(h: ComicHazard): Model {
 }
 export class ComicView extends T.Group {
   private key = "";
+  private builtTrack?: Simulation["courseTrack"];
   private models: Model[] = [];
   /** Live editing: shift one hazard model by delta. */
   moveModel(id: string, dx: number, dy: number, dz: number) {
@@ -727,7 +728,9 @@ export class ComicView extends T.Group {
   }
   update(s: Simulation) {
     const key = s.courseTrack?.id ?? "";
-    if (key !== this.key) {
+    // Editor saves replace the definition without changing the level id.
+    if (key !== this.key || s.courseTrack !== this.builtTrack) {
+      this.builtTrack = s.courseTrack;
       this.traverse((o) => {
         if (o instanceof T.Sprite) {
           const mat = o.material as T.SpriteMaterial;
