@@ -227,7 +227,7 @@ export class EditorStore {
       this.level.mode !== "race"
     )
       return undefined;
-    const point = { x, z };
+    const point = { x, y: this.level.mode === "demolition" ? 1.5 : 1.7, z };
     this.pushHistory();
     list.push(point);
     this.selection = { kind: "target", index: list.length - 1 };

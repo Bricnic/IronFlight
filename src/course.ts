@@ -66,6 +66,26 @@ export function courseSolids(track: Track): CourseSolid[] {
             color: 0x767c76,
           }),
         );
+      } else if (p.kind === "axe") {
+        // The prefab position is the ground under the Canyon-style gantry;
+        // the pendulum pivot sits nine units above it (see axeDefs).
+        for (const [part, dx, dy, w, h, d] of [
+          ["post-left", -15.5, 6.5, 1.5, 13, 1.5],
+          ["post-right", 15.5, 6.5, 1.5, 13, 1.5],
+          ["beam", 0, 13, 32.5, 1, 1.5],
+          ["hanger", 0, 11, 0.8, 3, 0.8],
+        ] as const)
+          solids.push({
+            id: `${p.id}-${part}`,
+            kind: "barrier",
+            x: p.x + dx,
+            y: (p.y ?? 0) + dy,
+            z: p.z,
+            w,
+            h,
+            d,
+            color: 0x4a545c,
+          });
       } else if (p.kind === "lamp") {
         solids.push({
           id: `${p.id}-pole`,

@@ -84,6 +84,7 @@ const PREFAB_COLORS: Record<string, number> = {
   gravestone: 0x9aa2a8,
   snowman: 0xdfe8ff,
   hammer: 0xb08d57,
+  axe: 0x9aa2a8,
   trampoline: 0x7af2ff,
   ghost: 0xc9b8ff,
   loop: 0x9bddf4,
@@ -486,11 +487,14 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         ...(level.collectibles ?? []),
         ...(level.demolish ?? []),
       ].entries()) {
+        const collectible = level.mode !== "demolition";
         const marker = new T.Mesh(
-          new T.OctahedronGeometry(1.6),
+          collectible
+            ? new T.TorusGeometry(0.85, 0.17, 12, 32)
+            : new T.OctahedronGeometry(1.6),
           new T.MeshBasicMaterial({ color: 0xffd24a, wireframe: true }),
         );
-        marker.position.set(t.x, (t.y ?? 0) + 1.5, t.z);
+        marker.position.set(t.x, t.y ?? (collectible ? 1.7 : 1.5), t.z);
         marker.userData.pick = { kind: "target", index: i };
         if (
           selection != null &&
