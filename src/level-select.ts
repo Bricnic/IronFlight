@@ -1,4 +1,5 @@
-import { TRACKS, getTrack, type TrackId } from "./tracks";
+import { TRACKS, getTrack, type Track, type TrackId, type CustomTrackId } from "./tracks";
+import { getCustomTrack } from "./custom-level";
 import type { BestTimes } from "./best-times";
 import type { TrackRun } from "./track-run";
 import { modeLabel, timeoutCopy } from "./run-copy";
@@ -6,7 +7,7 @@ const format = (time: number) => `${time.toFixed(2)}s`;
 export function createLevelSelect(
   host: HTMLElement,
   scores: BestTimes,
-  onStart: (id: TrackId) => void,
+  onStart: (id: TrackId | CustomTrackId) => void,
   onLab: () => void,
   onTuning: () => void,
   onRetry: () => void,
@@ -14,10 +15,13 @@ export function createLevelSelect(
 ) {
   const screen = document.createElement("main");
   screen.id = "level-select";
-  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Nine places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to play · L for level select · N/P for next/previous level · Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
+  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Ten places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to play · L for level select · N/P for next/previous level · Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
   const grid = screen.querySelector<HTMLElement>(".track-grid")!;
-  const cards = new Map<TrackId, HTMLElement>();
-  for (const [i, track] of TRACKS.entries()) {
+  const tracks: Track[] = [...TRACKS];
+  const fairground = getCustomTrack("custom:fairground");
+  if (fairground) tracks.push(fairground);
+  const cards = new Map<TrackId | CustomTrackId, HTMLElement>();
+  for (const [i, track] of tracks.entries()) {
     const card = document.createElement("article");
     card.className = "track-card";
     card.dataset.track = track.id;
@@ -25,7 +29,7 @@ export function createLevelSelect(
       "--track-accent",
       `#${track.color.toString(16).padStart(6, "0")}`,
     );
-    card.innerHTML = `<button class="track-play" aria-label="Play ${track.name}"><div class="track-image"><img src="${track.thumbnail}" alt="${track.name} route preview"><span class="track-number">0${i + 1}</span><span class="track-mode">${modeLabel(track)}</span></div><div class="track-card-body"><div class="track-card-heading"><h2>${track.name}</h2><span class="best-medal">UNRANKED</span></div><p>${track.description}</p><div class="medal-targets"><span class="gold">● ${track.medals.gold}s</span><span class="silver">● ${track.medals.silver}s</span><span class="bronze">● ${track.medals.bronze}s</span></div><div class="track-card-bottom"><span class="best-time">NO TIME SET</span><span class="play-word">PLAY ↗</span></div></div></button>`;
+    card.innerHTML = `<button class="track-play" aria-label="Play ${track.name}"><div class="track-image"><img src="${track.thumbnail}" alt="${track.name} route preview"><span class="track-number">${String(i + 1).padStart(2, "0")}</span><span class="track-mode">${modeLabel(track)}</span></div><div class="track-card-body"><div class="track-card-heading"><h2>${track.name}</h2><span class="best-medal">UNRANKED</span></div><p>${track.description}</p><div class="medal-targets"><span class="gold">● ${track.medals.gold}s</span><span class="silver">● ${track.medals.silver}s</span><span class="bronze">● ${track.medals.bronze}s</span></div><div class="track-card-bottom"><span class="best-time">NO TIME SET</span><span class="play-word">PLAY ↗</span></div></div></button>`;
     card.querySelector("button")!.onclick = () => {
       selected = i;
       onStart(track.id);
@@ -79,7 +83,7 @@ export function createLevelSelect(
     }
   });
   const refresh = () => {
-    for (const track of TRACKS) {
+    for (const track of tracks) {
       const best = track.legacy
         ? ["easy", "medium", "hard"]
             .map((v) => ({ v, b: scores.best(track.id, v) }))

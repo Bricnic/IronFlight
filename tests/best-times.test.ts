@@ -2,6 +2,8 @@ import { expect, it } from "vitest";
 import { BestTimes } from "../src/best-times";
 import { TrackRun } from "../src/track-run";
 import { getTrack } from "../src/tracks";
+import { registerCustomTrack, toTrack, validateCustomLevel } from "../src/custom-level";
+import fairground from "../levels/official/Fairground.json";
 const result = (
   time: number,
   status: "completed" | "failed" = "completed",
@@ -20,6 +22,12 @@ function memory() {
     },
   };
 }
+it("retains gold times for the JSON-authored Fairground through reload", () => {
+  const track = toTrack(validateCustomLevel(fairground)); registerCustomTrack(track);
+  const storage = memory(), scores = new BestTimes(storage);
+  expect(scores.record({ ...new TrackRun(track).snapshot(), status: "completed", elapsed: 164.63 })).toBe(true);
+  expect(new BestTimes(storage).best(track.id)).toEqual({ time: 164.63, medal: "gold" });
+});
 it("keeps only faster completed times and reloads medals", () => {
   const storage = memory(),
     scores = new BestTimes(storage);

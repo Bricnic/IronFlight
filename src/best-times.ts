@@ -1,12 +1,12 @@
-import { getTrack, TRACK_IDS, type TrackId } from "./tracks";
+import { getTrack, TRACK_IDS, type TrackId, type CustomTrackId } from "./tracks";
 import { medalFor, type TrackRun } from "./track-run";
 export type ScoreStorage = Pick<Storage, "getItem" | "setItem">;
 const KEY = "iron-flight-best-times-v1";
 function validKey(key: string) {
-  const [id, variant, ...rest] = key.split(":");
+  const separator = key.lastIndexOf(":");
+  const id = key.slice(0, separator), variant = key.slice(separator + 1);
   return (
-    !rest.length &&
-    TRACK_IDS.includes(id as TrackId) &&
+    (TRACK_IDS.includes(id as TrackId) || /^custom:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) &&
     (id === "triple-loop"
       ? ["easy", "medium", "hard"].includes(variant)
       : variant === "default")
@@ -34,7 +34,7 @@ export class BestTimes {
       /* Private browsing or corrupt records must not prevent playing. */
     }
   }
-  best(id: TrackId, variant = id === "triple-loop" ? "easy" : "default") {
+  best(id: TrackId | CustomTrackId, variant = id === "triple-loop" ? "easy" : "default") {
     const time = this.records[`${id}:${variant}`];
     return time === undefined
       ? null

@@ -45,6 +45,8 @@ export async function createDebugMenu(sim: Simulation) {
     dragonDamage: "Dragon damage per tick",
     hammerSpeed: "Hammer spin rate",
     axeSpeed: "Axe swing speed",
+    carouselSpeed: "Carousel spin speed",
+    bumperSpeed: "Bumper car speed",
     handbrakePower: "Handbrake multiplier",
     shadowDarkness: "Truck shadow darkness",
     gravity: "Gravity strength",

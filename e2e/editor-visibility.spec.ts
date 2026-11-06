@@ -96,6 +96,8 @@ for (const kind of [...PREFAB_KINDS, "collectible", "wall"] as const) {
       } else {
         await page.locator("#editor-prefab-kind").selectOption(kind);
         await page.locator("#editor-add-prefab").click();
+        // Keep an overhead attraction in the close-range test camera's view.
+        if (kind === "hot-air-balloon") await editNumber(page, "y", 18);
       }
       await editNumber(page, "x", 0);
       await editNumber(page, "z", -18);

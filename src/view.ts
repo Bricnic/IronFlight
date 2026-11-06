@@ -1,4 +1,5 @@
 import { ComicView } from "./comic-view";
+import { FairgroundView } from "./fairground-view";
 import { potionScale } from "./comic-hazards";
 import { CourseView } from "./course-view";
 import { LavaPartEffects } from "./lava-effects";
@@ -29,6 +30,7 @@ export class GameView {
   readonly chase = new ChaseCamera(this.camera);
   private props = new PropView();
   private comic = new ComicView();
+  private fairground = new FairgroundView();
   private comicInspection?: string;
   private nitro = new T.Group();
   private officialCourse = new CourseView();
@@ -82,6 +84,7 @@ export class GameView {
     this.contactShadow.rotation.x = -Math.PI / 2;
     this.scene.add(
       this.comic,
+      this.fairground,
       this.nitro,
       this.contactShadow,
       this.skids,
@@ -614,6 +617,7 @@ export class GameView {
         hoodScale: this.meshes.get("hood")?.scale.toArray(),
       },
       comicHazards: this.comic.inspect(),
+      fairground: this.fairground.inspect(),
       officialCourse: this.officialCourse.inspect(),
       fire: this.fire.inspect(),
       lavaParts: this.lavaEffects.inspect(),
@@ -707,6 +711,7 @@ export class GameView {
     this.hazards.visible = s.stage !== "lab" && !s.courseTrack;
     this.officialCourse.update(s, this.camera);
     this.comic.update(s);
+    this.fairground.update(s);
     this.nitro.visible = s.comic.effect === "nitro";
     this.nitro.position.copy(root);
     this.nitro.quaternion.copy(q);

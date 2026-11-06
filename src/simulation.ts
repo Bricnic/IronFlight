@@ -1,4 +1,5 @@
 import { ComicPhysics } from "./comic-physics";
+import { Fairground, CAROUSEL_OMEGA } from "./fairground";
 import { GhostSwarm } from "./ghosts";
 import { AxeArray } from "./axes";
 import { SlideSystems } from "./slide";
@@ -57,6 +58,7 @@ export function initPhysics() {
 export class Simulation {
   world!: RAPIER.World;
   comic!: ComicPhysics;
+  fairground!: Fairground;
   ghosts!: GhostSwarm;
   ghostsEnabled = true;
   axes!: AxeArray;
@@ -335,6 +337,7 @@ export class Simulation {
       this.courseTrack ? courseProps(this.courseTrack) : undefined,
     );
     this.comic = new ComicPhysics(this);
+    this.fairground = new Fairground(this);
     this.ghosts = new GhostSwarm(this);
     this.axes = new AxeArray(this);
     this.slide = new SlideSystems(this);
@@ -468,6 +471,7 @@ export class Simulation {
     }
   }
   step(input: Input = {}) {
+    input = this.fairground.controls(input);
     this.previousPosition.copy(this.body.translation());
     this.previousRotation.copy(this.body.rotation());
     this.inFlames = false;
@@ -633,13 +637,13 @@ export class Simulation {
     const localUp = new Vector3(0, 1, 0).applyQuaternion(
       new Quaternion().copy(this.body.rotation()),
     );
-    if (frontGrip > 0 && localUp.y > 0.7 && !onLoop && !strafeMode) {
+    if (frontGrip > 0 && localUp.y > 0.7 && !onLoop && !strafeMode && !this.fairground.slipping) {
       const yaw = new Vector3().copy(this.body.angvel()).dot(localUp);
       const targetYaw =
         (longitudinal *
           Math.sin(this.steeringAngle) *
           this.tuning.turningPower) /
-        3.3;
+        3.3 + (this.fairground.riding ? CAROUSEL_OMEGA * this.tuning.carouselSpeed : 0);
       const delta = (targetYaw - yaw) * Math.min(1, 18 * DT) * frontGrip;
       this.body.applyTorqueImpulse(
         localUp.clone().multiplyScalar(delta * this.body.principalInertia().y),
@@ -650,7 +654,7 @@ export class Simulation {
       );
       lateral.y = 0;
       lateral.normalize();
-      const slip = lateral.dot(this.body.linvel());
+      const slip = lateral.dot(new Vector3().copy(this.body.linvel()).sub(this.fairground.deckVelocity()));
       this.body.applyImpulse(
         lateral.multiplyScalar(
           -slip * this.body.mass() * Math.min(1, 6 * DT) * frontGrip,
@@ -679,7 +683,7 @@ export class Simulation {
       );
     }
     // Rolling resistance only acts while grounded and coasting, never in flight.
-    if (throttle === 0 && brake === 0 && handbrake === 0 && grounded && !flow) {
+    if (throttle === 0 && brake === 0 && handbrake === 0 && grounded && !flow && !this.fairground.riding && !this.fairground.slipping) {
       const delta = Math.min(
         Math.abs(longitudinal),
         1.8 * this.tuning.friction * DT,
@@ -771,7 +775,7 @@ export class Simulation {
       this.vehicle.updateVehicle(
         DT,
         RAPIER.QueryFilterFlags.EXCLUDE_DYNAMIC |
-          RAPIER.QueryFilterFlags.EXCLUDE_KINEMATIC |
+          (this.fairground.carousels.length ? 0 : RAPIER.QueryFilterFlags.EXCLUDE_KINEMATIC) |
           RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
       );
     this.hammerPhase += hammerAngle(DT) * this.tuning.hammerSpeed;
@@ -783,6 +787,7 @@ export class Simulation {
         ),
       );
     this.axes.update();
+    this.fairground.before();
     const before = new Vector3().copy(this.body.linvel());
     for (const [id, rotor] of this.hazardBodies)
       for (let i = 0; i < rotor.numColliders(); i++) {
@@ -798,6 +803,7 @@ export class Simulation {
     this.ghosts.update();
     this.world.step(this.events, this.hammerHooks);
     this.comic.after();
+    const fairgroundHit = this.fairground.after(before);
     this.ghosts.attack();
     for (let i = 0; i < 4; i++) {
       const ground = this.vehicle.wheelGroundObject(i);
@@ -815,6 +821,7 @@ export class Simulation {
     if (
       !hammerHit &&
       !axeHit &&
+      !fairgroundHit &&
       impact > 10 &&
       this.time - this.lastImpact > 0.2
     ) {
@@ -1017,9 +1024,8 @@ export class Simulation {
         : this.body.linvel();
       const lateral = new Vector3(1, 0, 0).applyQuaternion(q).dot(velocity);
       const slipping =
-        Math.abs(throttle) > 0.2 &&
-        Math.abs(steer) > 0.4 &&
-        Math.abs(lateral) > 0.4 &&
+        (this.fairground.slipping || (Math.abs(throttle) > 0.2 &&
+        Math.abs(steer) > 0.4 && Math.abs(lateral) > 0.4)) &&
         Math.hypot(velocity.x, velocity.z) > 2 &&
         !this.parts.get(this.partDefs[i + 2].id)!.body &&
         this.vehicle.wheelIsInContact(i) &&
@@ -1339,6 +1345,7 @@ export class Simulation {
       v = this.body.linvel();
     return {
       comic: this.comic.snapshot(),
+      fairground: this.fairground.snapshot(),
       ghosts: this.ghosts.snapshot(),
       axes: this.axes.snapshot(),
       slide: this.slide.snapshot(),

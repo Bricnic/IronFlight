@@ -12,6 +12,8 @@ export const TUNING_KEYS = [
   "dragonDamage",
   "hammerSpeed",
   "axeSpeed",
+  "carouselSpeed",
+  "bumperSpeed",
   "handbrakePower",
   "shadowDarkness",
   "gravity",
@@ -25,7 +27,7 @@ export function tuningRange(key: keyof Tuning) {
   return key === "maxSteeringAngle"
     ? { min: 5, max: 90, step: 1 }
     : {
-        min: key === "gravity" || key === "turningPower" || key === "axeSpeed" ? 0.1 : 1,
+        min: key === "gravity" || key === "turningPower" || key === "axeSpeed" || key === "carouselSpeed" || key === "bumperSpeed" ? 0.1 : 1,
         max: 10,
         step: 0.1,
       };

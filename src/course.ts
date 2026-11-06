@@ -66,6 +66,9 @@ export function courseSolids(track: Track): CourseSolid[] {
             color: 0x767c76,
           }),
         );
+      } else if (p.kind === "carousel") {
+        solids.push({ id: `${p.id}-boarding-ramp`, kind: "ramp", x: p.x, y: (p.y ?? 0) + 0.5,
+          z: p.z - 30, w: 10, h: 0.2, d: 12, angle: -Math.atan(1 / 12), color: 0xd6b47a, texture: "concrete_layers_02" });
       } else if (p.kind === "axe") {
         // The prefab position is the ground under the Canyon-style gantry;
         // the pendulum pivot sits nine units above it (see axeDefs).

@@ -15,7 +15,6 @@ import {
   listLevels,
   saveLevel,
   loadLevel,
-  removeLevel,
 } from "./level-store";
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -72,7 +71,6 @@ export function createLevelEditor(
   const newButton = el("button", { id: "editor-new" }, "New");
   const saveButton = el("button", { id: "editor-save" }, "Save");
   const playtestButton = el("button", { id: "editor-playtest" }, "Playtest");
-  const deleteButton = el("button", { id: "editor-delete" }, "Delete");
   const undoButton = el("button", { id: "editor-undo" }, "Undo");
   const redoButton = el("button", { id: "editor-redo" }, "Redo");
   undoButton.addEventListener("click", () => store.undo());
@@ -105,7 +103,6 @@ export function createLevelEditor(
     newButton,
     saveButton,
     playtestButton,
-    deleteButton,
     undoButton,
     redoButton,
     backButton,
@@ -486,16 +483,6 @@ export function createLevelEditor(
     }
   }
   saveButton.addEventListener("click", () => doSave(() => {}));
-  deleteButton.addEventListener("click", () => {
-    const name = store.level.name;
-    removeLevel(undefined, name)
-      .then(() => {
-        store.openBlank("Untitled");
-        showStatus(`Deleted ${name}`);
-        return refreshLevels();
-      })
-      .catch((e: Error) => showError(e.message));
-  });
   playtestButton.addEventListener("click", () => {
     let valid: CustomLevel;
     try {

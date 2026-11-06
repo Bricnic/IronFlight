@@ -32,6 +32,9 @@ export const COMIC_PREFAB_KINDS = [
   "potion",
 ] as const;
 export const COURSE_PREFAB_KINDS = [
+  "carousel",
+  "bumper-arena",
+  "hot-air-balloon",
   "hammer",
   "axe",
   "trampoline",

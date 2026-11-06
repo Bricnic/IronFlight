@@ -10,6 +10,8 @@
   "dragonDamage": 3,
   "hammerSpeed": 4.1,
   "axeSpeed": 1,
+  "carouselSpeed": 1,
+  "bumperSpeed": 1,
   "handbrakePower": 1,
   "shadowDarkness": 8.3,
   "gravity": 1.7,
