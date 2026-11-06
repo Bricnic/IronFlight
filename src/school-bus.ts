@@ -399,10 +399,12 @@ export function createSchoolBus(_materials: TruckMaterials = {}) {
     rounded(roof, [0.08, 0.06, 0.05], [(i - 2) * 0.36, 0.08, -2.28], tail, 1, 0.01);
   }
   // Rear cap: window, door, warnings, taillights.
-  rounded(bed, [1.4, 0.6, 0.06], [0, 0.35, -0.2], glass, 4, 0.02);
-  rounded(bed, [1.5, 0.66, 0.04], [0, 0.35, -0.18], black, 2, 0.02);
-  rounded(bed, [0.9, 1.2, 0.04], [0, -0.1, -0.21], yellow, 2, 0.02);
-  rounded(bed, [0.06, 0.3, 0.06], [0.3, -0.1, -0.24], black, 1, 0.01);
+  // Rear faces point toward -Z. Keep the door, opaque window backing and
+  // glass in separate depth layers outside the cap's -0.2 face.
+  rounded(bed, [1.4, 0.6, 0.04], [0, 0.35, -0.325], glass, 4, 0.02);
+  rounded(bed, [1.5, 0.66, 0.04], [0, 0.35, -0.28], black, 2, 0.02);
+  rounded(bed, [0.9, 1.2, 0.04], [0, -0.1, -0.23], yellow, 2, 0.02);
+  rounded(bed, [0.06, 0.3, 0.06], [0.3, -0.1, -0.29], black, 1, 0.01);
   for (const [x, mat] of [[-0.7, tail], [-0.25, amber], [0.25, amber], [0.7, tail]] as const)
     rounded(bed, [0.16, 0.16, 0.06], [x, 0.68, -0.2], mat, 3, 0.05);
   for (const x of [-0.8, 0.8]) {
