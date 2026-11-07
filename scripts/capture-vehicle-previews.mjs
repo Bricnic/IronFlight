@@ -14,6 +14,10 @@ const ids = [
   "cop-car",
   "ambulance",
   "school-bus",
+  "hovercraft",
+  "snow-groomer",
+  "hot-rod",
+  "tow-truck",
 ];
 try {
   const page = await browser.newPage({

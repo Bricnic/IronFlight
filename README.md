@@ -105,4 +105,4 @@ Verification: `npx playwright test e2e/comic-hazards.spec.ts e2e/comic-effects.s
 
 Press backtick to open Playtest tuning, then uncheck **Enable graveyard ghosts** to hide Haunted Hollow's ghosts and stop their movement and damage. The setting persists in this browser across reloads and restarts; Reset tuning enables ghosts again.
 
-Vehicle selection includes in-game screenshots of all five vehicles. The PNGs in `public/vehicles/` are captured from the real game scene and camera, not separate illustrations. To regenerate them, start the dev server and run `node scripts/capture-vehicle-previews.mjs`.
+Vehicle selection includes in-game screenshots of all nine vehicles. The PNGs in `public/vehicles/` are captured from the real game scene and camera, not separate illustrations. To regenerate them, start the dev server and run `node scripts/capture-vehicle-previews.mjs`.

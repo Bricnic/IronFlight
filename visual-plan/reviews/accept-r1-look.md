@@ -1,0 +1,27 @@
+# Round 1 look review — new-cars-4up.png vs refs
+- [major] hovercraft rear ducted fan ring 100% missing (only small white nub) -> tan full-height ring duct with dark 6-blade fan as in side-hovercraft.jpg
+- [major] hovercraft body color cream #EFE7CF vs tan -> #D2AC6E matte voxel tan
+- [major] hovercraft black skirt replaced by 2x exposed round side wheels -> full-perimeter black rubber skirt, zero wheels
+- [major] hovercraft voxel stepping 0% (smooth low-poly slabs) -> stepped voxel hull with visible layer edges
+- [major] snow-groomer windshield + side glass opaque near-black 100% -> transparent gray glass showing gray seat + steering as in side-snow-groomer.jpg
+- [major] snow-groomer front plow blade ~50% too narrow, perforated face -> full-width solid blade, 120% of cab width, mesh only on top lip
+- [major] snow-groomer track road wheels 2 visible vs 4 -> 4x gray road wheels per track with tread grousers
+- [major] hot-rod engine block red stripe 100% missing, all-white engine -> gray block with red mid-band + chrome intake as in side-hot-rod.jpg
+- [major] hot-rod front tires ~200% too wide, knobby monster tread -> narrow front runners, ~60% of rear width
+- [major] hot-rod side exhaust white 3-into-1 headers undersized and tucked vs ref -> long white headers exiting low along sill, collector pipe full sill length
+- [major] tow-truck crane boom + cable hook 100% missing, replaced by short roll bar -> full-length yellow telescopic boom over bed with black tip, cable + red block and black hook
+- [major] tow-truck wheels 4x oversize knobby off-road (~150% diameter) vs 6x road wheels -> 1x front + 2x rear road wheels per side, gray front / yellow rear hubs
+- [major] tow-truck cab shape flat-nose short hood vs conventional long-nose cab -> long-nose yellow cab with windshield, beacon lights, mirrors
+- [major] spurious orange-red side decal with white text on all 4 cars, 100% absent in refs -> remove decals entirely
+- [moderate] snow-groomer body lime #D4F542 vs ref neon green -> #A8D800 saturated lime, matte
+- [moderate] snow-groomer cab 20% too tall/narrow, hood boxy vertical vs sloped hood -> lower sloped hood, wider cab with black surround trim
+- [moderate] snow-groomer exhaust stack missing vs dark vertical stack behind cab -> vertical dark-gray stack on right of cab
+- [moderate] hot-rod body gloss semi-gloss vs flat matte black -> matte #111111 with roughness 0.85
+- [moderate] hot-rod cabin glass opaque vs semi-transparent showing red seats -> transparent side glass revealing red interior
+- [moderate] tow-truck bed cargo generic red/white boxes vs detailed tools -> gray/red toolboxes, spare tires, crane base hydraulics as in side-tow-truck.jpg
+- [moderate] tow-truck cab beacons 100% missing -> 2x amber roof beacons
+- [minor] hovercraft deck MG mount slab-sided vs stepped voxel pedestal -> stepped tan pedestal with black gun
+- [minor] snow-groomer rear bed rails thick solid vs thin tubular rails -> thin light-gray tubular rails, open bed
+- [minor] hot-rod rear fenders/bumper white patch at rear vs black -> black rear with small red/white tail detail
+- [minor] all cars shadows ~30% darker/harder than refs -> softer diffused shadow matching ref concrete-pad look
+- [minor] output camera rear-3/4 on 3 cars vs front-3/4 hero angle -> match hero.png front-3/4 three-quarter angle per car
