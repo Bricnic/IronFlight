@@ -1,0 +1,23 @@
+{
+  "interpretationRules": [
+    "Replace the wood floor with a large lava lake below the floating track. Omit the carpet, vent, and other household background objects.",
+    "Treat the toy car on the course as the spawn marker and orient it along the first driveable segment. A checkered flag marks the finish. If a marker is ambiguous, use the visible course endpoints and document the choice.",
+    "Build a race. Keep the reference's colored magnetic tiles, black striped road, ramps, towers, and relative route layout. Add up to two intermediate checkpoints before the finish.",
+    "Turn green mat pieces along the course into a non-driveable slime pit with a jump ramp and a viable landing. Ordinary green magnetic tiles remain track pieces.",
+    "Place visible dinosaurs as matching reusable prefabs. They can turn and lunge to attack nearby vehicles while their bases stay anchored.",
+    "Make only the geometry changes needed for a finishable route. Join unintended gaps, make steep approaches driveable, and verify the race with normal steering and throttle. Register it in levels/official/order.json."
+  ],
+  "processedImages": [
+    {
+      "filename": "9b7726d5-6a28-4b17-89de-7fd8ab489a10.jfif",
+      "sha256": "F2C99F18918813538C1ED21E883DC860F821F95BAEF2B9C319415CA78839CDD0",
+      "levelFile": "Jurassic Junction.json"
+    },
+    {
+      "filename": "44e5d0ab-b8cc-4490-944c-08c964e0159c.jfif",
+      "sha256": "400443D361FA56B77A3C3E67DCB9FA17E8DCCC5911BD4B7B0A330D57E62C3EA8",
+      "levelFile": "Emberfall Causeway.json",
+      "notes": "The red car on the teal tower marks the start. The orange car is outside the track. The striped descent leads onto the stacked causeway. The green mat becomes the required jump. With no clear checkered flag visible, the lower-left raptor end becomes the marked finish."
+    }
+  ]
+}

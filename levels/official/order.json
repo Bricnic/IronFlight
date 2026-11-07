@@ -13,5 +13,10 @@
     "file": "Jurassic Junction.json",
     "thumbnail": "/tracks/jurassic-junction.svg",
     "description": "Race across colored tiles above a lava lake, dodge snapping dinosaurs, and jump the slime pit before climbing to the checkered finish."
+  },
+  {
+    "file": "Emberfall Causeway.json",
+    "thumbnail": "/tracks/emberfall-causeway.png",
+    "description": "Drop down a striped tower ramp, pass a red wyvern on the stacked causeway, and jump the slime before the raptor finish."
   }
 ]

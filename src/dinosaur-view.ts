@@ -6,6 +6,7 @@ const palette = {
   raptor: [0x6c36cb, 0x346eff],
   pterosaur: [0xffac32, 0xff478e],
   spinosaurus: [0x239354, 0x8dd846],
+  "ember-wyvern": [0xc42530, 0x8736b9],
 };
 type XYZ = [number, number, number];
 
@@ -35,7 +36,8 @@ export function buildDinosaur(root: T.Group, kind: DinosaurKind) {
     piece.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), b.sub(a).normalize());
     return piece;
   };
-  const winged = kind === "pterosaur", low = kind === "spinosaurus";
+  const winged = kind === "pterosaur" || kind === "ember-wyvern";
+  const low = kind === "spinosaurus";
   const trunk = low ? 1.35 : 2.15;
   const { height, reach } = DINOSAUR_BITE[kind];
   oval(root, skin, [0, trunk, -0.4], [1.12, 0.99, low ? 2.05 : 1.5]);

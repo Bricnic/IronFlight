@@ -46,7 +46,7 @@ export const COURSE_PREFAB_KINDS = [
   "lamp",
   "grandstand",
 ] as const;
-export const DINOSAUR_PREFAB_KINDS = ["raptor", "pterosaur", "spinosaurus"] as const;
+export const DINOSAUR_PREFAB_KINDS = ["raptor", "pterosaur", "spinosaurus", "ember-wyvern"] as const;
 export type DinosaurKind = (typeof DINOSAUR_PREFAB_KINDS)[number];
 export function isDinosaur(kind: string): kind is DinosaurKind {
   return (DINOSAUR_PREFAB_KINDS as readonly string[]).includes(kind);

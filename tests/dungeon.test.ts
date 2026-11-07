@@ -435,6 +435,7 @@ const DUNGEON_MIN_TRIANGLES: Record<DungeonKind, number> = {
   raptor: 2000,
   pterosaur: 2000,
   spinosaurus: 2000,
+  "ember-wyvern": 2000,
 };
 
 for (const kind of Object.keys(DUNGEON_MIN_TRIANGLES) as DungeonKind[]) {

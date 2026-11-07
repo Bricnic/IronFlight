@@ -14,6 +14,7 @@ test("normal startup shows the illustrated official lineup and keeps the simulat
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
+    "Emberfall Causeway",
   ]);
   for (const t of TRACKS) {
     await expect(
@@ -115,7 +116,7 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(12);
+  await expect(page.locator(".track-card")).toHaveCount(13);
   expect(
     await page
       .locator("#level-select")

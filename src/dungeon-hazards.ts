@@ -80,6 +80,7 @@ export const DINOSAUR_BITE: Record<DinosaurKind, { height: number; reach: number
   raptor: { height: 3.5, reach: 4.3 },
   pterosaur: { height: 3, reach: 4.8 },
   spinosaurus: { height: 1.9, reach: 5 },
+  "ember-wyvern": { height: 3, reach: 4.8 },
 };
 export const DINOSAUR_COOLDOWN = 1.8;
 export const DINOSAUR_LUNGE = 1.4;
