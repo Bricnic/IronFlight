@@ -1,4 +1,5 @@
 import { ComicPhysics } from "./comic-physics";
+import { DungeonPhysics } from "./dungeon-physics";
 import { Fairground, CAROUSEL_OMEGA } from "./fairground";
 import { GhostSwarm } from "./ghosts";
 import { AxeArray } from "./axes";
@@ -58,6 +59,7 @@ export function initPhysics() {
 export class Simulation {
   world!: RAPIER.World;
   comic!: ComicPhysics;
+  dungeon!: DungeonPhysics;
   fairground!: Fairground;
   ghosts!: GhostSwarm;
   ghostsEnabled = true;
@@ -346,6 +348,7 @@ export class Simulation {
       this.courseTrack ? courseProps(this.courseTrack) : undefined,
     );
     this.comic = new ComicPhysics(this);
+    this.dungeon = new DungeonPhysics(this);
     this.fairground = new Fairground(this);
     this.ghosts = new GhostSwarm(this);
     this.axes = new AxeArray(this);
@@ -812,6 +815,7 @@ export class Simulation {
     this.ghosts.update();
     this.world.step(this.events, this.hammerHooks);
     this.comic.after();
+    this.dungeon.after();
     const fairgroundHit = this.fairground.after(before);
     this.ghosts.attack();
     for (let i = 0; i < 4; i++) {
@@ -1354,6 +1358,7 @@ export class Simulation {
       v = this.body.linvel();
     return {
       comic: this.comic.snapshot(),
+      dungeon: this.dungeon.snapshot(),
       fairground: this.fairground.snapshot(),
       ghosts: this.ghosts.snapshot(),
       axes: this.axes.snapshot(),

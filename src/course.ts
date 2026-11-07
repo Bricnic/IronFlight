@@ -7,6 +7,13 @@ import {
   PROP_PREFAB_KINDS,
   customTrackIds,
 } from "./custom-level.ts";
+/** Rotate a local (dx, dz) offset by three.js YXZ yaw. */
+function yawOffset(dx: number, dz: number, yaw: number) {
+  return {
+    x: dx * Math.cos(yaw) + dz * Math.sin(yaw),
+    z: -dx * Math.sin(yaw) + dz * Math.cos(yaw),
+  };
+}
 import { loopRingSolids, loopSupportSolids } from "./loop.ts";
 import { clipFootprint, subtractFootprint } from "./solid-clip.ts";
 export type CourseSolid = {
@@ -33,6 +40,8 @@ export type CourseSolid = {
   roll?: number;
   color: number;
   texture?: string;
+  uvOffsetX?: number;
+  uvOffsetZ?: number;
   /** Clipped polygon in local X/Z, extruded through the solid's height. */
   footprint?: readonly Point[];
 };
@@ -178,6 +187,73 @@ export function courseSolids(track: Track): CourseSolid[] {
           h: 7.6,
           d: 80,
           color: 0x767c76,
+        });
+      } else if (p.kind === "jail-cell") {
+        // Barred 8x8 cell: corner posts, three bars per side and top rails.
+        // The truck (4+ wide) cannot slip between the 1.6-wide gaps.
+        const baseY = p.y ?? 0,
+          yaw = p.yaw ?? 0,
+          iron = 0x2b2f33;
+        const at = (dx: number, dz: number) => {
+          const o = yawOffset(dx, dz, yaw);
+          return { x: p.x + o.x, z: p.z + o.z };
+        };
+        (["n", "s", "e", "w"] as const).forEach((side) => {
+          for (const t of [-2, 0, 2]) {
+            const along = side === "n" || side === "s";
+            const pos = at(
+              along ? t : side === "e" ? 4 : -4,
+              along ? (side === "n" ? -4 : 4) : t,
+            );
+            solids.push({
+              id: `${p.id}-bar-${side}-${t + 2}`,
+              kind: "barrier",
+              x: pos.x,
+              y: baseY + 2.5,
+              z: pos.z,
+              w: 0.35,
+              h: 5,
+              d: 0.35,
+              color: iron,
+            });
+          }
+        });
+        ([
+          [-4, -4],
+          [4, -4],
+          [-4, 4],
+          [4, 4],
+        ] as const).forEach(([dx, dz], i) => {
+          const pos = at(dx, dz);
+          solids.push({
+            id: `${p.id}-post-${i}`,
+            kind: "barrier",
+            x: pos.x,
+            y: baseY + 2.5,
+            z: pos.z,
+            w: 0.5,
+            h: 5,
+            d: 0.5,
+            color: iron,
+          });
+        });
+        (["n", "s", "e", "w"] as const).forEach((side, s) => {
+          const alongX = side === "n" || side === "s";
+          const pos = at(0, s < 2 ? (side === "n" ? -4 : 4) : 0);
+          const east = side === "e" || side === "w";
+          const centered = east ? at(side === "e" ? 4 : -4, 0) : pos;
+          solids.push({
+            id: `${p.id}-rail-${side}`,
+            kind: "barrier",
+            x: centered.x,
+            y: baseY + 5.2,
+            z: centered.z,
+            w: alongX ? 7.5 : 0.5,
+            h: 0.4,
+            d: alongX ? 0.5 : 7.5,
+            ...(yaw ? { yaw } : {}),
+            color: iron,
+          });
         });
       }
     }

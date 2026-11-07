@@ -1,0 +1,43 @@
+{
+  "hash": "1143e262",
+  "configHash": "fa4fd6a6",
+  "lockfileHash": "7bc51717",
+  "browserHash": "d0a8897d",
+  "optimized": {
+    "three": {
+      "src": "../../node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "6186bffa",
+      "needsInterop": false
+    },
+    "three/addons/environments/RoomEnvironment.js": {
+      "src": "../../node_modules/three/examples/jsm/environments/RoomEnvironment.js",
+      "file": "three_addons_environments_RoomEnvironment__js.js",
+      "fileHash": "ab59a015",
+      "needsInterop": false
+    },
+    "@dimforge/rapier3d-compat": {
+      "src": "../../node_modules/@dimforge/rapier3d-compat/rapier.mjs",
+      "file": "@dimforge_rapier3d-compat.js",
+      "fileHash": "a21187e8",
+      "needsInterop": false
+    },
+    "three/addons/geometries/RoundedBoxGeometry.js": {
+      "src": "../../node_modules/three/examples/jsm/geometries/RoundedBoxGeometry.js",
+      "file": "three_addons_geometries_RoundedBoxGeometry__js.js",
+      "fileHash": "90880425",
+      "needsInterop": false
+    },
+    "three/addons/utils/BufferGeometryUtils.js": {
+      "src": "../../node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
+      "file": "three_addons_utils_BufferGeometryUtils__js.js",
+      "fileHash": "e78f23c3",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-7ZQWRWOH": {
+      "file": "chunk-7ZQWRWOH.js"
+    }
+  }
+}

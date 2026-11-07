@@ -1,4 +1,5 @@
 import { ComicView } from "./comic-view";
+import { DungeonView } from "./dungeon-view";
 import { FairgroundView } from "./fairground-view";
 import { potionScale } from "./comic-hazards";
 import { CourseView } from "./course-view";
@@ -30,6 +31,7 @@ export class GameView {
   readonly chase = new ChaseCamera(this.camera);
   private props = new PropView();
   private comic = new ComicView();
+  private dungeon = new DungeonView();
   private fairground = new FairgroundView();
   private comicInspection?: string;
   private lavaPitInspection?: { id: string; angle: number };
@@ -85,6 +87,7 @@ export class GameView {
     this.contactShadow.rotation.x = -Math.PI / 2;
     this.scene.add(
       this.comic,
+      this.dungeon,
       this.fairground,
       this.nitro,
       this.contactShadow,
@@ -561,7 +564,7 @@ export class GameView {
     );
     const ray = new T.Raycaster();
     ray.setFromCamera(ndc, this.camera);
-    const groups: T.Group[] = [this.officialCourse, this.props, this.comic];
+    const groups: T.Group[] = [this.officialCourse, this.props, this.comic, this.dungeon];
     const hits = ray.intersectObjects(
       groups.flatMap((g) => g.children),
       true,
@@ -603,6 +606,12 @@ export class GameView {
   moveComicModel(id: string, dx: number, dy: number, dz: number) {
     this.comic.moveModel(id, dx, dy, dz);
   }
+  moveDungeonModel(id: string, dx: number, dy: number, dz: number) {
+    this.dungeon.moveModel(id, dx, dy, dz);
+  }
+  removeDungeonModel(id: string) {
+    this.dungeon.removeModel(id);
+  }
   removeComicModel(id: string) {
     this.comic.removeModel(id);
   }
@@ -621,6 +630,7 @@ export class GameView {
         hoodScale: this.meshes.get("hood")?.scale.toArray(),
       },
       comicHazards: this.comic.inspect(),
+      dungeon: this.dungeon.inspect(),
       fairground: this.fairground.inspect(),
       officialCourse: this.officialCourse.inspect(),
       fire: this.fire.inspect(),
@@ -678,8 +688,10 @@ export class GameView {
   render(snap = false, alpha = 1, draw = true) {
     const s = this.simulation;
     const mood = s.courseTrack?.id;
-    const bg =
-      mood === "haunted-hollow"
+    const underground = !!s.courseTrack?.underground;
+    const bg = underground
+      ? 0x0a0d15
+      : mood === "haunted-hollow"
         ? 0x3a4a5a
         : mood === "sky-slide"
           ? 0xbfd8e8
@@ -690,21 +702,36 @@ export class GameView {
     const fog = this.scene.fog as T.Fog;
     fog.color.setHex(bg);
     fog.near =
-      (mood === "haunted-hollow"
-        ? 80
-        : mood === "sky-slide"
-          ? 200
-          : mood === "canyon-plunge"
-            ? 150
-            : 140) * this.fogScale;
+      (underground
+        ? 60
+        : mood === "haunted-hollow"
+          ? 80
+          : mood === "sky-slide"
+            ? 200
+            : mood === "canyon-plunge"
+              ? 150
+              : 140) * this.fogScale;
     fog.far =
-      (mood === "haunted-hollow" ? 320 : mood ? 600 : 430) * this.fogScale;
-    this.hemi.intensity =
-      mood === "haunted-hollow" ? 1.2 : mood === "sky-slide" ? 2.2 : 2;
-    this.sun.intensity = mood === "haunted-hollow" ? 1.8 : 3.5;
-    this.sun.color.setHex(mood === "haunted-hollow" ? 0xff9a4a : 0xffe3af);
-    this.scene.environmentIntensity =
-      mood === "haunted-hollow" ? 0.4 : mood === "sky-slide" ? 0.8 : 0.7;
+      (underground ? 280 : mood === "haunted-hollow" ? 320 : mood ? 600 : 430) *
+      this.fogScale;
+    this.hemi.intensity = underground
+      ? 0.85
+      : mood === "haunted-hollow"
+        ? 1.2
+        : mood === "sky-slide"
+          ? 2.2
+          : 2;
+    this.sun.intensity = underground ? 1.1 : mood === "haunted-hollow" ? 1.8 : 3.5;
+    this.sun.color.setHex(
+      underground ? 0xffb46a : mood === "haunted-hollow" ? 0xff9a4a : 0xffe3af,
+    );
+    this.scene.environmentIntensity = underground
+      ? 0.32
+      : mood === "haunted-hollow"
+        ? 0.4
+        : mood === "sky-slide"
+          ? 0.8
+          : 0.7;
     const root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
       q = s.previousRotation
         .clone()
@@ -715,6 +742,7 @@ export class GameView {
     this.hazards.visible = s.stage !== "lab" && !s.courseTrack;
     this.officialCourse.update(s, this.camera);
     this.comic.update(s);
+    this.dungeon.update(s);
     this.fairground.update(s);
     this.nitro.visible = s.comic.effect === "nitro";
     this.nitro.position.copy(root);
@@ -890,8 +918,9 @@ export class GameView {
       this.camera.lookAt(r.x - 7.5, -7.3, z);
     }
     if (this.comicInspection) {
-      const h = s.comic.mechanisms.find(
-        (m) => m.h.id === this.comicInspection,
+      const h = (
+        s.comic.mechanisms.find((m) => m.h.id === this.comicInspection) ??
+        s.dungeon.mechanisms.find((m) => m.h.id === this.comicInspection)
       )?.h;
       if (h) {
         this.camera.position.set(

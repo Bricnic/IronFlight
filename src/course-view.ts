@@ -701,20 +701,32 @@ export class CourseView extends T.Group {
           const g = new T.Group();
           g.position.set(p.x, p.y, p.z);
           g.name = p.id;
-          const token = new T.Mesh(
-            new T.TorusGeometry(0.85, 0.17, 12, 32),
-            new T.MeshStandardMaterial({
-              color: track.color,
-              emissive: track.color,
-              emissiveIntensity: 0.7,
-              metalness: 0.3,
-              roughness: 0.3,
-            }),
-          );
-          g.add(token);
+          if ((p.kind ?? "ring") === "chest") {
+            g.add(buildTreasureChest());
+            const beam = new T.Mesh(
+              new T.CylinderGeometry(0.35, 0.5, 3, 12, 1, true),
+              new T.MeshBasicMaterial({ color: 0xffd24a, transparent: true, opacity: 0.32, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }),
+            );
+            beam.position.y = 2;
+            g.add(beam);
+            g.userData.spin = 0.5;
+          } else {
+            const token = new T.Mesh(
+              new T.TorusGeometry(0.85, 0.17, 12, 32),
+              new T.MeshStandardMaterial({
+                color: track.color,
+                emissive: track.color,
+                emissiveIntensity: 0.7,
+                metalness: 0.3,
+                roughness: 0.3,
+              }),
+            );
+            g.add(token);
+            g.userData.spin = 1;
+          }
           const label = this.label(String(i + 1), track.color);
           label.scale.setScalar(0.3);
-          label.position.y = 1.4;
+          label.position.y = (p.kind ?? "ring") === "chest" ? 2.4 : 1.4;
           g.add(label);
           this.add(g);
           this.pickupModels.set(p.id, g);
@@ -771,7 +783,7 @@ export class CourseView extends T.Group {
       const g = this.pickupModels.get(p.id)!;
       g.visible = !run.collected.has(p.id);
       g.position.y = p.y + Math.sin(sim.time * 3) * 0.2;
-      g.children[0].rotation.y = sim.time;
+      g.children[0].rotation.y = sim.time * (g.userData.spin ?? 1);
       if (camera) g.children[1].quaternion.copy(camera.quaternion);
     }
     const packet = dragonFlame(sim.time);
@@ -1046,6 +1058,99 @@ export function buildLampPost() {
   bar.position.y = 13;
   group.add(pole, bar);
   return group;
+}
+/** Treasure chest pickup: plank body, arched lid, iron bands, gold lock. */
+export function buildTreasureChest() {
+  const group = new T.Group();
+  const wood = new T.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.8 });
+  const darkWood = new T.MeshStandardMaterial({
+    color: 0x4a2f18,
+    roughness: 0.85,
+  });
+  const iron = new T.MeshStandardMaterial({
+    color: 0x2f3336,
+    metalness: 0.7,
+    roughness: 0.45,
+  });
+  const gold = new T.MeshStandardMaterial({
+    color: 0xd8a920,
+    metalness: 0.9,
+    roughness: 0.3,
+    emissive: 0x6a4a00,
+    emissiveIntensity: 0.5,
+  });
+  const add = (mesh: T.Mesh) => {
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    group.add(mesh);
+    return mesh;
+  };
+  const body = add(new T.Mesh(new T.BoxGeometry(2.2, 1.1, 1.4), wood));
+  body.position.y = -0.35;
+  for (let i = 0; i < 3; i++) {
+    const plank = add(
+      new T.Mesh(new T.BoxGeometry(2.24, 0.06, 1.44), darkWood),
+    );
+    plank.position.y = -0.7 + i * 0.36;
+  }
+  const lid = add(
+    new T.Mesh(
+      new T.CylinderGeometry(0.7, 0.7, 2.2, 24, 1, false, 0, Math.PI),
+      wood,
+    ),
+  );
+  lid.rotation.z = Math.PI / 2;
+  lid.position.y = 0.2;
+  for (const x of [-0.75, 0.75]) {
+    const band = add(new T.Mesh(new T.BoxGeometry(0.22, 1.35, 1.5), iron));
+    band.position.set(x, -0.28, 0);
+    const strap = add(
+      new T.Mesh(new T.TorusGeometry(0.72, 0.09, 10, 20, Math.PI), iron),
+    );
+    strap.position.set(x, 0.2, 0);
+    strap.rotation.y = Math.PI / 2;
+  }
+  const lock = add(new T.Mesh(new T.BoxGeometry(0.34, 0.44, 0.12), gold));
+  lock.position.set(0, -0.15, 0.72);
+  const keyhole = new T.Mesh(
+    new T.BoxGeometry(0.08, 0.2, 0.04),
+    new T.MeshStandardMaterial({ color: 0x14161c, roughness: 1 }),
+  );
+  keyhole.position.set(0, -0.15, 0.79);
+  group.add(keyhole);
+  for (const [x, z] of [
+    [-0.9, -0.5],
+    [0.9, -0.5],
+    [-0.9, 0.5],
+    [0.9, 0.5],
+  ]) {
+    const foot = add(new T.Mesh(new T.BoxGeometry(0.3, 0.25, 0.3), iron));
+    foot.position.set(x, -1.0, z);
+  }
+  const glint = add(
+    new T.Mesh(
+      new T.BoxGeometry(0.5, 0.06, 0.06),
+      new T.MeshStandardMaterial({
+        color: 0xffe9b0,
+        emissive: 0xffc95a,
+        emissiveIntensity: 1.6,
+      }),
+    ),
+  );
+  glint.position.set(0, 0.2, 0.71);
+  return group;
+}
+export function chestStats(group: T.Group) {
+  let meshes = 0,
+    triangles = 0;
+  group.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    meshes++;
+    triangles += o.geometry.index
+      ? o.geometry.index.count / 3
+      : o.geometry.attributes.position.count / 3;
+  });
+  return { meshes, triangles: Math.round(triangles) };
 }
 /** Five stepped seating rows, sized for custom levels. */
 export function buildGrandstand() {

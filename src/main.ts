@@ -25,6 +25,7 @@ import {
   duplicateCheckpointOnTrack,
   registerCustomTrack,
   COMIC_PREFAB_KINDS,
+  DUNGEON_PREFAB_KINDS,
   TEXTURE_IDS,
   validateCustomLevel,
 } from "./custom-level";
@@ -474,6 +475,18 @@ async function boot() {
         phase: 0,
         ...(prefab.y === undefined ? {} : { y: prefab.y }),
       });
+    else if (
+      (DUNGEON_PREFAB_KINDS as readonly string[]).includes(prefab.kind)
+    )
+      sim.dungeon.addHazard({
+        id: prefab.id,
+        kind: prefab.kind as "hands" | "cage",
+        x: prefab.x,
+        z: prefab.z,
+        phase: 0,
+        ...(prefab.y === undefined ? {} : { y: prefab.y }),
+        ...(prefab.yaw === undefined ? {} : { yaw: prefab.yaw }),
+      });
   }
   async function saveLiveEdit(next: CustomLevel) {
     const track = sim.courseTrack!;
@@ -536,7 +549,9 @@ async function boot() {
           const dy = y - (prefabCtx.prefab.y ?? 0);
           const dz = updated.z - prefabCtx.prefab.z;
           sim.comic.moveHazard(updated.id, updated.x, y, updated.z);
+          sim.dungeon.moveHazard(updated.id, updated.x, y, updated.z);
           view.moveComicModel(updated.id, dx, dy, dz);
+          view.moveDungeonModel(updated.id, dx, dy, dz);
         }
         refreshSelBox();
         say(`Moved ${prefabCtx.prefab.id}`);
@@ -622,7 +637,9 @@ async function boot() {
           view.removePropModel(prefabCtx.prefab.id);
         } else {
           sim.comic.removeHazard(prefabCtx.prefab.id);
+          sim.dungeon.removeHazard(prefabCtx.prefab.id);
           view.removeComicModel(prefabCtx.prefab.id);
+          view.removeDungeonModel(prefabCtx.prefab.id);
         }
         selectSolid(null);
         say(`Deleted ${prefabCtx.prefab.id}`);

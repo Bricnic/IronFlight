@@ -7,6 +7,7 @@ import {
 import type { EditorSelection, EditorStore } from "./editor-state";
 import { pbr } from "./materials";
 import { scaleSolidUVs } from "./solid-uv";
+import { validRect, type ClipRect } from "./editor-clip";
 type ViewportHit = { object: unknown; distance?: number; point?: T.Vector3 };
 const pickKey = (pick: EditorSelection) => !pick ? "" :
   `${pick.kind}:${"id" in pick ? pick.id : "index" in pick ? pick.index : ""}`;
@@ -129,6 +130,13 @@ const PREFAB_COLORS: Record<string, number> = {
   lamp: 0xfaf8e8,
   grandstand: 0x50626b,
   checkpoint: 0x6ae08a,
+  skull: 0xe8e0cc,
+  hands: 0xff5a3c,
+  scissors: 0xc7ccd2,
+  clippers: 0x9fb8cc,
+  cage: 0x5a636b,
+  "jail-cell": 0x7a8494,
+  candle: 0xffb347,
 };
 /** Minimal orbit: drag rotates, wheel zooms, shift-drag pans. */
 function attachOrbit(
@@ -264,8 +272,21 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   let moved = false;
   const cycle = new ViewportPickCycle();
   let pendingClick: { x: number; y: number; picks: NonNullable<EditorSelection>[]; context: string } | null = null;
+  let clipDrag: { x: number; z: number; y: number; before: ClipRect[] } | null = null;
   const canStart = (e: PointerEvent) => {
     pendingClick = null;
+    if (store.tool === "clip" && (e.button !== 0 || e.altKey)) return true;
+    if (store.tool === "clip" && e.button === 0 && !e.altKey) {
+      const s = store.level.solids.find((s) => store.clip?.targets.includes(s.id));
+      const y = s ? s.y + s.h / 2 : 0;
+      raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
+      const hit = planeHit(raycaster.ray.origin, raycaster.ray.direction, y);
+      if (hit) {
+        clipDrag = { ...hit, y, before: e.shiftKey ? [...store.clip?.cutters ?? []] : [] };
+        renderer.domElement.setPointerCapture(e.pointerId);
+      }
+      return false;
+    }
     if (store.tool !== "select" || e.button !== 0) cycle.reset();
     if (store.tool === "pan") {
       downX = e.clientX;
@@ -293,6 +314,9 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       pendingClick = { x: e.clientX, y: e.clientY, picks, context };
     }
     const point = stack.find((entry) => pickKey(entry.selection) === pickKey(selection))?.hit.point;
+    if (store.tool === "select" && (e.shiftKey || e.ctrlKey || e.metaKey) && selection?.kind === "solid") {
+      pendingClick = null; store.select(selection, true); return false;
+    }
     if (!selection || !point) {
       cycle.reset(); pendingClick = null;
       downEmpty = true;
@@ -337,6 +361,16 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     canStart,
   );
   renderer.domElement.addEventListener("pointermove", (e) => {
+    if (clipDrag && store.clip) {
+      raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
+      const hit = planeHit(raycaster.ray.origin, raycaster.ray.direction, clipDrag.y);
+      if (hit) {
+        const r = { minX: Math.min(hit.x, clipDrag.x), maxX: Math.max(hit.x, clipDrag.x), minZ: Math.min(hit.z, clipDrag.z), maxZ: Math.max(hit.z, clipDrag.z) };
+        if (validRect(r)) store.setClipCutters([...clipDrag.before, r]);
+      }
+      return;
+    }
+    if (!store.clip) clipDrag = null;
     if (Math.hypot(e.clientX - downX, e.clientY - downY) >= 4) moved = true;
     if (pan) {
       orbit.panBy(
@@ -393,6 +427,10 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       store.updateSelected({ x: hit.x - drag.offX, z: hit.z - drag.offZ });
   });
   const endGesture = (e: PointerEvent) => {
+    if (clipDrag) {
+      if (e.type === "pointercancel") store.setClipCutters(clipDrag.before);
+      clipDrag = null; return;
+    }
     if (drag || rotateAxis || pan) {
       drag = null;
       rotateAxis = null;
@@ -472,6 +510,8 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   return {
     dom: renderer.domElement,
     render(level: CustomLevel, selection: EditorSelection, preview = false) {
+      const clip = store.clipPreview();
+      if (clip) { level = { ...level, solids: clip.solids }; preview = true; }
       previewOn = preview;
       grid.visible = !preview;
       axes.visible = !preview;
@@ -501,11 +541,17 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           s.roll ?? 0,
           "YXZ",
         );
-        const selected =
-          selection != null && "id" in selection && selection.id === s.id;
+        const selected = store.solidSelection.includes(s.id) ||
+          (selection != null && "id" in selection && selection.id === s.id);
         if (preview) previewSolid(holder, s, selected);
         else wireBox(holder, s.w, s.h, s.d, s.color, selected);
         group.add(holder);
+      }
+      for (const s of clip?.removed ?? []) {
+        const removed = new T.Mesh(new T.BoxGeometry(s.w, s.h, s.d), new T.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 0.4, depthWrite: false }));
+        removed.position.set(s.x, s.y, s.z);
+        // Preview volumes are not selectable and are disposed with the scene.
+        group.add(removed);
       }
       for (const [i, cp] of level.checkpoints.entries()) {
         const gate = new T.Mesh(
@@ -549,9 +595,11 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       ].entries()) {
         const collectible = level.mode !== "demolition";
         const marker = new T.Mesh(
-          collectible
-            ? new T.TorusGeometry(0.85, 0.17, 12, 32)
-            : new T.OctahedronGeometry(1.6),
+          !collectible
+            ? new T.OctahedronGeometry(1.6)
+            : t.kind === "chest"
+              ? new T.BoxGeometry(2.2, 1.6, 1.4)
+              : new T.TorusGeometry(0.85, 0.17, 12, 32),
           new T.MeshBasicMaterial({ color: 0xffd24a, wireframe: true }),
         );
         marker.position.set(t.x, t.y ?? (collectible ? 1.7 : 1.5), t.z);

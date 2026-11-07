@@ -29,19 +29,21 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
 });
 it("steps to the next and previous level with wraparound", () => {
   expect(officialTracks.slice(-2).map((track) => track.name)).toEqual([
-    "Sky Slide",
     "Fairground",
+    "Dungeon",
   ]);
   expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
   expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
   expect(stepTrackId("sky-slide", 1)).toBe("custom:fairground");
   expect(stepTrackId("custom:fairground", -1)).toBe("sky-slide");
-  expect(stepTrackId("custom:fairground", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:fairground");
+  expect(stepTrackId("custom:fairground", 1)).toBe("custom:dungeon");
+  expect(stepTrackId("custom:dungeon", -1)).toBe("custom:fairground");
+  expect(stepTrackId("custom:dungeon", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:dungeon");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:fairground");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:dungeon");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:fairground");
+  expect(stepTrackId(undefined, -1)).toBe("custom:dungeon");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);
