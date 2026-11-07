@@ -3,6 +3,7 @@ import { Simulation, initPhysics } from "../src/simulation";
 import { TRACK_IDS, getTrack } from "../src/tracks";
 import { ROUTES } from "../src/routes";
 import { VEHICLES } from "../src/vehicles";
+import { THEMED_VEHICLES } from "../src/themed-vehicles";
 import { courseDriver } from "./course-driver";
 import { loopDriver } from "./loop-driver";
 beforeAll(initPhysics);
@@ -23,6 +24,7 @@ expect(VEHICLES.map((v) => v.id)).toEqual([
   "armored-scout",
   "ice-cream-van",
   "baja-beetle",
+  ...THEMED_VEHICLES.map((vehicle) => vehicle.id),
 ]);
 for (const v of VEHICLES) {
   it(`headless matrix: ${v.id} completes triple-loop (easy)`, () => {

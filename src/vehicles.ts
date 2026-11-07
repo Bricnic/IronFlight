@@ -58,6 +58,7 @@ import {
   WRECKER_WHEEL_RADIUS,
 } from "./tow-truck";
 import { CONCEPT_VEHICLES } from "./concept-vehicles";
+import { THEMED_VEHICLES } from "./themed-vehicles";
 export type VehicleId =
   | "monster-truck"
   | "sports-car"
@@ -68,7 +69,8 @@ export type VehicleId =
   | "snow-groomer"
   | "hot-rod"
   | "tow-truck"
-  | (typeof CONCEPT_VEHICLES)[number]["id"];
+  | (typeof CONCEPT_VEHICLES)[number]["id"]
+  | (typeof THEMED_VEHICLES)[number]["id"];
 export interface VehiclePart {
   id: string;
   pos: readonly [number, number, number];
@@ -197,7 +199,7 @@ export const VEHICLES: VehicleDef[] = [
     build: (options) => createTowTruck(options),
     seriesDecal: false,
   },
-  ...CONCEPT_VEHICLES.map((vehicle) => ({
+  ...[...CONCEPT_VEHICLES, ...THEMED_VEHICLES].map((vehicle) => ({
     ...vehicle,
     ...standardChassis,
     seriesDecal: false as const,

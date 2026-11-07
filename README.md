@@ -116,3 +116,5 @@ Press backtick to open Playtest tuning, then uncheck **Enable graveyard ghosts**
 Vehicle selection uses screenshots from the game camera in `public/vehicles/`. To regenerate them, start the dev server and run `node scripts/capture-vehicle-previews.mjs`. Pass vehicle IDs to capture a subset.
 
 The Dune Buggy, Rally Hatch, Racing Semi, Armored Scout, Ice Cream Van, and Baja Beetle were modeled from the Nano Banana 2 concepts in `visual-plan/refs/gemini/`. Their meshes use the shared four-wheel chassis and thirteen damage parts.
+
+The twenty themed vehicles use the same chassis and damage system. Their original Gemini images and generation briefs are in `visual-plan/refs/gemini/themed/`.

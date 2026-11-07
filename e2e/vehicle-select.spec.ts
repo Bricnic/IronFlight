@@ -26,25 +26,25 @@ test("menu offers a vehicle screen that persists the choice", async ({
       .toBe(true);
   }
 
-  await page.getByRole("button", { name: "Drive the Dune Buggy" }).click();
+  await page.getByRole("button", { name: "Drive the Jack-o-Racer" }).click();
   await expect(page.locator("#vehicle-select")).toBeHidden();
   expect(await page.evaluate(() => localStorage.getItem("vehicle"))).toBe(
-    "dune-buggy",
+    "jack-o-racer",
   );
 });
 test("official runs start in the selected vehicle", async ({ page }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await page.evaluate(() => {
-    localStorage.setItem("vehicle", "racing-semi");
+    localStorage.setItem("vehicle", "orbital-rover");
     const g = window.__game!;
     g.pause(true);
     g.startTrack("harbor-sprint");
   });
   expect(await page.evaluate(() => window.__game!.snapshot().vehicleId)).toBe(
-    "racing-semi",
+    "orbital-rover",
   );
   expect(await page.evaluate(() => window.__game!.stats().vehicleId)).toBe(
-    "racing-semi",
+    "orbital-rover",
   );
 });

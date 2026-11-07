@@ -1,0 +1,102 @@
+[
+  {
+    "id": "canopy-runner",
+    "theme": "Jungle",
+    "brief": "Olive and ochre jungle safari buggy with an open cockpit, a khaki fabric canopy on a visible dark roll cage, oversized amber rally lamps, strapped jerry cans, and leaf-green fenders. Four wheels on two axles."
+  },
+  {
+    "id": "dune-raider",
+    "theme": "Desert",
+    "brief": "Sand-colored short desert rally pickup with a low wedge nose, rust-orange stripe, protective tubular front bar, twin vertical air intakes, and ribbed sand ladders stacked flat in the rear bed. Four wheels on two axles."
+  },
+  {
+    "id": "frost-patrol",
+    "theme": "Winter",
+    "brief": "Ice-blue and white winter expedition rescue wagon with a tall square enclosed cab, split windshield, dark fender arches, amber rescue marker lamps, and a low black roof basket carrying two red recovery canisters. Four studded chunky wheels."
+  },
+  {
+    "id": "prism-racer",
+    "theme": "Futuristic",
+    "brief": "Silver futuristic electric race car with a very low sharp wedge nose, narrow electric-cyan light bars, dark teardrop canopy, inset cyan side fins, and clean sculpted aerodynamic wheel arches. Exactly four exposed wheels."
+  },
+  {
+    "id": "sun-chariot",
+    "theme": "Ancient",
+    "brief": "Ancient Egyptian-inspired four-wheel stunt chariot with an open driver seat, lapis-blue side panels with gold stepped trim, sweeping gold fenders, upright sun-disk crest behind the seat, and a gold scarab shape at the nose. Four modern block-tread tires."
+  },
+  {
+    "id": "rocket-coupe",
+    "theme": "Retro",
+    "brief": "1950s-inspired mint and ivory two-door stunt coupe with a domed cab, massive curved chrome bumper, bullet-shaped headlamps, raised pointed tailfins, thin red tail lights, and wide whitewall tires. Four wheels."
+  },
+  {
+    "id": "orbital-rover",
+    "theme": "Sci-fi",
+    "brief": "White and orange sci-fi planetary rover with a faceted glass cockpit at the front, blue slatted solar panels on the rear deck, a silver satellite dish on a mast, and exposed shock absorbers. Four wheels on two axles."
+  },
+  {
+    "id": "rune-drifter",
+    "theme": "Fantasy",
+    "brief": "Dark violet fantasy armored carriage converted to a four-wheel stunt roadster, with warm brass pointed panels, two curled brass horns at the bumper, and three angular glowing teal crystal shards rising from a mount on the roof. Four chunky tires."
+  },
+  {
+    "id": "toon-taxi",
+    "theme": "Cartoon",
+    "brief": "Bright lemon-yellow cartoon taxi with a squashed egg-shaped body, oversized round headlamps, exaggerated dark blue wraparound windshield, black and cream checker strip on the doors, and a rounded yellow taxi roof sign with no text. Four tires."
+  },
+  {
+    "id": "big-top-buggy",
+    "theme": "Clown",
+    "brief": "Purple circus clown buggy with an open cab, giant spherical red nose on the front, striped red and cream scalloped roof canopy, rainbow-colored wheel arches, and four multicolored round circus lamps. Four wheels."
+  },
+  {
+    "id": "sugar-rush",
+    "theme": "Candy",
+    "brief": "Hot-pink and mint candy-themed compact rally car with bright rounded gumdrop fenders, red and white striped candy-cane front bars, candy button trim, and a big vertical mint-and-pink swirl lollipop mounted on the roof. Four wheels."
+  },
+  {
+    "id": "timber-scout",
+    "theme": "Forest",
+    "brief": "Moss-green forestry utility pickup with a sturdy closed cab, warm wood-paneled flanks, three strapped round-cut logs lying lengthwise in an open rear bed, orange tow hooks, and charcoal fenders. Four block-tread tires."
+  },
+  {
+    "id": "jack-o-racer",
+    "theme": "Halloween",
+    "brief": "Pumpkin-orange Halloween stunt coupe with a round ribbed pumpkin-shaped hood, glowing triangular jack-o-lantern eyes and a jagged grin on the nose, crooked green stem mounted on the roof, and black curved fenders. Four tires."
+  },
+  {
+    "id": "sleigh-runner",
+    "theme": "Christmas",
+    "brief": "Deep red four-wheel Christmas sleigh racer with an open green seat, gold curled sleigh rail tips along the side, a raised curved nose, and three bright ribbon-wrapped gifts secured in the rear bed. Four visible road wheels, no runners below the tires."
+  },
+  {
+    "id": "harbor-skiff",
+    "theme": "Nautical",
+    "brief": "A blue and cream nautical skiff turned into a derby car on four chunky road tires, with a pointed boat bow and raised cream gunwale, red and cream lifebuoy attached to the side, a tiny enclosed blue-tinted bridge, and a striped stern rail. Four wheels."
+  },
+  {
+    "id": "foundry-hauler",
+    "theme": "Industrial",
+    "brief": "Yellow and charcoal heavy industrial stunt hauler with a boxy enclosed loader cab, recessed black radiator fins, black and yellow diagonal bumper hazard stripes, visible hydraulic cylinders on an empty rear deck, and grated access steps. Four wheels."
+  },
+  {
+    "id": "cinder-crawler",
+    "theme": "Volcanic",
+    "brief": "Black basalt volcanic crawler with a low faceted armored body, glowing orange lava seam lines in the hood and flanks, smoked glass, angular black wheel arches, and twin angled exhaust pipes behind the cab. Four chunky tires."
+  },
+  {
+    "id": "haywire-tractor",
+    "theme": "Farm",
+    "brief": "Vintage green farm tractor adapted for stunt racing with a narrow rounded engine hood, tall upright black exhaust, open driving seat and small curved sun canopy, a vertical steel radiator grille, cream-yellow hubs, and four oversized treaded tires."
+  },
+  {
+    "id": "gilded-arrow",
+    "theme": "Art Deco",
+    "brief": "Graphite and brass Art Deco streamline coupe with a narrow vertical gold grille, sculpted sweeping roof, three stacked horizontal gold trim lines on each side, elongated rear fins, and sculpted gold-edged wheel spats. Four wheels."
+  },
+  {
+    "id": "runway-racer",
+    "theme": "Aviation",
+    "brief": "Aviation-inspired silver four-wheel stunt racer with a red nose cone, a blue-tinted bubble cockpit canopy, rows of rivets on the fuselage, a small red-edged tail spoiler and short side winglets that stay within the wheel track. Four wheels."
+  }
+]
