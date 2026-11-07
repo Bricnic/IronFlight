@@ -46,6 +46,7 @@ export async function createDebugMenu(sim: Simulation) {
     hammerSpeed: "Hammer spin rate",
     axeSpeed: "Axe swing speed",
     carouselSpeed: "Carousel spin speed",
+    carouselRestriction: "Carousel movement restriction",
     bumperSpeed: "Bumper car speed",
     handbrakePower: "Handbrake multiplier",
     shadowDarkness: "Truck shadow darkness",
@@ -67,7 +68,9 @@ export async function createDebugMenu(sim: Simulation) {
         sim.tuning[key],
       );
       menu.querySelector(`#value-${key}`)!.textContent =
-        key === "slideWaterSpeed"
+        key === "carouselRestriction"
+          ? sim.tuning[key].toFixed(1)
+          : key === "slideWaterSpeed"
           ? `${sim.tuning[key].toFixed(1)}× · ${Math.round(sim.tuning[key] * 100)} MPH`
           : key === "canyonTopSpeed"
             ? `${sim.tuning[key].toFixed(1)}× · ${(sim.tuning.topSpeed * sim.tuning[key]).toFixed(1)}× total`

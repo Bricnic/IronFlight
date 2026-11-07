@@ -24,6 +24,7 @@ export async function driveTrack(
       if (start) g.startTrack(track.id, undefined, vehicle);
       const initial = g.stats().officialCourse;
       let peakY = 0;
+      let blockedFor = 0, reverseUntil = -1;
       for (
         let frame = 0;
         frame < 1200 && g.snapshot().run?.status === "running";
@@ -153,6 +154,14 @@ export async function driveTrack(
             );
             const speed =
               Math.abs(error) > 0.6 ? 6 : Math.abs(error) > 0.25 ? 10 : 15;
+            // A human can reverse out after a bumper-car hit. Keep this proof
+            // on ordinary driving controls rather than overriding its physics.
+            if (track.id === "custom:fairground") {
+              blockedFor = s.speed < 0.6 ? blockedFor + 1 / 120 : 0;
+              if (blockedFor > 1.2) { reverseUntil = s.time + 1.3; blockedFor = 0; }
+              if (s.time < reverseUntil)
+                return { throttle: -0.7, steer: Math.max(-1, Math.min(1, -error * 3)), brake: 0 };
+            }
             return {
               steer: Math.max(-1, Math.min(1, error * 3)),
               throttle: s.signedSpeed < speed ? 1 : 0,

@@ -28,6 +28,12 @@ it("ships identical official and editable-clone layouts with 25 rings and an eig
   expect(validateCustomLevel(original).collectibles).toHaveLength(25);
   expect(validateCustomLevel(original).limit).toBe(480);
   expect(original.medals.gold).toBe(300);
+  const arena = original.prefabs.find((p) => p.kind === "bumper-arena")!;
+  expect(
+    original.collectibles.some(
+      (r) => Math.abs(r.x - arena.x) < 30 && Math.abs(r.z - arena.z) < 23,
+    ),
+  ).toBe(true);
   expect({ ...clone, name: original.name }).toEqual(original);
   for (const kind of [
     "carousel",
@@ -94,13 +100,82 @@ it("calibrates mutual bumper damage by relative momentum", () => {
   expect(bumperDamage(0, 3000, 3000)).toBe(0);
   expect(bumperDamage(60 * 0.44704, 6000, 3000)).toBeLessThan(0.25);
 });
+it("lower carousel restriction allows more movement relative to the deck", () => {
+  const relativeSpeeds: number[] = [];
+  for (const restriction of [0.1, 5]) {
+    const sim = fixture([{ id: "ride", kind: "carousel", x: 0, z: 0 }], {
+      x: 0,
+      y: 3.1,
+      z: 17,
+      yaw: Math.PI / 2,
+    });
+    try {
+      expect(sim.tuning.carouselRestriction).toBe(5);
+      sim.setTuning({ carouselRestriction: restriction });
+      sim.run(1);
+      expect(sim.fairground.riding).toBe("ride");
+      sim.body.applyImpulse({ x: sim.body.mass() * 5, y: 0, z: 0 }, true);
+      sim.run(0.15);
+      const deck = sim.fairground.deckVelocity(),
+        velocity = sim.body.linvel();
+      relativeSpeeds.push(Math.hypot(velocity.x - deck.x, velocity.z - deck.z));
+      expect(() => sim.setTuning({ carouselRestriction: 10.1 })).toThrow();
+      expect(() => sim.setTuning({ carouselRestriction: 0 })).toThrow();
+    } finally {
+      sim.dispose();
+    }
+  }
+  expect(relativeSpeeds[0]).toBeGreaterThan(relativeSpeeds[1] * 1.5);
+});
+it("bumper cars vary their behavior without a player, and only some choose to attack one", () => {
+  const sim = fixture([{ id: "arena", kind: "bumper-arena", x: 0, z: 0 }]);
+  try {
+    const absent = new Set<string>(),
+      present = new Set<string>();
+    for (let i = 0; i < 32; i++) {
+      sim.run(0.25);
+      for (const car of sim.fairground.bumpers) {
+        absent.add(car.mode);
+        expect(car.aggressive).toBe(false);
+      }
+    }
+    for (const mode of ["cruise", "wander", "ram-car", "reverse"])
+      expect(absent.has(mode)).toBe(true);
+    sim.run(60);
+    expect(
+      sim.fairground.bumpers.filter(
+        (car) => Math.hypot(car.body.linvel().x, car.body.linvel().z) > 0.5,
+      ).length,
+    ).toBeGreaterThanOrEqual(3);
+    sim.body.setTranslation({ x: 0, y: 2.1, z: 0 }, true);
+    sim.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    for (let i = 0; i < 32; i++) {
+      sim.run(0.25);
+      for (const car of sim.fairground.bumpers) present.add(car.mode);
+      expect(
+        sim.fairground.bumpers.filter((car) => car.aggressive).length,
+      ).toBeLessThanOrEqual(2);
+    }
+    expect(present.has("ram-player")).toBe(true);
+    expect(present.has("ram-car")).toBe(true);
+    expect(present.has("reverse")).toBe(true);
+  } finally {
+    sim.dispose();
+  }
+});
 it("bumper speed tuning scales physical patrol speed and survives reset", () => {
   const speeds: number[] = [];
   for (const multiplier of [0.5, 2]) {
     const sim = fixture([{ id: "arena", kind: "bumper-arena", x: 0, z: 0 }]);
     try {
+      // Measure the speed setting without another car interrupting the run.
+      sim.fairground.bumpers
+        .slice(1)
+        .forEach((car, i) =>
+          car.body.setTranslation({ x: 70, y: 1.2, z: 50 + i * 7 }, true),
+        );
       sim.setTuning({ bumperSpeed: multiplier });
-      sim.run(0.25);
+      sim.run(0.05);
       const velocity = sim.fairground.bumpers[0].body.linvel();
       speeds.push(Math.hypot(velocity.x, velocity.z));
       sim.startTrack("custom:fairground-fixture");
@@ -119,7 +194,7 @@ it("bumper cars patrol, chase an intruder and take real mutual collision damage"
     sim.body.setTranslation({ x: 0, y: 2.1, z: -21 }, true);
     sim.body.setLinvel({ x: 0, y: 0, z: 60 * 0.44704 }, true);
     sim.run(0.45);
-    expect(sim.fairground.bumpers.every((b) => b.aggressive)).toBe(true);
+    expect(sim.fairground.bumpers.some((b) => b.mode === "reverse")).toBe(true);
     expect(sim.fairground.impacts.length).toBeGreaterThan(0);
     expect(sim.fairground.bumpers.some((b) => b.health < 1)).toBe(true);
     expect(sim.snapshot().integrity).toBeLessThan(0.99);

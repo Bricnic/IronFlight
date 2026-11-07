@@ -53,10 +53,11 @@ test("bumper and carousel speed sliders persist and reset", async ({
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await page.keyboard.press("Backquote");
-  for (const key of ["bumperSpeed", "carouselSpeed"]) {
+  for (const key of ["bumperSpeed", "carouselSpeed", "carouselRestriction"]) {
     const slider = page.locator(`#tune-${key}`);
     await expect(slider).toHaveAttribute("min", "0.1");
     await expect(slider).toHaveAttribute("max", "10");
+    await expect(slider).toHaveAttribute("step", "0.1");
     await slider.fill("2.4");
     await slider.dispatchEvent("input");
   }
@@ -65,9 +66,11 @@ test("bumper and carousel speed sliders persist and reset", async ({
   await page.keyboard.press("Backquote");
   await expect(page.locator("#tune-bumperSpeed")).toHaveValue("2.4");
   await expect(page.locator("#tune-carouselSpeed")).toHaveValue("2.4");
+  await expect(page.locator("#tune-carouselRestriction")).toHaveValue("2.4");
   await page.getByRole("button", { name: "Reset tuning", exact: true }).click();
   await expect(page.locator("#tune-bumperSpeed")).toHaveValue("1");
   await expect(page.locator("#tune-carouselSpeed")).toHaveValue("1");
+  await expect(page.locator("#tune-carouselRestriction")).toHaveValue("5");
 });
 
 test("the real Fairground carousel carries an unpowered car for at least 45 seconds", async ({

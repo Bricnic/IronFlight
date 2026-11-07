@@ -50,6 +50,12 @@ export type Bumper = {
   incoming: Vector3;
   touching: boolean;
   patrol: number;
+  mode: "cruise" | "wander" | "ram-player" | "ram-car" | "reverse";
+  targetId: string | null;
+  target: { x: number; z: number };
+  nextDecision: number;
+  lastStrike: number;
+  random: () => number;
 };
 export type Balloon = {
   p: CustomPrefab;
@@ -83,6 +89,7 @@ export class Fairground {
   private nextSteer = 0;
   private random = randomFor("fairground-skids");
   private bananaId = 0;
+  private bumperContacts = new Set<string>();
   riding: string | null = null;
   rideSeconds = 0;
   explosions = 0;
@@ -245,6 +252,15 @@ export class Fairground {
         incoming: new Vector3(),
         touching: false,
         patrol: i * 1.047,
+        mode: i % 3 === 0 ? "cruise" : i % 3 === 1 ? "ram-car" : "wander",
+        targetId: `${p.id}-car-${((i + 1) % 6) + 1}`,
+        target: {
+          x: p.x + Math.sin(i * 2) * 23,
+          z: p.z + Math.cos(i * 2) * 16,
+        },
+        nextDecision: 0.6 + i * 0.23,
+        lastStrike: -100,
+        random: randomFor(`${p.id}-car-${i + 1}`),
       });
     }
   }
@@ -253,6 +269,13 @@ export class Fairground {
       (part) =>
         part.collider && this.sim.world.intersectionPair(sensor, part.collider),
     );
+  }
+  private backOff(car: Bumper, from: { x: number; z: number }) {
+    if (car.mode === "reverse" && car.nextDecision > this.sim.time) return;
+    car.mode = "reverse";
+    car.aggressive = false;
+    car.target = { x: from.x, z: from.z };
+    car.nextDecision = this.sim.time + 0.8 + car.random() * 0.6;
   }
   before() {
     if (!this.carousels.length && !this.bumpers.length && !this.balloons.length)
@@ -284,7 +307,8 @@ export class Fairground {
         this.riding = c.p.id;
         this.rideSeconds += DT;
         const velocity = s.body.linvel();
-        const gain = Math.min(1, DT * 20);
+        const restriction = s.tuning.carouselRestriction / 5;
+        const gain = Math.min(1, DT * 20 * restriction);
         s.body.applyImpulse(
           {
             x: (omega * dz - velocity.x) * s.body.mass() * gain,
@@ -295,7 +319,14 @@ export class Fairground {
         );
         const spin = s.body.angvel();
         s.body.setAngvel(
-          { x: spin.x, y: omega + Math.sin(s.steeringAngle) * 0.5, z: spin.z },
+          {
+            x: spin.x,
+            y:
+              spin.y +
+              (omega + Math.sin(s.steeringAngle) * 0.5 - spin.y) *
+                Math.min(1, restriction),
+            z: spin.z,
+          },
           true,
         );
       }
@@ -303,21 +334,96 @@ export class Fairground {
     for (const car of this.bumpers) {
       const pos = car.body.translation(),
         a = car.arena;
+      const playerInside =
+        Math.abs(player.x - a.x) < 31 && Math.abs(player.z - a.z) < 24;
+      if (
+        s.time >= car.nextDecision ||
+        (car.mode === "ram-player" && !playerInside)
+      ) {
+        const roll = car.random();
+        const peers = this.bumpers.filter(
+          (other) => other !== car && other.arena === a && other.health > 0,
+        );
+        const attackers = peers.filter(
+          (other) => other.mode === "ram-player",
+        ).length;
+        car.mode =
+          playerInside && roll < 0.25 && attackers < 2
+            ? "ram-player"
+            : roll < 0.55 && peers.length
+              ? "ram-car"
+              : roll < 0.7
+                ? "reverse"
+                : roll < 0.85
+                  ? "wander"
+                  : "cruise";
+        car.targetId = peers.length
+          ? peers[Math.floor(car.random() * peers.length)].id
+          : null;
+        car.target =
+          car.mode === "reverse"
+            ? {
+                x: pos.x + Math.sin(car.patrol + s.time) * 5,
+                z: pos.z + Math.cos(car.patrol + s.time) * 5,
+              }
+            : {
+                x: a.x + (car.random() * 2 - 1) * 24,
+                z: a.z + (car.random() * 2 - 1) * 17,
+              };
+        car.nextDecision =
+          s.time +
+          (car.mode === "reverse"
+            ? 0.7 + car.random() * 0.6
+            : 1.5 + car.random() * 2);
+      }
       car.aggressive =
-        car.health > 0 &&
-        Math.abs(player.x - a.x) < 31 &&
-        Math.abs(player.z - a.z) < 24;
+        car.health > 0 && car.mode === "ram-player" && playerInside;
       const phase = s.time * 0.2 + car.patrol;
+      const peer = this.bumpers.find(
+        (other) => other.id === car.targetId && other.health > 0,
+      );
       const target = car.aggressive
         ? player
-        : { x: a.x + Math.sin(phase) * 21, z: a.z + Math.cos(phase) * 15 };
+        : car.mode === "ram-car" && peer
+          ? peer.body.translation()
+          : car.mode === "cruise"
+            ? { x: a.x + Math.sin(phase) * 21, z: a.z + Math.cos(phase) * 15 }
+            : car.mode === "reverse"
+              ? { x: pos.x * 2 - car.target.x, z: pos.z * 2 - car.target.z }
+              : car.target;
       let dx = target.x - pos.x,
         dz = target.z - pos.z;
+      // Avoid piling up on uninvolved cars; a deliberate charge may still
+      // close the gap to its chosen opponent.
+      for (const other of this.bumpers) {
+        if (
+          other === car ||
+          other.arena !== a ||
+          (car.mode === "ram-car" && other.id === car.targetId)
+        )
+          continue;
+        const p = other.body.translation(),
+          ox = pos.x - p.x,
+          oz = pos.z - p.z;
+        const distance = Math.hypot(ox, oz);
+        if (distance > 0.01 && distance < 7) {
+          dx += (ox / distance) * (7 - distance) * 5;
+          dz += (oz / distance) * (7 - distance) * 5;
+        }
+      }
       if (Math.abs(pos.x - a.x) > 28) dx = (a.x - pos.x) * 3;
       if (Math.abs(pos.z - a.z) > 21) dz = (a.z - pos.z) * 3;
       const length = Math.hypot(dx, dz) || 1,
         speed =
-          car.health <= 0 ? 0 : (car.aggressive ? 9 : 4) * s.tuning.bumperSpeed;
+          car.health <= 0
+            ? 0
+            : (car.aggressive
+                ? 9
+                : car.mode === "ram-car"
+                  ? 7
+                  : car.mode === "reverse"
+                    ? 3
+                    : 4) * s.tuning.bumperSpeed;
       const v = car.body.linvel(),
         gain = Math.min(1, DT * 2);
       car.body.applyImpulse(
@@ -328,14 +434,26 @@ export class Fairground {
         },
         true,
       );
-      if (speed)
-        car.body.setRotation(
-          new Quaternion().setFromAxisAngle(
-            new Vector3(0, 1, 0),
-            Math.atan2(dx, dz),
-          ),
+      if (speed) {
+        const forward = new Vector3(0, 0, 1).applyQuaternion(
+          new Quaternion().copy(car.body.rotation()),
+        );
+        const error =
+          Math.atan2(dx, dz) +
+          (car.mode === "reverse" ? Math.PI : 0) -
+          Math.atan2(forward.x, forward.z);
+        car.body.setAngvel(
+          {
+            x: 0,
+            y: Math.max(
+              -2.5,
+              Math.min(2.5, Math.atan2(Math.sin(error), Math.cos(error)) * 4),
+            ),
+            z: 0,
+          },
           true,
         );
+      }
       car.incoming.copy(car.body.linvel());
     }
     for (const balloon of this.balloons) {
@@ -447,7 +565,8 @@ export class Fairground {
           0,
           incoming.clone().sub(car.incoming).dot(normal),
         );
-        if (closing > 1.5) {
+        if (closing > 1.5 && s.time - car.lastStrike > 0.6) {
+          car.lastStrike = s.time;
           const playerDamage = bumperDamage(
             closing,
             s.body.mass(),
@@ -469,9 +588,29 @@ export class Fairground {
             time: s.time,
           });
         }
+        this.backOff(car, s.body.translation());
       }
       car.touching = contact;
     }
+    const contacts = new Set<string>();
+    for (let i = 0; i < this.bumpers.length; i++)
+      for (let j = i + 1; j < this.bumpers.length; j++) {
+        const a = this.bumpers[i],
+          b = this.bumpers[j];
+        if (a.arena !== b.arena) continue;
+        let touching = false;
+        s.world.contactPair(a.collider, b.collider, (manifold) => {
+          if (manifold.numSolverContacts()) touching = true;
+        });
+        if (!touching) continue;
+        const key = `${a.id}:${b.id}`;
+        contacts.add(key);
+        if (!this.bumperContacts.has(key)) {
+          this.backOff(a, b.body.translation());
+          this.backOff(b, a.body.translation());
+        }
+      }
+    this.bumperContacts = contacts;
     for (const b of this.bananas) {
       const point = new Vector3(b.x, b.y, b.z);
       const wheelHit = s.partDefs.slice(2, 6).some((def) => {
@@ -515,6 +654,13 @@ export class Fairground {
         rotation: { ...c.body.rotation() },
         health: c.health,
         aggressive: c.aggressive,
+        mode: c.mode,
+        targetId:
+          c.mode === "ram-car"
+            ? c.targetId
+            : c.mode === "ram-player"
+              ? "player"
+              : null,
       })),
       balloons: this.balloons.map((b) => ({
         id: b.p.id,
