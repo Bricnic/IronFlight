@@ -135,13 +135,26 @@ test("wireframe drag from mousedown to mouseup is one undo step", async ({
 });
 test("wireframe editor reloads and deletes from disk", async ({ page }) => {
   await openEditor(page);
+  const forwardScreenOffset = (yaw: number) =>
+    page.evaluate((heading) => {
+      const game = window.__game!;
+      const spawn = game.editor().cameraTarget;
+      const ahead = game.editorProject({
+        x: spawn.x + Math.sin(heading) * 10,
+        y: spawn.y,
+        z: spawn.z + Math.cos(heading) * 10,
+      });
+      return ahead.y - game.editorProject(spawn).y;
+    }, yaw);
+  // From behind the spawn, a point ahead recedes up the screen.
+  expect(await forwardScreenOffset(0)).toBeLessThan(-1);
   await page.evaluate(async () => {
     const g = window.__game!;
     await g.customLevels.remove("e2e-edit").catch(() => {});
     await g.customLevels.save({
       name: "e2e-edit",
       mode: "race",
-      spawn: { x: 0, y: 2.1, z: -40, yaw: 0 },
+      spawn: { x: 0, y: 2.1, z: -40, yaw: Math.PI / 2 },
       checkpoints: [{ x: 0, z: 40 }],
       solids: [
         {
@@ -175,6 +188,7 @@ test("wireframe editor reloads and deletes from disk", async ({ page }) => {
   await openEditor(page);
   await page.locator("#editor-levels").selectOption("e2e-edit");
   await expect(page.locator("#editor-status")).toContainText("Opened e2e-edit");
+  expect(await forwardScreenOffset(Math.PI / 2)).toBeLessThan(-1);
   let probe = await page.evaluate(() => window.__game!.editor());
   expect(probe).toMatchObject({ name: "e2e-edit", solids: 2 });
   await page.locator('#editor-objects li[data-key="solid:barrier-1"]').click();
