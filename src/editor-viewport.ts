@@ -1,11 +1,13 @@
 import * as T from "three";
 import {
   PROP_PREFAB_KINDS,
+  isDinosaur,
   type CustomLevel,
   type CustomSolid,
 } from "./custom-level";
 import type { EditorSelection, EditorStore } from "./editor-state";
-import { pbr } from "./materials";
+import { magneticTileMaterial, pbr, slimeMaterial } from "./materials";
+import { buildDungeonModel } from "./dungeon-view";
 import { scaleSolidUVs } from "./solid-uv";
 import { validRect, type ClipRect } from "./editor-clip";
 type ViewportHit = { object: unknown; distance?: number; point?: T.Vector3 };
@@ -407,7 +409,8 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           current.item.kind,
         );
         const isDragon = current.item.kind === "dragon";
-        if (rotateAxis === "yaw" && (isProp || isDragon))
+        const canYaw = isProp || isDragon || isDinosaur(current.item.kind);
+        if (rotateAxis === "yaw" && canYaw)
           store.updateSelected({ yaw: (current.item.yaw ?? 0) + dx * 0.01 });
         else if (rotateAxis === "pitch" && isProp)
           store.updateSelected({ angle: (current.item.angle ?? 0) + dx * 0.01 });
@@ -461,21 +464,14 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   const previewSolid = (parent: T.Group, s: CustomSolid, selected: boolean) => {
     const geometry = new T.BoxGeometry(s.w, s.h, s.d);
     scaleSolidUVs(geometry, s);
-    const mesh = new T.Mesh(
-      geometry,
-      s.texture
-        ? pbr(s.texture, 1, {
-            color: s.color,
-            roughness: 0.9,
-            emissive: selected ? 0x4a3a00 : 0x000000,
-          })
-        : new T.MeshStandardMaterial({
-            color: s.color,
-            roughness: 0.9,
-            emissive: selected ? 0x4a3a00 : 0x000000,
-          }),
-    );
-    parent.add(mesh);
+    const surface = { color: s.color, roughness: 0.9 };
+    let material: T.MeshStandardMaterial;
+    if (s.kind === "slime") material = slimeMaterial(s.color);
+    else if (s.texture) material = pbr(s.texture, 1, surface);
+    else if (s.kind === "tile") material = magneticTileMaterial(s.color);
+    else material = new T.MeshStandardMaterial(surface);
+    if (selected) material.emissive.add(new T.Color(0x4a3a00));
+    parent.add(new T.Mesh(geometry, material));
   };
   const wireBox = (
     parent: T.Group,
@@ -574,6 +570,12 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         group.add(gate);
       }
       for (const p of level.prefabs) {
+        if (preview && isDinosaur(p.kind)) {
+          const { root } = buildDungeonModel({ ...p, kind: p.kind, phase: 0 });
+          root.userData.pick = { kind: "prefab", id: p.id };
+          root.userData.locked = !!p.locked;
+          group.add(root);
+        }
         const marker = new T.Mesh(
           new T.OctahedronGeometry(1.2),
           new T.MeshBasicMaterial({

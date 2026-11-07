@@ -195,7 +195,7 @@ export class Simulation {
         .setTranslation(s.x, s.y, s.z)
         .setRotation(solidQuaternion(s))
         .setFriction(1)
-        .setSensor(s.kind === "lava"),
+        .setSensor(s.kind === "lava" || s.kind === "slime"),
     );
     this.surfaceKinds.set(collider.handle, s.kind);
     if (s.id !== undefined) this.solidColliders.set(s.id, collider);
@@ -814,6 +814,7 @@ export class Simulation {
     this.comic.before();
     this.ghosts.update();
     this.world.step(this.events, this.hammerHooks);
+    this.checkSlimeContact();
     this.comic.after();
     this.dungeon.after();
     const fairgroundHit = this.fairground.after(before);
@@ -953,6 +954,21 @@ export class Simulation {
   }
   run(seconds: number, input: Input = {}) {
     for (let i = 0; i < Math.round(seconds / DT); i++) this.step(input);
+  }
+  private checkSlimeContact() {
+    if (!this.courseTrack?.custom || this.status !== "driving") return;
+    for (const part of ["chassis-front", "chassis-rear"]) {
+      const collider = this.parts.get(part)?.collider;
+      if (!collider) continue;
+      let inSlime = false;
+      this.world.intersectionPairsWith(collider, (other) => {
+        if (this.surfaceKinds.get(other.handle) === "slime") inSlime = true;
+      });
+      if (!inSlime) continue;
+      this.damage("chassis-front", 10000);
+      this.damageEvents.push({ source: "slime", part: "chassis-front", time: this.time });
+      return;
+    }
   }
   private updateLava() {
     if (this.stage === "lab") return;

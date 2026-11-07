@@ -26,6 +26,8 @@ export type CourseSolid = {
     | "ramp"
     | "support"
     | "lava"
+    | "slime"
+    | "tile"
     | "loop"
     | "lamp"
     | "grandstand";

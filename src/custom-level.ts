@@ -46,6 +46,11 @@ export const COURSE_PREFAB_KINDS = [
   "lamp",
   "grandstand",
 ] as const;
+export const DINOSAUR_PREFAB_KINDS = ["raptor", "pterosaur", "spinosaurus"] as const;
+export type DinosaurKind = (typeof DINOSAUR_PREFAB_KINDS)[number];
+export function isDinosaur(kind: string): kind is DinosaurKind {
+  return (DINOSAUR_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -53,6 +58,7 @@ export const DUNGEON_PREFAB_KINDS = [
   "cage",
   "jail-cell",
   "candle",
+  ...DINOSAUR_PREFAB_KINDS,
 ] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,
@@ -70,6 +76,8 @@ export const SOLID_KINDS = [
   "ramp",
   "support",
   "lava",
+  "slime",
+  "tile",
 ] as const;
 export type SolidKind = (typeof SOLID_KINDS)[number];
 export interface CustomSolid {
@@ -533,6 +541,8 @@ export function solidDefaults(kind: SolidKind) {
     ramp: { w: 16, h: 0.35, d: 12, color: 0x8a8f96, angle: -0.124 },
     support: { w: 2, h: 8, d: 2, color: 0x555c60 },
     lava: { w: 20, h: 0.5, d: 20, color: 0xff5a1f },
+    slime: { w: 20, h: 1, d: 14, color: 0x80ec27 },
+    tile: { w: 12, h: 1.3, d: 12, color: 0x137e91 },
   };
   return defaults[kind];
 }

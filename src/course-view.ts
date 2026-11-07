@@ -4,6 +4,8 @@ import { flameIntensity, type Hazard } from "./hazards";
 import {
   pbr,
   lavaMaterial,
+  magneticTileMaterial,
+  slimeMaterial,
   textureLoadErrors,
   dragonFlameMaterial,
 } from "./materials";
@@ -55,7 +57,7 @@ export function defaultTextureFor(
   trackId: string,
   s: { id: string; kind: string },
 ) {
-  if (s.kind === "lava") return undefined;
+  if (s.kind === "lava" || s.kind === "slime") return undefined;
   if (s.id.startsWith("gorge-")) return "dark_rock_02";
   if (isStoneId(s.id))
     return trackId === "haunted-hollow" ? "monastery_stone_floor" : "rock_06";
@@ -130,6 +132,8 @@ export class CourseView extends T.Group {
     return { stone, cliff, groundMap, roadMap, groundTint };
   }
   private buildSolidMaterial(track: Track, s: CourseSolid) {
+    if (s.kind === "slime") return slimeMaterial(s.color);
+    if (s.kind === "tile" && !s.texture) return magneticTileMaterial(s.color);
     const { stone, cliff, groundMap, roadMap, groundTint } = this.solidMaps(
       track,
       s,
@@ -217,7 +221,7 @@ export class CourseView extends T.Group {
     const mesh = new T.Mesh(geometry, mat);
     mesh.position.set(s.x, s.y, s.z);
     mesh.quaternion.copy(solidQuaternion(s));
-    mesh.castShadow = s.kind !== "ground" && s.kind !== "road";
+    mesh.castShadow = !["ground", "road", "slime"].includes(s.kind);
     mesh.receiveShadow = true;
     mesh.name = s.id;
     if (s.kind === "container")

@@ -6,6 +6,8 @@ import {
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
+import { isDinosaur } from "./custom-level";
+import { buildDinosaur, poseDinosaur } from "./dinosaur-view";
 import type { Simulation } from "./simulation";
 
 const standard = (color: number, metalness = 0.15, roughness = 0.55) =>
@@ -16,6 +18,7 @@ type Model = {
   /** Animated pivots, driven by snapOpenness in update(). */
   pivots: T.Group[];
   triangles: number;
+  dinosaur?: ReturnType<typeof buildDinosaur>;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
 function consolidate(root: T.Group) {
@@ -699,6 +702,9 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     model.pivots = buildCageModel(h, root);
   } else if (h.kind === "candle") {
     model.pivots = buildCandleModel(h, root);
+  } else if (isDinosaur(h.kind)) {
+    model.dinosaur = buildDinosaur(root, h.kind);
+    poseDinosaur(model.dinosaur, 0, 0);
   } else {
     model.pivots = buildJailCellModel(h, root);
   }
@@ -812,6 +818,11 @@ export class DungeonView extends T.Group {
       this.add(m.root);
     }
     for (const m of this.models) {
+      if (m.dinosaur) {
+        const bite = s.dungeon.mechanisms.find(({ h }) => h.id === m.h.id)?.bite;
+        poseDinosaur(m.dinosaur, bite ? s.time - bite.started : 0, bite?.turn ?? 0);
+        continue;
+      }
       const open = snapOpenness(s.time + m.h.phase);
       if (m.h.kind === "hands" && m.pivots.length >= 2) {
         m.pivots[0].rotation.z = -0.79 + open * 1.75;
@@ -839,7 +850,7 @@ export class DungeonView extends T.Group {
       id: m.h.id,
       kind: m.h.kind,
       triangles: m.triangles,
-      animated: m.pivots.length > 0,
+      animated: m.pivots.length > 0 || !!m.dinosaur,
     }));
   }
 }

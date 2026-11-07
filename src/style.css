@@ -562,8 +562,7 @@ kbd {
 }
 
 #level-select-button,
-#vehicle-select-button,
-#level-editor-button,
+.header-action,
 .menu-actions button {
   padding: 10px 14px;
   border: 1px solid #ffffff38;
@@ -574,6 +573,28 @@ kbd {
     sans-serif;
   cursor: pointer;
   white-space: nowrap;
+}
+.header-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+}
+.header-action img {
+  flex: none;
+}
+.header-action:hover {
+  background: #314951;
+}
+@media (max-width: 650px) {
+  .header-action {
+    gap: 0;
+    padding: 7px;
+  }
+  .header-action span {
+    max-width: 0;
+    overflow: hidden;
+  }
 }
 #level-select {
   position: fixed;

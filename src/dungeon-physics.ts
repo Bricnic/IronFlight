@@ -2,7 +2,12 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
+import { isDinosaur, type DinosaurKind } from "./custom-level";
 import {
+  DINOSAUR_BITE,
+  DINOSAUR_COOLDOWN,
+  DINOSAUR_LUNGE,
+  dinosaurPose,
   dungeonHazards,
   snapStriking,
   SNAP_CYCLE,
@@ -16,6 +21,7 @@ type Mechanism = {
   colliders: R.Collider[];
   contacts: number;
   lastCycle: number;
+  bite?: { started: number; turn: number; hit: boolean };
 };
 export class DungeonPhysics {
   mechanisms: Mechanism[] = [];
@@ -84,11 +90,44 @@ export class DungeonPhysics {
     const [m] = this.mechanisms.splice(at, 1);
     for (const c of m.colliders) this.sim.world.removeCollider(c, true);
   }
+  private attackWithDinosaur(m: Mechanism, kind: DinosaurKind, p: R.Vector) {
+    const s = this.sim;
+    if (s.status !== "driving") return;
+    const { h } = m;
+    const { height, reach } = DINOSAUR_BITE[kind];
+    const dx = p.x - h.x, dz = p.z - h.z;
+    const dy = p.y - ((h.y ?? 0) + height);
+    const yaw = h.yaw ?? 0;
+    if (s.time - (m.bite?.started ?? -Infinity) >= DINOSAUR_COOLDOWN) {
+      const aim = Math.atan2(dx, dz) - yaw;
+      const turn = Math.atan2(Math.sin(aim), Math.cos(aim));
+      if (Math.abs(turn) <= 1.25 && Math.abs(dy) <= 3 && Math.hypot(dx, dz) <= 10)
+        m.bite = { started: s.time, turn, hit: false };
+    }
+    const bite = m.bite;
+    if (!bite || bite.hit) return;
+    const pose = dinosaurPose(s.time - bite.started);
+    if (!pose.striking || Math.abs(dy) > 2.6) return;
+    const angle = yaw + bite.turn * pose.turn;
+    const x = Math.sin(angle), z = Math.cos(angle);
+    const mouth = reach + pose.lunge * DINOSAUR_LUNGE;
+    if (Math.hypot(dx - x * mouth, dz - z * mouth) > 3.1) return;
+    bite.hit = true;
+    m.contacts++;
+    s.damage("chassis-front", 32);
+    const shove = s.body.mass() * 1.4;
+    s.body.applyImpulse({ x: x * shove, y: 0, z: z * shove }, true);
+    s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
+  }
   after() {
     const s = this.sim,
       p = s.body.translation();
     for (const m of this.mechanisms) {
       const h = m.h;
+      if (isDinosaur(h.kind)) {
+        this.attackWithDinosaur(m, h.kind, p);
+        continue;
+      }
       const strike =
         DUNGEON_STRIKE[h.kind as keyof typeof DUNGEON_STRIKE];
       if (!strike) continue;
@@ -139,7 +178,9 @@ export class DungeonPhysics {
         z: m.h.z,
         colliders: m.colliders.length,
         contacts: m.contacts,
-        striking: snapStriking(this.sim.time + m.h.phase),
+        striking: isDinosaur(m.h.kind)
+          ? !!m.bite && dinosaurPose(this.sim.time - m.bite.started).striking
+          : snapStriking(this.sim.time + m.h.phase),
       })),
     };
   }

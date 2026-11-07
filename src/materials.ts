@@ -106,6 +106,47 @@ export function lavaMaterial() {
   return material;
 }
 
+function patternSurface(material: T.MeshStandardMaterial, pattern: string) {
+  material.customProgramCacheKey = () => pattern;
+  material.onBeforeCompile = (shader) => {
+    const varying = "varying vec2 vSurfaceUv;\n";
+    shader.vertexShader = varying + shader.vertexShader.replace(
+      "#include <uv_vertex>", "#include <uv_vertex>\n vSurfaceUv = uv;",
+    );
+    shader.fragmentShader = varying + shader.fragmentShader.replace(
+      "#include <color_fragment>",
+      "#include <color_fragment>\n" + pattern,
+    );
+  };
+  return material;
+}
+
+/** Opaque green liquid with swirls visible from the approach ramp. */
+export function slimeMaterial(color: number) {
+  return patternSurface(
+    new T.MeshStandardMaterial({ color, emissive: 0x285b03, emissiveIntensity: 0.75, roughness: 0.28 }),
+    `vec2 p = vSurfaceUv * vec2(11.0, 7.0);
+      float eddy = sin(p.x * 1.8 + cos(p.y * 2.7)) * cos(p.y * 2.1 + sin(p.x));
+      float streak = sin(p.x * 2.7 + p.y * 3.1 + eddy * 1.9);
+      diffuseColor.rgb *= 0.72 + eddy * 0.18 + smoothstep(0.5, 1.0, streak) * 0.36;`,
+  );
+}
+
+/** Molded edges, diagonal bracing and corner magnets on colored toy tiles. */
+export function magneticTileMaterial(color: number) {
+  return patternSurface(
+    new T.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.17 }),
+    `vec2 inset = min(vSurfaceUv, 1.0 - vSurfaceUv);
+      float edge = min(inset.x, inset.y);
+      float rim = smoothstep(0.025, 0.045, edge) * (1.0 - smoothstep(0.065, 0.075, edge));
+      float diagonal = min(abs(vSurfaceUv.x - vSurfaceUv.y), abs(vSurfaceUv.x + vSurfaceUv.y - 1.0));
+      float brace = (1.0 - smoothstep(0.006, 0.02, diagonal)) * smoothstep(0.07, 0.09, edge);
+      float magnet = 1.0 - smoothstep(0.023, 0.032, distance(inset, vec2(0.075)));
+      diffuseColor.rgb = diffuseColor.rgb * (0.84 + 0.22 * rim + 0.21 * brace)
+        + vec3(0.18, 0.15, 0.11) * magnet;`,
+  );
+}
+
 /** Traveling flame packet with independently advancing leading and trailing edges. */
 export function dragonFlameMaterial() {
   return new T.ShaderMaterial({

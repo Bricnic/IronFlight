@@ -1,7 +1,7 @@
 import { driveTrack } from "./course-driver";
 import { test, expect } from "@playwright/test";
 import { TRACKS } from "../src/tracks";
-test("normal startup shows eleven illustrated tracks and keeps the simulation paused", async ({
+test("normal startup shows the illustrated official lineup and keeps the simulation paused", async ({
   page,
 }, info) => {
   await page.goto("/");
@@ -9,11 +9,11 @@ test("normal startup shows eleven illustrated tracks and keeps the simulation pa
   await expect(
     page.getByRole("heading", { name: "Choose your track.", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".track-card")).toHaveCount(11);
   await expect(page.locator(".track-card h2")).toHaveText([
     ...TRACKS.map((track) => track.name),
     "Fairground",
     "Dungeon",
+    "Jurassic Junction",
   ]);
   for (const t of TRACKS) {
     await expect(
@@ -115,7 +115,7 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(11);
+  await expect(page.locator(".track-card")).toHaveCount(12);
   expect(
     await page
       .locator("#level-select")

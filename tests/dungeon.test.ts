@@ -432,6 +432,9 @@ const DUNGEON_MIN_TRIANGLES: Record<DungeonKind, number> = {
   cage: 4000,
   "jail-cell": 2500,
   candle: 800,
+  raptor: 2000,
+  pterosaur: 2000,
+  spinosaurus: 2000,
 };
 
 for (const kind of Object.keys(DUNGEON_MIN_TRIANGLES) as DungeonKind[]) {

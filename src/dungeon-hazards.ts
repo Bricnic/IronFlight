@@ -1,12 +1,6 @@
 import type { Track } from "./tracks.ts";
-import { DUNGEON_PREFAB_KINDS } from "./custom-level.ts";
-export type DungeonKind =
-  | "hands"
-  | "scissors"
-  | "clippers"
-  | "cage"
-  | "jail-cell"
-  | "candle";
+import { DUNGEON_PREFAB_KINDS, type DinosaurKind } from "./custom-level.ts";
+export type DungeonKind = (typeof DUNGEON_PREFAB_KINDS)[number];
 export type DungeonHazard = {
   id: string;
   kind: DungeonKind;
@@ -81,3 +75,17 @@ export const CAGE = { w: 3, h: 4, d: 3 } as const;
  * roll over, so only the back (`z` local offset) collides.
  */
 export const CLIPPER_BACK = { w: 8.5, h: 3.5, d: 3.5, z: -3.0 } as const;
+
+export const DINOSAUR_BITE: Record<DinosaurKind, { height: number; reach: number }> = {
+  raptor: { height: 3.5, reach: 4.3 },
+  pterosaur: { height: 3, reach: 4.8 },
+  spinosaurus: { height: 1.9, reach: 5 },
+};
+export const DINOSAUR_COOLDOWN = 1.8;
+export const DINOSAUR_LUNGE = 1.4;
+export function dinosaurPose(elapsed: number) {
+  const open = Math.max(0, Math.min(1, elapsed / 0.24, (0.46 - elapsed) / 0.13));
+  const lunge = Math.max(0, Math.min(1, (elapsed - 0.24) / 0.19, (0.82 - elapsed) / 0.27));
+  const turn = Math.max(0, Math.min(1, elapsed / 0.24, (1 - elapsed) / 0.28));
+  return { open, lunge, turn, striking: elapsed >= 0.43 && elapsed <= 0.55 };
+}

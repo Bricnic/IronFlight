@@ -108,7 +108,10 @@ async function boot() {
   });
   header.insertAdjacentHTML(
     "beforeend",
-    '<button id="level-select-button">Level select</button><button id="vehicle-select-button">Select vehicle</button><button id="level-editor-button">Level editor</button><button id="settings-button">Settings</button>',
+    `<button id="level-select-button">Level select</button>
+    <button id="vehicle-select-button" class="header-action"><img src="/icons/select-vehicle.png" width="24" height="24" alt=""><span>Select vehicle</span></button>
+    <button id="level-editor-button" class="header-action"><img src="/icons/level-editor.png" width="24" height="24" alt=""><span>Level editor</span></button>
+    <button id="settings-button" class="header-action"><img src="/icons/settings.png" width="24" height="24" alt=""><span>Settings</span></button>`,
   );
   const keys = new Set<string>();
   let cameraTrace: CameraSample[] = [],
