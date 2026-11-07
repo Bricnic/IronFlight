@@ -1022,6 +1022,11 @@ async function boot() {
       if (!e.repeat) showLevelSelect();
       return;
     }
+    if (k === "c") {
+      e.preventDefault();
+      if (!e.repeat) showVehicleSelect();
+      return;
+    }
     if (k === "r" && surface !== "menu") {
       e.preventDefault();
       if (!e.repeat) retryTrack();
