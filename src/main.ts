@@ -56,6 +56,7 @@ import "./harness";
 import type { CameraSample } from "./harness";
 import { drivingInput } from "./controls";
 import { objectiveCopy, progressCopy, progressFraction } from "./run-copy";
+
 import { createDebugMenu } from "./debug-menu";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
@@ -994,6 +995,7 @@ async function boot() {
     rate = Number((e.target as HTMLSelectElement).value);
     (e.target as HTMLSelectElement).blur();
   };
+
   window.addEventListener("keydown", (e) => {
     if (e.code === "Backquote") {
       e.preventDefault();

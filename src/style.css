@@ -1199,6 +1199,30 @@ kbd {
   background: #15242b;
   border-bottom: 1px solid #ffffff20;
 }
+/* Objective progress counter: the bottom-of-screen "n / m" readout defaults
+   to 16.9px (1.3x the original 13px). The debug-menu slider ("Objective
+   font size", 1..10 step 0.1) scales it live in multiples of 13px. The
+   counter never wraps: the box grows horizontally with the text (max-content)
+   and stays centered via left 50% + translateX. Placed last so #status wins
+   over the base and media-query widths above by source order. */
+#status {
+  width: max-content;
+  max-width: 96vw;
+  left: 50%;
+  transform: translateX(-50%);
+}
+#run-progress {
+  font-size: 16.9px;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1.05;
+}
+/* Keep the objective description readable while the box grows. */
+#state-copy {
+  max-width: min(92vw, 640px);
+  margin-left: auto;
+  margin-right: auto;
+}
 .vehicle-preview img {
   display: block;
   width: 100%;
