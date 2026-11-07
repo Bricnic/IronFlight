@@ -1,4 +1,5 @@
-import { gates, type CustomTrackId, type Track } from "./tracks";
+import { gates, type CustomTrackId, type Point, type Track } from "./tracks";
+import { isConvexFootprint } from "./solid-clip";
 export const TEXTURE_IDS = [
   "asphalt_02",
   "grass_ground",
@@ -86,6 +87,7 @@ export interface CustomSolid {
   roll?: number;
   color: number;
   texture?: string;
+  footprint?: readonly Point[];
 }
 export interface CustomPrefab {
   name?: string;
@@ -277,6 +279,14 @@ export function validateCustomLevel(input: unknown): CustomLevel {
       s?.texture === undefined || (TEXTURE_IDS as readonly string[]).includes(s.texture),
       `solid ${s?.id ?? i} has an unknown texture`,
     );
+    check(
+      errors,
+      s?.footprint === undefined ||
+        (Array.isArray(s.footprint) &&
+          s.footprint.every((p) => finite(p?.x) && finite(p?.z)) &&
+          isConvexFootprint(s.footprint)),
+      `solid ${s?.id ?? i} needs a convex footprint with finite x/z vertices`,
+    );
   }
   const prefabs = Array.isArray((level as CustomLevel)?.prefabs)
     ? (level as CustomLevel).prefabs
@@ -347,7 +357,10 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     ...(collectibles.length ? { collectibles: collectibles.map((p) => ({ ...p })) } : {}),
     ...(demolish.length ? { demolish: demolish.map((p) => ({ ...p })) } : {}),
     ...(rings.length ? { rings: rings.map((r) => ({ ...r })) } : {}),
-    solids: solids.map((s) => ({ ...s })),
+    solids: solids.map((s) => ({
+      ...s,
+      ...(s.footprint && { footprint: s.footprint.map((p) => ({ ...p })) }),
+    })),
     prefabs: prefabs.map((p) => ({ ...p })),
     medals: { ...medals },
     ...(limit === undefined ? {} : { limit }),

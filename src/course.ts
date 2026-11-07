@@ -8,7 +8,7 @@ import {
   customTrackIds,
 } from "./custom-level.ts";
 import { loopRingSolids, loopSupportSolids } from "./loop.ts";
-import { clipFootprint } from "./solid-clip.ts";
+import { clipFootprint, subtractFootprint } from "./solid-clip.ts";
 export type CourseSolid = {
   id: string;
   kind:
@@ -37,38 +37,48 @@ export type CourseSolid = {
   footprint?: readonly Point[];
 };
 
-function skylineRoads(path: readonly Point[]): CourseSolid[] {
-  return path.slice(0, -1).map((a, i) => {
-    // Reuse the first point at the finish so both pieces share the same cut.
-    const b = i === path.length - 2 ? path[0] : path[i + 1];
+function miteredRoads(path: readonly Point[], closed: boolean) {
+  const segments = path.slice(0, -1).map((a, i) => {
+    const b = closed && i === path.length - 2 ? path[0] : path[i + 1];
+    const length = Math.hypot(b.x - a.x, b.z - a.z);
+    return { a, b, length, dx: (b.x - a.x) / length, dz: (b.z - a.z) / length };
+  });
+  return segments.map(({ a, b, length, dx, dz }, i) => {
+    const previous = segments[i - 1] ?? (closed ? segments.at(-1) : undefined);
+    const next = segments[i + 1] ?? (closed ? segments[0] : undefined);
+    // Neighbors use the same bisector with opposite clipping normals.
+    const start = {
+      x: dx + (previous?.dx ?? dx),
+      z: dz + (previous?.dz ?? dz),
+    };
+    const end = { x: dx + (next?.dx ?? dx), z: dz + (next?.dz ?? dz) };
     const x = (a.x + b.x) / 2;
     const z = (a.z + b.z) / 2;
-    const length = Math.hypot(b.x - a.x, b.z - a.z);
-    const dx = (b.x - a.x) / length;
-    const dz = (b.z - a.z) / length;
     const w = 24;
-    const d = length + 6;
-    // Three metres of stock at each end reaches past the outer miter.
-    const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(
-      ([side, end]) => ({
-        x: (side * dz * w + end * dx * d) / 2,
-        z: (-side * dx * w + end * dz * d) / 2,
-      }),
-    );
-    // Each radial seam keeps opposite sides for the two adjoining segments.
-    const start = clipFootprint(
+    // Extend the stock past both outside corners before cutting it back.
+    const reach = (normal: Point) =>
+      (w / 2) *
+      Math.abs((dz * normal.x - dx * normal.z) / (dx * normal.x + dz * normal.z));
+    const d = length + 2 * (1.5 + Math.max(reach(start), reach(end)));
+    const corners = rectangleFootprint(w, d).map((p) => ({
+      x: p.x * dz + p.z * dx,
+      z: -p.x * dx + p.z * dz,
+    }));
+    const startOverhang = previous ? 0 : 1.5;
+    const endOverhang = next ? 0 : 1.5;
+    const fromStart = clipFootprint(
       corners,
-      { x: a.x - x, z: a.z - z },
-      { x: -a.z, z: a.x },
+      { x: a.x - x - dx * startOverhang, z: a.z - z - dz * startOverhang },
+      start,
     );
     const footprint = clipFootprint(
-      start,
-      { x: b.x - x, z: b.z - z },
-      { x: b.z, z: -b.x },
+      fromStart,
+      { x: b.x - x + dx * endOverhang, z: b.z - z + dz * endOverhang },
+      { x: -end.x, z: -end.z },
     );
     return {
       id: `road-${i + 1}`,
-      kind: "road",
+      kind: "road" as const,
       x,
       y: 0.015,
       z,
@@ -79,6 +89,15 @@ function skylineRoads(path: readonly Point[]): CourseSolid[] {
       footprint,
     };
   });
+}
+
+function rectangleFootprint(w: number, d: number): Point[] {
+  return [
+    { x: -w / 2, z: -d / 2 },
+    { x: w / 2, z: -d / 2 },
+    { x: w / 2, z: d / 2 },
+    { x: -w / 2, z: d / 2 },
+  ];
 }
 export const courseAvailable = (id: string) =>
   [
@@ -179,10 +198,16 @@ export function courseSolids(track: Track): CourseSolid[] {
       color: 0x6d817c,
     },
   ];
+  const harbor = track.id === "harbor-sprint";
+  const skyline = track.id === "skyline-circuit";
+  const clippedRoads =
+    harbor || skyline ? miteredRoads(track.path, skyline) : [];
+  solids.push(...clippedRoads);
   for (
     let i = 1;
     track.mode === "race" &&
-    track.id !== "skyline-circuit" &&
+    !harbor &&
+    !skyline &&
     track.id !== "canyon-plunge" &&
     track.id !== "sky-slide" &&
     i < track.path.length;
@@ -203,7 +228,7 @@ export function courseSolids(track: Track): CourseSolid[] {
       color: 0x303e49,
     });
   }
-  if (track.id === "harbor-sprint") {
+  if (harbor) {
     for (let i = 0; i < 9; i++)
       for (const side of [-1, 1])
         solids.push({
@@ -305,7 +330,6 @@ export function courseSolids(track: Track): CourseSolid[] {
   }
   if (track.id === "skyline-circuit") {
     solids[0].color = 0x5a6970;
-    solids.push(...skylineRoads(track.path));
     for (const radius of [64, 96])
       for (let i = 0; i < 48; i++) {
         const angle = (i * Math.PI) / 24;
@@ -924,9 +948,10 @@ export function courseSolids(track: Track): CourseSolid[] {
       color: 0x4fb8ff,
     });
   }
-  for (const water of comicHazards(track).filter((h) => h.kind === "water"))
-    for (const direction of [-1, 1])
-      solids.push({
+  const waterHazards = comicHazards(track).filter((h) => h.kind === "water");
+  for (const water of waterHazards)
+    for (const direction of [-1, 1]) {
+      const approach: CourseSolid = {
         id: `${water.id}-approach-${direction}`,
         kind: "road",
         x: water.x,
@@ -936,13 +961,32 @@ export function courseSolids(track: Track): CourseSolid[] {
         h: 0.03,
         d: 32,
         color: 0xc3c4c5,
-      });
+      };
+      if (harbor) {
+        // Give the main road ownership where the crossing apron meets it.
+        const pieces = clippedRoads.reduce(
+          (remaining, road) => {
+            const cutter = road.footprint.map((p) => ({
+              x: p.x + road.x - approach.x,
+              z: p.z + road.z - approach.z,
+            }));
+            return remaining.flatMap((piece) => subtractFootprint(piece, cutter));
+          },
+          [rectangleFootprint(approach.w, approach.d)],
+        );
+        pieces.forEach((footprint, i) =>
+          solids.push({
+            ...approach,
+            id: i === 0 ? approach.id : `${approach.id}-${i}`,
+            footprint,
+          }),
+        );
+      } else solids.push(approach);
+    }
   // Subtract water-road apertures from the concrete, so failed skims really sink.
   let result = solids;
   const apertures = [
-    ...comicHazards(track)
-      .filter((h) => h.kind === "water")
-      .map((h) => ({ x: h.x, z: h.z, w: 14, d: 26 })),
+    ...waterHazards.map((h) => ({ x: h.x, z: h.z, w: 14, d: 26 })),
     ...solids
       .filter((s) => s.kind === "lava")
       .map((s) => ({ ...s, w: s.w + 2, d: s.d + 2 })),
