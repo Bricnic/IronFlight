@@ -22,7 +22,12 @@ export type Checkpoint = Point & {
   y: number;
   height: number;
 };
-export type Collectible = Point & { id: string; y: number; radius: number };
+export type Collectible = Point & {
+  id: string;
+  y: number;
+  radius: number;
+  kind?: "ring" | "chest";
+};
 export type Demolishable = Point & { id: string; y: number; radius: number };
 export type TrackRing = Point & { y: number; radius: number; goal: boolean };
 export type Track = {
@@ -210,6 +215,7 @@ function arena(
       y: 1.7,
       id: `pickup-${i + 1}`,
       radius: 3.5,
+      kind: "ring" as const,
     })),
   };
 }

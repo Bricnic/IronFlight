@@ -20,6 +20,7 @@ export const PROP_PREFAB_KINDS = [
   "barrel",
   "gravestone",
   "snowman",
+  "skull",
 ] as const;
 export const COMIC_PREFAB_KINDS = [
   "book",
@@ -44,10 +45,18 @@ export const COURSE_PREFAB_KINDS = [
   "lamp",
   "grandstand",
 ] as const;
+export const DUNGEON_PREFAB_KINDS = [
+  "hands",
+  "scissors",
+  "clippers",
+  "cage",
+  "jail-cell",
+] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,
   ...COMIC_PREFAB_KINDS,
   ...COURSE_PREFAB_KINDS,
+  ...DUNGEON_PREFAB_KINDS,
   "checkpoint",
 ] as const;
 export type PrefabKind = (typeof PREFAB_KINDS)[number];
@@ -90,12 +99,16 @@ export interface CustomPrefab {
   angle?: number;
   roll?: number;
 }
+export const COLLECTIBLE_KINDS = ["ring", "chest"] as const;
+export type CollectibleKind = (typeof COLLECTIBLE_KINDS)[number];
 export interface CustomPoint {
   name?: string;
   locked?: boolean;
   x: number;
   z: number;
   y?: number;
+  /** Collectibles only: "ring" salvage tokens or "chest" treasure chests. */
+  kind?: string;
 }
 export interface CustomRing {
   name?: string;
@@ -191,7 +204,15 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     );
   const collectibles = (level as CustomLevel)?.collectibles ?? [];
   check(errors, Array.isArray(collectibles), "collectibles must be an array");
-  collectibles.forEach((p, i) => checkPoint(errors, p, `collectible ${i}`));
+  collectibles.forEach((p, i) => {
+    checkPoint(errors, p, `collectible ${i}`);
+    check(
+      errors,
+      p?.kind === undefined ||
+        (COLLECTIBLE_KINDS as readonly string[]).includes(p.kind),
+      `collectible ${i} has an unknown kind`,
+    );
+  });
   if (mode === "arena") {
     check(errors, collectibles.length >= 1, "arena levels need a collectible");
     check(errors, typeof limit === "number" && limit > 0, "arena levels need a time limit");
@@ -286,8 +307,9 @@ export function validateCustomLevel(input: unknown): CustomLevel {
       errors,
       p?.yaw === undefined ||
         (PROP_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
+        (DUNGEON_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
         p?.kind === "dragon",
-      `prefab ${p?.id ?? i} yaw is only supported on prop and dragon kinds`,
+      `prefab ${p?.id ?? i} yaw is only supported on prop, dungeon and dragon kinds`,
     );
     check(
       errors,
@@ -395,6 +417,7 @@ export function toTrack(level: CustomLevel): Track {
         y: p.y ?? 1.7,
         id: `pickup-${i + 1}`,
         radius: 3.5,
+        kind: (p.kind as CollectibleKind | undefined) ?? "ring",
       })),
       limit: level.limit!,
       feasibility: level.limit! * 0.75,
@@ -425,6 +448,7 @@ export function toTrack(level: CustomLevel): Track {
       y: p.y ?? 1.7,
       id: `pickup-${i + 1}`,
       radius: 3.5,
+      kind: (p.kind as CollectibleKind | undefined) ?? "ring",
     })),
     ...(level.limit === undefined
       ? {}
