@@ -9,7 +9,7 @@ test("normal startup shows ten illustrated tracks and keeps the simulation pause
   await expect(
     page.getByRole("heading", { name: "Choose your track.", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".track-card")).toHaveCount(10);
+  await expect(page.locator(".track-card")).toHaveCount(11);
   for (const t of TRACKS) {
     await expect(
       page.getByRole("button", { name: `Play ${t.name}`, exact: true }),
@@ -110,7 +110,7 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(10);
+  await expect(page.locator(".track-card")).toHaveCount(11);
   expect(
     await page
       .locator("#level-select")

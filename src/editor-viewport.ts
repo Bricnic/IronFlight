@@ -130,6 +130,13 @@ const PREFAB_COLORS: Record<string, number> = {
   lamp: 0xfaf8e8,
   grandstand: 0x50626b,
   checkpoint: 0x6ae08a,
+  skull: 0xe8e0cc,
+  hands: 0xff5a3c,
+  scissors: 0xc7ccd2,
+  clippers: 0x9fb8cc,
+  cage: 0x5a636b,
+  "jail-cell": 0x7a8494,
+  candle: 0xffb347,
 };
 /** Minimal orbit: drag rotates, wheel zooms, shift-drag pans. */
 function attachOrbit(
@@ -587,9 +594,11 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       ].entries()) {
         const collectible = level.mode !== "demolition";
         const marker = new T.Mesh(
-          collectible
-            ? new T.TorusGeometry(0.85, 0.17, 12, 32)
-            : new T.OctahedronGeometry(1.6),
+          !collectible
+            ? new T.OctahedronGeometry(1.6)
+            : t.kind === "chest"
+              ? new T.BoxGeometry(2.2, 1.6, 1.4)
+              : new T.TorusGeometry(0.85, 0.17, 12, 32),
           new T.MeshBasicMaterial({ color: 0xffd24a, wireframe: true }),
         );
         marker.position.set(t.x, t.y ?? (collectible ? 1.7 : 1.5), t.z);

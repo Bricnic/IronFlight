@@ -9,7 +9,10 @@ export function modeLabel(track: Track) {
 }
 export function objectiveCopy(track: Track) {
   if (track.mode === "arena")
-    return "Collect every token before time runs out.";
+    return track.collectibles.length &&
+      track.collectibles.every((p) => p.kind === "chest")
+      ? "Collect every treasure chest before time runs out."
+      : "Collect every token before time runs out.";
   if (track.mode === "demolition")
     return "Smash every gravestone. Keep moving — ghosts drain parked trucks.";
   if (track.controls === "strafe")

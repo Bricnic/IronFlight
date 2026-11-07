@@ -352,7 +352,7 @@ export class EditorStore {
   }
   updateLevel(
     patch: Partial<
-      Pick<CustomLevel, "mode" | "limit"> & {
+      Pick<CustomLevel, "mode" | "limit" | "underground"> & {
         gold: number;
         silver: number;
         bronze: number;
@@ -361,6 +361,8 @@ export class EditorStore {
   ) {
     this.pushHistory();
     if (patch.mode) this.level.mode = patch.mode;
+    if (patch.underground !== undefined)
+      this.level.underground = patch.underground;
     if (patch.limit !== undefined) {
       if (Number.isNaN(patch.limit)) delete this.level.limit;
       else this.level.limit = patch.limit;

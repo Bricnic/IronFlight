@@ -51,6 +51,7 @@ export const DUNGEON_PREFAB_KINDS = [
   "clippers",
   "cage",
   "jail-cell",
+  "candle",
 ] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,
@@ -135,6 +136,8 @@ export interface CustomLevel {
   prefabs: CustomPrefab[];
   medals: { gold: number; silver: number; bronze: number };
   limit?: number;
+  /** Underground levels render with dark cavern air, fog and torchlight. */
+  underground?: boolean;
 }
 const NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,63}$/;
 const finite = (n: unknown) =>
@@ -184,6 +187,12 @@ export function validateCustomLevel(input: unknown): CustomLevel {
   );
   const limit = (level as CustomLevel)?.limit;
   check(errors, limit === undefined || limit > 0, "limit must be positive");
+  const underground = (level as CustomLevel)?.underground;
+  check(
+    errors,
+    underground === undefined || typeof underground === "boolean",
+    "underground must be a boolean",
+  );
   const checkpoints = Array.isArray((level as CustomLevel)?.checkpoints)
     ? (level as CustomLevel).checkpoints
     : [];
@@ -356,6 +365,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     prefabs: prefabs.map((p) => ({ ...p })),
     medals: { ...medals },
     ...(limit === undefined ? {} : { limit }),
+    ...(underground === undefined ? {} : { underground }),
   };
 }
 export function customSlug(name: string) {
@@ -398,6 +408,7 @@ export function toTrack(level: CustomLevel): Track {
     path,
     medals: { ...level.medals },
     custom: level,
+    ...(level.underground ? { underground: true } : {}),
     ...(trampolines.length ? { trampolines } : {}),
     ...(level.rings?.length
       ? {

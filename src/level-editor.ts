@@ -6,6 +6,8 @@ import {
   TEXTURE_IDS,
   PREFAB_KINDS,
   PROP_PREFAB_KINDS,
+  DUNGEON_PREFAB_KINDS,
+  COLLECTIBLE_KINDS,
   SOLID_KINDS,
   toTrack,
   validateCustomLevel,
@@ -363,6 +365,17 @@ export function createLevelEditor(
       store.updateLevel({ limit: Number.NaN }),
     );
     props.append(clearLimit);
+    const undergroundRow = el("label", { class: "prop-row" }, "Underground ");
+    const underground = el("input", {
+      type: "checkbox",
+      "data-prop": "underground",
+    }) as HTMLInputElement;
+    underground.checked = !!level.underground;
+    underground.addEventListener("change", () =>
+      store.updateLevel({ underground: underground.checked }),
+    );
+    undergroundRow.append(underground);
+    props.append(undergroundRow);
     const current = store.selectedItem();
     if (!current) {
       props.append(el("p", { class: "prop-hint" }, "Select an object to edit it."));
@@ -378,7 +391,9 @@ export function createLevelEditor(
             : current.kind === "target"
               ? level.mode === "demolition"
                 ? "Demolition target"
-                : "Ring collectible"
+                : (current.item as { kind?: string }).kind === "chest"
+                  ? "Treasure chest"
+                  : "Ring collectible"
               : current.kind === "ring"
                 ? "Ring"
                 : "Checkpoint",
@@ -447,7 +462,10 @@ export function createLevelEditor(
       const isProp = (PROP_PREFAB_KINDS as readonly string[]).includes(
         current.item.kind,
       );
-      if (isProp || current.item.kind === "dragon")
+      const isDungeon = (DUNGEON_PREFAB_KINDS as readonly string[]).includes(
+        current.item.kind,
+      );
+      if (isProp || isDungeon || current.item.kind === "dragon")
         numberField(
           props,
           "Yaw",
@@ -475,6 +493,18 @@ export function createLevelEditor(
     if (current.kind === "checkpoint" || current.kind === "target") {
       const defaultY = current.kind === "checkpoint" ? 2 : level.mode === "demolition" ? 1.5 : 1.7;
       numberField(props, "Y", "y", (item.y as number | undefined) ?? defaultY, commit("y"));
+    }
+    if (current.kind === "target" && level.mode !== "demolition") {
+      const typeRow = el("label", { class: "prop-row" }, "Type ");
+      const type = el("select", { "data-prop": "kind" }) as HTMLSelectElement;
+      for (const kind of COLLECTIBLE_KINDS)
+        type.append(el("option", { value: kind }, kind));
+      type.value = (item.kind as string | undefined) ?? "ring";
+      type.addEventListener("change", () =>
+        store.updateSelected({ kind: type.value }),
+      );
+      typeRow.append(type);
+      props.append(typeRow);
     }
     if (current.kind === "ring") {
       numberField(
@@ -567,7 +597,7 @@ export function createLevelEditor(
     );
     store.targetList().forEach((t, i) =>
       row(
-        `${level.mode === "demolition" ? "Demolition target" : "Collectible"} ${i + 1} (${t.x}, ${t.z})`,
+        `${level.mode === "demolition" ? "Demolition target" : t.kind === "chest" ? "Treasure chest" : "Collectible"} ${i + 1} (${t.x}, ${t.z})`,
         store.selection?.kind === "target" &&
           (store.selection as { index: number }).index === i,
         { kind: "target", index: i },
@@ -608,7 +638,7 @@ export function createLevelEditor(
     addTarget.title =
       store.level.mode === "demolition"
         ? "Place a destructible demolition target"
-        : "Place a ring collectible like those in Scrapyard Sweep";
+        : "Place a collectible: a ring like Scrapyard Sweep, or a treasure chest";
     refreshList();
     refreshProps();
     viewport.render(store.level, store.selection, store.preview);

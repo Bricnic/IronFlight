@@ -2,7 +2,13 @@ import RAPIER from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
 import { ROUTES } from "./routes.ts";
 import { PARTS, type PartState } from "./damage.ts";
-export type PropKind = "sign" | "trash" | "barrel" | "gravestone" | "snowman";
+export type PropKind =
+  | "sign"
+  | "trash"
+  | "barrel"
+  | "gravestone"
+  | "snowman"
+  | "skull";
 export type PropDefinition = {
   id: string;
   kind: PropKind;
@@ -47,6 +53,7 @@ function propHeight(kind: string) {
   if (kind === "snowman") return 1.4;
   if (kind === "gravestone") return 0.9;
   if (kind === "trash") return 0.65;
+  if (kind === "skull") return 0.45;
   return 0.7;
 }
 export class Destructibles {
@@ -139,6 +146,16 @@ export class Destructibles {
             RAPIER.ColliderDesc.cuboid(0.7, 0.9, 0.25)
               .setMass(120)
               .setFriction(0.7),
+            body,
+          ),
+        );
+      else if (kind === "skull")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.ball(0.5)
+              .setMass(6)
+              .setFriction(0.5)
+              .setRestitution(0.35),
             body,
           ),
         );

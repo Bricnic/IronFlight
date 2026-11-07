@@ -15,11 +15,13 @@ export function createLevelSelect(
 ) {
   const screen = document.createElement("main");
   screen.id = "level-select";
-  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Ten places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to play · L for level select · N/P for next/previous level · Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
+  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Eleven places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to play · L for level select · N/P for next/previous level · Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
   const grid = screen.querySelector<HTMLElement>(".track-grid")!;
   const tracks: Track[] = [...TRACKS];
   const fairground = getCustomTrack("custom:fairground");
   if (fairground) tracks.push(fairground);
+  const dungeon = getCustomTrack("custom:dungeon");
+  if (dungeon) tracks.push(dungeon);
   const cards = new Map<TrackId | CustomTrackId, HTMLElement>();
   for (const [i, track] of tracks.entries()) {
     const card = document.createElement("article");

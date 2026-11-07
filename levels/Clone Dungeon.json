@@ -1,0 +1,1659 @@
+{
+  "name": "Clone Dungeon",
+  "mode": "arena",
+  "spawn": {
+    "x": 0,
+    "y": 2.1,
+    "z": -195,
+    "yaw": 0
+  },
+  "checkpoints": [],
+  "collectibles": [
+    {
+      "x": 60,
+      "y": 1.2,
+      "z": -160,
+      "kind": "chest"
+    },
+    {
+      "x": -100,
+      "y": 1.2,
+      "z": -140,
+      "kind": "chest"
+    },
+    {
+      "x": 150,
+      "y": 1.2,
+      "z": -80,
+      "kind": "chest"
+    },
+    {
+      "x": 150,
+      "y": 1.2,
+      "z": 0,
+      "kind": "chest"
+    },
+    {
+      "x": 100,
+      "y": 1.2,
+      "z": 40,
+      "kind": "chest"
+    },
+    {
+      "x": -100,
+      "y": 1.2,
+      "z": 40,
+      "kind": "chest"
+    },
+    {
+      "x": -150,
+      "y": 1.2,
+      "z": 100,
+      "kind": "chest"
+    },
+    {
+      "x": -120,
+      "y": 1.2,
+      "z": 170,
+      "kind": "chest"
+    },
+    {
+      "x": 0,
+      "y": 1.2,
+      "z": 185,
+      "kind": "chest"
+    },
+    {
+      "x": 60,
+      "y": 1.2,
+      "z": 150,
+      "kind": "chest"
+    },
+    {
+      "x": -140,
+      "y": 7.2,
+      "z": 160,
+      "kind": "chest"
+    },
+    {
+      "x": -60,
+      "y": 7.2,
+      "z": 160,
+      "kind": "chest"
+    },
+    {
+      "x": 0,
+      "y": 7.2,
+      "z": 190,
+      "kind": "chest"
+    },
+    {
+      "x": 80,
+      "y": 7.2,
+      "z": 195,
+      "kind": "chest"
+    },
+    {
+      "x": 140,
+      "y": 7.2,
+      "z": 190,
+      "kind": "chest"
+    }
+  ],
+  "solids": [
+    {
+      "id": "ground",
+      "kind": "ground",
+      "x": -165,
+      "z": 0,
+      "w": 70,
+      "d": 440,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ground-1",
+      "kind": "ground",
+      "x": -60,
+      "z": 0,
+      "w": 100,
+      "d": 440,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ground-1-1",
+      "kind": "ground",
+      "x": 65,
+      "z": 0,
+      "w": 110,
+      "d": 440,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ground-1-1-1",
+      "kind": "ground",
+      "x": 170,
+      "z": 0,
+      "w": 60,
+      "d": 440,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ground-1-1-2",
+      "kind": "ground",
+      "x": 130,
+      "z": -28.5,
+      "w": 20,
+      "d": 383,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ground-1-1-3",
+      "kind": "ground",
+      "x": 130,
+      "z": 203.5,
+      "w": 20,
+      "d": 33,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ground-1-2",
+      "kind": "ground",
+      "x": 0,
+      "z": -116,
+      "w": 20,
+      "d": 208,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ground-1-3",
+      "kind": "ground",
+      "x": 0,
+      "z": 116,
+      "w": 20,
+      "d": 208,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ground-2",
+      "kind": "ground",
+      "x": -120,
+      "z": -191,
+      "w": 20,
+      "d": 58,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ground-3",
+      "kind": "ground",
+      "x": -120,
+      "z": 41,
+      "w": 20,
+      "d": 358,
+      "y": -0.6,
+      "h": 1.2,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "pit-0-lava",
+      "kind": "lava",
+      "x": -120,
+      "y": -4.8,
+      "z": -150,
+      "w": 18,
+      "h": 1.2,
+      "d": 22,
+      "color": 16738848
+    },
+    {
+      "id": "pit-0-floor",
+      "kind": "support",
+      "x": -120,
+      "y": -5.6,
+      "z": -150,
+      "w": 18,
+      "h": 0.4,
+      "d": 22,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-0-wall-x--1",
+      "kind": "support",
+      "x": -129.5,
+      "y": -2.7,
+      "z": -150,
+      "w": 1,
+      "h": 5.6,
+      "d": 24,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-0-wall-z--1",
+      "kind": "support",
+      "x": -120,
+      "y": -2.7,
+      "z": -161.5,
+      "w": 18,
+      "h": 5.6,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-0-wall-x-1",
+      "kind": "support",
+      "x": -110.5,
+      "y": -2.7,
+      "z": -150,
+      "w": 1,
+      "h": 5.6,
+      "d": 24,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-0-wall-z-1",
+      "kind": "support",
+      "x": -120,
+      "y": -2.7,
+      "z": -138.5,
+      "w": 18,
+      "h": 5.6,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-1-lava",
+      "kind": "lava",
+      "x": 0,
+      "y": -4.8,
+      "z": 0,
+      "w": 18,
+      "h": 1.2,
+      "d": 22,
+      "color": 16738848
+    },
+    {
+      "id": "pit-1-floor",
+      "kind": "support",
+      "x": 0,
+      "y": -5.6,
+      "z": 0,
+      "w": 18,
+      "h": 0.4,
+      "d": 22,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-1-wall-x--1",
+      "kind": "support",
+      "x": -9.5,
+      "y": -2.7,
+      "z": 0,
+      "w": 1,
+      "h": 5.6,
+      "d": 24,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-1-wall-z--1",
+      "kind": "support",
+      "x": 0,
+      "y": -2.7,
+      "z": -11.5,
+      "w": 18,
+      "h": 5.6,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-1-wall-x-1",
+      "kind": "support",
+      "x": 9.5,
+      "y": -2.7,
+      "z": 0,
+      "w": 1,
+      "h": 5.6,
+      "d": 24,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-1-wall-z-1",
+      "kind": "support",
+      "x": 0,
+      "y": -2.7,
+      "z": 11.5,
+      "w": 18,
+      "h": 5.6,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-2-lava",
+      "kind": "lava",
+      "x": 130,
+      "y": -4.8,
+      "z": 175,
+      "w": 18,
+      "h": 1.2,
+      "d": 22,
+      "color": 16738848
+    },
+    {
+      "id": "pit-2-floor",
+      "kind": "support",
+      "x": 130,
+      "y": -5.6,
+      "z": 175,
+      "w": 18,
+      "h": 0.4,
+      "d": 22,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-2-wall-x--1",
+      "kind": "support",
+      "x": 120.5,
+      "y": -2.7,
+      "z": 175,
+      "w": 1,
+      "h": 5.6,
+      "d": 24,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-2-wall-z--1",
+      "kind": "support",
+      "x": 130,
+      "y": -2.7,
+      "z": 163.5,
+      "w": 18,
+      "h": 5.6,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-2-wall-x-1",
+      "kind": "support",
+      "x": 139.5,
+      "y": -2.7,
+      "z": 175,
+      "w": 1,
+      "h": 5.6,
+      "d": 24,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pit-2-wall-z-1",
+      "kind": "support",
+      "x": 130,
+      "y": -2.7,
+      "z": 186.5,
+      "w": 18,
+      "h": 5.6,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "wall-west",
+      "kind": "barrier",
+      "x": -198.5,
+      "y": 5.75,
+      "z": 0,
+      "w": 3,
+      "h": 11.5,
+      "d": 440,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "wall-east",
+      "kind": "barrier",
+      "x": 198.5,
+      "y": 5.75,
+      "z": 0,
+      "w": 3,
+      "h": 11.5,
+      "d": 440,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "wall-south",
+      "kind": "barrier",
+      "x": 0,
+      "y": 5.75,
+      "z": -218.5,
+      "w": 394,
+      "h": 11.5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "wall-north",
+      "kind": "barrier",
+      "x": 0,
+      "y": 5.75,
+      "z": 218.5,
+      "w": 394,
+      "h": 11.5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "maze-w1",
+      "kind": "barrier",
+      "x": -38.5,
+      "y": 2.5,
+      "z": -60,
+      "w": 317,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "maze-w2",
+      "kind": "barrier",
+      "x": 38.5,
+      "y": 2.5,
+      "z": 60,
+      "w": 317,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "maze-s1",
+      "kind": "barrier",
+      "x": -40,
+      "y": 2.5,
+      "z": -39.25,
+      "w": 3,
+      "h": 5,
+      "d": 38.5,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "maze-s2",
+      "kind": "barrier",
+      "x": 40,
+      "y": 2.5,
+      "z": 39.25,
+      "w": 3,
+      "h": 5,
+      "d": 38.5,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "maze-s3",
+      "kind": "barrier",
+      "x": -168.5,
+      "y": 2.5,
+      "z": -140,
+      "w": 57,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "maze-s4",
+      "kind": "barrier",
+      "x": 50,
+      "y": 2.5,
+      "z": 200,
+      "w": 100,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "maze-b1",
+      "kind": "barrier",
+      "x": 100,
+      "y": 2.5,
+      "z": -160,
+      "w": 12,
+      "h": 5,
+      "d": 12,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "maze-b2",
+      "kind": "barrier",
+      "x": -160,
+      "y": 2.5,
+      "z": 0,
+      "w": 12,
+      "h": 5,
+      "d": 12,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "maze-b3",
+      "kind": "barrier",
+      "x": 60,
+      "y": 2.5,
+      "z": 120,
+      "w": 12,
+      "h": 5,
+      "d": 12,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "deck",
+      "kind": "ground",
+      "x": 0,
+      "y": 5.5,
+      "z": 178,
+      "w": 356,
+      "h": 1,
+      "d": 76,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "parapet-north",
+      "kind": "barrier",
+      "x": 0,
+      "y": 13.25,
+      "z": 215.5,
+      "w": 354,
+      "h": 14.5,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "parapet-west",
+      "kind": "barrier",
+      "x": -177.5,
+      "y": 13.25,
+      "z": 178,
+      "w": 1,
+      "h": 14.5,
+      "d": 76,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "parapet-east",
+      "kind": "barrier",
+      "x": 177.5,
+      "y": 13.25,
+      "z": 178,
+      "w": 1,
+      "h": 14.5,
+      "d": 76,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "pillar--170-150",
+      "kind": "support",
+      "x": -170,
+      "y": 2.5,
+      "z": 150,
+      "w": 3,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pillar--170-210",
+      "kind": "support",
+      "x": -170,
+      "y": 2.5,
+      "z": 210,
+      "w": 3,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pillar--60-150",
+      "kind": "support",
+      "x": -60,
+      "y": 2.5,
+      "z": 150,
+      "w": 3,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pillar--60-210",
+      "kind": "support",
+      "x": -60,
+      "y": 2.5,
+      "z": 210,
+      "w": 3,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pillar-100-150",
+      "kind": "support",
+      "x": 100,
+      "y": 2.5,
+      "z": 150,
+      "w": 3,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pillar-100-210",
+      "kind": "support",
+      "x": 100,
+      "y": 2.5,
+      "z": 210,
+      "w": 3,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pillar-170-150",
+      "kind": "support",
+      "x": 170,
+      "y": 2.5,
+      "z": 150,
+      "w": 3,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "pillar-170-210",
+      "kind": "support",
+      "x": 170,
+      "y": 2.5,
+      "z": 210,
+      "w": 3,
+      "h": 5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "deck-w1",
+      "kind": "barrier",
+      "x": -108.5,
+      "y": 7.25,
+      "z": 180,
+      "w": 137,
+      "h": 2.5,
+      "d": 2,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "ceil-s0",
+      "kind": "barrier",
+      "x": 0,
+      "y": 12,
+      "z": -167,
+      "w": 394,
+      "h": 1,
+      "d": 100,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "ceil-s1",
+      "kind": "barrier",
+      "x": 0,
+      "y": 12,
+      "z": 4,
+      "w": 394,
+      "h": 1,
+      "d": 214,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "ceil-s2",
+      "kind": "barrier",
+      "x": 0,
+      "y": 12,
+      "z": 132.25,
+      "w": 394,
+      "h": 1,
+      "d": 14.5,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "ceil-s1w",
+      "kind": "barrier",
+      "x": -102,
+      "y": 12,
+      "z": -110,
+      "w": 190,
+      "h": 1,
+      "d": 14,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "ceil-s1e",
+      "kind": "barrier",
+      "x": 102,
+      "y": 12,
+      "z": -110,
+      "w": 190,
+      "h": 1,
+      "d": 14,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "ceil-s2w",
+      "kind": "barrier",
+      "x": -163,
+      "y": 12,
+      "z": 118,
+      "w": 68,
+      "h": 1,
+      "d": 14,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "ceil-s2e",
+      "kind": "barrier",
+      "x": 41,
+      "y": 12,
+      "z": 118,
+      "w": 312,
+      "h": 1,
+      "d": 14,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "shaft-1-wx0",
+      "kind": "barrier",
+      "x": -7.5,
+      "y": 19.25,
+      "z": -110,
+      "w": 1,
+      "h": 13.5,
+      "d": 16,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "shaft-1-wx1",
+      "kind": "barrier",
+      "x": 7.5,
+      "y": 19.25,
+      "z": -110,
+      "w": 1,
+      "h": 13.5,
+      "d": 16,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "shaft-1-wz0",
+      "kind": "barrier",
+      "x": 0,
+      "y": 19.25,
+      "z": -117.5,
+      "w": 14,
+      "h": 13.5,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "shaft-1-wz1",
+      "kind": "barrier",
+      "x": 0,
+      "y": 19.25,
+      "z": -102.5,
+      "w": 14,
+      "h": 13.5,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "shaft-2-wx0",
+      "kind": "barrier",
+      "x": -129.5,
+      "y": 19.25,
+      "z": 118,
+      "w": 1,
+      "h": 13.5,
+      "d": 16,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "shaft-2-wx1",
+      "kind": "barrier",
+      "x": -114.5,
+      "y": 19.25,
+      "z": 118,
+      "w": 1,
+      "h": 13.5,
+      "d": 16,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "shaft-2-wz0",
+      "kind": "barrier",
+      "x": -122,
+      "y": 19.25,
+      "z": 110.5,
+      "w": 14,
+      "h": 13.5,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "shaft-2-wz1",
+      "kind": "barrier",
+      "x": -122,
+      "y": 19.25,
+      "z": 125.5,
+      "w": 14,
+      "h": 13.5,
+      "d": 1,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "upwall-top",
+      "kind": "barrier",
+      "x": 0,
+      "y": 15.75,
+      "z": 139.75,
+      "w": 394,
+      "h": 9.5,
+      "d": 0.5,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "upwall-low-w",
+      "kind": "barrier",
+      "x": -188.5,
+      "y": 8.5,
+      "z": 139.75,
+      "w": 17,
+      "h": 5,
+      "d": 0.5,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "upwall-low-mid",
+      "kind": "barrier",
+      "x": 0,
+      "y": 8.5,
+      "z": 139.75,
+      "w": 320,
+      "h": 5,
+      "d": 0.5,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "upwall-low-e",
+      "kind": "barrier",
+      "x": 188.5,
+      "y": 8.5,
+      "z": 139.75,
+      "w": 17,
+      "h": 5,
+      "d": 0.5,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "deck-ceil",
+      "kind": "barrier",
+      "x": 0,
+      "y": 21,
+      "z": 177.5,
+      "w": 354,
+      "h": 1,
+      "d": 75,
+      "texture": "dark_rock_02",
+      "color": 13686235
+    },
+    {
+      "id": "dcol--163-155",
+      "kind": "support",
+      "x": -163,
+      "y": 13.25,
+      "z": 155,
+      "w": 3,
+      "h": 14.5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "dcol-160-150",
+      "kind": "support",
+      "x": 160,
+      "y": 13.25,
+      "z": 150,
+      "w": 3,
+      "h": 14.5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "dcol--160-205",
+      "kind": "support",
+      "x": -160,
+      "y": 13.25,
+      "z": 205,
+      "w": 3,
+      "h": 14.5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "dcol-160-205",
+      "kind": "support",
+      "x": 160,
+      "y": 13.25,
+      "z": 205,
+      "w": 3,
+      "h": 14.5,
+      "d": 3,
+      "texture": "dark_rock_02",
+      "color": 9080726
+    },
+    {
+      "id": "ramp--170",
+      "kind": "ramp",
+      "x": -170,
+      "y": 2.75,
+      "z": 116.03,
+      "w": 20,
+      "h": 0.5,
+      "d": 48.4,
+      "angle": -0.12435499454676144,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    },
+    {
+      "id": "ramp-170",
+      "kind": "ramp",
+      "x": 170,
+      "y": 2.75,
+      "z": 116.03,
+      "w": 20,
+      "h": 0.5,
+      "d": 48.4,
+      "angle": -0.12435499454676144,
+      "texture": "monastery_stone_floor",
+      "color": 12106946
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "hands-1",
+      "kind": "hands",
+      "x": 165,
+      "z": -40
+    },
+    {
+      "id": "hands-2",
+      "kind": "hands",
+      "x": 143,
+      "z": 14,
+      "yaw": -0.9
+    },
+    {
+      "id": "hands-3",
+      "kind": "hands",
+      "x": 0,
+      "z": 160,
+      "y": 6
+    },
+    {
+      "id": "scissors-1",
+      "kind": "scissors",
+      "x": 0,
+      "z": -110,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "scissors-2",
+      "kind": "scissors",
+      "x": -122,
+      "z": 118,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "clippers-1",
+      "kind": "clippers",
+      "x": -19,
+      "z": -143
+    },
+    {
+      "id": "clippers-2",
+      "kind": "clippers",
+      "x": 100,
+      "z": 165,
+      "y": 6
+    },
+    {
+      "id": "cage-1",
+      "kind": "cage",
+      "x": -160,
+      "z": -180
+    },
+    {
+      "id": "cage-2",
+      "kind": "cage",
+      "x": 170,
+      "z": 20
+    },
+    {
+      "id": "cage-3",
+      "kind": "cage",
+      "x": -40,
+      "z": 190
+    },
+    {
+      "id": "cage-4",
+      "kind": "cage",
+      "x": 80,
+      "z": 75
+    },
+    {
+      "id": "cell-1",
+      "kind": "jail-cell",
+      "x": 40,
+      "z": -180
+    },
+    {
+      "id": "cell-2",
+      "kind": "jail-cell",
+      "x": -70,
+      "z": -30,
+      "yaw": 0.7853981633974483
+    },
+    {
+      "id": "cell-3",
+      "kind": "jail-cell",
+      "x": 40,
+      "z": 120
+    },
+    {
+      "id": "skull-1",
+      "kind": "skull",
+      "x": 30,
+      "z": -170
+    },
+    {
+      "id": "skull-2",
+      "kind": "skull",
+      "x": -30,
+      "z": -150
+    },
+    {
+      "id": "skull-3",
+      "kind": "skull",
+      "x": 120,
+      "z": -100
+    },
+    {
+      "id": "skull-4",
+      "kind": "skull",
+      "x": 170,
+      "z": -60
+    },
+    {
+      "id": "skull-5",
+      "kind": "skull",
+      "x": 130,
+      "z": 20
+    },
+    {
+      "id": "skull-6",
+      "kind": "skull",
+      "x": 60,
+      "z": 30
+    },
+    {
+      "id": "skull-7",
+      "kind": "skull",
+      "x": -60,
+      "z": 50
+    },
+    {
+      "id": "skull-8",
+      "kind": "skull",
+      "x": -140,
+      "z": 70
+    },
+    {
+      "id": "skull-9",
+      "kind": "skull",
+      "x": -130,
+      "z": 140
+    },
+    {
+      "id": "skull-10",
+      "kind": "skull",
+      "x": -60,
+      "z": 175
+    },
+    {
+      "id": "skull-11",
+      "kind": "skull",
+      "x": 40,
+      "z": 170
+    },
+    {
+      "id": "skull-12",
+      "kind": "skull",
+      "x": 100,
+      "z": 180
+    },
+    {
+      "id": "hammer-1",
+      "kind": "hammer",
+      "x": -150,
+      "z": -100
+    },
+    {
+      "id": "hammer-2",
+      "kind": "hammer",
+      "x": 100,
+      "z": -20
+    },
+    {
+      "id": "hammer-3",
+      "kind": "hammer",
+      "x": -100,
+      "z": 110
+    },
+    {
+      "id": "hammer-4",
+      "kind": "hammer",
+      "x": 90,
+      "z": 120
+    },
+    {
+      "id": "axe-1",
+      "kind": "axe",
+      "x": 0,
+      "z": -140,
+      "y": 0.05
+    },
+    {
+      "id": "axe-2",
+      "kind": "axe",
+      "x": -150,
+      "z": -20,
+      "y": 0.05
+    },
+    {
+      "id": "axe-3",
+      "kind": "axe",
+      "x": 150,
+      "z": 100,
+      "y": 0.05
+    },
+    {
+      "id": "teeth-1",
+      "kind": "teeth",
+      "x": 180,
+      "z": -140
+    },
+    {
+      "id": "teeth-2",
+      "kind": "teeth",
+      "x": -180,
+      "z": 40
+    },
+    {
+      "id": "teeth-3",
+      "kind": "teeth",
+      "x": 150,
+      "z": 75
+    },
+    {
+      "id": "burner-1",
+      "kind": "burner",
+      "x": -180,
+      "z": -100
+    },
+    {
+      "id": "burner-2",
+      "kind": "burner",
+      "x": 20,
+      "z": 95
+    },
+    {
+      "id": "candle-1",
+      "kind": "candle",
+      "x": 12,
+      "z": -180
+    },
+    {
+      "id": "candle-2",
+      "kind": "candle",
+      "x": 100,
+      "z": -150
+    },
+    {
+      "id": "candle-3",
+      "kind": "candle",
+      "x": -60,
+      "z": -120
+    },
+    {
+      "id": "candle-4",
+      "kind": "candle",
+      "x": 140,
+      "z": -52
+    },
+    {
+      "id": "candle-5",
+      "kind": "candle",
+      "x": 114,
+      "z": 21
+    },
+    {
+      "id": "candle-6",
+      "kind": "candle",
+      "x": 55,
+      "z": 25
+    },
+    {
+      "id": "candle-7",
+      "kind": "candle",
+      "x": -80,
+      "z": 20
+    },
+    {
+      "id": "candle-8",
+      "kind": "candle",
+      "x": -156,
+      "z": 56
+    },
+    {
+      "id": "candle-9",
+      "kind": "candle",
+      "x": -100,
+      "z": 130
+    },
+    {
+      "id": "candle-10",
+      "kind": "candle",
+      "x": 0,
+      "z": 108
+    },
+    {
+      "id": "candle-11",
+      "kind": "candle",
+      "x": 130,
+      "z": -55
+    },
+    {
+      "id": "candle-12",
+      "kind": "candle",
+      "x": -110,
+      "z": 106
+    },
+    {
+      "id": "candle-13",
+      "kind": "candle",
+      "x": -28,
+      "z": -136
+    },
+    {
+      "id": "candle-14",
+      "kind": "candle",
+      "x": 68,
+      "z": 144
+    },
+    {
+      "id": "candle-15",
+      "kind": "candle",
+      "x": -112,
+      "z": 164
+    },
+    {
+      "id": "candle-16",
+      "kind": "candle",
+      "x": 14,
+      "z": 170
+    },
+    {
+      "id": "candle-17",
+      "kind": "candle",
+      "x": -160,
+      "z": 52
+    },
+    {
+      "id": "candle-18",
+      "kind": "candle",
+      "x": 52,
+      "z": -152
+    },
+    {
+      "id": "candle-19",
+      "kind": "candle",
+      "x": -142,
+      "z": 94
+    },
+    {
+      "id": "candle-20",
+      "kind": "candle",
+      "x": -52,
+      "z": 186
+    },
+    {
+      "id": "candle-21",
+      "kind": "candle",
+      "x": 138,
+      "z": -100
+    },
+    {
+      "id": "candle-22",
+      "kind": "candle",
+      "x": -100,
+      "z": 154,
+      "y": 6
+    },
+    {
+      "id": "candle-23",
+      "kind": "candle",
+      "x": 8,
+      "z": 174,
+      "y": 6
+    },
+    {
+      "id": "candle-24",
+      "kind": "candle",
+      "x": 110,
+      "z": 199,
+      "y": 6
+    },
+    {
+      "id": "candle-25",
+      "kind": "candle",
+      "x": -148,
+      "z": 166,
+      "y": 6
+    },
+    {
+      "id": "candle-26",
+      "kind": "candle",
+      "x": 148,
+      "z": 184,
+      "y": 6
+    },
+    {
+      "id": "candle-27",
+      "kind": "candle",
+      "x": -152,
+      "z": 148,
+      "y": 6
+    },
+    {
+      "id": "barrel-1",
+      "kind": "barrel",
+      "x": 80,
+      "z": -170
+    },
+    {
+      "id": "barrel-2",
+      "kind": "barrel",
+      "x": -140,
+      "z": -160
+    },
+    {
+      "id": "barrel-3",
+      "kind": "barrel",
+      "x": 170,
+      "z": -100
+    },
+    {
+      "id": "barrel-4",
+      "kind": "barrel",
+      "x": 140,
+      "z": -10
+    },
+    {
+      "id": "barrel-5",
+      "kind": "barrel",
+      "x": 0,
+      "z": 75
+    },
+    {
+      "id": "barrel-6",
+      "kind": "barrel",
+      "x": -120,
+      "z": 80
+    },
+    {
+      "id": "barrel-7",
+      "kind": "barrel",
+      "x": -80,
+      "z": 160
+    },
+    {
+      "id": "barrel-8",
+      "kind": "barrel",
+      "x": 110,
+      "z": 150
+    },
+    {
+      "id": "trash-1",
+      "kind": "trash",
+      "x": 40,
+      "z": -140
+    },
+    {
+      "id": "trash-2",
+      "kind": "trash",
+      "x": -80,
+      "z": -100
+    },
+    {
+      "id": "trash-3",
+      "kind": "trash",
+      "x": 160,
+      "z": 40
+    },
+    {
+      "id": "trash-4",
+      "kind": "trash",
+      "x": -40,
+      "z": 75
+    },
+    {
+      "id": "trash-5",
+      "kind": "trash",
+      "x": -145,
+      "z": 125
+    },
+    {
+      "id": "trash-6",
+      "kind": "trash",
+      "x": 80,
+      "z": 190
+    },
+    {
+      "id": "sign-1",
+      "kind": "sign",
+      "x": 120,
+      "z": -140
+    },
+    {
+      "id": "sign-2",
+      "kind": "sign",
+      "x": -120,
+      "z": -40
+    },
+    {
+      "id": "sign-3",
+      "kind": "sign",
+      "x": 60,
+      "z": 80
+    },
+    {
+      "id": "sign-4",
+      "kind": "sign",
+      "x": -60,
+      "z": 140
+    },
+    {
+      "id": "stone-1",
+      "kind": "gravestone",
+      "x": -170,
+      "z": -60
+    },
+    {
+      "id": "stone-2",
+      "kind": "gravestone",
+      "x": 170,
+      "z": -170
+    },
+    {
+      "id": "stone-3",
+      "kind": "gravestone",
+      "x": -20,
+      "z": -100
+    },
+    {
+      "id": "stone-4",
+      "kind": "gravestone",
+      "x": -190,
+      "z": 110
+    },
+    {
+      "id": "stone-5",
+      "kind": "gravestone",
+      "x": 40,
+      "z": 130
+    },
+    {
+      "id": "stone-6",
+      "kind": "gravestone",
+      "x": 170,
+      "z": 180
+    },
+    {
+      "id": "dragon-1",
+      "kind": "dragon",
+      "x": 170,
+      "z": -190,
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "potion-1",
+      "kind": "potion",
+      "x": -140,
+      "z": -185
+    },
+    {
+      "id": "hydrant-1",
+      "kind": "hydrant",
+      "x": 180,
+      "z": -70
+    },
+    {
+      "id": "book-1",
+      "kind": "book",
+      "x": -40,
+      "z": -170
+    },
+    {
+      "id": "computer-1",
+      "kind": "computer",
+      "x": 60,
+      "z": -40
+    },
+    {
+      "id": "flippers-1",
+      "kind": "flippers",
+      "x": -120,
+      "z": 100
+    }
+  ],
+  "medals": {
+    "gold": 150,
+    "silver": 200,
+    "bronze": 260
+  },
+  "limit": 300,
+  "underground": true
+}

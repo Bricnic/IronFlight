@@ -52,6 +52,8 @@ export type Track = {
   limit?: number;
   feasibility?: number;
   custom?: CustomLevel;
+  /** Underground levels render with dark cavern air, fog and torchlight. */
+  underground?: boolean;
 };
 export type OfficialTrack = Track & { id: TrackId };
 const points = (pairs: number[][]): Point[] =>

@@ -460,11 +460,6 @@ test("wireframe rotator drives one euler axis per button and drives the yawed wa
   );
   // Each mouse button drives exactly one euler axis.
   await page.locator("#editor-tool-rotator").click();
-  const at = await page.evaluate((p) => window.__game!.editorProject(p), {
-    x: 10,
-    y: 0.8,
-    z: -20,
-  });
   const spinAngles = () =>
     page.evaluate(async () => {
       const loaded = await window.__game!.customLevels.load("e2e-euler");
@@ -482,6 +477,12 @@ test("wireframe rotator drives one euler axis per button and drives the yawed wa
       }),
     );
   const dragSpin = async (button?: "left" | "right" | "middle") => {
+    // Re-project per drag: each save rewraps the toolbar and shifts the canvas.
+    const at = await page.evaluate((p) => window.__game!.editorProject(p), {
+      x: 10,
+      y: 0.8,
+      z: -20,
+    });
     await page.mouse.move(at.x, at.y);
     await page.mouse.down(button ? { button } : undefined);
     await page.mouse.move(at.x + 70, at.y + 50, { steps: 10 });

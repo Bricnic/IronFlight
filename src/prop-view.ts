@@ -1,5 +1,6 @@
 import * as T from "three";
 import { Destructibles, type PropState } from "./destructibles";
+import { buildSkullMesh } from "./dungeon-view";
 import { flameMaterial } from "./materials";
 export class PropView extends T.Group {
   private source?: Destructibles;
@@ -207,6 +208,8 @@ export class PropView extends T.Group {
         .split("")
         .reduce((n, c) => n + c.charCodeAt(0), 0);
       tilt.add(buildGravestoneMesh(seed));
+    } else if (prop.definition.kind === "skull") {
+      tilt.add(buildSkullMesh(1));
     } else {
       const h = prop.definition.kind === "trash" ? 1.3 : 1.4,
         r = prop.definition.kind === "trash" ? 0.48 : 0.5;

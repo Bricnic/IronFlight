@@ -6,6 +6,7 @@ import {
   type CustomLevel,
 } from "./custom-level";
 import fairground from "../levels/official/Fairground.json";
+import dungeon from "../levels/official/Dungeon.json";
 export interface LevelStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
@@ -137,6 +138,8 @@ export async function importLevel(
 export async function registerStoredTracks(deps?: Partial<LevelStoreDeps>) {
   registerCustomTrack({ ...toTrack(validateCustomLevel(fairground)), thumbnail: "/tracks/fairground.svg",
     description: "Twenty-five rings, a giant carousel, bumper brawls and banana-dropping balloons. Gold in five minutes." });
+  registerCustomTrack({ ...toTrack(validateCustomLevel(dungeon)), thumbnail: "/tracks/dungeon.svg",
+    description: "Fifteen treasure chests in a two-story dungeon maze. Lava pits, jail cells and giant snapping traps. Gold in two and a half minutes." });
   try {
     for (const name of await listLevels(deps)) await loadLevel(deps, name);
   } catch {
