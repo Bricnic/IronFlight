@@ -1103,6 +1103,7 @@ async function boot() {
       burnoutOverview: (focus) => view.burnoutOverview(focus),
       lavaOverview: () => view.lavaOverview(),
       hazardOverview: (id) => view.hazardOverview(id),
+      lavaPitOverview: (id, angle) => view.lavaPitOverview(id, angle),
       setVelocity: (velocity) => sim.body.setLinvel(velocity, true),
       basinProbe: (angle) => view.basinProbe(angle),
       dropPartInLava: (id) => {

@@ -3,6 +3,3 @@ dist/
 test-results/
 playwright-report/
 artifacts/
-levels/*
-!levels/official/
-!levels/Fairground-Clone.json

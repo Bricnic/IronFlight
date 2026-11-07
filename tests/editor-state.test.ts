@@ -6,6 +6,27 @@ import {
 } from "../src/editor-state";
 import { validateCustomLevel } from "../src/custom-level";
 
+it("names every object type, persists names and supports rename undo/redo", () => {
+  const store = new EditorStore("Named objects");
+  const p = store.addPrefab("sign"); store.addTarget(); store.addRing();
+  const selections: EditorSelection[] = [
+    { kind: "solid", id: "ground" }, { kind: "prefab", id: p.id },
+    { kind: "checkpoint", index: 0 }, { kind: "target", index: 0 },
+    { kind: "ring", index: 0 }, { kind: "spawn" },
+  ];
+  selections.forEach((selection, i) => { store.select(selection); store.renameSelected(`  Object ${i}  `); });
+  const restored = new EditorStore("Restored");
+  restored.openLevel(validateCustomLevel(JSON.parse(JSON.stringify(store.level))));
+  selections.forEach((selection, i) => expect(restored.selectedItem(selection)?.item.name).toBe(`Object ${i}`));
+  restored.select({ kind: "solid", id: "ground" });
+  restored.renameSelected("Zebra ground"); restored.undo();
+  expect(restored.selectedItem()?.item.name).toBe("Object 0");
+  restored.redo(); expect(restored.selectedItem()?.item.name).toBe("Zebra ground");
+  restored.renameSelected(" "); expect(restored.selectedItem()?.item.name).toBeUndefined();
+  expect(() => restored.renameSelected("x".repeat(81))).toThrow(/80/);
+  expect(() => validateCustomLevel({ ...store.level, spawn: { ...store.level.spawn, name: 7 } })).toThrow(/name must/);
+});
+
 it("persists locks for every object kind and unlocks selection with undo/redo", () => {
   const store = new EditorStore("Locked Objects");
   const prefab = store.addPrefab("axe");

@@ -1,0 +1,55 @@
+{
+  "name": "Dragon",
+  "mode": "race",
+  "spawn": {
+    "x": 0,
+    "y": 2.1,
+    "z": -40,
+    "yaw": 0
+  },
+  "checkpoints": [
+    {
+      "x": 0,
+      "z": 40
+    }
+  ],
+  "solids": [
+    {
+      "id": "ground",
+      "kind": "ground",
+      "x": 0,
+      "y": -0.6,
+      "z": 0,
+      "w": 200,
+      "h": 1.2,
+      "d": 200,
+      "color": 7176572,
+      "texture": "grass_ground"
+    },
+    {
+      "id": "road-1",
+      "kind": "road",
+      "x": -0.061266347971016266,
+      "y": 0.015,
+      "z": -20.480301055592122,
+      "w": 24,
+      "h": 0.03,
+      "d": 110,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "dragon-1",
+      "kind": "dragon",
+      "x": 19.16105946866526,
+      "z": -16.758167746429976
+    }
+  ],
+  "medals": {
+    "gold": 30,
+    "silver": 45,
+    "bronze": 60
+  }
+}

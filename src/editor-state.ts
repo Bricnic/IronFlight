@@ -282,6 +282,13 @@ export class EditorStore {
     Object.assign(current.item, patch);
     this.emit();
   }
+  renameSelected(value: string) {
+    const current = this.selectedItem();
+    if (!current || current.item.locked) return;
+    const name = value.trim() || undefined;
+    if (name && name.length > 80) throw new Error("Object names must be at most 80 characters");
+    if (current.item.name !== name) this.updateSelected({ name });
+  }
   updateLevel(
     patch: Partial<
       Pick<CustomLevel, "mode" | "limit"> & {

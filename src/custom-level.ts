@@ -62,6 +62,7 @@ export const SOLID_KINDS = [
 ] as const;
 export type SolidKind = (typeof SOLID_KINDS)[number];
 export interface CustomSolid {
+  name?: string;
   locked?: boolean;
   id: string;
   kind: SolidKind;
@@ -78,6 +79,7 @@ export interface CustomSolid {
   texture?: string;
 }
 export interface CustomPrefab {
+  name?: string;
   locked?: boolean;
   id: string;
   kind: string;
@@ -89,12 +91,14 @@ export interface CustomPrefab {
   roll?: number;
 }
 export interface CustomPoint {
+  name?: string;
   locked?: boolean;
   x: number;
   z: number;
   y?: number;
 }
 export interface CustomRing {
+  name?: string;
   locked?: boolean;
   x: number;
   y: number;
@@ -106,7 +110,7 @@ export type CustomMode = "race" | "arena" | "demolition";
 export interface CustomLevel {
   name: string;
   mode: CustomMode;
-  spawn: { x: number; y: number; z: number; yaw: number; locked?: boolean };
+  spawn: { x: number; y: number; z: number; yaw: number; locked?: boolean; name?: string };
   checkpoints: CustomPoint[];
   collectibles?: CustomPoint[];
   demolish?: CustomPoint[];
@@ -308,8 +312,10 @@ export function validateCustomLevel(input: unknown): CustomLevel {
       `prefab ${p?.id ?? i} roll is only supported on prop kinds`,
     );
   }
-  for (const [i, item] of [spawn, ...solids, ...prefabs, ...checkpoints, ...collectibles, ...demolish, ...rings].entries())
+  for (const [i, item] of [spawn, ...solids, ...prefabs, ...checkpoints, ...collectibles, ...demolish, ...rings].entries()) {
     check(errors, item?.locked === undefined || typeof item.locked === "boolean", `object ${i} locked must be a boolean`);
+    check(errors, item?.name === undefined || (typeof item.name === "string" && item.name.trim().length > 0 && item.name.length <= 80), `object ${i} name must be 1-80 characters`);
+  }
   if (errors.length) throw new Error(`Invalid custom level: ${errors.join("; ")}`);
   return {
     name,

@@ -240,6 +240,12 @@ export function createLevelEditor(
     >;
     const commit = (prop: string) => (n: number) =>
       store.updateSelected({ [prop]: n });
+    const objectNameRow = el("label", { class: "prop-row" }, "Name ");
+    const objectName = el("input", { type: "text", "data-prop": "name", "aria-label": "Object name", maxlength: "80" });
+    objectName.value = current.item.name ?? ("id" in current.item ? current.item.id : "");
+    objectName.placeholder = "Automatic name";
+    objectName.addEventListener("change", () => store.renameSelected(objectName.value));
+    objectNameRow.append(objectName); props.append(objectNameRow);
     for (const key of ["x", "y", "z"]) {
       // Optional heights have their own field below, even when already set.
       if (
@@ -345,13 +351,16 @@ export function createLevelEditor(
   function refreshList() {
     objects.innerHTML = "";
     const level = store.level;
+    const rows: { li: HTMLLIElement; name: string; key: string }[] = [];
     const row = (
       label: string,
       selected: boolean,
       selection: EditorSelection,
       key: string,
     ) => {
-      const locked = !!store.selectedItem(selection)?.item.locked;
+      const item = store.selectedItem(selection)?.item;
+      const locked = !!item?.locked;
+      label = item?.name ?? label;
       const onPick = () => store.select(selection);
       const li = el(
         "li",
@@ -376,7 +385,7 @@ export function createLevelEditor(
           onPick();
         }
       });
-      objects.append(li);
+      rows.push({ li, name: label, key });
     };
     for (const s of level.solids)
       row(
@@ -427,6 +436,8 @@ export function createLevelEditor(
       { kind: "spawn" },
       "spawn",
     );
+    rows.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true }) || a.key.localeCompare(b.key));
+    objects.append(...rows.map((row) => row.li));
   }
   function refresh() {
     if (document.activeElement !== nameInput) nameInput.value = store.level.name;
