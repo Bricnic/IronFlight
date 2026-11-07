@@ -24,7 +24,11 @@ test("N and P step through levels with wraparound", async ({ page }) => {
   await page.keyboard.press("n");
   await expect.poll(trackId, { timeout: 15000 }).toBe("custom:fairground");
   await page.keyboard.press("n");
+  await expect.poll(trackId, { timeout: 15000 }).toBe("custom:dungeon");
+  await page.keyboard.press("n");
   await expect.poll(trackId, { timeout: 15000 }).toBe("triple-loop");
+  await page.keyboard.press("p");
+  await expect.poll(trackId, { timeout: 15000 }).toBe("custom:dungeon");
   await page.keyboard.press("p");
   await expect.poll(trackId, { timeout: 15000 }).toBe("custom:fairground");
   await page.keyboard.press("p");
