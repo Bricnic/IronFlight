@@ -32,6 +32,7 @@ export class GameView {
   private comic = new ComicView();
   private fairground = new FairgroundView();
   private comicInspection?: string;
+  private lavaPitInspection?: { id: string; angle: number };
   private nitro = new T.Group();
   private officialCourse = new CourseView();
   private fire = new TruckFireView();
@@ -446,6 +447,7 @@ export class GameView {
   }
   resetTruck() {
     this.comicInspection = undefined;
+    this.lavaPitInspection = undefined;
     this.overview = false;
     this.lavaInspection = false;
     this.lavaEffects.reset();
@@ -898,12 +900,25 @@ export class GameView {
         this.camera.lookAt(h.x, h.kind === "hydrant" ? 1.5 : 4, h.z);
       }
     }
+    if (this.lavaPitInspection) {
+      const pit = s.courseTrack?.custom?.solids.find((solid) => solid.id === this.lavaPitInspection!.id && solid.kind === "lava");
+      if (pit) {
+        const angle = this.lavaPitInspection.angle;
+        this.camera.position.set(pit.x + Math.sin(angle) * 16, pit.y + 22, pit.z - Math.cos(angle) * 16);
+        this.camera.lookAt(pit.x, pit.y, pit.z);
+      }
+    }
     this.snapCamera = false;
     if (draw) this.renderer.render(this.scene, this.camera);
   }
   hazardOverview(id: string) {
     this.comicInspection = id;
     this.render(true);
+  }
+  lavaPitOverview(id: string, angle = 0) {
+    this.lavaPitInspection = { id, angle };
+    this.render(true);
+    this.camera.updateMatrixWorld();
   }
   /** Probe fixed points on the outer basin wall while slightly orbiting below the road. */
   basinProbe(angle: number) {

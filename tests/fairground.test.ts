@@ -20,12 +20,12 @@ function fixture(
   level.spawn = spawn;
   registerCustomTrack(toTrack(validateCustomLevel(level)));
   const sim = new Simulation();
-  sim.setTuning({ gravity: 1 });
+  sim.setTuning({ gravity: 1, carouselSpeed: 1, carouselRestriction: 5, bumperSpeed: 1 });
   sim.startTrack("custom:fairground-fixture");
   return sim;
 }
-it("ships identical official and editable-clone layouts with 25 rings and an eight-minute timer", () => {
-  expect(validateCustomLevel(original).collectibles).toHaveLength(25);
+it("ships identical official and editable-clone layouts with 26 rings and an eight-minute timer", () => {
+  expect(validateCustomLevel(original).collectibles).toHaveLength(26);
   expect(validateCustomLevel(original).limit).toBe(480);
   expect(original.medals.gold).toBe(300);
   const arena = original.prefabs.find((p) => p.kind === "bumper-arena")!;

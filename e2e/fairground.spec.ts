@@ -1,11 +1,15 @@
 import { test, expect, type Page } from "@playwright/test";
 import { driveTrack } from "./course-driver";
+import official from "../levels/official/Fairground.json" with { type: "json" };
+import sourceDefaults from "../src/tuning-defaults.json" with { type: "json" };
 
 test.setTimeout(300000);
 test.use({ viewport: { width: 1100, height: 780 } });
 async function start(page: Page) {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
+  // Gameplay proofs use a stable baseline, independently of saved preferences.
+  await page.evaluate(() => window.__game!.setTuning({ carouselSpeed: 1, carouselRestriction: 5, bumperSpeed: 1 }));
   await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
   await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   await page
@@ -14,16 +18,16 @@ async function start(page: Page) {
   await page.evaluate(() => window.__game!.pause(true));
 }
 
-test("Fairground: all 25 rings are reachable by ordinary driving in under five minutes", async ({
+test("Fairground: all 26 rings are reachable by ordinary driving in under five minutes", async ({
   page,
 }, info) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await start(page);
   const art = await page.evaluate(() => window.__game!.stats().fairground);
-  expect(art.carousels).toBe(1);
-  expect(art.bumpers).toBe(6);
-  expect(art.balloons).toBe(4);
+  expect(art.carousels).toBe(official.prefabs.filter((p) => p.kind === "carousel").length);
+  expect(art.bumpers).toBe(official.prefabs.filter((p) => p.kind === "bumper-arena").length * 6);
+  expect(art.balloons).toBe(official.prefabs.filter((p) => p.kind === "hot-air-balloon").length);
   expect(art.triangles).toBeGreaterThan(150000);
   expect(art.carouselTriangles).toBeGreaterThan(150000);
   const result = await driveTrack(page, "custom:fairground", false);
@@ -34,7 +38,7 @@ test("Fairground: all 25 rings are reachable by ordinary driving in under five m
   expect(result.state.run?.status, JSON.stringify(result.state)).toBe(
     "completed",
   );
-  expect(result.state.run?.collected).toHaveLength(25);
+  expect(result.state.run?.collected).toHaveLength(26);
   expect(result.state.run?.elapsed).toBeLessThanOrEqual(300);
   expect(result.state.integrity).toBeGreaterThan(0);
   expect(result.state.fairground.drops.length).toBeGreaterThan(0);
@@ -68,9 +72,9 @@ test("bumper and carousel speed sliders persist and reset", async ({
   await expect(page.locator("#tune-carouselSpeed")).toHaveValue("2.4");
   await expect(page.locator("#tune-carouselRestriction")).toHaveValue("2.4");
   await page.getByRole("button", { name: "Reset tuning", exact: true }).click();
-  await expect(page.locator("#tune-bumperSpeed")).toHaveValue("1");
-  await expect(page.locator("#tune-carouselSpeed")).toHaveValue("1");
-  await expect(page.locator("#tune-carouselRestriction")).toHaveValue("5");
+  await expect(page.locator("#tune-bumperSpeed")).toHaveValue(String(sourceDefaults.bumperSpeed));
+  await expect(page.locator("#tune-carouselSpeed")).toHaveValue(String(sourceDefaults.carouselSpeed));
+  await expect(page.locator("#tune-carouselRestriction")).toHaveValue(String(sourceDefaults.carouselRestriction));
 });
 
 test("the real Fairground carousel carries an unpowered car for at least 45 seconds", async ({

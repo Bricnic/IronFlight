@@ -7,11 +7,15 @@ import {
 import type { EditorSelection, EditorStore } from "./editor-state";
 import { pbr } from "./materials";
 import { scaleSolidUVs } from "./solid-uv";
-/** Resolve a pick from raycast hits by walking to tagged ancestors. */
-export function resolveViewportPick(
-  hits: { object: unknown }[],
-): EditorSelection {
-  for (const hit of hits) {
+type ViewportHit = { object: unknown; distance?: number; point?: T.Vector3 };
+const pickKey = (pick: EditorSelection) => !pick ? "" :
+  `${pick.kind}:${"id" in pick ? pick.id : "index" in pick ? pick.index : ""}`;
+/** One candidate per logical object, ordered from the camera into the scene.
+ * Fill, wireframe, children and exit faces must not add duplicate stops. */
+export function resolveViewportStack(hits: ViewportHit[]) {
+  const stack: { selection: NonNullable<EditorSelection>; hit: ViewportHit }[] = [];
+  const seen = new Set<string>();
+  for (const hit of [...hits].sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0))) {
     let node: unknown = hit.object;
     while (node !== null && node !== undefined) {
       const record = node as {
@@ -19,11 +23,40 @@ export function resolveViewportPick(
         parent?: unknown;
       };
       if (record.userData?.locked) break;
-      if (record.userData?.pick != null) return record.userData.pick;
+      if (record.userData?.pick != null) {
+        const selection = record.userData.pick, key = pickKey(selection);
+        if (!seen.has(key)) { stack.push({ selection, hit }); seen.add(key); }
+        break;
+      }
       node = record.parent;
     }
   }
-  return null;
+  return stack;
+}
+export function resolveViewportPick(hits: ViewportHit[]): EditorSelection {
+  return resolveViewportStack(hits)[0]?.selection ?? null;
+}
+/** Selection highlights rebuild meshes, so retain logical ids rather than
+ * object instances. Camera/content changes or a different click area restart. */
+export class ViewportPickCycle {
+  private anchor = { x: Infinity, y: Infinity };
+  private context = "";
+  private order: NonNullable<EditorSelection>[] = [];
+  private index = -1;
+  reset() { this.index = -1; this.order = []; }
+  private matches(x: number, y: number, picks: EditorSelection[], context: string) {
+    return this.index >= 0 && Math.hypot(x - this.anchor.x, y - this.anchor.y) < 4 && context === this.context &&
+      picks.map(pickKey).sort().join("|") === this.order.map(pickKey).sort().join("|");
+  }
+  current(x: number, y: number, picks: EditorSelection[], context: string): EditorSelection {
+    return this.matches(x, y, picks, context) ? this.order[this.index] : null;
+  }
+  next(x: number, y: number, picks: NonNullable<EditorSelection>[], context: string): EditorSelection {
+    if (!picks.length) { this.reset(); return null; }
+    if (this.matches(x, y, picks, context)) this.index = (this.index + 1) % this.order.length;
+    else { this.anchor = { x, y }; this.context = context; this.order = [...picks]; this.index = 0; }
+    return this.order[this.index];
+  }
 }
 export type PanPlane = "xz" | "xy";
 /** Pan tool: left drags stay on the ground plane, right/middle go vertical. */
@@ -215,10 +248,9 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     const hits = group
       ? raycaster.intersectObjects(group.children, true)
       : [];
-    const first = hits[0];
+    const stack = resolveViewportStack(hits);
     return {
-      selection: resolveViewportPick(hits),
-      point: first ? first.point.clone() : null,
+      stack,
     };
   };
   let drag: { planeY: number; offX: number; offZ: number } | null = null;
@@ -229,7 +261,11 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   let downX = 0;
   let downY = 0;
   let moved = false;
+  const cycle = new ViewportPickCycle();
+  let pendingClick: { x: number; y: number; picks: NonNullable<EditorSelection>[]; context: string } | null = null;
   const canStart = (e: PointerEvent) => {
+    pendingClick = null;
+    if (store.tool !== "select" || e.button !== 0) cycle.reset();
     if (store.tool === "pan") {
       downX = e.clientX;
       downY = e.clientY;
@@ -245,8 +281,19 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     downY = e.clientY;
     moved = false;
     downEmpty = false;
-    const { selection, point } = pickAt(e.clientX, e.clientY);
+    const { stack } = pickAt(e.clientX, e.clientY);
+    let selection: EditorSelection = stack[0]?.selection ?? null;
+    if (store.tool === "select" && e.button === 0) {
+      const picks = stack.map((entry) => entry.selection);
+      const context = `${camera.matrixWorld.elements.join(",")}|${camera.projectionMatrix.elements.join(",")}|${store.preview}|${JSON.stringify(store.level)}`;
+      const current = cycle.current(e.clientX, e.clientY, picks, context);
+      if (current && pickKey(current) === pickKey(store.selection)) selection = current;
+      else if (current) cycle.reset();
+      pendingClick = { x: e.clientX, y: e.clientY, picks, context };
+    }
+    const point = stack.find((entry) => pickKey(entry.selection) === pickKey(selection))?.hit.point;
     if (!selection || !point) {
+      cycle.reset(); pendingClick = null;
       downEmpty = true;
       return true;
     }
@@ -334,7 +381,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       }
       return;
     }
-    if (!drag) return;
+    if (!drag || !moved) return;
     raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
     const hit = planeHit(
       raycaster.ray.origin,
@@ -351,8 +398,13 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       pan = false;
       panButton = 0;
       store.endGesture();
-      return;
     }
+    if (pendingClick && !moved && e.type === "pointerup" && e.button === 0) {
+      const { x, y, picks, context } = pendingClick;
+      const next = cycle.next(x, y, picks, context);
+      if (pickKey(next) !== pickKey(store.selection)) store.select(next);
+    } else if (moved || e.type === "pointercancel") cycle.reset();
+    pendingClick = null;
     if (downEmpty && !moved && e.button !== 2) store.select(null);
     downEmpty = false;
   };
