@@ -32,6 +32,8 @@ export type CourseSolid = {
   roll?: number;
   color: number;
   texture?: string;
+  uvOffsetX?: number;
+  uvOffsetZ?: number;
 };
 export const courseAvailable = (id: string) =>
   [

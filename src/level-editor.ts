@@ -1,6 +1,7 @@
 import { EditorStore, type EditorSelection } from "./editor-state";
 import { createEditorViewport } from "./editor-viewport";
 import { defaultTextureFor } from "./course-view";
+import { clipUnsupported, intersectRects, solidRect, validRect, type ClipRect } from "./editor-clip";
 import {
   TEXTURE_IDS,
   PREFAB_KINDS,
@@ -77,13 +78,14 @@ export function createLevelEditor(
   redoButton.addEventListener("click", () => store.redo());
   const backButton = el("button", { id: "editor-back" }, "Back");
   const toolButtons = (
-    ["select", "pan", "eyedropper", "rotator"] as const
+    ["select", "pan", "eyedropper", "rotator", "clip"] as const
   ).map((tool) => {
     const button = el(
       "button",
       { id: `editor-tool-${tool}` },
       tool[0].toUpperCase() + tool.slice(1),
     ) as HTMLButtonElement;
+    if (tool === "clip") button.title = "Clip selected ground/road solids. Shift/Ctrl click list rows to select several.";
     button.addEventListener("click", () => store.setTool(tool));
     return { tool, button };
   });
@@ -180,8 +182,155 @@ export function createLevelEditor(
       })
       .catch((e: Error) => showError(e.message));
   }
+  function refreshClipProps() {
+    const session = store.clip!;
+    props.append(
+      el("h3", {}, "Clip solids"),
+      el(
+        "p",
+        {},
+        "Draw a rectangle in the viewport (Shift adds a cutter). Numeric bounds are in world metres. Click list rows to include layers. Escape cancels.",
+      ),
+    );
+    const source = store.level.solids.find((s) => session.targets.includes(s.id));
+    const fallback = source
+      ? {
+          minX: source.x - source.w / 4,
+          maxX: source.x + source.w / 4,
+          minZ: source.z - source.d / 4,
+          maxZ: source.z + source.d / 4,
+        }
+      : { minX: -5, maxX: 5, minZ: -5, maxZ: 5 };
+    const bounds = session.cutters.at(-1) ?? fallback;
+    const fields = {} as Record<keyof ClipRect, HTMLInputElement>;
+    for (const key of ["minX", "maxX", "minZ", "maxZ"] as const) {
+      const label = el("label", { class: "prop-row" }, key);
+      const input = el("input", {
+        id: `editor-clip-${key}`,
+        type: "number",
+        step: "any",
+        "aria-label": `Clip ${key}`,
+      }) as HTMLInputElement;
+      input.value = String(bounds[key]);
+      fields[key] = input;
+      label.append(input);
+      props.append(label);
+    }
+    const commitBounds = (append: boolean) => {
+      const r = Object.fromEntries(
+        Object.entries(fields).map(([k, input]) => [
+          k,
+          input.value === "" ? NaN : Number(input.value),
+        ]),
+      ) as ClipRect;
+      if (!validRect(r)) {
+        showError("Enter finite bounds with minX < maxX and minZ < maxZ");
+        return;
+      }
+      store.setClipCutters(
+        append ? [...session.cutters, r] : [...session.cutters.slice(0, -1), r],
+      );
+    };
+    const numeric = el("button", { id: "editor-clip-preview" }, "Preview bounds");
+    numeric.addEventListener("click", () => commitBounds(false));
+    const append = el("button", { id: "editor-clip-add-cutter" }, "Add cutter");
+    append.addEventListener("click", () => commitBounds(true));
+    props.append(numeric, append);
+    const cutter = el("select", {
+      id: "editor-clip-object",
+      "aria-label": "Cutter object",
+    }) as HTMLSelectElement;
+    for (const s of store.level.solids) {
+      if ((s.yaw ?? 0) || (s.angle ?? 0) || (s.roll ?? 0)) continue;
+      cutter.append(el("option", { value: s.id }, s.name ?? s.id));
+    }
+    cutter.value =
+      session.cutterId ??
+      (store.selection?.kind === "solid"
+        ? store.selection.id
+        : (cutter.options[0]?.value ?? ""));
+    const use = el(
+      "button",
+      { id: "editor-clip-use-object" },
+      "Use selected object as cutter",
+    );
+    use.addEventListener("click", () => {
+      const s = store.level.solids.find((s) => s.id === cutter.value);
+      if (!s || !validRect(solidRect(s))) {
+        showError(
+          "Choose an axis-aligned cutter with finite positive dimensions",
+        );
+        return;
+      }
+      store.setClipCutters([solidRect(s)], s.id);
+    });
+    props.append(
+      cutter,
+      use,
+      el(
+        "p",
+        {},
+        "The cutter object stays intact. A through-cut opens collision space at every selected height; no pit bottom is added.",
+      ),
+    );
+    const result = store.clipPreview();
+    props.append(
+      el(
+        "p",
+        { id: "editor-clip-summary", role: "status" },
+        `${session.cutters.length} cutters · ${result?.affected.length ?? 0} affected solids · ${result?.retained.length ?? 0} retained pieces`,
+      ),
+    );
+    if (result?.slivers)
+      props.append(
+        el("p", {}, `Warning: ${result.slivers} slivers narrower than 1 cm`),
+      );
+    for (const issue of result?.issues ?? [])
+      props.append(el("p", { class: "clip-issue" }, issue));
+    props.append(el("h3", {}, "Overlapping layers"));
+    const layers = el("div", { id: "editor-clip-layers" });
+    for (const s of store.level.solids) {
+      // Rotated solids are listed as unsupported, never subtracted by bounds.
+      if (
+        !session.targets.includes(s.id) &&
+        !session.cutters.some((c) => intersectRects(solidRect(s), c)) &&
+        !((s.yaw || s.angle || s.roll) && session.cutters.length)
+      )
+        continue;
+      const row = el("label", { class: "clip-layer" });
+      const input = el("input", {
+        type: "checkbox",
+        "aria-label": `Clip target ${s.name ?? s.id}`,
+      }) as HTMLInputElement;
+      input.checked = session.targets.includes(s.id);
+      const reason = clipUnsupported(s);
+      input.disabled = !!reason || session.cutterId === s.id;
+      input.addEventListener("change", () =>
+        store.setClipTarget(s.id, input.checked),
+      );
+      row.append(
+        input,
+        document.createTextNode(
+          `${s.name ?? s.id} · Y ${s.y} · ${session.cutterId === s.id ? "cutter (kept)" : (reason ?? (input.checked ? "will cut" : "not selected — remains in place"))}`,
+        ),
+      );
+      layers.append(row);
+    }
+    props.append(layers);
+    const apply = el(
+      "button",
+      { id: "editor-clip-apply" },
+      "Apply",
+    ) as HTMLButtonElement;
+    apply.disabled = !result?.affected.length || !!result.issues.length;
+    apply.addEventListener("click", () => store.applyClip());
+    const cancel = el("button", { id: "editor-clip-cancel" }, "Cancel");
+    cancel.addEventListener("click", () => store.cancelClip());
+    props.append(apply, cancel);
+  }
   function refreshProps() {
     props.innerHTML = "";
+    if (store.clip) { refreshClipProps(); return; }
     const level = store.level;
     const section = (title: string) => {
       props.append(el("h3", {}, title));
@@ -361,7 +510,11 @@ export function createLevelEditor(
       const item = store.selectedItem(selection)?.item;
       const locked = !!item?.locked;
       label = item?.name ?? label;
-      const onPick = () => store.select(selection);
+      const onPick = (event: MouseEvent | KeyboardEvent) => {
+        if (store.clip) {
+          if (selection?.kind === "solid") store.setClipTarget(selection.id, !store.clip.targets.includes(selection.id));
+        } else store.select(selection, event.shiftKey || event.ctrlKey || event.metaKey);
+      };
       const li = el(
         "li",
         { "data-key": key, "data-locked": String(locked), class: selected ? "selected" : "" },
@@ -375,6 +528,7 @@ export function createLevelEditor(
         event.stopPropagation();
         store.setLocked(selection, !locked);
       });
+      lock.disabled = !!store.clip;
       li.append(lock);
       li.tabIndex = locked ? -1 : 0;
       li.addEventListener("click", onPick);
@@ -382,7 +536,7 @@ export function createLevelEditor(
         if (e.target !== li) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onPick();
+          onPick(e);
         }
       });
       rows.push({ li, name: label, key });
@@ -390,8 +544,7 @@ export function createLevelEditor(
     for (const s of level.solids)
       row(
         `${s.id} · ${s.kind}`,
-        store.selection?.kind === "solid" &&
-          (store.selection as { id: string }).id === s.id,
+        store.clip ? store.clip.targets.includes(s.id) : store.solidSelection.includes(s.id) || (store.selection?.kind === "solid" && store.selection.id === s.id),
         { kind: "solid", id: s.id },
         `solid:${s.id}`,
       );
@@ -440,6 +593,8 @@ export function createLevelEditor(
     objects.append(...rows.map((row) => row.li));
   }
   function refresh() {
+    for (const button of [saveButton, playtestButton, addSolid, addPrefab, addCheckpoint, addTarget, addRing, duplicateButton, removeButton, spawnButton]) button.disabled = !!store.clip;
+    nameInput.disabled = !!store.clip;
     if (document.activeElement !== nameInput) nameInput.value = store.level.name;
     if (!store.dirty) unsaved.hidden = true;
     showStatus(store.dirty ? "Unsaved changes" : "Saved");
@@ -548,7 +703,16 @@ export function createLevelEditor(
   duplicateButton.addEventListener("click", () => store.duplicateSelected());
   removeButton.addEventListener("click", () => store.deleteSelected());
   spawnButton.addEventListener("click", () => store.select({ kind: "spawn" }));
+  // Rebuilding the property panel can remove the focused button. Escape must
+  // still cancel when the browser has consequently moved focus to the body.
+  document.addEventListener("keydown", (e) => {
+    if (!screen.hidden && e.key === "Escape" && store.clip) {
+      e.preventDefault(); store.cancelClip();
+    }
+  });
   screen.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && store.clip) { e.preventDefault(); store.cancelClip(); return; }
+    if (store.clip) return;
     if (
       (e.key === "Delete" || e.key === "Backspace") &&
       !(e.target instanceof HTMLInputElement) &&
@@ -575,6 +739,7 @@ export function createLevelEditor(
       refresh();
     },
     hide() {
+      store.cancelClip();
       screen.hidden = true;
       host.classList.remove("at-level-select");
     },

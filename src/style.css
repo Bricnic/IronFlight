@@ -979,6 +979,12 @@ kbd {
   border-color: #ffa762;
   background: #3a2f22;
 }
+.editor-top button:disabled,
+.editor-list button:disabled,
+.editor-props button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
 #editor-status {
   color: #8fa5a8;
   font-size: 12px;
@@ -1063,6 +1069,14 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.clip-layer {
+  display: block;
+  padding: 5px 0;
+  font-size: 13px;
+}
+.clip-issue {
+  color: #ff9980;
 }
 .editor-props h3 {
   margin: 4px 0;

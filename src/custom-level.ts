@@ -71,6 +71,9 @@ export const SOLID_KINDS = [
 ] as const;
 export type SolidKind = (typeof SOLID_KINDS)[number];
 export interface CustomSolid {
+  /** Local texture phase retained when a box is partitioned by the editor. */
+  uvOffsetX?: number;
+  uvOffsetZ?: number;
   name?: string;
   locked?: boolean;
   id: string;
@@ -241,6 +244,8 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     "solid",
   );
   for (const [i, s] of solids.entries()) {
+    check(errors, s?.uvOffsetX === undefined || finite(s.uvOffsetX), `solid ${s?.id ?? i} needs a finite UV X offset`);
+    check(errors, s?.uvOffsetZ === undefined || finite(s.uvOffsetZ), `solid ${s?.id ?? i} needs a finite UV Z offset`);
     check(errors, (SOLID_KINDS as readonly string[]).includes(s?.kind), `solid ${i} has an unknown kind`);
     check(
       errors,

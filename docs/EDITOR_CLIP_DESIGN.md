@@ -14,8 +14,32 @@ plaza. All surviving boxes retain the original Y, thickness, texture, color,
 and lock state. Lava and rim geometry stay unchanged. Both level JSONs receive
 the same repair, retaining their respective level names.
 
-This repair is baked into the JSON. There is no runtime or editor clip feature
-yet; the one-off script is not a dependency of the level.
+This repair is baked into the JSON; the one-off script is not a dependency of
+the level. The editor now also supports reusable clipping as described below.
+
+## Implemented controls
+
+Select solids in the list (Shift/Ctrl adds or removes a solid), then choose
+**Clip**. Drag in the viewport at the first target's top height to define world
+X/Z bounds; Shift-drag adds another cutter. Right-drag or Alt-drag orbits the
+camera. Alternatively enter minX/maxX/minZ/maxZ and choose **Preview bounds**
+or **Add cutter**. The cutter-object dropdown and **Use selected object as
+cutter** keep that object intact and exclude it from targets.
+
+The overlapping-layers checklist includes unselected covering solids, locked
+layers, and unsupported solids. Click an eligible checkbox or a list row to
+change targets. Unsupported selected targets block Apply; unlock objects before
+starting a clip. Apply commits the entire operation in one undo step; Cancel or
+Escape discards the staged operation. Save and Playtest become available after
+applying or cancelling.
+
+Geometry uses a 1e-8 metre degeneracy threshold without expanding cutter bounds;
+retained strips narrower than 0.01 metres are reported as slivers. Merging uses
+exact full edges within each source, so materials and metadata cannot mix.
+Ordinary solids carry optional finite `uvOffsetX`/`uvOffsetZ` texture-phase
+offsets. Ground top faces keep their existing world alignment, and road top and
+side faces retain their pre-cut phase, including after repeated cuts and reload.
+There are no saved editor brushes or operation-history dependencies.
 
 ## User workflow
 

@@ -8,6 +8,7 @@ import {
   type CustomSolid,
   type SolidKind,
 } from "./custom-level";
+import { previewClip, type ClipRect } from "./editor-clip";
 export type EditorSelection =
   | { kind: "solid"; id: string }
   | { kind: "prefab"; id: string }
@@ -16,7 +17,8 @@ export type EditorSelection =
   | { kind: "ring"; index: number }
   | { kind: "spawn" }
   | null;
-export type EditorTool = "select" | "pan" | "eyedropper" | "rotator";
+export type EditorTool = "select" | "pan" | "eyedropper" | "rotator" | "clip";
+type Snapshot = { level: CustomLevel; selection: EditorSelection; solidSelection: string[] };
 /**
  * The editor store may adopt a live session's level only when it has no
  * unsaved work of its own and both sides name the same level.
@@ -32,14 +34,16 @@ export function shouldSyncFromSession(
 export class EditorStore {
   level: CustomLevel;
   selection: EditorSelection = null;
+  solidSelection: string[] = [];
+  clip: { targets: string[]; cutters: ClipRect[]; cutterId?: string } | null = null;
   tool: EditorTool = "select";
   preview = false;
   dirty = false;
   private listeners = new Set<() => void>();
-  private past: { level: CustomLevel; selection: EditorSelection }[] = [];
-  private future: { level: CustomLevel; selection: EditorSelection }[] = [];
+  private past: Snapshot[] = [];
+  private future: Snapshot[] = [];
   private gesture: {
-    snapshot: { level: CustomLevel; selection: EditorSelection };
+    snapshot: Snapshot;
     dirty: boolean;
   } | null = null;
   constructor(name: string) {
@@ -55,6 +59,7 @@ export class EditorStore {
     return {
       level: structuredClone(this.level),
       selection: structuredClone(this.selection),
+      solidSelection: [...this.solidSelection],
     };
   }
   private pushHistory() {
@@ -83,23 +88,27 @@ export class EditorStore {
   }
   /** Restore the previous change; false when history is empty. */
   undo() {
+    this.cancelClip();
     const prev = this.past.pop();
     if (!prev) return false;
     this.future.push(this.snapshot());
     if (this.future.length > 100) this.future.shift();
     this.level = prev.level;
     this.selection = prev.selection;
+    this.solidSelection = prev.solidSelection;
     this.emit();
     return true;
   }
   /** Re-apply an undone change; false when there is nothing to redo. */
   redo() {
+    this.cancelClip();
     const next = this.future.pop();
     if (!next) return false;
     this.past.push(this.snapshot());
     if (this.past.length > 100) this.past.shift();
     this.level = next.level;
     this.selection = next.selection;
+    this.solidSelection = next.solidSelection;
     this.emit();
     return true;
   }
@@ -108,10 +117,16 @@ export class EditorStore {
     return () => void this.listeners.delete(listener);
   }
   private emit(touch = true) {
+    if (this.selection?.kind !== "solid") this.solidSelection = [];
+    else {
+      this.solidSelection = this.solidSelection.filter((id) => this.level.solids.some((s) => s.id === id && !s.locked));
+      if (!this.solidSelection.includes(this.selection.id)) this.solidSelection = [this.selection.id];
+    }
     if (touch) this.dirty = true;
     for (const listener of this.listeners) listener();
   }
   openBlank(name: string) {
+    this.clip = null; this.tool = "select"; this.solidSelection = [];
     this.level = blankLevel(name);
     this.selection = null;
     this.dirty = false;
@@ -121,6 +136,7 @@ export class EditorStore {
     for (const listener of this.listeners) listener();
   }
   openLevel(level: CustomLevel) {
+    this.clip = null; this.tool = "select"; this.solidSelection = [];
     this.level = level;
     this.selection = null;
     this.dirty = false;
@@ -138,9 +154,15 @@ export class EditorStore {
     this.level.name = name;
     this.emit();
   }
-  select(selection: EditorSelection) {
+  select(selection: EditorSelection, additive = false) {
     if (this.selectedItem(selection)?.item.locked) return;
     this.selection = selection;
+    if (selection?.kind === "solid") {
+      this.solidSelection = additive
+        ? this.solidSelection.includes(selection.id) ? this.solidSelection.filter((id) => id !== selection.id) : [...this.solidSelection, selection.id]
+        : [selection.id];
+      if (!this.solidSelection.includes(selection.id)) this.selection = this.solidSelection.length ? { kind: "solid", id: this.solidSelection[this.solidSelection.length - 1] } : null;
+    } else this.solidSelection = [];
     this.emit(false);
   }
   setLocked(selection: EditorSelection, locked: boolean) {
@@ -153,8 +175,46 @@ export class EditorStore {
     this.emit();
   }
   setTool(tool: EditorTool) {
+    if (tool === "clip") { this.startClip(); return; }
+    this.clip = null;
     this.tool = tool;
     this.emit(false);
+  }
+  startClip() {
+    this.endGesture();
+    const ids = this.selection?.kind === "solid" ? (this.solidSelection.includes(this.selection.id) ? this.solidSelection : [this.selection.id]) : [];
+    this.clip = { targets: [...ids], cutters: [] };
+    this.tool = "clip";
+    this.emit(false);
+  }
+  cancelClip() {
+    if (!this.clip) return;
+    this.clip = null; this.tool = "select"; this.emit(false);
+  }
+  setClipCutters(cutters: ClipRect[], cutterId?: string) {
+    if (!this.clip) return;
+    this.clip.cutters = cutters; this.clip.cutterId = cutterId ?? this.clip.cutterId;
+    if (this.clip.cutterId) this.clip.targets = this.clip.targets.filter((id) => id !== this.clip!.cutterId);
+    this.emit(false);
+  }
+  setClipTarget(id: string, enabled: boolean) {
+    if (!this.clip || id === this.clip.cutterId) return;
+    this.clip.targets = this.clip.targets.filter((target) => target !== id);
+    if (enabled) this.clip.targets.push(id);
+    this.emit(false);
+  }
+  clipPreview() {
+    return this.clip?.cutters.length ? previewClip(this.level.solids, this.clip.targets, this.clip.cutters) : null;
+  }
+  applyClip() {
+    const result = this.clipPreview();
+    if (!result?.affected.length || result.issues.length) return false;
+    this.pushHistory();
+    this.level.solids = result.solids;
+    this.solidSelection = result.retained.map((s) => s.id);
+    this.selection = result.retained[0] ? { kind: "solid", id: result.retained[0].id } : null;
+    this.clip = null; this.tool = "select"; this.emit();
+    return true;
   }
   setPreview(preview: boolean) {
     this.preview = preview;
@@ -184,6 +244,7 @@ export class EditorStore {
     };
     this.level.solids.push(solid);
     this.selection = { kind: "solid", id: solid.id };
+    this.solidSelection = [solid.id];
     this.emit();
     return solid;
   }
@@ -362,6 +423,7 @@ export class EditorStore {
       };
       this.level.solids.push(copy);
       this.selection = { kind: "solid", id: copy.id };
+      this.solidSelection = [copy.id];
       this.emit();
       return copy;
     }
