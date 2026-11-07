@@ -1,12 +1,13 @@
 import * as T from "three";
 /**
  * Shared solid UV convention: world-scale repeats, one tile per 3m. Top faces
- * map world x/z (grounds add the solid offset so tiles stay continuous);
+ * map x/z (grounds and clipped roads add the solid offset for continuous tiles);
  * side faces shear x+z against height so walls tile without stretching.
  */
 export function scaleSolidUVs(
   geometry: T.BufferGeometry,
   s: { kind: string; x: number; z: number },
+  worldAligned = s.kind === "ground",
 ) {
   const pos = geometry.attributes.position as T.BufferAttribute;
   const normals = geometry.attributes.normal as T.BufferAttribute;
@@ -16,10 +17,10 @@ export function scaleSolidUVs(
     uv.setXY(
       i,
       (top
-        ? pos.getX(i) + (s.kind === "ground" ? s.x : 0)
+        ? pos.getX(i) + (worldAligned ? s.x : 0)
         : pos.getX(i) + pos.getZ(i)) / 3,
       (top
-        ? pos.getZ(i) + (s.kind === "ground" ? s.z : 0)
+        ? pos.getZ(i) + (worldAligned ? s.z : 0)
         : pos.getY(i)) / 3,
     );
   }

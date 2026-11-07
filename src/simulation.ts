@@ -178,9 +178,18 @@ export class Simulation {
     yaw?: number;
     roll?: number;
     kind: string;
+    footprint?: CourseSolid["footprint"];
   }) {
+    const shape = s.footprint
+      ? RAPIER.ColliderDesc.convexHull(
+          new Float32Array(
+            s.footprint.flatMap(({ x, z }) => [x, -s.h / 2, z, x, s.h / 2, z]),
+          ),
+        )
+      : RAPIER.ColliderDesc.cuboid(s.w / 2, s.h / 2, s.d / 2);
+    if (!shape) throw new Error(`Invalid clipped solid: ${s.id}`);
     const collider = this.world.createCollider(
-      RAPIER.ColliderDesc.cuboid(s.w / 2, s.h / 2, s.d / 2)
+      shape
         .setTranslation(s.x, s.y, s.z)
         .setRotation(solidQuaternion(s))
         .setFriction(1)

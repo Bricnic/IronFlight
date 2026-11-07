@@ -176,14 +176,21 @@ export class CourseView extends T.Group {
     const mat = this.buildSolidMaterial(track, s);
     const { stone, cliff, groundMap, roadMap } = this.solidMaps(track, s);
     if (s.kind === "lava") this.lavaMaterials.push(mat);
-    const geometry = new T.BoxGeometry(s.w, s.h, s.d);
+    const geometry = s.footprint
+      ? new T.ExtrudeGeometry(
+          new T.Shape(s.footprint.map(({ x, z }) => new T.Vector2(x, -z))),
+          { depth: s.h, bevelEnabled: false },
+        )
+          .rotateX(-Math.PI / 2)
+          .translate(0, -s.h / 2, 0)
+      : new T.BoxGeometry(s.w, s.h, s.d);
     if (
       stone ||
       cliff ||
       s.texture ||
       ["ground", "road", "ramp", "loop"].includes(s.kind)
     ) {
-      scaleSolidUVs(geometry, s);
+      scaleSolidUVs(geometry, s, s.kind === "ground" || !!s.footprint);
       mat.userData.surface = s.texture
         ? s.texture
         : stone

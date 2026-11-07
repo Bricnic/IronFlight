@@ -1,6 +1,6 @@
 import { comicHazards } from "./comic-hazards.ts";
 import { slideProfileY } from "./tracks.ts";
-import type { Track, TrackId } from "./tracks.ts";
+import type { Point, Track } from "./tracks.ts";
 import type { Hazard } from "./hazards.ts";
 import type { PropDefinition, PropKind } from "./destructibles.ts";
 import {
@@ -8,6 +8,7 @@ import {
   customTrackIds,
 } from "./custom-level.ts";
 import { loopRingSolids, loopSupportSolids } from "./loop.ts";
+import { clipFootprint } from "./solid-clip.ts";
 export type CourseSolid = {
   id: string;
   kind:
@@ -32,7 +33,53 @@ export type CourseSolid = {
   roll?: number;
   color: number;
   texture?: string;
+  /** Clipped polygon in local X/Z, extruded through the solid's height. */
+  footprint?: readonly Point[];
 };
+
+function skylineRoads(path: readonly Point[]): CourseSolid[] {
+  return path.slice(0, -1).map((a, i) => {
+    // Reuse the first point at the finish so both pieces share the same cut.
+    const b = i === path.length - 2 ? path[0] : path[i + 1];
+    const x = (a.x + b.x) / 2;
+    const z = (a.z + b.z) / 2;
+    const length = Math.hypot(b.x - a.x, b.z - a.z);
+    const dx = (b.x - a.x) / length;
+    const dz = (b.z - a.z) / length;
+    const w = 24;
+    const d = length + 6;
+    // Three metres of stock at each end reaches past the outer miter.
+    const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(
+      ([side, end]) => ({
+        x: (side * dz * w + end * dx * d) / 2,
+        z: (-side * dx * w + end * dz * d) / 2,
+      }),
+    );
+    // Each radial seam keeps opposite sides for the two adjoining segments.
+    const start = clipFootprint(
+      corners,
+      { x: a.x - x, z: a.z - z },
+      { x: -a.z, z: a.x },
+    );
+    const footprint = clipFootprint(
+      start,
+      { x: b.x - x, z: b.z - z },
+      { x: b.z, z: -b.x },
+    );
+    return {
+      id: `road-${i + 1}`,
+      kind: "road",
+      x,
+      y: 0.015,
+      z,
+      w,
+      h: 0.03,
+      d,
+      color: 0x303e49,
+      footprint,
+    };
+  });
+}
 export const courseAvailable = (id: string) =>
   [
     "harbor-sprint",
@@ -135,6 +182,7 @@ export function courseSolids(track: Track): CourseSolid[] {
   for (
     let i = 1;
     track.mode === "race" &&
+    track.id !== "skyline-circuit" &&
     track.id !== "canyon-plunge" &&
     track.id !== "sky-slide" &&
     i < track.path.length;
@@ -257,6 +305,7 @@ export function courseSolids(track: Track): CourseSolid[] {
   }
   if (track.id === "skyline-circuit") {
     solids[0].color = 0x5a6970;
+    solids.push(...skylineRoads(track.path));
     for (const radius of [64, 96])
       for (let i = 0; i < 48; i++) {
         const angle = (i * Math.PI) / 24;
