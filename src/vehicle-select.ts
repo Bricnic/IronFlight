@@ -7,7 +7,7 @@ export function createVehicleSelect(
   const screen = document.createElement("main");
   screen.id = "vehicle-select";
   screen.hidden = true;
-  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / GARAGE</div><h1>Choose your vehicle.</h1><p>Five ways to wreck. Pick your weapon.</p></div><div class="menu-actions"><button id="vehicle-back">Level select</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to select · L for level select</p>`;
+  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / GARAGE</div><h1>Choose your vehicle.</h1><p>Nine ways to wreck. Pick your weapon.</p></div><div class="menu-actions"><button id="vehicle-back">Level select</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to select · L for level select</p>`;
   const grid = screen.querySelector<HTMLElement>(".track-grid")!;
   const cards = new Map<string, HTMLElement>();
   for (const vehicle of VEHICLES) {

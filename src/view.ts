@@ -497,8 +497,12 @@ export class GameView {
     this.lastCameraTime = 0;
     for (const def of this.simulation.partDefs)
       this.meshes.set(def.id, this.truck.getObjectByName(def.id) as T.Group);
+    const newNoLivery = ["hovercraft", "snow-groomer", "hot-rod", "tow-truck"].includes(
+      this.simulation.vehicleId,
+    );
     const doorDef = this.simulation.partDefs.find((d) => d.id === "door-left")!;
     for (const side of [-1, 1]) {
+      if (newNoLivery) continue; // new photo-staged vehicles: clean flanks, no series livery
       const decal = this.label("IRON FLIGHT", "#fff0ce", "#ac401e", 512, 128);
       decal.scale.set(1.25, 0.31, 1);
       decal.rotation.y = (side * Math.PI) / 2;
@@ -1024,10 +1028,10 @@ export class GameView {
     const center = bounds.getCenter(new T.Vector3());
     const radius = bounds.getSize(new T.Vector3()).length() / 2;
     const distance =
-      (radius / Math.sin(T.MathUtils.degToRad(this.camera.fov / 2))) * 1.15;
+      (radius / Math.sin(T.MathUtils.degToRad(this.camera.fov / 2))) * 1.03;
     this.camera.position
       .copy(center)
-      .add(new T.Vector3(1, 0.65, 1).normalize().multiplyScalar(distance));
+      .add(new T.Vector3(1, 0.5, 1).normalize().multiplyScalar(distance));
     this.camera.lookAt(center);
     this.camera.updateMatrixWorld();
     this.renderer.render(this.scene, this.camera);

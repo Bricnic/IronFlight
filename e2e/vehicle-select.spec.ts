@@ -6,9 +6,9 @@ test("menu offers a vehicle screen that persists the choice", async ({
   await page.waitForFunction(() => !!window.__game);
   await page.getByRole("button", { name: "Select vehicle" }).click();
   await expect(page.locator("#vehicle-select")).toBeVisible();
-  await expect(page.locator(".vehicle-card")).toHaveCount(5);
+  await expect(page.locator(".vehicle-card")).toHaveCount(9);
   const previews = page.locator(".vehicle-preview img");
-  await expect(previews).toHaveCount(5);
+  await expect(previews).toHaveCount(9);
   for (const image of await previews.all()) {
     await expect(image).toBeVisible();
     await expect

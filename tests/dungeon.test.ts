@@ -795,6 +795,7 @@ it("completes all 15 chests within the five-minute limit", () => {
       if (reached && leg < DUNGEON_ROUTE.length - 1) {
         leg++;
         legSince = s.time;
+        if (process.env.PROOF_TRACE) console.log(`leg ${leg} t=${s.time.toFixed(1)}`);
       }
       const gate = DUNGEON_ROUTE[leg];
       // Never cut under the deck beside the ramp: re-approach from the base.

@@ -30,6 +30,7 @@ export function cloneHarborSprint(): CustomLevel {
     ...(s.yaw === undefined ? {} : { yaw: s.yaw }),
     ...(s.angle === undefined ? {} : { angle: s.angle }),
     ...(s.roll === undefined ? {} : { roll: s.roll }),
+    ...(s.footprint === undefined ? {} : { footprint: s.footprint }),
     color: s.color,
   }));
   const prefabs: CustomPrefab[] = [

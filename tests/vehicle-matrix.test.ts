@@ -13,6 +13,10 @@ expect(VEHICLES.map((v) => v.id)).toEqual([
   "cop-car",
   "ambulance",
   "school-bus",
+  "hovercraft",
+  "snow-groomer",
+  "hot-rod",
+  "tow-truck",
 ]);
 for (const v of VEHICLES) {
   it(`headless matrix: ${v.id} completes triple-loop (easy)`, () => {

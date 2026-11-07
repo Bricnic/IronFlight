@@ -57,10 +57,13 @@ export async function createDebugMenu(sim: Simulation) {
   menu.innerHTML = `<div class="eyebrow">PLAYTEST TUNING <span>\u0060 TO CLOSE</span></div><h2>Make it your own.</h2><p>Live adjustments · saved on this browser</p><label class="debug-toggle" for="debug-ghosts"><span>Enable graveyard ghosts</span><input id="debug-ghosts" type="checkbox"></label><div id="truck-colors" class="truck-colors"></div>${sliderKeys.map((key) => `<label for="tune-${key}">${labels[key]}<output id="value-${key}"></output></label><input id="tune-${key}" type="range" min="${tuningRange(key).min}" max="${tuningRange(key).max}" step="${tuningRange(key).step}" value="${sim.tuning[key]}">`).join("")}<button id="store-defaults">Store as Defaults</button><button id="reset-tuning">Reset tuning</button><p id="tuning-status" role="status" aria-live="polite"></p>`;
   document.getElementById("app")!.append(menu);
   const ghostToggle = menu.querySelector<HTMLInputElement>("#debug-ghosts")!;
-  ghostToggle.addEventListener("change", () => {
-    sim.ghostsEnabled = ghostToggle.checked;
+  const setGhostsEnabled = (enabled: boolean) => {
+    sim.ghostsEnabled = enabled;
     sync();
-  });
+  };
+  ghostToggle.addEventListener("change", () =>
+    setGhostsEnabled(ghostToggle.checked),
+  );
   const sync = () => {
     ghostToggle.checked = sim.ghostsEnabled;
     for (const key of sliderKeys) {
@@ -132,8 +135,7 @@ export async function createDebugMenu(sim: Simulation) {
           replaceDefaults(await response.json());
         }
         sim.setTuning(DEFAULT_TUNING);
-        sim.ghostsEnabled = true;
-        sync();
+        setGhostsEnabled(true);
         status.textContent = "Restored source defaults.";
       } catch (error) {
         status.textContent =
@@ -141,9 +143,14 @@ export async function createDebugMenu(sim: Simulation) {
       }
     };
   sync();
-  return () => {
-    menu.hidden = !menu.hidden;
-    if (menu.hidden && menu.contains(document.activeElement))
-      (document.activeElement as HTMLElement).blur();
+  return {
+    toggleDebug() {
+      menu.hidden = !menu.hidden;
+      if (menu.hidden && menu.contains(document.activeElement))
+        (document.activeElement as HTMLElement).blur();
+    },
+    toggleGhosts() {
+      setGhostsEnabled(!sim.ghostsEnabled);
+    },
   };
 }

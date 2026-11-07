@@ -35,6 +35,9 @@ it("ships a high-fidelity harbor-sprint clone", () => {
       y: s.y,
       z: s.z,
     });
+  expect(level.solids.map((s) => s.footprint)).toEqual(
+    courseSolids(track).map((s) => s.footprint),
+  );
   expect(level.prefabs.map((p) => p.kind).sort()).toEqual(
     [
       ...courseProps(track).map((p) => p.kind),

@@ -1,5 +1,5 @@
-import { TRACKS, getTrack, type Track, type TrackId, type CustomTrackId } from "./tracks";
-import { getCustomTrack } from "./custom-level";
+import { getTrack, type TrackId, type CustomTrackId } from "./tracks";
+import { officialTracks } from "./official-levels";
 import type { BestTimes } from "./best-times";
 import type { TrackRun } from "./track-run";
 import { modeLabel, timeoutCopy } from "./run-copy";
@@ -12,18 +12,14 @@ export function createLevelSelect(
   onTuning: () => void,
   onRetry: () => void,
   onMenu: () => void,
+  onNext: () => void,
 ) {
   const screen = document.createElement("main");
   screen.id = "level-select";
-  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>Eleven places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to play · L for level select · N/P for next/previous level · Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
+  screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / TRACK COLLECTION 01</div><h1>Choose your track.</h1><p>${officialTracks.length} places to send it. Make every second count.</p></div><div class="menu-actions"><button id="menu-tuning">Truck tuning</button><button id="menu-lab">Destruction lab</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys · Space to play · L for level select · N/P for next/previous level · Drive with WASD or arrow keys · Space to handbrake · Best times stay on this browser</p>`;
   const grid = screen.querySelector<HTMLElement>(".track-grid")!;
-  const tracks: Track[] = [...TRACKS];
-  const fairground = getCustomTrack("custom:fairground");
-  if (fairground) tracks.push(fairground);
-  const dungeon = getCustomTrack("custom:dungeon");
-  if (dungeon) tracks.push(dungeon);
   const cards = new Map<TrackId | CustomTrackId, HTMLElement>();
-  for (const [i, track] of tracks.entries()) {
+  for (const [i, track] of officialTracks.entries()) {
     const card = document.createElement("article");
     card.className = "track-card";
     card.dataset.track = track.id;
@@ -45,13 +41,15 @@ export function createLevelSelect(
   result.setAttribute("role", "dialog");
   result.setAttribute("aria-modal", "true");
   result.setAttribute("aria-labelledby", "result-title");
-  result.innerHTML = `<div class="result-card"><div id="result-track" class="eyebrow"></div><div id="result-medal" class="result-medal"></div><h2 id="result-title"></h2><p id="result-description"></p><div id="result-time"></div><p id="personal-best"></p><div class="result-actions"><button id="retry-track">Retry track</button><button id="result-level-select">Level select</button></div></div>`;
+  result.innerHTML = `<div class="result-card"><div id="result-track" class="eyebrow"></div><div id="result-medal" class="result-medal"></div><h2 id="result-title"></h2><p id="result-description"></p><div id="result-time"></div><p id="personal-best"></p><div class="result-actions"><button id="next-track" hidden>Next level</button><button id="retry-track">Retry track</button><button id="result-level-select">Level select</button></div></div>`;
   host.append(screen, result);
   screen.querySelector<HTMLButtonElement>("#menu-lab")!.onclick = onLab;
   screen.querySelector<HTMLButtonElement>("#menu-tuning")!.onclick = onTuning;
   result.querySelector<HTMLButtonElement>("#retry-track")!.onclick = onRetry;
   result.querySelector<HTMLButtonElement>("#result-level-select")!.onclick =
     onMenu;
+  const nextButton = result.querySelector<HTMLButtonElement>("#next-track")!;
+  nextButton.onclick = onNext;
   let selected = 0;
   const buttons = Array.from(
     grid.querySelectorAll<HTMLButtonElement>(".track-play"),
@@ -85,7 +83,7 @@ export function createLevelSelect(
     }
   });
   const refresh = () => {
-    for (const track of tracks) {
+    for (const track of officialTracks) {
       const best = track.legacy
         ? ["easy", "medium", "hard"]
             .map((v) => ({ v, b: scores.best(track.id, v) }))
@@ -128,6 +126,7 @@ export function createLevelSelect(
       result.inert = false;
       host.classList.remove("at-level-select");
       const completed = run.status === "completed";
+      nextButton.hidden = !completed || !cards.has(run.trackId);
       result.querySelector("#result-track")!.textContent = getTrack(
         run.trackId,
       ).name.toUpperCase();

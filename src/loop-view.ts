@@ -5,6 +5,7 @@ import {
   dragonFiring,
   dragonFlame,
   DRAGON_FLAME_LENGTH,
+  DRAGON_MOUTH,
   dragonHeat,
   loopSolids,
   loopX,
@@ -56,11 +57,11 @@ export function buildDragonStatue(stone: T.Material, bronze: T.Material, horn: T
     mesh(new T.BoxGeometry(1.1, 0.4, 1.6), bronze, 0, 2.9, 3.1);
     // Black mouth and curved horns make the fire source legible at driving scale.
     mesh(
-      new T.SphereGeometry(0.5, 24, 16),
+      new T.SphereGeometry(DRAGON_MOUTH.radius, 24, 16),
       new T.MeshStandardMaterial({ color: 0x151919 }),
       0,
-      3.25,
-      3.55,
+      DRAGON_MOUTH.y,
+      DRAGON_MOUTH.z,
       1.05,
       0.55,
       1,
@@ -140,16 +141,52 @@ export function buildDragonStatue(stone: T.Material, bronze: T.Material, horn: T
     return g;
   }
 
-/** Seven-plane flame fan spanning from a jet group toward +side*x. */
-export function addDragonJetFan(parent: T.Group, side: number, flame: T.Material) {
+/** Seven-plane flame fan with UV zero at its origin and UV one at its tip. */
+export function addDragonJetFan(
+  parent: T.Group,
+  direction: number,
+  flame: T.Material,
+  x = 0,
+  y = 0,
+) {
   for (let i = 0; i < 7; i++) {
     const geometry = new T.PlaneGeometry(2.4, DRAGON_FLAME_LENGTH);
     geometry.translate(0, DRAGON_FLAME_LENGTH / 2, 0);
     const jet = new T.Mesh(geometry, flame);
-    jet.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), new T.Vector3(-side, 0, 0));
+    jet.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), new T.Vector3(direction, 0, 0));
     jet.rotateY(((i - 3) * Math.PI) / 7);
-    jet.position.set(side * DRAGON_FLAME_LENGTH, 0.6, (i - 3) * 0.035);
+    jet.position.set(x, y, (i - 3) * 0.035);
     parent.add(jet);
+  }
+}
+
+export function updateDragonGlow(
+  bronze: T.MeshStandardMaterial,
+  eyes: T.MeshStandardMaterial,
+  time: number,
+  packet: ReturnType<typeof dragonFlame>,
+) {
+  const heat = dragonHeat(time);
+  bronze.color.setHex(0x15191b).lerp(new T.Color(0xff0000), 0.5 * heat);
+  bronze.emissive.setHex(0x7f0800);
+  bronze.emissiveIntensity = heat * 0.35;
+  const danger = dragonFiring(time) || packet.opacity > 0;
+  eyes.emissive.setHex(danger ? 0xff3500 : 0x1bbf8e);
+  eyes.color.setHex(danger ? 0xff5a0a : 0x73f5bc);
+}
+
+export function updateDragonJets(
+  jets: T.Group,
+  time: number,
+  packet: ReturnType<typeof dragonFlame>,
+) {
+  jets.visible = packet.opacity > 0 && packet.head > packet.tail;
+  for (const jet of jets.children) {
+    const uniforms = ((jet as T.Mesh).material as T.ShaderMaterial).uniforms;
+    uniforms.time.value = time;
+    uniforms.head.value = packet.head;
+    uniforms.tail.value = packet.tail;
+    uniforms.opacity.value = packet.opacity;
   }
 }
 /** Scenery shares track dimensions and fire timing with the simulation. */
@@ -282,7 +319,8 @@ export class LoopView extends T.Group {
         this.add(jets);
         this.jets.push(jets);
         const flame = dragonFlameMaterial();
-        for (const side of [-1, 1]) addDragonJetFan(jets, side, flame);
+        for (const side of [-1, 1])
+          addDragonJetFan(jets, -side, flame, side * DRAGON_FLAME_LENGTH, 0.6);
       }
       const signal = new T.Mesh(new T.SphereGeometry(0.65, 16, 12), this.eyes);
       signal.position.set(r.x - 6, 5, LOOP.boostStart - 5);
@@ -302,28 +340,9 @@ export class LoopView extends T.Group {
   }
 
   update(time: number) {
-    const firing = dragonFiring(time);
     const packet = dragonFlame(time);
-    const heat = dragonHeat(time);
-    this.dragonMaterial.color
-      .setHex(0x15191b)
-      .lerp(new T.Color(0xff0000), 0.5 * heat);
-    this.dragonMaterial.emissive.setHex(0x7f0800);
-    this.dragonMaterial.emissiveIntensity = heat * 0.35;
-    for (const jets of this.jets) {
-      jets.visible = packet.opacity > 0 && packet.head > packet.tail;
-      jets.children.forEach((jet) => {
-        const uniforms = ((jet as T.Mesh).material as T.ShaderMaterial)
-          .uniforms;
-        uniforms.time.value = time;
-        uniforms.head.value = packet.head;
-        uniforms.tail.value = packet.tail;
-        uniforms.opacity.value = packet.opacity;
-      });
-    }
-    const danger = firing || packet.opacity > 0;
-    this.eyes.emissive.setHex(danger ? 0xff3500 : 0x1bbf8e);
-    this.eyes.color.setHex(danger ? 0xff5a0a : 0x73f5bc);
+    updateDragonGlow(this.dragonMaterial, this.eyes, time, packet);
+    for (const jets of this.jets) updateDragonJets(jets, time, packet);
   }
   stats() {
     return {

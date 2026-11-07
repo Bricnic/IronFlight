@@ -10,7 +10,9 @@ export const LOOP = {
 export function dragonFiring(time: number) {
   return time % 8 < 3;
 }
-// Mouth front: statue offset 10 minus local mouth center 3.55 and its 0.5 radius.
+export const DRAGON_MOUTH = { y: 3.25, z: 3.55, radius: 0.5 };
+export const DRAGON_MOUTH_FRONT = DRAGON_MOUTH.z + DRAGON_MOUTH.radius;
+// Distance from the official statue's mouth front to the center of its lane.
 export const DRAGON_FLAME_LENGTH = 5.95;
 /** Normalized distance from the mouth: ignition advances the head; shutoff advances the tail. */
 export function dragonFlame(time: number) {
@@ -176,18 +178,21 @@ export function dragonExposureAt(
   if (flame.opacity <= 0 || flame.head <= flame.tail) return 0;
   if (Math.abs(car.y - mouth.y) > 3) return 0;
   const along = (car.x - mouth.x) * dir.x + (car.z - mouth.z) * dir.z;
-  const near = DRAGON_FLAME_LENGTH * (1 - flame.head);
-  const far = DRAGON_FLAME_LENGTH * (1 - flame.tail);
+  const near = DRAGON_FLAME_LENGTH * flame.tail;
+  const far = DRAGON_FLAME_LENGTH * flame.head;
   if (along < near || along > far) return 0;
   const lateral = Math.abs((car.x - mouth.x) * dir.z - (car.z - mouth.z) * dir.x);
   return lateral <= 2.5 ? flame.opacity : 0;
 }
 /** Mouth offset and jet direction for a custom dragon with the given yaw. */
 export function dragonAim(yaw: number) {
+  const dx = -Math.cos(yaw);
+  const dz = Math.sin(yaw);
   return {
-    mx: -3.55 * Math.cos(yaw),
-    mz: 3.55 * Math.sin(yaw),
-    dx: -Math.cos(yaw),
-    dz: Math.sin(yaw),
+    mx: DRAGON_MOUTH_FRONT * dx,
+    my: DRAGON_MOUTH.y,
+    mz: DRAGON_MOUTH_FRONT * dz,
+    dx,
+    dz,
   };
 }

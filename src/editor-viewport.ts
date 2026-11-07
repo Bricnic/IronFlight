@@ -214,9 +214,10 @@ function attachOrbit(
   );
   apply();
   return {
-    frame(point: T.Vector3) {
-      target.copy(point);
+    frameSpawn({ x, y, z, yaw }: CustomLevel["spawn"]) {
+      target.set(x, y, z);
       spherical.radius = 90;
+      spherical.theta = yaw + Math.PI;
       apply();
     },
     panBy(dx: number, dy: number, plane?: PanPlane) {
@@ -716,7 +717,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       };
     },
     frameSpawn(level: CustomLevel) {
-      orbit.frame(new T.Vector3(level.spawn.x, level.spawn.y, level.spawn.z));
+      orbit.frameSpawn(level.spawn);
     },
     cameraTarget() {
       return { x: target.x, y: target.y, z: target.z };

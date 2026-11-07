@@ -33,10 +33,10 @@ import { getVehicle } from "./vehicles";
 import { BestTimes } from "./best-times";
 import {
   getTrack,
-  stepTrackId,
   type CustomTrackId,
   type TrackId,
 } from "./tracks";
+import { stepTrackId } from "./official-levels";
 import {
   listLevels,
   saveLevel,
@@ -80,7 +80,7 @@ async function boot() {
     view = new GameView(document.querySelector("#viewport")!, sim),
     clock = new FixedClock();
   view.applyQuality(loadSettings().video);
-  const toggleDebug = await createDebugMenu(sim);
+  const { toggleDebug, toggleGhosts } = await createDebugMenu(sim);
   document.querySelector(".camera-hint")!.textContent =
     "DRAG TO ORBIT · WHEEL TO ZOOM · ` TUNING";
   let rate = 1,
@@ -252,6 +252,7 @@ async function boot() {
     toggleDebug,
     retryTrack,
     showLevelSelect,
+    () => stepLevel(1),
   );
   $("level-select-button").onclick = showLevelSelect;
   vehicleScreens = createVehicleSelect(
@@ -1011,6 +1012,11 @@ async function boot() {
     )
       return;
     const k = e.key.toLowerCase();
+    if (k === "g" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      if (!e.repeat) toggleGhosts();
+      return;
+    }
     if (k === "l") {
       e.preventDefault();
       if (!e.repeat) showLevelSelect();

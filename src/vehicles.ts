@@ -29,12 +29,44 @@ import {
   BUS_SUSPENSION_REST,
   BUS_WHEEL_RADIUS,
 } from "./school-bus";
+import {
+  createHovercraft,
+  HOVERCRAFT_PARTS,
+  HOVERCRAFT_SUSPENSION,
+  HOVERCRAFT_SUSPENSION_REST,
+  HOVERCRAFT_WHEEL_RADIUS,
+} from "./hovercraft";
+import {
+  createSnowGroomer,
+  GROOMER_PARTS,
+  GROOMER_SUSPENSION,
+  GROOMER_SUSPENSION_REST,
+  GROOMER_WHEEL_RADIUS,
+} from "./snow-groomer";
+import {
+  createHotRod,
+  HOTROD_PARTS,
+  HOTROD_SUSPENSION,
+  HOTROD_SUSPENSION_REST,
+  HOTROD_WHEEL_RADIUS,
+} from "./hot-rod";
+import {
+  createTowTruck,
+  WRECKER_PARTS,
+  WRECKER_SUSPENSION,
+  WRECKER_SUSPENSION_REST,
+  WRECKER_WHEEL_RADIUS,
+} from "./tow-truck";
 export type VehicleId =
   | "monster-truck"
   | "sports-car"
   | "cop-car"
   | "ambulance"
-  | "school-bus";
+  | "school-bus"
+  | "hovercraft"
+  | "snow-groomer"
+  | "hot-rod"
+  | "tow-truck";
 export interface VehiclePart {
   id: string;
   pos: readonly [number, number, number];
@@ -114,6 +146,46 @@ export const VEHICLES: VehicleDef[] = [
     wheelRadius: BUS_WHEEL_RADIUS,
     suspensionRest: BUS_SUSPENSION_REST,
     build: (options) => createSchoolBus(options),
+  },
+  {
+    id: "hovercraft",
+    name: "Hovercraft",
+    blurb: "HOVERCRAFT — heavy. Skirt barge with a lift fan and a roof gun.",
+    parts: HOVERCRAFT_PARTS,
+    suspension: HOVERCRAFT_SUSPENSION,
+    wheelRadius: HOVERCRAFT_WHEEL_RADIUS,
+    suspensionRest: HOVERCRAFT_SUSPENSION_REST,
+    build: (options) => createHovercraft(options),
+  },
+  {
+    id: "snow-groomer",
+    name: "Snow Groomer",
+    blurb: "GROOMER — tracked. Twin tracks, mesh plow, and a tall lime cab.",
+    parts: GROOMER_PARTS,
+    suspension: GROOMER_SUSPENSION,
+    wheelRadius: GROOMER_WHEEL_RADIUS,
+    suspensionRest: GROOMER_SUSPENSION_REST,
+    build: (options) => createSnowGroomer(options),
+  },
+  {
+    id: "hot-rod",
+    name: "Hot Rod",
+    blurb: "HOT ROD — fast. Blown V8, white headers, huge rear tires.",
+    parts: HOTROD_PARTS,
+    suspension: HOTROD_SUSPENSION,
+    wheelRadius: HOTROD_WHEEL_RADIUS,
+    suspensionRest: HOTROD_SUSPENSION_REST,
+    build: (options) => createHotRod(options),
+  },
+  {
+    id: "tow-truck",
+    name: "Tow Truck",
+    blurb: "WRECKER — heavy. Cab-over crane with a loaded flatbed.",
+    parts: WRECKER_PARTS,
+    suspension: WRECKER_SUSPENSION,
+    wheelRadius: WRECKER_WHEEL_RADIUS,
+    suspensionRest: WRECKER_SUSPENSION_REST,
+    build: (options) => createTowTruck(options),
   },
 ];
 /** Game mph everywhere: the HUD and comic hazards use m/s x 3.6. */
