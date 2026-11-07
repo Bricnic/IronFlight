@@ -7,15 +7,17 @@ import { createSnowGroomer, groomerStats } from "../src/snow-groomer";
 import { createHotRod, hotRodStats } from "../src/hot-rod";
 import { createTowTruck, towTruckStats } from "../src/tow-truck";
 import { createTruck, truckStats } from "../src/truck";
+import { CONCEPT_VEHICLES } from "../src/concept-vehicles";
 
 const NEW_CARS = [
   { id: "hovercraft", build: createHovercraft, stats: hovercraftStats },
   { id: "snow-groomer", build: createSnowGroomer, stats: groomerStats },
   { id: "hot-rod", build: createHotRod, stats: hotRodStats },
   { id: "tow-truck", build: createTowTruck, stats: towTruckStats },
+  ...CONCEPT_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
 ] as const;
 
-it("catalogs the four new cars on the shared part slots", () => {
+it("catalogs the new cars on the shared part slots", () => {
   for (const car of NEW_CARS) {
     const def = getVehicle(car.id);
     expect(def.parts.map((p) => p.id)).toEqual(PARTS.map((p) => p.id));
@@ -70,6 +72,14 @@ it("new cars carry high-poly detail near truck density", () => {
       stats.triangles,
       `${car.id} vs truck`,
     ).toBeGreaterThan(truck.triangles * 0.4);
+  }
+});
+
+it("the six Gemini concepts use detailed geometry and four animated wheel assemblies", () => {
+  for (const { id, build } of CONCEPT_VEHICLES) {
+    const { triangles, treadBlocks } = truckStats(build());
+    expect(triangles, id).toBeGreaterThanOrEqual(90_000);
+    expect(treadBlocks, id).toBeGreaterThanOrEqual(384);
   }
 });
 

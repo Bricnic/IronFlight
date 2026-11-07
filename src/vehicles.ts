@@ -57,6 +57,7 @@ import {
   WRECKER_SUSPENSION_REST,
   WRECKER_WHEEL_RADIUS,
 } from "./tow-truck";
+import { CONCEPT_VEHICLES } from "./concept-vehicles";
 export type VehicleId =
   | "monster-truck"
   | "sports-car"
@@ -66,7 +67,8 @@ export type VehicleId =
   | "hovercraft"
   | "snow-groomer"
   | "hot-rod"
-  | "tow-truck";
+  | "tow-truck"
+  | (typeof CONCEPT_VEHICLES)[number]["id"];
 export interface VehiclePart {
   id: string;
   pos: readonly [number, number, number];
@@ -88,21 +90,25 @@ export interface VehicleDef {
   suspensionRest: number;
   build: (options?: TruckMaterials) => T.Group;
   lights?: "police" | "ems";
+  seriesDecal?: false;
 }
+const standardChassis = {
+  parts: PARTS,
+  suspension: [
+    [1.65, -0.35, 1.65],
+    [-1.65, -0.35, 1.65],
+    [1.65, -0.35, -1.65],
+    [-1.65, -0.35, -1.65],
+  ] as VehicleDef["suspension"],
+  wheelRadius: 1.05,
+  suspensionRest: 0.6,
+};
 export const VEHICLES: VehicleDef[] = [
   {
     id: "monster-truck",
     name: "Monster Truck",
     blurb: "The original. Huge tires, huge air, huge damage.",
-    parts: PARTS,
-    suspension: [
-      [1.65, -0.35, 1.65],
-      [-1.65, -0.35, 1.65],
-      [1.65, -0.35, -1.65],
-      [-1.65, -0.35, -1.65],
-    ],
-    wheelRadius: 1.05,
-    suspensionRest: 0.6,
+    ...standardChassis,
     build: (options) => createTruck(options),
   },
   {
@@ -156,6 +162,7 @@ export const VEHICLES: VehicleDef[] = [
     wheelRadius: HOVERCRAFT_WHEEL_RADIUS,
     suspensionRest: HOVERCRAFT_SUSPENSION_REST,
     build: (options) => createHovercraft(options),
+    seriesDecal: false,
   },
   {
     id: "snow-groomer",
@@ -166,6 +173,7 @@ export const VEHICLES: VehicleDef[] = [
     wheelRadius: GROOMER_WHEEL_RADIUS,
     suspensionRest: GROOMER_SUSPENSION_REST,
     build: (options) => createSnowGroomer(options),
+    seriesDecal: false,
   },
   {
     id: "hot-rod",
@@ -176,6 +184,7 @@ export const VEHICLES: VehicleDef[] = [
     wheelRadius: HOTROD_WHEEL_RADIUS,
     suspensionRest: HOTROD_SUSPENSION_REST,
     build: (options) => createHotRod(options),
+    seriesDecal: false,
   },
   {
     id: "tow-truck",
@@ -186,7 +195,13 @@ export const VEHICLES: VehicleDef[] = [
     wheelRadius: WRECKER_WHEEL_RADIUS,
     suspensionRest: WRECKER_SUSPENSION_REST,
     build: (options) => createTowTruck(options),
+    seriesDecal: false,
   },
+  ...CONCEPT_VEHICLES.map((vehicle) => ({
+    ...vehicle,
+    ...standardChassis,
+    seriesDecal: false as const,
+  })),
 ];
 /** Game mph everywhere: the HUD and comic hazards use m/s x 3.6. */
 export const MS_TO_GAME_MPH = 3.6;

@@ -8,17 +8,26 @@ const browser = await chromium.launch({
     "--enable-unsafe-swiftshader",
   ],
 });
-const ids = [
-  "monster-truck",
-  "sports-car",
-  "cop-car",
-  "ambulance",
-  "school-bus",
-  "hovercraft",
-  "snow-groomer",
-  "hot-rod",
-  "tow-truck",
-];
+const requested = process.argv.slice(2);
+const ids = requested.length
+  ? requested
+  : [
+      "monster-truck",
+      "sports-car",
+      "cop-car",
+      "ambulance",
+      "school-bus",
+      "hovercraft",
+      "snow-groomer",
+      "hot-rod",
+      "tow-truck",
+      "dune-buggy",
+      "rally-hatch",
+      "racing-semi",
+      "armored-scout",
+      "ice-cream-van",
+      "baja-beetle",
+    ];
 try {
   const page = await browser.newPage({
     viewport: { width: 1000, height: 600 },
@@ -31,7 +40,8 @@ try {
         if (!window.__captureFreeze) cb(t);
       });
   });
-  await page.goto("http://127.0.0.1:5173/?test=vehicle-previews");
+  const baseUrl = process.env.CAPTURE_URL ?? "http://127.0.0.1:5173";
+  await page.goto(`${baseUrl}/?test=vehicle-previews`);
   await page.waitForFunction(() => !!window.__game);
   await page.evaluate(() => {
     window.__game.pause(true);

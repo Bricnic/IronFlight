@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { VEHICLES } from "../src/vehicles";
 test("menu offers a vehicle screen that persists the choice", async ({
   page,
 }) => {
@@ -6,9 +7,9 @@ test("menu offers a vehicle screen that persists the choice", async ({
   await page.waitForFunction(() => !!window.__game);
   await page.getByRole("button", { name: "Select vehicle" }).click();
   await expect(page.locator("#vehicle-select")).toBeVisible();
-  await expect(page.locator(".vehicle-card")).toHaveCount(9);
+  await expect(page.locator(".vehicle-card")).toHaveCount(VEHICLES.length);
   const previews = page.locator(".vehicle-preview img");
-  await expect(previews).toHaveCount(9);
+  await expect(previews).toHaveCount(VEHICLES.length);
   for (const image of await previews.all()) {
     await expect(image).toBeVisible();
     await expect
@@ -25,25 +26,25 @@ test("menu offers a vehicle screen that persists the choice", async ({
       .toBe(true);
   }
 
-  await page.locator('[data-vehicle="monster-truck"] .vehicle-pick').click();
+  await page.getByRole("button", { name: "Drive the Dune Buggy" }).click();
   await expect(page.locator("#vehicle-select")).toBeHidden();
   expect(await page.evaluate(() => localStorage.getItem("vehicle"))).toBe(
-    "monster-truck",
+    "dune-buggy",
   );
 });
 test("official runs start in the selected vehicle", async ({ page }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await page.evaluate(() => {
-    localStorage.setItem("vehicle", "monster-truck");
+    localStorage.setItem("vehicle", "racing-semi");
     const g = window.__game!;
     g.pause(true);
     g.startTrack("harbor-sprint");
   });
   expect(await page.evaluate(() => window.__game!.snapshot().vehicleId)).toBe(
-    "monster-truck",
+    "racing-semi",
   );
   expect(await page.evaluate(() => window.__game!.stats().vehicleId)).toBe(
-    "monster-truck",
+    "racing-semi",
   );
 });

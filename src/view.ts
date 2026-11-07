@@ -482,7 +482,8 @@ export class GameView {
       clearcoat: 0.8,
       clearcoatRoughness: 0.3,
     });
-    this.truck = getVehicle(this.simulation.vehicleId).build({
+    const vehicle = getVehicle(this.simulation.vehicleId);
+    this.truck = vehicle.build({
       paint,
       metal,
     });
@@ -494,12 +495,9 @@ export class GameView {
     this.lastCameraTime = 0;
     for (const def of this.simulation.partDefs)
       this.meshes.set(def.id, this.truck.getObjectByName(def.id) as T.Group);
-    const newNoLivery = ["hovercraft", "snow-groomer", "hot-rod", "tow-truck"].includes(
-      this.simulation.vehicleId,
-    );
     const doorDef = this.simulation.partDefs.find((d) => d.id === "door-left")!;
     for (const side of [-1, 1]) {
-      if (newNoLivery) continue; // new photo-staged vehicles: clean flanks, no series livery
+      if (vehicle.seriesDecal === false) continue;
       const decal = this.label("IRON FLIGHT", "#fff0ce", "#ac401e", 512, 128);
       decal.scale.set(1.25, 0.31, 1);
       decal.rotation.y = (side * Math.PI) / 2;

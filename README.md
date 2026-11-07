@@ -71,6 +71,12 @@ The development-only `window.__game` bridge supports stage selection, pause, fra
 
 ## Assets and limits
 
+To make a vehicle concept from an in-game screenshot, set `GEMINI_API_KEY` in your terminal from a billing-enabled Gemini API project. The Node script sends the screenshot and vehicle brief to Nano Banana 2 and saves a 1K JPEG. [Gemini image generation guide](https://ai.google.dev/gemini-api/docs/image-generation)
+
+```sh
+node scripts/generate-vehicle-concept.mjs public/vehicles/monster-truck.png artifacts/stunt-motorcycle.jpg "An off-road stunt motorcycle with two oversized block-tread tires, an orange tank, a black crash cage, and exposed suspension"
+```
+
 All material maps and fonts ship locally. `public/textures/manifest.json` records the six Poly Haven [CC0](https://polyhaven.com/license) sources, eighteen original map URLs, sizes and SHA256 hashes. Run `node scripts/fetch-textures.mjs` to reproduce the cache. The hero truck has over 100,000 triangles and 320 instanced tread blocks. Its geometry is authored procedurally and does not require paid asset or generation services.
 
 This is a desktop keyboard prototype with six tracks, local medals, bounded visual dents and rigid-body breakage. It has no soft-body simulation, multiplayer or audio. GPU performance needs measurement on target devices; software-rendered browser tests establish correctness rather than a 60 fps guarantee. Rapier's embedded WebAssembly makes the initial JavaScript bundle relatively large.
@@ -107,4 +113,6 @@ Verification: `npx playwright test e2e/comic-hazards.spec.ts e2e/comic-effects.s
 
 Press backtick to open Playtest tuning, then uncheck **Enable graveyard ghosts** to hide Haunted Hollow's ghosts and stop their movement and damage. The setting persists in this browser across reloads and restarts; Reset tuning enables ghosts again.
 
-Vehicle selection includes in-game screenshots of all nine vehicles. The PNGs in `public/vehicles/` are captured from the real game scene and camera, not separate illustrations. To regenerate them, start the dev server and run `node scripts/capture-vehicle-previews.mjs`.
+Vehicle selection uses screenshots from the game camera in `public/vehicles/`. To regenerate them, start the dev server and run `node scripts/capture-vehicle-previews.mjs`. Pass vehicle IDs to capture a subset.
+
+The Dune Buggy, Rally Hatch, Racing Semi, Armored Scout, Ice Cream Van, and Baja Beetle were modeled from the Nano Banana 2 concepts in `visual-plan/refs/gemini/`. Their meshes use the shared four-wheel chassis and thirteen damage parts.
