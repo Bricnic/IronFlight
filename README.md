@@ -31,7 +31,7 @@ Canyon Plunge has a separate **Canyon Plunge top speed** slider (1–10x), multi
 
 Sky Slide's **Sky Slide water speed** slider sets a minimum flow speed from 100–1,000 displayed MPH (1–10x), defaulting to 250 MPH (2.5x). Twenty snowmen occupy every fifth segment of the channel. Impacts scatter snow and detach a random part, nudging the truck toward the edge. A/D strafe on the water; normal steering resumes on solid ground. The trampoline launches forward through an upright golden ring, including at maximum water speed.
 
-Haunted Hollow's ghosts accelerate from about 22 MPH to 50 MPH as the twelve gravestones are destroyed. Each 20 percentage points of actual ghost damage tears off another random part. In Inferno Vault, the camera pans above the stage to watch the truck sink into lava.
+Haunted Hollow's ghosts accelerate from about 22 MPH to 50 MPH as the twelve gravestones are destroyed. Each 20 percentage points of actual ghost damage tears off another random part. Press G to toggle ghosts. In Inferno Vault, the camera pans above the stage to watch the truck sink into lava.
 
 W/S and Up/Down blend braking into opposite-direction acceleration over the last 20 displayed speed units before stopping. Space applies the stronger handbrake. The HUD says MPH and retains the previous numerical values, as requested. The boost pad keeps its ground chevrons; its overhead boost banner has been removed. The pad still targets three times nominal top speed, with power controlled by the saved tuning; the physics sweep is saved to `artifacts/boost-sweep.json`.
 

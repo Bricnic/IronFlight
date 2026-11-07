@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-test("graveyard ghosts can be disabled live, persist across reload, and be enabled again", async ({
+test("G toggles graveyard ghosts live and syncs the saved checkbox setting", async ({
   page,
 }) => {
   await page.goto("/?test=ghost-toggle");
@@ -14,7 +14,10 @@ test("graveyard ghosts can be disabled live, persist across reload, and be enabl
     name: "Enable graveyard ghosts",
   });
   await expect(toggle).toBeChecked();
-  await toggle.uncheck();
+  await page.keyboard.down("g");
+  await page.keyboard.down("g");
+  await page.keyboard.up("g");
+  await expect(toggle).not.toBeChecked();
   const frozen = await page.evaluate(() => {
     const g = window.__game!;
     g.advanceFrames(1, 1, {});
@@ -40,7 +43,8 @@ test("graveyard ghosts can be disabled live, persist across reload, and be enabl
   expect(
     await page.evaluate(() => window.__game!.stats().officialCourse.ghosts),
   ).toBe(0);
-  await toggle.check();
+  await page.keyboard.press("g");
+  await expect(toggle).toBeChecked();
   await page.evaluate(() => window.__game!.advanceFrames(1, 1, {}));
   expect(
     await page.evaluate(() => window.__game!.stats().officialCourse.ghosts),
@@ -48,4 +52,8 @@ test("graveyard ghosts can be disabled live, persist across reload, and be enabl
   expect(
     await page.evaluate(() => window.__game!.snapshot().ghosts.enabled),
   ).toBe(true);
+  await toggle.uncheck();
+  expect(
+    await page.evaluate(() => window.__game!.snapshot().ghosts.enabled),
+  ).toBe(false);
 });

@@ -79,7 +79,7 @@ async function boot() {
     view = new GameView(document.querySelector("#viewport")!, sim),
     clock = new FixedClock();
   view.applyQuality(loadSettings().video);
-  const toggleDebug = await createDebugMenu(sim);
+  const { toggleDebug, toggleGhosts } = await createDebugMenu(sim);
   document.querySelector(".camera-hint")!.textContent =
     "DRAG TO ORBIT · WHEEL TO ZOOM · ` TUNING";
   let rate = 1,
@@ -995,6 +995,11 @@ async function boot() {
     )
       return;
     const k = e.key.toLowerCase();
+    if (k === "g" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      if (!e.repeat) toggleGhosts();
+      return;
+    }
     if (k === "l") {
       e.preventDefault();
       if (!e.repeat) showLevelSelect();
