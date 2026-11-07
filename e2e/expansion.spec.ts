@@ -60,4 +60,8 @@ test("Sky Slide: ride the rapids, bounce the trampoline and thread the ring", as
     contentType: "application/json",
   });
   await page.screenshot({ path: info.outputPath("sky-finish.png") });
+  await page.getByRole("button", { name: "Next level", exact: true }).click();
+  await expect.poll(
+    () => page.evaluate(() => window.__game!.snapshot().run?.trackId),
+  ).toBe("custom:fairground");
 });

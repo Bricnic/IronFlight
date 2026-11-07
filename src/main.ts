@@ -32,10 +32,10 @@ import { getVehicle } from "./vehicles";
 import { BestTimes } from "./best-times";
 import {
   getTrack,
-  stepTrackId,
   type CustomTrackId,
   type TrackId,
 } from "./tracks";
+import { stepTrackId } from "./official-levels";
 import {
   listLevels,
   saveLevel,
@@ -251,6 +251,7 @@ async function boot() {
     toggleDebug,
     retryTrack,
     showLevelSelect,
+    () => stepLevel(1),
   );
   $("level-select-button").onclick = showLevelSelect;
   vehicleScreens = createVehicleSelect(

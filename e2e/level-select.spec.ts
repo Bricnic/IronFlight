@@ -10,6 +10,10 @@ test("normal startup shows ten illustrated tracks and keeps the simulation pause
     page.getByRole("heading", { name: "Choose your track.", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".track-card")).toHaveCount(10);
+  await expect(page.locator(".track-card h2")).toHaveText([
+    ...TRACKS.map((track) => track.name),
+    "Fairground",
+  ]);
   for (const t of TRACKS) {
     await expect(
       page.getByRole("button", { name: `Play ${t.name}`, exact: true }),
