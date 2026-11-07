@@ -59,5 +59,5 @@ it("rejects invalid expansion budgets and objectives", () => {
 });
 it("ships a readable thumbnail file per expansion track", () => {
   for (const id of ["canyon-plunge", "haunted-hollow", "sky-slide"])
-    expect(existsSync(`public/tracks/${id}.svg`)).toBe(true);
+    expect(existsSync(`public/tracks/${id}.png`)).toBe(true);
 });

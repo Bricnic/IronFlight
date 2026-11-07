@@ -1,7 +1,7 @@
 import { driveTrack } from "./course-driver";
 import { test, expect } from "@playwright/test";
 import { TRACKS } from "../src/tracks";
-test("normal startup shows ten illustrated tracks and keeps the simulation paused", async ({
+test("normal startup shows eleven illustrated tracks and keeps the simulation paused", async ({
   page,
 }, info) => {
   await page.goto("/");

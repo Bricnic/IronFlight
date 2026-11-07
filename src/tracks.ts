@@ -180,7 +180,7 @@ function race(
     description,
     color,
     mode: "race",
-    thumbnail: `/tracks/${id}.svg`,
+    thumbnail: `/tracks/${id}.png`,
     spawn: { ...path[0], y: 2.1, yaw },
     path,
     checkpoints: gates(path),
