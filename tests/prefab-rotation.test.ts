@@ -7,9 +7,11 @@ import { Simulation, initPhysics } from "../src/simulation";
 import { Destructibles } from "../src/destructibles";
 import { PropView } from "../src/prop-view";
 import { courseProps } from "../src/course";
-import { dragonAim } from "../src/loop";
+import { CourseView } from "../src/course-view";
+import { DRAGON_FLAME_LENGTH, dragonAim } from "../src/loop";
 import {
   toTrack,
+  registerCustomTrack,
   validateCustomLevel,
   type CustomLevel,
   type CustomPrefab,
@@ -42,7 +44,11 @@ const minimal = (prefabs: CustomPrefab[]): CustomLevel => ({
 
 // Headless texture loads need a fake document (see tests/comic-labels.test.ts).
 vi.stubGlobal("document", {
-  createElement: () => ({ width: 0, height: 0, getContext: () => ({}) }),
+  createElement: () => ({
+    width: 0,
+    height: 0,
+    getContext: () => ({ fillRect: () => {}, fillText: () => {} }),
+  }),
   createElementNS: () => ({
     addEventListener: () => {},
     removeEventListener: () => {},
@@ -102,17 +108,60 @@ it("non-finite prefab rotation is rejected", () => {
 });
 
 it("dragonAim rotates the mouth offset and jet direction", () => {
-  expect(dragonAim(0)).toMatchObject({ mx: -3.55, mz: 0, dx: -1, dz: 0 });
+  expect(dragonAim(0)).toMatchObject({ mx: -4.05, my: 3.25, mz: 0, dx: -1, dz: 0 });
   const flipped = dragonAim(Math.PI);
-  expect(flipped.mx).toBeCloseTo(3.55, 9);
+  expect(flipped.mx).toBeCloseTo(4.05, 9);
   expect(flipped.mz).toBeCloseTo(0, 9);
   expect(flipped.dx).toBeCloseTo(1, 9);
   expect(flipped.dz).toBeCloseTo(0, 9);
   const quarter = dragonAim(Math.PI / 2);
   expect(quarter.mx).toBeCloseTo(0, 9);
-  expect(quarter.mz).toBeCloseTo(3.55, 9);
+  expect(quarter.mz).toBeCloseTo(4.05, 9);
   expect(quarter.dx).toBeCloseTo(0, 9);
   expect(quarter.dz).toBeCloseTo(1, 9);
+});
+
+it("a rotated custom dragon has dark bronze and emits from its mouth toward the tip", () => {
+  const level = minimal([
+    { id: "dragon-1", kind: "dragon", x: 10, y: 1.5, z: 20, yaw: Math.PI / 2 },
+  ]);
+  const track = toTrack(validateCustomLevel(level));
+  registerCustomTrack(track);
+  const sim = new Simulation();
+  try {
+    sim.startTrack(track.id);
+    const view = new CourseView();
+    sim.time = 5;
+    view.update(sim);
+    const statue = view.getObjectByName("dragon-1")!;
+    const body = statue.children[1] as T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>;
+    const horn = statue.children[7] as T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>;
+    const jets = statue.getObjectByName("dragon-jets")!;
+    expect(body.material.color.getHex()).toBe(0x15191b);
+    expect(body.material.emissiveIntensity).toBe(0);
+    expect(jets.visible).toBe(false);
+
+    sim.time = 0.1;
+    view.update(sim);
+    expect(body.material.color.equals(
+      new T.Color(0x15191b).lerp(new T.Color(0xff0000), 0.5),
+    )).toBe(true);
+    expect(body.material.emissiveIntensity).toBe(0.35);
+    expect(horn.material.color.getHex()).toBe(0xd7c7a0);
+    expect(jets.visible).toBe(true);
+
+    const jet = jets.children[3] as T.Mesh<T.BufferGeometry, T.ShaderMaterial>;
+    const mouth = jet.getWorldPosition(new T.Vector3());
+    expect(mouth.toArray()).toEqual([10, 4.75, 24.05]);
+    const { position, uv } = jet.geometry.attributes;
+    for (let i = 0; i < position.count; i++) {
+      const vertex = jet.localToWorld(new T.Vector3().fromBufferAttribute(position, i));
+      expect(vertex.z).toBeCloseTo(mouth.z + DRAGON_FLAME_LENGTH * uv.getY(i));
+    }
+    expect(jet.material.uniforms.head.value).toBeCloseTo(0.25);
+  } finally {
+    sim.dispose();
+  }
 });
 
 it("clone triple-loop dragons face the reference headings", () => {

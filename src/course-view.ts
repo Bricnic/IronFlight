@@ -7,8 +7,13 @@ import {
   textureLoadErrors,
   dragonFlameMaterial,
 } from "./materials";
-import { dragonAim, dragonFlame, dragonFiring } from "./loop";
-import { buildDragonStatue, addDragonJetFan } from "./loop-view";
+import { DRAGON_MOUTH, DRAGON_MOUTH_FRONT, dragonFlame } from "./loop";
+import {
+  buildDragonStatue,
+  addDragonJetFan,
+  updateDragonGlow,
+  updateDragonJets,
+} from "./loop-view";
 import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
 import { solidQuaternion } from "./euler";
@@ -77,7 +82,6 @@ export class CourseView extends T.Group {
   private dragonJets: T.Group[] = [];
   private dragonGlow: {
     bronze: T.MeshStandardMaterial;
-    horn: T.MeshStandardMaterial;
     eyes: T.MeshStandardMaterial;
   }[] = [];
   private lampModels: T.Group[] = [];
@@ -613,18 +617,19 @@ export class CourseView extends T.Group {
             horn,
             eyes,
           );
-          this.dragonGlow.push({ bronze, horn, eyes });
-          const aim = dragonAim(p.yaw ?? 0);
+          this.dragonGlow.push({ bronze, eyes });
           statue.name = p.id;
           statue.position.set(p.x, baseY, p.z);
           statue.rotation.y = -Math.PI / 2 + (p.yaw ?? 0);
           this.add(statue);
           this.dragonModels.push(statue);
           const jets = new T.Group();
-          jets.position.set(p.x + aim.mx, baseY + 3.25, p.z + aim.mz);
-          jets.rotation.y = Math.PI + (p.yaw ?? 0);
+          jets.name = "dragon-jets";
+          jets.position.set(0, DRAGON_MOUTH.y, DRAGON_MOUTH_FRONT);
+          // Turn the fan's +X into the statue's local forward (+Z).
+          jets.rotation.y = -Math.PI / 2;
           addDragonJetFan(jets, 1, dragonFlameMaterial());
-          this.add(jets);
+          statue.add(jets);
           this.dragonJets.push(jets);
         }
         if (track.id === "sky-slide") {
@@ -769,26 +774,10 @@ export class CourseView extends T.Group {
       g.children[0].rotation.y = sim.time;
       if (camera) g.children[1].quaternion.copy(camera.quaternion);
     }
-    const danger = dragonFiring(sim.time);
-    for (const g of this.dragonGlow) {
-      g.bronze.emissive.setHex(danger ? 0xff3500 : 0x1bbf8e);
-      g.bronze.color.setHex(danger ? 0xff5a0a : 0x15191b);
-      g.horn.color.setHex(danger ? 0xff5a0a : 0xd7c7a0);
-      g.eyes.emissive.setHex(danger ? 0xff3500 : 0x1bbf8e);
-      g.eyes.color.setHex(danger ? 0xff5a0a : 0x73f5bc);
-    }
     const packet = dragonFlame(sim.time);
-    for (const jets of this.dragonJets) {
-      jets.visible = packet.opacity > 0 && packet.head > packet.tail;
-      jets.children.forEach((jet) => {
-        const uniforms = ((jet as T.Mesh).material as T.ShaderMaterial)
-          .uniforms;
-        uniforms.time.value = sim.time;
-        uniforms.head.value = packet.head;
-        uniforms.tail.value = packet.tail;
-        uniforms.opacity.value = packet.opacity;
-      });
-    }
+    for (const { bronze, eyes } of this.dragonGlow)
+      updateDragonGlow(bronze, eyes, sim.time, packet);
+    for (const jets of this.dragonJets) updateDragonJets(jets, sim.time, packet);
   }
   inspect() {
     return {

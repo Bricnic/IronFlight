@@ -69,6 +69,16 @@ it("exposes custom dragon jets along their facing", () => {
     dragonExposureAt(5, { x: 2, y: 2.1, z: 0 }, mouth, dir),
   ).toBe(0);
 });
+it("custom dragon damage starts at the mouth and clears outward", () => {
+  const mouth = { x: 0, y: 3.25, z: 0 };
+  const direction = { x: 0, z: 1 };
+  const exposure = (time: number, z: number) =>
+    dragonExposureAt(time, { x: 0, y: 2.1, z }, mouth, direction);
+  expect(exposure(0.1, 1)).toBeCloseTo(0.5);
+  expect(exposure(0.1, 5)).toBe(0);
+  expect(exposure(3.1, 1)).toBe(0);
+  expect(exposure(3.1, 5)).toBeCloseTo(0.75);
+});
 it("actual truck fire damage waits for the visible jet and ends when its tail clears", () => {
   const s = new Simulation("easy");
   s.body.setTranslation({ x: -24, y: 2, z: 213 }, true);
