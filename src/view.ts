@@ -654,6 +654,7 @@ export class GameView {
       renderTriangles: this.renderer.info.render.triangles,
       geometries: this.renderer.info.memory.geometries,
       textures: this.renderer.info.memory.textures,
+      weather: { ...this.simulation.weather },
       video: {
         tier: this.videoTier,
         pixelRatio: this.renderer.getPixelRatio(),

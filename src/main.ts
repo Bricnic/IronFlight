@@ -81,6 +81,10 @@ async function boot() {
     view = new GameView(document.querySelector("#viewport")!, sim),
     clock = new FixedClock();
   view.applyQuality(loadSettings().video);
+  {
+    const stored = loadSettings();
+    sim.weather = { night: stored.night, rain: stored.rain };
+  }
   const { toggleDebug, toggleGhosts } = await createDebugMenu(sim);
   document.querySelector(".camera-hint")!.textContent =
     "DRAG TO ORBIT · WHEEL TO ZOOM · ` TUNING";
@@ -111,7 +115,7 @@ async function boot() {
     `<button id="level-select-button" class="header-action"><img src="/icons/level-select.png" width="24" height="24" alt=""><span>Level select</span></button>
     <button id="vehicle-select-button" class="header-action"><img src="/icons/select-vehicle.png" width="24" height="24" alt=""><span>Select vehicle</span></button>
     <button id="level-editor-button" class="header-action"><img src="/icons/level-editor.png" width="24" height="24" alt=""><span>Level editor</span></button>
-    <button id="settings-button" class="header-action"><img src="/icons/settings.png" width="24" height="24" alt=""><span>Settings</span></button>`,
+    <button id="settings-button" class="header-action"><img src="/icons/settings.png" width="24" height="24" alt=""><span>Settings</span></button><span id="weather-night" class="weather-badge" hidden>NIGHT</span><span id="weather-rain" class="weather-badge" hidden>RAIN</span>`,
   );
   const keys = new Set<string>();
   let cameraTrace: CameraSample[] = [],
@@ -272,11 +276,20 @@ async function boot() {
     startOfficial(id),
   );
   $("level-editor-button").onclick = showLevelEditor;
+  const paintWeather = () => {
+    document.getElementById("weather-night")!.hidden = !sim.weather.night;
+    document.getElementById("weather-rain")!.hidden = !sim.weather.rain;
+  };
   settingsScreens = createSettings(
     app,
     (tier) => view.applyQuality(tier),
     showLevelSelect,
+    (weather) => {
+      sim.weather = { ...weather };
+      paintWeather();
+    },
   );
+  paintWeather();
   $("settings-button").onclick = showSettings;
   // In-game placement for custom levels: ghost brick, live commit, disk save.
   app.insertAdjacentHTML(

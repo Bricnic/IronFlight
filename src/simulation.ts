@@ -20,6 +20,7 @@ import { solidQuaternion } from "./euler";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
 import { BOOST_PAD } from "./custom-level";
+import { DEFAULT_WEATHER, type WeatherFlags } from "./weather";
 import { type PartState } from "./damage";
 import { getVehicle, type VehicleId } from "./vehicles";
 import {
@@ -74,6 +75,7 @@ export class Simulation {
   vehicle!: RAPIER.DynamicRayCastVehicleController;
   stage: Stage;
   vehicleId: VehicleId = "monster-truck";
+  weather: WeatherFlags = { ...DEFAULT_WEATHER };
   trackRun?: TrackRun;
   courseTrack?: ReturnType<typeof getTrack>;
   activeHazards: Hazard[] = [];

@@ -172,6 +172,10 @@ export interface GameHarness {
     renderTriangles: number;
     geometries: number;
     textures: number;
+    weather: {
+      night: boolean;
+      rain: boolean;
+    };
     video: {
       tier: string;
       pixelRatio: number;

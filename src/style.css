@@ -586,6 +586,30 @@ kbd {
 .header-action:hover {
   background: #314951;
 }
+.weather-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border: 1px solid #ffffff38;
+  background: #253941;
+  color: #e8efec;
+  font:
+    600 12px "Barlow",
+    sans-serif;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+.weather-badge[hidden] {
+  display: none;
+}
+#weather-night {
+  border-color: #7dd7f0;
+  color: #bfe9f7;
+}
+#weather-rain {
+  border-color: #6aa8e0;
+  color: #c2d9f2;
+}
 @media (max-width: 650px) {
   .header-action {
     gap: 0;
