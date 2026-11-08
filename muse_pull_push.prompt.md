@@ -7,7 +7,9 @@ proceed safely, report failure (see below) instead of guessing.
 
 ## Goal
 
-1. `git pull --no-rebase --no-edit origin main`
+1. If the tree already has an in-progress merge (`git ls-files --unmerged`
+   shows entries), skip straight to step 2 — the caller already tried a
+   plain pull. Otherwise `git pull --no-rebase --no-edit origin main`.
 2. If the pull reports merge conflicts, resolve every conflicted file
    SEMANTICALLY (see below), verify, and complete the merge.
 3. Stage and commit any remaining changes exactly like push.cmd does:
@@ -36,6 +38,16 @@ proceed safely, report failure (see below) instead of guessing.
 - On success, `git add --all` and complete the merge with
   `git commit --no-edit`.
 
+## Progress output
+
+The caller shows your console output live, but long quiet stretches
+look like a stall. After every stage, print a progress line with a
+shell echo so it streams to the console: pull done (or skipped),
+conflicts found with the file list, each file as you resolve it,
+verification results, commit done, push done. Prefix every marker
+with `MUSE-PROGRESS:`, e.g.
+`echo MUSE-PROGRESS: resolved src/view.ts (2 of 5)`.
+
 ## Status report (REQUIRED, always the last step)
 
 Write `%TEMP%\muse-pull-push.status` (expand %TEMP% in your shell) whose
@@ -43,3 +55,18 @@ FIRST line is exactly `OK` or `FAIL`, followed by a short summary: what
 was pulled, which files you resolved (if any), and the push result.
 Write this file even when you fail: a missing status file is treated
 as failure by the caller.
+
+## Dry-run mode
+
+Before doing anything, check whether `%TEMP%\muse-pull-push.dryrun`
+exists (expand %TEMP% in your shell). If it does, you are in DRY-RUN
+mode and MUST NOT write anything: no pull, push, commit, add, merge,
+checkout, or file edits anywhere in the repository (scratch files
+under %TEMP% are fine). `git fetch origin main` is allowed so you can
+inspect remote objects; use `git status`, `git log`, and
+`git merge-tree` to predict exactly what the pull would bring in and
+which files would conflict. Draft every conflict resolution in your
+report (and temp files if useful) but apply none of them, and skip
+`npm run check` (read-only analysis only). Still finish by writing
+the status file: first line `OK` with a summary of what a real run
+would do, or `FAIL` with blockers.
