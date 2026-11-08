@@ -5,6 +5,7 @@ import {
   Vector3,
   Mesh,
   MeshPhysicalMaterial,
+  SphereGeometry,
   TextureLoader,
   Texture,
 } from "three";
@@ -31,6 +32,25 @@ it("loop arcs use translucent plastic while the approaches stay opaque", () => {
   expect(
     (view.getObjectByName("physical-loop-track") as Mesh).material,
   ).toHaveProperty("transparent", false);
+});
+
+it("the dragon course has no floating signal spheres", () => {
+  const load = vi
+    .spyOn(TextureLoader.prototype, "load")
+    .mockReturnValue(new Texture());
+  const view = new LoopView();
+  load.mockRestore();
+  const orbs: Mesh[] = [];
+  view.traverse((node) => {
+    const mesh = node as Mesh;
+    if (
+      mesh.isMesh &&
+      mesh.geometry.type === "SphereGeometry" &&
+      (mesh.geometry as SphereGeometry).parameters.radius === 0.65
+    )
+      orbs.push(mesh);
+  });
+  expect(orbs).toHaveLength(0);
 });
 
 it("a sinking player stays visible from above the stage", () => {

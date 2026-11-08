@@ -194,7 +194,6 @@ export class LoopView extends T.Group {
   private jets: T.Group[] = [];
   private eyes: T.MeshStandardMaterial;
   private dragonMaterial!: T.MeshStandardMaterial;
-  private lights: T.Mesh[] = [];
   constructor() {
     super();
     this.name = "dragon-loop-course";
@@ -322,10 +321,6 @@ export class LoopView extends T.Group {
         for (const side of [-1, 1])
           addDragonJetFan(jets, -side, flame, side * DRAGON_FLAME_LENGTH, 0.6);
       }
-      const signal = new T.Mesh(new T.SphereGeometry(0.65, 16, 12), this.eyes);
-      signal.position.set(r.x - 6, 5, LOOP.boostStart - 5);
-      this.add(signal);
-      this.lights.push(signal);
       for (const z of [LOOP.z - 34, LOOP.z + 34])
         for (const side of [-1, 1]) {
           const support = new T.Mesh(new T.BoxGeometry(0.6, 25, 0.6), trim);
