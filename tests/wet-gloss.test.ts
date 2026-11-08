@@ -8,9 +8,9 @@ import {
 } from "../src/course-view";
 
 function wettable(roughness = 0.95, env = 1): Wettable {
-  const mat = new T.MeshStandardMaterial({ roughness });
+  const mat = new T.MeshStandardMaterial({ roughness, color: 0xc3c4c5 });
   mat.envMapIntensity = env;
-  return { mat, roughness, env };
+  return { mat, roughness, env, color: 0xc3c4c5 };
 }
 
 it("glosses wet surfaces and reports the count", () => {
@@ -21,6 +21,7 @@ it("glosses wet surfaces and reports the count", () => {
   for (const w of surfaces) {
     expect(w.mat.roughness).toBe(WET_ROUGHNESS);
     expect(w.mat.envMapIntensity).toBe(WET_ENV);
+    expect(w.mat.color.getHex()).toBeLessThan(w.color);
   }
 });
 
@@ -32,4 +33,5 @@ it("restores day values when dry", () => {
   expect(surfaces[0].mat.envMapIntensity).toBe(1);
   expect(surfaces[1].mat.roughness).toBe(0.6);
   expect(surfaces[1].mat.envMapIntensity).toBe(0.8);
+  expect(surfaces[0].mat.color.getHex()).toBe(0xc3c4c5);
 });

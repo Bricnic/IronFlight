@@ -20,6 +20,8 @@ export function applyHaze(base: T.Color, horizon: T.Color, radius: number): T.Co
 
 /** Seeded star points on the upper sky dome; fog-free so they read at night. */
 export const STAR_COUNT = 300;
+/** Storm-gray cloud tint while raining. */
+export const STORM_CLOUD = 0x59616e;
 export function buildStarField(count: number): T.Points {
   const rand = mulberry32(0x5eed);
   const positions = new Float32Array(count * 3);
@@ -175,7 +177,7 @@ export class BackgroundView extends T.Group {
   private templateName = "";
   private shapeCount = 0;
   private matCache = new Map<string, T.Material>();
-  private clouds: { sprite: T.Sprite; baseX: number; drift: number }[] = [];
+  private clouds: { sprite: T.Sprite; baseX: number; drift: number; day: number }[] = [];
   private skyMaterial: T.ShaderMaterial | null = null;
   private stars: T.Points | null = null;
   private nightApplied = false;
@@ -213,10 +215,14 @@ export class BackgroundView extends T.Group {
     }
     this.position.set(focusX, 0, focusZ);
     this.scale.setScalar(far / 650);
-    for (const cloud of this.clouds)
+    for (const cloud of this.clouds) {
       cloud.sprite.position.x =
         ((((cloud.baseX + time * cloud.drift + 700) % 1400) + 1400) % 1400) -
         700;
+      (cloud.sprite.material as T.SpriteMaterial).color.setHex(
+        weather.rain ? STORM_CLOUD : cloud.day,
+      );
+    }
   }
 
   stats() {
@@ -640,8 +646,9 @@ export class BackgroundView extends T.Group {
       const w = 70 + t * 50;
       sprite.position.set(Math.cos(slot.angle) * radius, y, Math.sin(slot.angle) * radius);
       sprite.scale.set(w, w * 0.45, 1);
+      sprite.name = "background-cloud";
       this.add(sprite);
-      this.clouds.push({ sprite, baseX: sprite.position.x, drift: clouds.drift * 3 });
+      this.clouds.push({ sprite, baseX: sprite.position.x, drift: clouds.drift * 3, day: clouds.color });
     }
   }
 }

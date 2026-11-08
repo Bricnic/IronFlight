@@ -196,7 +196,7 @@ export class CourseView extends T.Group {
       (s.kind === "road" || s.kind === "ramp" || s.kind === "loop" || s.kind === "ground") &&
       mat instanceof T.MeshStandardMaterial
     )
-      this.wetSurfaces.push({ mat, roughness: mat.roughness, env: mat.envMapIntensity });
+      this.wetSurfaces.push({ mat, roughness: mat.roughness, env: mat.envMapIntensity, color: mat.color.getHex() });
     const geometry = s.footprint
       ? new T.ExtrudeGeometry(
           new T.Shape(s.footprint.map(({ x, z }) => new T.Vector2(x, -z))),
@@ -1149,16 +1149,25 @@ export function makeGlowTexture(): T.DataTexture {
 export const GATE_NIGHT_GLOW = 3.5;
 /** Wet-road gloss: low roughness plus an env kick for sky reflections. */
 export const WET_ROUGHNESS = 0.22;
-export const WET_ENV = 1.6;
+export const WET_ENV = 1.25;
+export const WET_ALBEDO = 0.72;
 export interface Wettable {
   mat: T.MeshStandardMaterial;
   roughness: number;
   env: number;
+  color: number;
+}
+function scaleColor(hex: number, f: number) {
+  const r = Math.round(((hex >> 16) & 0xff) * f);
+  const g = Math.round(((hex >> 8) & 0xff) * f);
+  const b = Math.round((hex & 0xff) * f);
+  return (r << 16) | (g << 8) | b;
 }
 export function applyWetGloss(surfaces: Wettable[], rain: boolean): number {
   for (const w of surfaces) {
     w.mat.roughness = rain ? WET_ROUGHNESS : w.roughness;
     w.mat.envMapIntensity = rain ? WET_ENV : w.env;
+    w.mat.color.setHex(rain ? scaleColor(w.color, WET_ALBEDO) : w.color);
   }
   return rain ? surfaces.length : 0;
 }

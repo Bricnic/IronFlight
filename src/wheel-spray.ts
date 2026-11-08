@@ -49,6 +49,6 @@ export function updateWheelSpray(
     );
     const scale = 0.8 + phase * (1.6 + strength * 1.2);
     o.scale.set(scale, scale, 1);
-    (o.material as T.SpriteMaterial).opacity = (1 - phase) * 0.5 * strength;
+    (o.material as T.SpriteMaterial).opacity = (1 - phase) * 0.65 * strength;
   }
 }
