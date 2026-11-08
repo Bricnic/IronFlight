@@ -5,10 +5,9 @@ import { mkdir, readFile } from "node:fs/promises";
 // IDs default to the full official lineup, read live from the level-select
 // screen; pass a subset to recapture. Each level uses the next vehicle in
 // garage order (triple-loop -> Monster Truck, harbor-sprint -> Sports Car,
-// ...), and the chase camera is zoomed out through the real wheel path to
-// the player's max zoom-out distance (45) before each screenshot.
+// ...) at the default chase distance, with a stylized top-down minimap of
+// the level drawn as a box in the lower right of each preview.
 const PORT = process.env.PREVIEW_PORT ?? "5173";
-const MAX_ZOOM_DISTANCE = 45;
 const browser = await chromium.launch({
   args: [
     "--enable-webgl",
@@ -18,28 +17,96 @@ const browser = await chromium.launch({
   ],
 });
 const file = (id) => id.replace(/^custom:/, "");
-/** Zoom the chase camera out through the real player wheel path. */
-async function zoomToMax(page) {
-  await page.mouse.move(400, 225);
-  for (let i = 0; i < 6; i++) {
-    const distance = await page.evaluate(
-      () => window.__game.camera().distance,
+/** Draw (or redraw) the stylized minimap overlay for a track. */
+async function drawMinimap(page, trackId) {
+  await page.evaluate((trackId) => {
+    const track = window.__game.track(trackId);
+    let box = document.getElementById("minimap-box");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "minimap-box";
+      box.style.cssText =
+        "position:absolute;right:14px;bottom:14px;width:204px;height:154px;" +
+        "background:rgba(8,14,18,0.82);border:2px solid rgba(255,255,255,0.30);" +
+        "border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.45);";
+      const canvas = document.createElement("canvas");
+      canvas.width = 200;
+      canvas.height = 150;
+      canvas.style.cssText =
+        "display:block;width:200px;height:150px;border-radius:8px;";
+      box.appendChild(canvas);
+      document.getElementById("viewport").appendChild(box);
+    }
+    const canvas = box.querySelector("canvas");
+    const ctx = canvas.getContext("2d");
+    const W = 200,
+      H = 150,
+      pad = 14;
+    ctx.clearRect(0, 0, W, H);
+    const pts = [
+      ...track.path,
+      ...track.checkpoints,
+      ...track.collectibles,
+      ...(track.demolish ?? []),
+      ...(track.rings ?? []),
+      ...(track.ring ? [track.ring] : []),
+      track.spawn,
+    ];
+    let minX = Math.min(...pts.map((p) => p.x));
+    let maxX = Math.max(...pts.map((p) => p.x));
+    let minZ = Math.min(...pts.map((p) => p.z));
+    let maxZ = Math.max(...pts.map((p) => p.z));
+    if (maxX - minX < 1) {
+      minX -= 0.5;
+      maxX += 0.5;
+    }
+    if (maxZ - minZ < 1) {
+      minZ -= 0.5;
+      maxZ += 0.5;
+    }
+    const s = Math.min(
+      (W - pad * 2) / (maxX - minX),
+      (H - pad * 2) / (maxZ - minZ),
     );
-    if (distance >= MAX_ZOOM_DISTANCE - 0.1) return distance;
-    await page.mouse.wheel(0, 800);
-  }
-  // Headless fallback: same listener, synthetic event.
-  await page.evaluate(() => {
-    document
-      .querySelector("#viewport canvas")
-      .dispatchEvent(new WheelEvent("wheel", { deltaY: 2000, bubbles: true }));
-  });
-  const distance = await page.evaluate(
-    () => window.__game.camera().distance,
-  );
-  if (distance < MAX_ZOOM_DISTANCE - 0.1)
-    throw new Error(`Zoom-out failed: distance ${distance}`);
-  return distance;
+    const ox = (W - s * (maxX - minX)) / 2;
+    const oy = (H - s * (maxZ - minZ)) / 2;
+    const X = (x) => ox + s * (x - minX);
+    const Y = (z) => oy + s * (maxZ - z);
+    const hex = `#${track.color.toString(16).padStart(6, "0")}`;
+    if (track.mode === "race" && track.path.length > 1) {
+      ctx.strokeStyle = hex;
+      ctx.lineWidth = 3.5;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      track.path.forEach((p, i) =>
+        i ? ctx.lineTo(X(p.x), Y(p.z)) : ctx.moveTo(X(p.x), Y(p.z)),
+      );
+      ctx.stroke();
+    }
+    const dot = (x, z, r, fill) => {
+      ctx.beginPath();
+      ctx.arc(X(x), Y(z), r, 0, Math.PI * 2);
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(0,0,0,0.55)";
+      ctx.stroke();
+    };
+    for (const c of track.checkpoints) dot(c.x, c.z, 2.5, "#ffffff");
+    for (const c of track.collectibles) dot(c.x, c.z, 3, "#ffd34d");
+    for (const d of track.demolish ?? []) dot(d.x, d.z, 3, "#ff5a4d");
+    const goalRing = (r) => {
+      ctx.beginPath();
+      ctx.arc(X(r.x), Y(r.z), Math.max(3, r.radius * s), 0, Math.PI * 2);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "#ffffff";
+      ctx.stroke();
+    };
+    for (const r of track.rings ?? []) goalRing(r);
+    if (track.ring) goalRing(track.ring);
+    dot(track.spawn.x, track.spawn.z, 3.5, "#7ee787");
+  }, trackId);
 }
 try {
   const page = await browser.newPage({
@@ -107,7 +174,10 @@ try {
       { trackId, vehicle },
     );
     await page.waitForTimeout(2000);
-    const distance = await zoomToMax(page);
+    await drawMinimap(page, trackId);
+    const distance = await page.evaluate(
+      () => window.__game.camera().distance,
+    );
     await page.evaluate(() => {
       window.__game.pause(true);
       window.__captureFreeze = true;
@@ -118,7 +188,7 @@ try {
       img?.startsWith("/tracks/") && img.endsWith(".png")
         ? `public${img}`
         : `public/tracks/${file(trackId)}.png`;
-    await page.locator("#viewport canvas").screenshot({ path: out });
+    await page.locator("#viewport").screenshot({ path: out });
     const bytes = await readFile(out);
     const w = bytes.readUInt32BE(16),
       h = bytes.readUInt32BE(20);
