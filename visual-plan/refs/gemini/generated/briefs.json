@@ -58,5 +58,29 @@
     "name": "Turbo Trike",
     "brief": "Custom trike derby car at chunky monster-truck scale that reads as a three-wheeler trike from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Long raked chrome front fork nose with twin headlamps and ape-hanger bars, low purple chopper tank with cyan flames, finned V-twin engine with chrome slash-cut exhausts, quilted brown saddle seat, wide purple rear fenders with cyan flames, tall chrome sissy bar. Gloss painted metal, chrome fork and pipes, leather seat, rubber tires.",
     "category": "wild"
+  },
+  {
+    "id": "dump-truck",
+    "name": "Dump Truck",
+    "brief": "Ochre construction dump truck at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Tall cab-over cab with big windshield, black slatted grille and amber roof beacons, open ribbed steel dump bed with hydraulic hoist ram and cab shield overhang, side ladders, mud flaps and steel rails. Painted metal cab and bed, steel rails, rubber tires.",
+    "category": "realistic"
+  },
+  {
+    "id": "mobile-crane",
+    "name": "Mobile Crane",
+    "brief": "Bright yellow mobile truck crane at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Compact cab-over carrier cab with tinted glass and sun visor, rotating crane turret with telescoping box boom, lattice-braced boom reaching over the cab, hook block and cable, extended stabilizing outrigger beams with jack pads, black and yellow hazard chevrons on the bumpers. Painted metal body, steel boom sections, rubber tires.",
+    "category": "realistic"
+  },
+  {
+    "id": "forklift",
+    "name": "Forklift",
+    "brief": "Safety-orange industrial forklift at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Open operator cage with overhead guard and operator seat, tall black twin-rail lift mast with chains, twin steel pallet forks, rear counterweight with tow pin, amber beacon and work lights. Painted metal body, steel mast and forks, rubber tires.",
+    "category": "realistic"
+  },
+  {
+    "id": "street-sweeper",
+    "name": "Street Sweeper",
+    "brief": "White municipal street sweeper at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Low cab-over cab with wraparound windshield, blue stripe livery and amber light bar, cylindrical steel water tank with rivet rings, top hatch and rear equipment doors, twin yellow gutter brushes with spray bars under the nose, side exhaust pipes. Painted metal body, steel tank, rubber tires.",
+    "category": "realistic"
   }
 ]

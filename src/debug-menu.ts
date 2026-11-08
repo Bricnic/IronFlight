@@ -60,7 +60,7 @@ export async function createDebugMenu(sim: Simulation) {
   };
   const sliderKeys = (Object.keys(labels) as (keyof typeof labels)[])
     .sort((a, b) => labels[a].localeCompare(labels[b]));
-  menu.innerHTML = `<div class="eyebrow">PLAYTEST TUNING <span>\u0060 TO CLOSE</span></div><h2>Make it your own.</h2><p>Live adjustments · saved on this browser</p><label class="debug-toggle" for="debug-ghosts"><span>Enable graveyard ghosts</span><input id="debug-ghosts" type="checkbox"></label><label for="objective-font-size">Objective font size<output id="objective-font-size-value"></output></label><input id="objective-font-size" type="range" min="1" max="10" step="0.1" value="1.3"><div id="truck-colors" class="truck-colors"></div>${sliderKeys.map((key) => `<label for="tune-${key}">${labels[key]}<output id="value-${key}"></output></label><input id="tune-${key}" type="range" min="${tuningRange(key).min}" max="${tuningRange(key).max}" step="${tuningRange(key).step}" value="${sim.tuning[key]}">`).join("")}<button id="store-defaults">Store as Defaults</button><button id="reset-tuning">Reset tuning</button><p id="tuning-status" role="status" aria-live="polite"></p>`;
+  menu.innerHTML = `<div class="eyebrow">PLAYTEST TUNING <span>\u0060 TO CLOSE</span></div><h2>Make it your own.</h2><p>Live adjustments · saved on this browser</p><p class="debug-level">Level path: <span id="debug-level-path"></span></p><label class="debug-toggle" for="debug-ghosts"><span>Enable graveyard ghosts</span><input id="debug-ghosts" type="checkbox"></label><label for="objective-font-size">Objective font size<output id="objective-font-size-value"></output></label><input id="objective-font-size" type="range" min="1" max="10" step="0.1" value="1.3"><div id="truck-colors" class="truck-colors"></div>${sliderKeys.map((key) => `<label for="tune-${key}">${labels[key]}<output id="value-${key}"></output></label><input id="tune-${key}" type="range" min="${tuningRange(key).min}" max="${tuningRange(key).max}" step="${tuningRange(key).step}" value="${sim.tuning[key]}">`).join("")}<button id="store-defaults">Store as Defaults</button><button id="reset-tuning">Reset tuning</button><p id="tuning-status" role="status" aria-live="polite"></p>`;
   document.getElementById("app")!.append(menu);
   const ghostToggle = menu.querySelector<HTMLInputElement>("#debug-ghosts")!;
   const setGhostsEnabled = (enabled: boolean) => {
@@ -89,7 +89,41 @@ export async function createDebugMenu(sim: Simulation) {
   fontInput.addEventListener("input", () =>
     setProgressFont(Number(fontInput.value)),
   );
+  const pathOutput =
+    menu.querySelector<HTMLElement>("#debug-level-path")!;
+  const copyModules = import.meta.glob<unknown>("../game-copy.json", {
+    eager: true,
+    import: "default",
+  });
+  const copyRoot = (() => {
+    const [info] = Object.values(copyModules);
+    return info &&
+      typeof info === "object" &&
+      typeof (info as { root?: unknown }).root === "string" &&
+      ((info as { root: string }).root.length > 0)
+      ? (info as { root: string }).root
+      : null;
+  })();
+  const copySep =
+    copyRoot !== null && /^[A-Za-z]:|^\\/.test(copyRoot) ? "\\" : "/";
+  const paintLevelPath = () => {
+    const track = sim.trackRun?.track;
+    const join = (parts: string) =>
+      copyRoot
+        ? `${copyRoot}${copySep}${parts.split("/").join(copySep)}`
+        : `${location.origin}/${parts}`;
+    pathOutput.textContent = !track
+      ? `${copyRoot ?? location.origin} (no level started)`
+      : track.sourceFile
+        ? join(track.sourceFile)
+        : track.custom
+          ? `${copyRoot ?? location.origin} (custom level "${track.custom.name}" from this copy's level store)`
+          : copyRoot
+            ? `${join("src/tracks.ts")}:${track.id}`
+            : `${location.origin} (built-in track "${track.id}", src/tracks.ts)`;
+  };
   const sync = () => {
+    paintLevelPath();
     ghostToggle.checked = sim.ghostsEnabled;
     paintFont();
     for (const key of sliderKeys) {
@@ -173,6 +207,7 @@ export async function createDebugMenu(sim: Simulation) {
   return {
     toggleDebug() {
       menu.hidden = !menu.hidden;
+      if (!menu.hidden) paintLevelPath();
       if (menu.hidden && menu.contains(document.activeElement))
         (document.activeElement as HTMLElement).blur();
     },
