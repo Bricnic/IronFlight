@@ -1,5 +1,6 @@
 {
   "name": "Fairground",
+  "backgroundTemplate": "fairground-park",
   "mode": "arena",
   "spawn": {
     "x": -180,

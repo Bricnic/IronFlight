@@ -1,0 +1,45 @@
+{
+  "name": "haunted-night",
+  "sky": { "top": 659504, "horizon": 3820122 },
+  "fog": { "color": 3820122, "near": 80, "far": 320 },
+  "sun": { "color": 16751178, "intensity": 1.8 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 1.2 },
+  "env": 0.4,
+  "shapes": [
+    {
+      "kind": "dead-tree",
+      "texture": "bark_brown_01",
+      "count": 18,
+      "radius": 200,
+      "y": 0,
+      "size": [8, 16],
+      "seed": 81
+    },
+    {
+      "kind": "hill",
+      "texture": "brown_mud_leaves_01",
+      "count": 8,
+      "radius": 300,
+      "y": -4,
+      "size": [40, 80],
+      "seed": 82
+    },
+    {
+      "kind": "moon",
+      "count": 1,
+      "radius": 480,
+      "y": 120,
+      "size": [22, 22],
+      "seed": 83
+    }
+  ],
+  "clouds": {
+    "count": 8,
+    "y": [100, 170],
+    "radius": [250, 470],
+    "color": 2765904,
+    "opacity": 0.7,
+    "drift": 1,
+    "seed": 84
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "ember-dusk",
+  "sky": { "top": 3811930, "horizon": 14715468 },
+  "fog": { "color": 14715468, "near": 140, "far": 600 },
+  "sun": { "color": 16751178, "intensity": 2 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2 },
+  "env": 0.7,
+  "shapes": [
+    {
+      "kind": "toy-block",
+      "texture": "concrete_layers_02",
+      "count": 10,
+      "radius": 340,
+      "y": 0,
+      "size": [40, 80],
+      "seed": 131
+    },
+    {
+      "kind": "mountain",
+      "texture": "dark_rock_02",
+      "count": 8,
+      "radius": 460,
+      "y": 0,
+      "size": [100, 180],
+      "seed": 132
+    }
+  ],
+  "clouds": {
+    "count": 8,
+    "y": [110, 180],
+    "radius": [260, 480],
+    "color": 12613712,
+    "opacity": 0.85,
+    "drift": 1,
+    "seed": 133
+  }
+}

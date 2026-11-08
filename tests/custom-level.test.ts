@@ -68,6 +68,28 @@ it("texture ids match the cached Poly Haven manifest", () => {
     manifest.assets.map((a: { id: string }) => a.id),
   );
 });
+it("preserves a valid background template reference", () => {
+  const level = validateCustomLevel({
+    ...minimal(),
+    backgroundTemplate: "desert-mesas",
+  });
+  expect(level.backgroundTemplate).toBe("desert-mesas");
+  expect(toTrack(level).backgroundTemplate).toBe("desert-mesas");
+});
+it("rejects invalid background template references", () => {
+  expect(() =>
+    validateCustomLevel({ ...minimal(), backgroundTemplate: "" }),
+  ).toThrow(/background/);
+  expect(() =>
+    validateCustomLevel({ ...minimal(), backgroundTemplate: "../escape" }),
+  ).toThrow(/background/);
+  expect(() =>
+    validateCustomLevel({ ...minimal(), backgroundTemplate: 7 }),
+  ).toThrow(/background/);
+});
+it("blank levels carry the default background", () => {
+  expect(blankLevel("Fresh").backgroundTemplate).toBe("pastoral-hills");
+});
 it("validates a minimal race level and round-trips through JSON", () => {
   const level = validateCustomLevel(minimal());
   expect(level.name).toBe("First Sprint");

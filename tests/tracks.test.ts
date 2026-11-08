@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { TRACKS, getTrack, validateTracks } from "../src/tracks";
+import { getBackgroundTemplate } from "../src/backgrounds";
 import { officialTracks, stepTrackId } from "../src/official-levels";
 it("registers Triple Loop plus eight distinct tracks", () => {
   expect(TRACKS.map((t) => t.name)).toEqual([
@@ -60,6 +61,14 @@ it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets
     ]),
   ).not.toEqual([]);
   expect(validateTracks([{ ...TRACKS[4], feasibility: 121 }])).not.toEqual([]);
+});
+it("every track resolves a background template", () => {
+  for (const t of [...TRACKS, ...officialTracks.slice(-4)]) {
+    expect(t.backgroundTemplate, t.id).toBeDefined();
+    expect(getBackgroundTemplate(t.backgroundTemplate).name).toBe(
+      t.backgroundTemplate,
+    );
+  }
 });
 it("every official level preview is a dedicated screenshot", () => {
   for (const track of officialTracks) {

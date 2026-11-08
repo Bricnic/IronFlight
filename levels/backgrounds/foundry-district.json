@@ -1,0 +1,37 @@
+{
+  "name": "foundry-district",
+  "sky": { "top": 8014376, "horizon": 14196842 },
+  "fog": { "color": 14196842, "near": 140, "far": 600 },
+  "sun": { "color": 16757866, "intensity": 3 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2 },
+  "env": 0.7,
+  "shapes": [
+    {
+      "kind": "smokestack",
+      "texture": "concrete_floor_02",
+      "count": 6,
+      "radius": 300,
+      "y": 0,
+      "size": [35, 55],
+      "seed": 31
+    },
+    {
+      "kind": "container-stack",
+      "texture": "concrete_layers_02",
+      "count": 10,
+      "radius": 380,
+      "y": 0,
+      "size": [25, 45],
+      "seed": 32
+    }
+  ],
+  "clouds": {
+    "count": 10,
+    "y": [110, 180],
+    "radius": [250, 470],
+    "color": 6969936,
+    "opacity": 0.85,
+    "drift": 2,
+    "seed": 33
+  }
+}

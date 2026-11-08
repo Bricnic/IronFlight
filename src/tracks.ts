@@ -54,6 +54,8 @@ export type Track = {
   custom?: CustomLevel;
   /** Underground levels render with dark cavern air, fog and torchlight. */
   underground?: boolean;
+  /** Background template name; see levels/backgrounds/. */
+  backgroundTemplate?: string;
 };
 export type OfficialTrack = Track & { id: TrackId };
 const points = (pairs: number[][]): Point[] =>
@@ -352,6 +354,18 @@ export const TRACKS: OfficialTrack[] = [
     ring: { x: 0, z: 2440, y: 20, radius: 10 },
   },
 ];
+const TRACK_BACKGROUNDS: Record<TrackId, string> = {
+  "triple-loop": "pastoral-hills",
+  "harbor-sprint": "harbor-docks",
+  "foundry-run": "foundry-district",
+  "skyline-circuit": "city-skyline",
+  "scrapyard-sweep": "scrapyard-flats",
+  "inferno-vault": "volcanic-fields",
+  "canyon-plunge": "desert-mesas",
+  "haunted-hollow": "haunted-night",
+  "sky-slide": "alpine-peaks",
+};
+for (const track of TRACKS) track.backgroundTemplate = TRACK_BACKGROUNDS[track.id];
 export function getTrack(id: string): Track {
   const track = TRACKS.find((t) => t.id === id) ?? getCustomTrack(id);
   if (!track) throw new RangeError(`Unknown track: ${id}`);

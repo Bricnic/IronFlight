@@ -1,0 +1,38 @@
+{
+  "name": "toybox-volcano",
+  "sky": { "top": 8014474, "horizon": 14721136 },
+  "fog": { "color": 14721136, "near": 140, "far": 600 },
+  "sun": { "color": 16769967, "intensity": 3.5 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2 },
+  "env": 0.7,
+  "shapes": [
+    {
+      "kind": "toy-block",
+      "texture": "blue_plaster_wall",
+      "color": 14241597,
+      "count": 14,
+      "radius": 260,
+      "y": 0,
+      "size": [15, 30],
+      "seed": 121
+    },
+    {
+      "kind": "mountain",
+      "texture": "dark_rock_02",
+      "count": 8,
+      "radius": 420,
+      "y": 0,
+      "size": [100, 180],
+      "seed": 122
+    }
+  ],
+  "clouds": {
+    "count": 10,
+    "y": [100, 170],
+    "radius": [250, 480],
+    "color": 16767408,
+    "opacity": 0.9,
+    "drift": 1.5,
+    "seed": 123
+  }
+}

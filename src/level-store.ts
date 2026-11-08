@@ -5,6 +5,7 @@ import {
   getCustomTrack,
   type CustomLevel,
 } from "./custom-level";
+import { backgroundForLevel } from "./backgrounds";
 import { officialFileTracks } from "./official-levels";
 export interface LevelStorage {
   getItem(key: string): string | null;
@@ -131,7 +132,13 @@ export async function importLevel(
   deps: Partial<LevelStoreDeps> | undefined,
   json: string,
 ) {
-  return saveLevel(deps, validateCustomLevel(JSON.parse(json) as unknown));
+  const level = validateCustomLevel(JSON.parse(json) as unknown);
+  return saveLevel(
+    deps,
+    level.backgroundTemplate === undefined
+      ? { ...level, backgroundTemplate: backgroundForLevel(level) }
+      : level,
+  );
 }
 /** Register every stored level at boot; never blocks the menu. */
 export async function registerStoredTracks(deps?: Partial<LevelStoreDeps>) {

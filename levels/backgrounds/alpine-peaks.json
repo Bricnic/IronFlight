@@ -1,0 +1,37 @@
+{
+  "name": "alpine-peaks",
+  "sky": { "top": 3108816, "horizon": 12572904 },
+  "fog": { "color": 12572904, "near": 200, "far": 600 },
+  "sun": { "color": 16769967, "intensity": 3.5 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2.2 },
+  "env": 0.8,
+  "shapes": [
+    {
+      "kind": "snow-peak",
+      "texture": "snow_01",
+      "count": 12,
+      "radius": 420,
+      "y": 0,
+      "size": [120, 220],
+      "seed": 91
+    },
+    {
+      "kind": "hill",
+      "texture": "grass_ground",
+      "count": 8,
+      "radius": 300,
+      "y": -4,
+      "size": [40, 80],
+      "seed": 92
+    }
+  ],
+  "clouds": {
+    "count": 14,
+    "y": [-40, 160],
+    "radius": [240, 500],
+    "color": 16777215,
+    "opacity": 0.9,
+    "drift": 1.8,
+    "seed": 93
+  }
+}

@@ -1,0 +1,145 @@
+import { expect, it, vi, beforeEach, afterEach } from "vitest";
+import { Color, Mesh, Sprite, Texture, TextureLoader } from "three";
+import { BackgroundView, applyHaze } from "../src/background-view";
+import { getTrack } from "../src/tracks";
+
+beforeEach(() => {
+  vi.spyOn(TextureLoader.prototype, "load").mockReturnValue(new Texture());
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+function meshes(view: BackgroundView) {
+  const out: Mesh[] = [];
+  view.traverse((o) => {
+    if (o instanceof Mesh) out.push(o);
+  });
+  return out;
+}
+
+function sprites(view: BackgroundView) {
+  const out: Sprite[] = [];
+  view.traverse((o) => {
+    if (o instanceof Sprite) out.push(o);
+  });
+  return out;
+}
+
+it("builds a sky dome, shapes and clouds for a track", () => {
+  const view = new BackgroundView();
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650);
+  const stats = view.stats();
+  expect(stats.template).toBe("pastoral-hills");
+  expect(view.getObjectByName("background-sky")).toBeDefined();
+  expect(meshes(view).length).toBeGreaterThan(1);
+  expect(sprites(view)).toHaveLength(12);
+  expect(stats.shapes).toBeGreaterThan(0);
+  expect(stats.clouds).toBe(12);
+});
+
+it("follows the focus point and scales to the far plane", () => {
+  const view = new BackgroundView();
+  view.update(getTrack("triple-loop"), 0, 100, 200, 350);
+  expect(view.position.x).toBe(100);
+  expect(view.position.z).toBe(200);
+  expect(view.scale.x).toBeCloseTo(350 / 650, 9);
+  view.update(getTrack("triple-loop"), 0, -50, 75, 650);
+  expect(view.position.x).toBe(-50);
+  expect(view.position.z).toBe(75);
+  expect(view.scale.x).toBeCloseTo(1, 9);
+});
+
+it("rebuilds only when the track changes", () => {
+  const view = new BackgroundView();
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650);
+  const first = meshes(view);
+  view.update(getTrack("triple-loop"), 10, 30, 40, 650);
+  const again = meshes(view);
+  expect(again.map((m) => m.id)).toEqual(first.map((m) => m.id));
+  view.update(getTrack("canyon-plunge"), 10, 30, 40, 650);
+  expect(view.stats().template).toBe("desert-mesas");
+  const rebuilt = meshes(view);
+  expect(rebuilt.map((m) => m.id)).not.toEqual(first.map((m) => m.id));
+});
+
+it("disposes geometries when rebuilding", () => {
+  const view = new BackgroundView();
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650);
+  let disposed = 0;
+  for (const m of meshes(view))
+    m.geometry.addEventListener("dispose", () => disposed++);
+  view.update(getTrack("canyon-plunge"), 0, 0, 0, 650);
+  expect(disposed).toBeGreaterThan(0);
+});
+
+it("renders underground templates without sky or clouds", () => {
+  const view = new BackgroundView();
+  view.update(
+    { ...getTrack("triple-loop"), backgroundTemplate: "cavern-dark" },
+    0,
+    0,
+    0,
+    650,
+  );
+  expect(view.stats().template).toBe("cavern-dark");
+  expect(view.getObjectByName("background-sky")).toBeUndefined();
+  expect(sprites(view)).toHaveLength(0);
+  expect(meshes(view).length).toBeGreaterThan(0);
+});
+
+it("falls back to the default template without a track", () => {
+  const view = new BackgroundView();
+  view.update(null, 0, 0, 0, 650);
+  expect(view.stats().template).toBe("pastoral-hills");
+  expect(view.getObjectByName("background-sky")).toBeDefined();
+});
+
+it("drifts clouds deterministically with time", () => {
+  const view = new BackgroundView();
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650);
+  const x0 = sprites(view).map((s) => s.position.x);
+  view.update(getTrack("triple-loop"), 20, 0, 0, 650);
+  const x1 = sprites(view).map((s) => s.position.x);
+  expect(x1).not.toEqual(x0);
+  view.update(getTrack("triple-loop"), 20, 0, 0, 650);
+  expect(sprites(view).map((s) => s.position.x)).toEqual(x1);
+});
+
+it("builds deterministically for the same template", () => {
+  const a = new BackgroundView();
+  const b = new BackgroundView();
+  a.update(getTrack("harbor-sprint"), 5, 0, 0, 650);
+  b.update(getTrack("harbor-sprint"), 5, 0, 0, 650);
+  const positions = (v: BackgroundView) =>
+    meshes(v).map((m) => m.position.toArray());
+  expect(positions(a)).toEqual(positions(b));
+});
+
+it("keeps background materials out of fog and shadow maps", () => {
+  const view = new BackgroundView();
+  view.update(getTrack("harbor-sprint"), 0, 0, 0, 650);
+  expect(meshes(view).length).toBeGreaterThan(0);
+  for (const m of meshes(view)) {
+    expect(m.castShadow).toBe(false);
+    for (const mat of Array.isArray(m.material) ? m.material : [m.material])
+      expect((mat as { fog?: boolean }).fog ?? false).toBe(false);
+  }
+  for (const s of sprites(view)) {
+    expect(s.material.fog).toBe(false);
+    expect(s.material.depthWrite).toBe(false);
+  }
+});
+
+it("hazes distant colors toward the horizon", () => {
+  const base = new Color(0xffffff);
+  expect(applyHaze(base.clone(), new Color(0x000000), 0).getHex()).toBe(
+    0xffffff,
+  );
+  const hazed = applyHaze(base.clone(), new Color(0x000000), 600);
+  expect(hazed.getHex()).not.toBe(0xffffff);
+  expect(hazed.getHex()).not.toBe(0x000000);
+  const nearer = applyHaze(base.clone(), new Color(0x000000), 100);
+  expect(nearer.getHex()).toBeGreaterThan(hazed.getHex());
+});

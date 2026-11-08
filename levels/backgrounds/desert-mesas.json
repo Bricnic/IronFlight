@@ -1,0 +1,37 @@
+{
+  "name": "desert-mesas",
+  "sky": { "top": 5937872, "horizon": 14207144 },
+  "fog": { "color": 14207144, "near": 150, "far": 600 },
+  "sun": { "color": 16769967, "intensity": 3.5 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2 },
+  "env": 0.7,
+  "shapes": [
+    {
+      "kind": "mesa",
+      "texture": "cracked_red_ground",
+      "count": 10,
+      "radius": 320,
+      "y": 0,
+      "size": [60, 120],
+      "seed": 71
+    },
+    {
+      "kind": "hill",
+      "texture": "coast_sand_rocks_02",
+      "count": 8,
+      "radius": 260,
+      "y": -4,
+      "size": [30, 60],
+      "seed": 72
+    }
+  ],
+  "clouds": {
+    "count": 5,
+    "y": [120, 180],
+    "radius": [260, 480],
+    "color": 16777215,
+    "opacity": 0.8,
+    "drift": 0.6,
+    "seed": 73
+  }
+}

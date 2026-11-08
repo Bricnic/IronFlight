@@ -1,0 +1,37 @@
+{
+  "name": "pastoral-hills",
+  "sky": { "top": 4886745, "horizon": 12964047 },
+  "fog": { "color": 12964047, "near": 140, "far": 600 },
+  "sun": { "color": 16769967, "intensity": 3.5 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2 },
+  "env": 0.7,
+  "shapes": [
+    {
+      "kind": "hill",
+      "texture": "grass_ground",
+      "count": 10,
+      "radius": 300,
+      "y": -4,
+      "size": [40, 90],
+      "seed": 11
+    },
+    {
+      "kind": "tree",
+      "texture": "bark_brown_01",
+      "count": 24,
+      "radius": 260,
+      "y": 0,
+      "size": [6, 12],
+      "seed": 12
+    }
+  ],
+  "clouds": {
+    "count": 12,
+    "y": [90, 150],
+    "radius": [240, 480],
+    "color": 16777215,
+    "opacity": 0.9,
+    "drift": 1.5,
+    "seed": 13
+  }
+}

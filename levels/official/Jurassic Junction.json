@@ -1,5 +1,6 @@
 {
   "name": "Jurassic Junction",
+  "backgroundTemplate": "toybox-volcano",
   "mode": "race",
   "spawn": {
     "x": -99,

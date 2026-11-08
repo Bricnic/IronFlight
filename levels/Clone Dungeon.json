@@ -1,5 +1,6 @@
 {
   "name": "Clone Dungeon",
+  "backgroundTemplate": "cavern-dark",
   "mode": "arena",
   "spawn": {
     "x": 0,

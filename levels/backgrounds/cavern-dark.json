@@ -1,0 +1,20 @@
+{
+  "name": "cavern-dark",
+  "sky": { "top": 658709, "horizon": 658709 },
+  "fog": { "color": 658709, "near": 60, "far": 280 },
+  "sun": { "color": 16757866, "intensity": 1.1 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 0.85 },
+  "env": 0.32,
+  "underground": true,
+  "shapes": [
+    {
+      "kind": "rock-wall",
+      "texture": "dark_rock_02",
+      "count": 16,
+      "radius": 120,
+      "y": 0,
+      "size": [40, 80],
+      "seed": 111
+    }
+  ]
+}

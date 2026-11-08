@@ -1,5 +1,6 @@
 {
   "name": "Emberfall Causeway",
+  "backgroundTemplate": "ember-dusk",
   "mode": "race",
   "spawn": {
     "x": 102,

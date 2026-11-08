@@ -1,0 +1,46 @@
+{
+  "name": "scrapyard-flats",
+  "sky": { "top": 8035008, "horizon": 13617336 },
+  "fog": { "color": 13617336, "near": 140, "far": 600 },
+  "sun": { "color": 16769967, "intensity": 3.5 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2 },
+  "env": 0.7,
+  "shapes": [
+    {
+      "kind": "crane",
+      "texture": "green_metal_rust",
+      "count": 1,
+      "radius": 300,
+      "y": 0,
+      "size": [45, 45],
+      "seed": 51
+    },
+    {
+      "kind": "container-stack",
+      "texture": "green_metal_rust",
+      "count": 10,
+      "radius": 260,
+      "y": 0,
+      "size": [10, 20],
+      "seed": 52
+    },
+    {
+      "kind": "hill",
+      "texture": "brown_mud_leaves_01",
+      "count": 8,
+      "radius": 340,
+      "y": -4,
+      "size": [35, 70],
+      "seed": 53
+    }
+  ],
+  "clouds": {
+    "count": 10,
+    "y": [90, 150],
+    "radius": [240, 480],
+    "color": 16777215,
+    "opacity": 0.85,
+    "drift": 1.2,
+    "seed": 54
+  }
+}

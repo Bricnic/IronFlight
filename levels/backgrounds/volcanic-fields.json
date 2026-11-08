@@ -1,0 +1,28 @@
+{
+  "name": "volcanic-fields",
+  "sky": { "top": 2758176, "horizon": 9062954 },
+  "fog": { "color": 9062954, "near": 140, "far": 600 },
+  "sun": { "color": 16742970, "intensity": 2.2 },
+  "hemi": { "sky": 9067082, "ground": 2759184, "intensity": 1.5 },
+  "env": 0.5,
+  "shapes": [
+    {
+      "kind": "mountain",
+      "texture": "dark_rock_02",
+      "count": 12,
+      "radius": 340,
+      "y": 0,
+      "size": [80, 160],
+      "seed": 61
+    }
+  ],
+  "clouds": {
+    "count": 10,
+    "y": [120, 200],
+    "radius": [250, 480],
+    "color": 5917248,
+    "opacity": 0.9,
+    "drift": 2.5,
+    "seed": 62
+  }
+}

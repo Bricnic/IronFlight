@@ -1,0 +1,36 @@
+{
+  "name": "fairground-park",
+  "sky": { "top": 4033232, "horizon": 12574960 },
+  "fog": { "color": 12574960, "near": 140, "far": 600 },
+  "sun": { "color": 16769967, "intensity": 3.5 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2 },
+  "env": 0.7,
+  "shapes": [
+    {
+      "kind": "tent",
+      "count": 6,
+      "radius": 280,
+      "y": 0,
+      "size": [20, 30],
+      "seed": 101
+    },
+    {
+      "kind": "tree",
+      "texture": "bark_brown_01",
+      "count": 20,
+      "radius": 300,
+      "y": 0,
+      "size": [6, 12],
+      "seed": 102
+    }
+  ],
+  "clouds": {
+    "count": 14,
+    "y": [90, 150],
+    "radius": [240, 480],
+    "color": 16777215,
+    "opacity": 0.9,
+    "drift": 1,
+    "seed": 103
+  }
+}

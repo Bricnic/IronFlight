@@ -80,6 +80,23 @@ function deps(down = false): LevelStoreDeps & { storage: ReturnType<typeof memor
     fetchFn: backend.fetchFn as unknown as typeof fetch,
   };
 }
+it("import assigns a heuristic background when the level has none", async () => {
+  const d = deps();
+  const saved = await importLevel(d, JSON.stringify(level("Canyon Dash")));
+  expect(saved.backgroundTemplate).toBe("desert-mesas");
+  const stored = JSON.parse(
+    d.storage.getItem("iron-flight-custom-level-v1:Canyon Dash")!,
+  );
+  expect(stored.backgroundTemplate).toBe("desert-mesas");
+});
+it("import keeps an explicit background template", async () => {
+  const d = deps();
+  const saved = await importLevel(
+    d,
+    JSON.stringify({ ...level("Canyon Dash"), backgroundTemplate: "haunted-night" }),
+  );
+  expect(saved.backgroundTemplate).toBe("haunted-night");
+});
 it("round-trips levels through the disk endpoint", async () => {
   const d = deps();
   expect(await listLevels(d)).toEqual([]);

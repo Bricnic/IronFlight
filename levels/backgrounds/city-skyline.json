@@ -1,0 +1,28 @@
+{
+  "name": "city-skyline",
+  "sky": { "top": 2767466, "horizon": 9083584 },
+  "fog": { "color": 9083584, "near": 140, "far": 600 },
+  "sun": { "color": 16763274, "intensity": 2.5 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2 },
+  "env": 0.7,
+  "shapes": [
+    {
+      "kind": "skyscraper",
+      "texture": "blue_plaster_wall",
+      "count": 16,
+      "radius": 380,
+      "y": 0,
+      "size": [60, 140],
+      "seed": 41
+    }
+  ],
+  "clouds": {
+    "count": 6,
+    "y": [150, 220],
+    "radius": [300, 520],
+    "color": 16777215,
+    "opacity": 0.7,
+    "drift": 0.8,
+    "seed": 42
+  }
+}

@@ -24,6 +24,8 @@ import { QUALITY, type VideoQuality } from "./settings";
 import { TruckFireView } from "./truck-fire";
 import { SkidView } from "./skids";
 import { LoopView } from "./loop-view";
+import { BackgroundView } from "./background-view";
+import { getBackgroundTemplate } from "./backgrounds";
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
@@ -37,6 +39,7 @@ export class GameView {
   private lavaPitInspection?: { id: string; angle: number };
   private nitro = new T.Group();
   private officialCourse = new CourseView();
+  private background = new BackgroundView();
   private fire = new TruckFireView();
   private lavaEffects = new LavaPartEffects();
   private lavaInspection = false;
@@ -95,6 +98,7 @@ export class GameView {
       this.fire.smoke,
       this.props,
       this.lavaEffects,
+      this.background,
     );
     const blue = flameMaterial();
     blue.fragmentShader = blue.fragmentShader
@@ -642,6 +646,7 @@ export class GameView {
       },
       lavaOffsets: this.lava.map((m) => m.map!.offset.toArray()),
       ...this.loop.stats(),
+      background: this.background.stats(),
       courseVisible: this.course.visible,
       drawCalls: this.renderer.info.render.calls,
       renderTriangles: this.renderer.info.render.triangles,
@@ -687,51 +692,20 @@ export class GameView {
   }
   render(snap = false, alpha = 1, draw = true) {
     const s = this.simulation;
-    const mood = s.courseTrack?.id;
-    const underground = !!s.courseTrack?.underground;
-    const bg = underground
-      ? 0x0a0d15
-      : mood === "haunted-hollow"
-        ? 0x3a4a5a
-        : mood === "sky-slide"
-          ? 0xbfd8e8
-          : mood === "canyon-plunge"
-            ? 0xd8c8a8
-            : 0xc5d0cf;
-    (this.scene.background as T.Color).setHex(bg);
+    const template = getBackgroundTemplate(
+      s.courseTrack?.backgroundTemplate ?? s.courseTrack?.custom?.backgroundTemplate,
+);
+    (this.scene.background as T.Color).setHex(template.fog.color);
     const fog = this.scene.fog as T.Fog;
-    fog.color.setHex(bg);
-    fog.near =
-      (underground
-        ? 60
-        : mood === "haunted-hollow"
-          ? 80
-          : mood === "sky-slide"
-            ? 200
-            : mood === "canyon-plunge"
-              ? 150
-              : 140) * this.fogScale;
-    fog.far =
-      (underground ? 280 : mood === "haunted-hollow" ? 320 : mood ? 600 : 430) *
-      this.fogScale;
-    this.hemi.intensity = underground
-      ? 0.85
-      : mood === "haunted-hollow"
-        ? 1.2
-        : mood === "sky-slide"
-          ? 2.2
-          : 2;
-    this.sun.intensity = underground ? 1.1 : mood === "haunted-hollow" ? 1.8 : 3.5;
-    this.sun.color.setHex(
-      underground ? 0xffb46a : mood === "haunted-hollow" ? 0xff9a4a : 0xffe3af,
-    );
-    this.scene.environmentIntensity = underground
-      ? 0.32
-      : mood === "haunted-hollow"
-        ? 0.4
-        : mood === "sky-slide"
-          ? 0.8
-          : 0.7;
+    fog.color.setHex(template.fog.color);
+    fog.near = template.fog.near * this.fogScale;
+    fog.far = template.fog.far * this.fogScale;
+    this.hemi.color.setHex(template.hemi.sky);
+    this.hemi.groundColor.setHex(template.hemi.ground);
+    this.hemi.intensity = template.hemi.intensity;
+    this.sun.intensity = template.sun.intensity;
+    this.sun.color.setHex(template.sun.color);
+    this.scene.environmentIntensity = template.env;
     const root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
       q = s.previousRotation
         .clone()
@@ -756,6 +730,13 @@ export class GameView {
         : "";
     const shape = new T.Vector3(
       ...(potionScale(s.comic.effect) as [number, number, number]),
+    );
+    this.background.update(
+      s.courseTrack ?? null,
+      s.time,
+      root.x,
+      root.z,
+      this.camera.far,
     );
     this.loop.update(s.time);
     this.skids.update(s.skidStrokes);

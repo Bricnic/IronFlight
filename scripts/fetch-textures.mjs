@@ -23,6 +23,8 @@ for (const id of [
   "brown_mud_leaves_01",
   "monastery_stone_floor",
   "blue_plaster_wall",
+  "bark_brown_01",
+  "snow_01",
 ]) {
   const cached = priorById.get(id);
   const roles = ["diffuse", "normal", "roughness"];

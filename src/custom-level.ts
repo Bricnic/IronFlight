@@ -13,6 +13,8 @@ export const TEXTURE_IDS = [
   "brown_mud_leaves_01",
   "monastery_stone_floor",
   "blue_plaster_wall",
+  "bark_brown_01",
+  "snow_01",
 ] as const;
 export type TextureId = (typeof TEXTURE_IDS)[number];
 export const PROP_PREFAB_KINDS = [
@@ -148,6 +150,8 @@ export interface CustomLevel {
   limit?: number;
   /** Underground levels render with dark cavern air, fog and torchlight. */
   underground?: boolean;
+  /** Background template name; resolved against levels/backgrounds/. */
+  backgroundTemplate?: string;
 }
 const NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,63}$/;
 const finite = (n: unknown) =>
@@ -197,6 +201,14 @@ export function validateCustomLevel(input: unknown): CustomLevel {
   );
   const limit = (level as CustomLevel)?.limit;
   check(errors, limit === undefined || limit > 0, "limit must be positive");
+  const backgroundTemplate = (level as CustomLevel)?.backgroundTemplate;
+  check(
+    errors,
+    backgroundTemplate === undefined ||
+      (typeof backgroundTemplate === "string" &&
+        NAME_PATTERN.test(backgroundTemplate)),
+    "backgroundTemplate must be 1-64 chars of letters, numbers, spaces, - or _",
+  );
   const underground = (level as CustomLevel)?.underground;
   check(
     errors,
@@ -387,6 +399,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     medals: { ...medals },
     ...(limit === undefined ? {} : { limit }),
     ...(underground === undefined ? {} : { underground }),
+    ...(backgroundTemplate === undefined ? {} : { backgroundTemplate }),
   };
 }
 export function customSlug(name: string) {
@@ -430,6 +443,9 @@ export function toTrack(level: CustomLevel): Track {
     medals: { ...level.medals },
     custom: level,
     ...(level.underground ? { underground: true } : {}),
+    ...(level.backgroundTemplate === undefined
+      ? {}
+      : { backgroundTemplate: level.backgroundTemplate }),
     ...(trampolines.length ? { trampolines } : {}),
     ...(level.rings?.length
       ? {
@@ -527,6 +543,7 @@ export function blankLevel(name: string): CustomLevel {
     ],
     prefabs: [],
     medals: { gold: 30, silver: 45, bronze: 60 },
+    backgroundTemplate: "pastoral-hills",
   };
 }
 export function solidDefaults(kind: SolidKind) {

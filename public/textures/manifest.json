@@ -300,6 +300,56 @@
           "bytes": 317512
         }
       }
+    },
+    {
+      "id": "bark_brown_01",
+      "source": "https://polyhaven.com/a/bark_brown_01",
+      "license": "CC0",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/bark_brown_01_diffuse.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/bark_brown_01/bark_brown_01_diff_1k.jpg",
+          "sha256": "4213441aebcb72b9911f5a860e9ce74a61a8f6ce3b9c23d1f204173e7e7f6066",
+          "bytes": 729893
+        },
+        "normal": {
+          "file": "/textures/bark_brown_01_normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/bark_brown_01/bark_brown_01_nor_gl_1k.jpg",
+          "sha256": "9d1537b3429579436a62890bb7c5050a0172a15ce768787eacde81c5ccefc9cc",
+          "bytes": 1226534
+        },
+        "roughness": {
+          "file": "/textures/bark_brown_01_roughness.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/bark_brown_01/bark_brown_01_rough_1k.jpg",
+          "sha256": "4e7f62508cf77faebfeee15ffb571ff02c45c18d5174aa19fcb8b98506359c5c",
+          "bytes": 201307
+        }
+      }
+    },
+    {
+      "id": "snow_01",
+      "source": "https://polyhaven.com/a/snow_01",
+      "license": "CC0",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/snow_01_diffuse.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/snow_01/snow_01_diff_1k.jpg",
+          "sha256": "bf71d93b7e47fe29bfb6ae11626439535b647da041b979ba5303ce8b0a862d53",
+          "bytes": 356249
+        },
+        "normal": {
+          "file": "/textures/snow_01_normal.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/snow_01/snow_01_nor_gl_1k.jpg",
+          "sha256": "ce806bc45cae729a211b16c94239018d58570b9a796a8cc890cf8cbce2c8f050",
+          "bytes": 1370735
+        },
+        "roughness": {
+          "file": "/textures/snow_01_roughness.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/snow_01/snow_01_rough_1k.jpg",
+          "sha256": "c008cd329bda1127d8c6ff2ed8772e563419fbfb836648b2f05e07ab893be1aa",
+          "bytes": 195503
+        }
+      }
     }
   ]
 }
