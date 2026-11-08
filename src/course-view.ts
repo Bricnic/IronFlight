@@ -84,6 +84,8 @@ export class CourseView extends T.Group {
   private trampolineModels: T.Group[] = [];
   private boostPadModels: T.Group[] = [];
   private gateGlowLevel = 0;
+  private wetSurfaces: Wettable[] = [];
+  private wetGlossLevel = 0;
   private lampGlowLevel = 0;
   private ringModels: T.Group[] = [];
   private dragonModels: T.Group[] = [];
@@ -190,6 +192,11 @@ export class CourseView extends T.Group {
     const mat = this.buildSolidMaterial(track, s);
     const { stone, cliff, groundMap, roadMap } = this.solidMaps(track, s);
     if (s.kind === "lava") this.lavaMaterials.push(mat);
+    if (
+      (s.kind === "road" || s.kind === "ramp" || s.kind === "loop" || s.kind === "ground") &&
+      mat instanceof T.MeshStandardMaterial
+    )
+      this.wetSurfaces.push({ mat, roughness: mat.roughness, env: mat.envMapIntensity });
     const geometry = s.footprint
       ? new T.ExtrudeGeometry(
           new T.Shape(s.footprint.map(({ x, z }) => new T.Vector2(x, -z))),
@@ -465,6 +472,7 @@ export class CourseView extends T.Group {
       this.hazards = [];
       this.pickupModels.clear();
       this.meshes = [];
+      this.wetSurfaces = [];
       this.lavaMaterials = [];
       if (run) {
         const track = run.track;
@@ -829,6 +837,7 @@ export class CourseView extends T.Group {
     for (const g of this.gateModels) this.gateGlowLevel += applyNightGlow(g, night);
     this.lampGlowLevel = 0;
     for (const g of this.lampModels) this.lampGlowLevel += applyNightGlow(g, night);
+    this.wetGlossLevel = applyWetGloss(this.wetSurfaces, sim.weather.rain);
   }
   inspect() {
     return {
@@ -838,6 +847,7 @@ export class CourseView extends T.Group {
       trampolines: this.trampolineModels.length,
       boostPads: this.boostPadModels.length,
       gateGlow: this.gateGlowLevel,
+      wetGloss: this.wetGlossLevel,
       lampGlow: this.lampGlowLevel,
       rings: this.ringModels.length,
       loopSegments: this.loopSegmentModels,
@@ -1137,6 +1147,21 @@ export function makeGlowTexture(): T.DataTexture {
 }
 /** Drive tagged emissive materials and lamp glow sprites; returns the lit count. */
 export const GATE_NIGHT_GLOW = 3.5;
+/** Wet-road gloss: low roughness plus an env kick for sky reflections. */
+export const WET_ROUGHNESS = 0.22;
+export const WET_ENV = 1.6;
+export interface Wettable {
+  mat: T.MeshStandardMaterial;
+  roughness: number;
+  env: number;
+}
+export function applyWetGloss(surfaces: Wettable[], rain: boolean): number {
+  for (const w of surfaces) {
+    w.mat.roughness = rain ? WET_ROUGHNESS : w.roughness;
+    w.mat.envMapIntensity = rain ? WET_ENV : w.env;
+  }
+  return rain ? surfaces.length : 0;
+}
 export function applyNightGlow(root: T.Object3D, night: boolean): number {
   let lit = 0;
   root.traverse((o) => {
