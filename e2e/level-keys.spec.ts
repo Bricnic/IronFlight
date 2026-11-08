@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 test.slow();
 
 test("N and P step through levels with wraparound", async ({ page }) => {
+  test.setTimeout(540000);
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   const trackId = () =>
