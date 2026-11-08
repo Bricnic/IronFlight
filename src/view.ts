@@ -37,6 +37,7 @@ export class GameView {
   private fairground = new FairgroundView();
   private comicInspection?: string;
   private lavaPitInspection?: { id: string; angle: number };
+  private dinoInspection?: string;
   private nitro = new T.Group();
   private officialCourse = new CourseView();
   private background = new BackgroundView();
@@ -455,6 +456,7 @@ export class GameView {
   resetTruck() {
     this.comicInspection = undefined;
     this.lavaPitInspection = undefined;
+    this.dinoInspection = undefined;
     this.overview = false;
     this.lavaInspection = false;
     this.lavaEffects.reset();
@@ -920,6 +922,21 @@ export class GameView {
         this.camera.lookAt(pit.x, pit.y, pit.z);
       }
     }
+    if (this.dinoInspection) {
+      const mech = s.dungeon.mechanisms.find((mm) => mm.h.id === this.dinoInspection);
+      if (mech) {
+        const h = mech.h;
+        const car = s.body.translation();
+        const dx = car.x - h.x, dz = car.z - h.z;
+        const len = Math.hypot(dx, dz) || 1;
+        const sc = h.scale ?? 1;
+        const dist = Math.max(9 * sc, Math.hypot(dx, dz) * 2.0);
+        // Side profile: the tail-up hunch and the diving head read against the truck.
+        const midX = (h.x + car.x) / 2, midZ = (h.z + car.z) / 2;
+        this.camera.position.set(midX - (dz / len) * dist, (h.y ?? 0) + 4.5 * sc, midZ + (dx / len) * dist);
+        this.camera.lookAt(midX, (h.y ?? 0) + 2 * sc, midZ);
+      }
+    }
     this.snapCamera = false;
     if (draw) this.renderer.render(this.scene, this.camera);
   }
@@ -931,6 +948,14 @@ export class GameView {
     this.lavaPitInspection = { id, angle };
     this.render(true);
     this.camera.updateMatrixWorld();
+  }
+  dinosaurOverview(id: string) {
+    this.dinoInspection = id;
+    this.render(true);
+    this.camera.updateMatrixWorld();
+  }
+  dinosaurStrike(id: string) {
+    return this.dungeon.inspectDinosaur(id);
   }
   /** Probe fixed points on the outer basin wall while slightly orbiting below the road. */
   basinProbe(angle: number) {

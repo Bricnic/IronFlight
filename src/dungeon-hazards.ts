@@ -9,6 +9,7 @@ export type DungeonHazard = {
   phase: number;
   y?: number;
   yaw?: number;
+  scale?: number;
 };
 /** Custom levels serve whatever dungeon prefabs the author placed. */
 export function dungeonHazards(track?: Track): DungeonHazard[] {
@@ -26,6 +27,7 @@ export function dungeonHazards(track?: Track): DungeonHazard[] {
       phase: i * 1.7,
       ...(p.y === undefined ? {} : { y: p.y }),
       ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
+      ...(p.scale === undefined ? {} : { scale: p.scale }),
     }));
 }
 /** Open crossing window, violent 0.2 s slam, shut hold, quick reopen. 3.2-second cycle. */
@@ -100,7 +102,8 @@ export const DINOSAUR_BITE: Record<DinosaurKind, { height: number; reach: number
 export const DINOSAUR_COOLDOWN = 1.8;
 export const DINOSAUR_LUNGE = 1.4;
 export function dinosaurPose(elapsed: number) {
-  const open = Math.max(0, Math.min(1, elapsed / 0.24, (0.46 - elapsed) / 0.13));
+  // The jaw gapes as the head dives and snaps shut through the strike window.
+  const open = Math.max(0, Math.min(1, elapsed / 0.3, (0.62 - elapsed) / 0.15));
   const lunge = Math.max(0, Math.min(1, (elapsed - 0.24) / 0.19, (0.82 - elapsed) / 0.27));
   const turn = Math.max(0, Math.min(1, elapsed / 0.24, (1 - elapsed) / 0.28));
   return { open, lunge, turn, striking: elapsed >= 0.43 && elapsed <= 0.55 };

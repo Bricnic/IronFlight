@@ -2,13 +2,14 @@ import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { pbr } from "./materials";
 import {
+  DINOSAUR_BITE,
   snapOpenness,
   limeJawPose,
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
 import { isDinosaur, isGauntletMachine } from "./custom-level";
-import { buildDinosaur, poseDinosaur } from "./dinosaur-view";
+import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildGuidedPipe } from "./guided-pipe-view";
@@ -716,6 +717,7 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (isGauntletMachine(h.kind)) {
     model.machine = buildGauntletMachine(root, { ...h, kind: h.kind });
   } else if (isDinosaur(h.kind)) {
+    root.scale.setScalar(h.scale ?? 1);
     model.dinosaur = buildDinosaur(root, h.kind);
     poseDinosaur(model.dinosaur, 0, 0);
   } else {
@@ -749,6 +751,17 @@ export class DungeonView extends T.Group {
   moveModel(id: string, dx: number, dy: number, dz: number) {
     const m = this.models.find((m) => m.h.id === id);
     if (m) m.root.position.add(new T.Vector3(dx, dy, dz));
+  }
+  /** Strike inspection for tests: head world position plus jaw openness. */
+  inspectDinosaur(id: string) {
+    const m = this.models.find((m) => m.h.id === id && m.dinosaur);
+    if (!m?.dinosaur) return undefined;
+    m.root.updateMatrixWorld(true);
+    const head = m.dinosaur.head.getWorldPosition(new T.Vector3());
+    return {
+      head: { x: head.x, y: head.y, z: head.z },
+      jawOpen: m.dinosaur.jaw.rotation.x,
+    };
   }
   /** Live editing: drop one hazard model by id. */
   removeModel(id: string) {
@@ -835,9 +848,22 @@ export class DungeonView extends T.Group {
         m.machine(s.time, s.dungeon.gauntlet.machines.get(m.h.id)?.state);
         continue;
       }
-      if (m.dinosaur) {
+      if (m.dinosaur && isDinosaur(m.h.kind)) {
         const bite = s.dungeon.mechanisms.find(({ h }) => h.id === m.h.id)?.bite;
-        poseDinosaur(m.dinosaur, bite ? s.time - bite.started : 0, bite?.turn ?? 0);
+        const elapsed = bite ? s.time - bite.started : 0;
+        let aim = 0;
+        if (bite) {
+          const car = s.body.translation();
+          const restHead = m.root.localToWorld(
+            new T.Vector3(0, DINOSAUR_BITE[m.h.kind].height, 1.65),
+          );
+          aim = dinosaurAimPitch(
+            restHead.y,
+            car.y,
+            Math.hypot(car.x - restHead.x, car.z - restHead.z),
+          );
+        }
+        poseDinosaur(m.dinosaur, elapsed, bite?.turn ?? 0, aim);
         continue;
       }
       if (m.h.kind === "lime-chomper") {
