@@ -67,6 +67,7 @@ const labelMessages: Record<string, [string, string]> = {
   hands: ["STONE CLAP", "TIMED CRUSH / DRIVE BETWEEN"],
   scissors: ["GIANT SNIP", "TIMED BLADES / DRIVE BETWEEN"],
   clippers: ["CRUSH CLIP", "TIMED JAWS / DRIVE BETWEEN"],
+  cup: ["SQUISH CUP", "TIMED SQUASH / DRIVE BETWEEN"],
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
 };
 /** Upright billboard label anchored above the model at the given local height. */
@@ -574,6 +575,26 @@ function buildClippersModel(h: DungeonHazard, root: T.Group): T.Group[] {
   root.add(lever);
   return [jaw, lever];
 }
+function buildCupModel(h: DungeonHazard, root: T.Group): T.Group[] {
+  const ceramic = standard(0xf2ede4, 0, 0.5);
+  const coffee = standard(0x2a1608, 0, 0.35);
+  const pivot = new T.Group();
+  pivot.position.set(0, 8.2, 0);
+  const body = new T.Mesh(new T.CylinderGeometry(4, 3.2, 5, 24), ceramic);
+  body.castShadow = true;
+  body.receiveShadow = true;
+  pivot.add(body);
+  const brew = new T.Mesh(new T.CylinderGeometry(3.5, 3.5, 0.3, 24), coffee);
+  brew.position.y = 2.2;
+  pivot.add(brew);
+  const handle = new T.Mesh(new T.TorusGeometry(1.6, 0.35, 12, 24), ceramic);
+  handle.position.x = 4.4;
+  handle.rotation.y = Math.PI / 2;
+  handle.castShadow = true;
+  pivot.add(handle);
+  root.add(pivot);
+  return [pivot];
+}
 function buildCageModel(h: DungeonHazard, root: T.Group): T.Group[] {
   const iron = standard(0x2b2f33, 0.7, 0.5);
   const base = new T.Mesh(new T.CylinderGeometry(1.85, 2.0, 0.35, 24), iron);
@@ -706,6 +727,9 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "clippers") {
     model.pivots = buildClippersModel(h, root);
     root.add(buildDungeonLabel(h, 14.5));
+  } else if (h.kind === "cup") {
+    model.pivots = buildCupModel(h, root);
+    root.add(buildDungeonLabel(h, 16));
   } else if (h.kind === "cage") {
     model.pivots = buildCageModel(h, root);
   } else if (h.kind === "candle") {
@@ -882,6 +906,8 @@ export class DungeonView extends T.Group {
       } else if (m.h.kind === "clippers" && m.pivots.length >= 2) {
         m.pivots[0].rotation.x = 0.22 - open * 1.27;
         m.pivots[1].rotation.x = 0.05 + open * 0.85;
+      } else if (m.h.kind === "cup" && m.pivots.length >= 1) {
+        m.pivots[0].position.y = 1.2 + open * 7;
       } else if (m.h.kind === "candle") {
         m.pivots.forEach((f, i) => {
           const base = (f.userData.base as number | undefined) ?? 1;

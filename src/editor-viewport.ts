@@ -140,6 +140,7 @@ const PREFAB_COLORS: Record<string, number> = {
   hands: 0xff5a3c,
   scissors: 0xc7ccd2,
   clippers: 0x9fb8cc,
+  cup: 0x6b4226,
   cage: 0x5a636b,
   "jail-cell": 0x7a8494,
   candle: 0xffb347,
