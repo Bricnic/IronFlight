@@ -497,7 +497,7 @@ async function commitAndPush(config, built) {
   } else {
     console.log(`generate-vehicles: committing:${dirty.split("\n").map((l) => `\n  ${l}`).join("")}`);
     await runLive("git", ["add", "--", ...paths.map(quote)]);
-    const message = `Add ${ids.length} pipeline-generated vehicles (${ids.join(", ")})`;
+    const message = `Add ${ids.length} pipeline-generated vehicle${ids.length === 1 ? "" : "s"} (${ids.join(", ")})`;
     await runLive("git", ["commit", "-m", quote(message)]);
   }
   if (!config.push) {
