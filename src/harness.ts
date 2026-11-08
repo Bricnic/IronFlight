@@ -117,6 +117,7 @@ export interface GameHarness {
     vehicleId: string;
     lights: { a: number; b: number };
     headlights: { on: boolean };
+    spray: { active: boolean };
     candleLights: { active: number; total: number };
     comicHazards: {
       id: string;
@@ -131,6 +132,8 @@ export interface GameHarness {
       clouds: number;
       stars: number;
       night: boolean;
+      rainStreaks: number;
+      rain: boolean;
     };
     officialCourse: {
       key: string;
@@ -139,6 +142,7 @@ export interface GameHarness {
       trampolines: number;
       boostPads: number;
       gateGlow: number;
+      wetGloss: number;
       lampGlow: number;
       rings: number;
       loopSegments: number;

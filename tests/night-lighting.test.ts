@@ -71,9 +71,27 @@ it("keeps a deep-blue night sky without lifting dark templates", () => {
   expect(cavernMood.fog.color).toBe(cavern.fog.color);
 });
 
-it("leaves the lighting rig alone when only raining", () => {
+it("casts an overcast rig when raining", () => {
   const template = getBackgroundTemplate("pastoral-hills");
-  expect(resolveMood(template, rain)).toEqual(resolveMood(template, day));
+  const mood = resolveMood(template, rain);
+  expect(luminance(mood.sky.top)).toBeLessThan(luminance(template.sky.top));
+  expect(luminance(mood.sky.horizon)).toBeLessThan(
+    luminance(template.sky.horizon),
+  );
+  expect(mood.sun.intensity).toBeLessThan(template.sun.intensity);
+  expect(mood.hemi.intensity).toBeLessThan(template.hemi.intensity);
+  expect(luminance(mood.fog.color)).toBeLessThan(
+    luminance(template.fog.color),
+  );
+  expect(mood.env).toBeGreaterThan(template.env);
+  expect(mood.fog.near).toBe(template.fog.near);
+  expect(mood.fog.far).toBe(template.fog.far);
+  const storm = resolveMood(template, { night: true, rain: true });
+  expect(luminance(storm.sky.top)).toBeLessThanOrEqual(
+    luminance(mood.sky.top),
+  );
+  expect(storm.sun.intensity).toBeLessThanOrEqual(mood.sun.intensity);
+  expect(storm.env).toBeLessThanOrEqual(mood.env);
 });
 
 it("builds a fog-free star field headlessly", () => {

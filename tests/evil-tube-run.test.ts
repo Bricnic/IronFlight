@@ -1,6 +1,7 @@
 import { beforeAll, expect, it } from "vitest";
 import { DT } from "../src/clock";
 import { registerCustomTrack } from "../src/custom-level";
+import { PIPE_EXIT } from "../src/guided-pipe";
 import { SCREW_POSITIONS, screwWave, volcanoPhase } from "../src/gauntlet-timing";
 import { officialFileTracks } from "../src/official-levels";
 import { initPhysics, Simulation } from "../src/simulation";
@@ -165,6 +166,31 @@ it("the evil tube shoots the trap path into a spiked lava dead end", () => {
     expect(sim.status).toBe("wrecked");
     expect(sim.damageEvents.some((e) => e.source === "lava" || e.source === "teeth")).toBe(true);
     expect(sim.trackRun!.status).not.toBe("completed");
+  } finally {
+    sim.dispose();
+  }
+});
+it("the evil tube glide has a visible tiled trail into the lava pit", () => {
+  const sim = race();
+  try {
+    const track = sim.courseTrack!;
+    const pipe = track.custom!.prefabs.find((p) => p.id === "evil-tube")!;
+    const covers = (x: number, y: number, z: number) =>
+      track.custom!.solids.some(
+        (s) =>
+          (s.kind === "tile" || s.kind === "lava" || s.kind === "road") &&
+          Math.abs(x - s.x) <= s.w / 2 &&
+          Math.abs(z - s.z) <= s.d / 2 &&
+          y - (s.y + s.h / 2) >= 0 &&
+          y - (s.y + s.h / 2) <= 3,
+      );
+    for (let i = 0; i <= 10; i++) {
+      const local = PIPE_EXIT.getPointAt(i / 10);
+      const x = pipe.x + local.x;
+      const y = (pipe.y ?? 0) + local.y;
+      const z = pipe.z + local.z;
+      expect(covers(x, y, z), `glide t=${i / 10} at (${x.toFixed(1)},${z.toFixed(1)})`).toBe(true);
+    }
   } finally {
     sim.dispose();
   }

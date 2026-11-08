@@ -316,33 +316,55 @@ function minHex(day: number, night: number) {
   const b = Math.min(day & 0xff, night & 0xff);
   return (r << 16) | (g << 8) | b;
 }
-/** Effective lighting rig: template channels by day, darkened minima at night. Rain never changes the rig. */
+/** Overcast multipliers for rain; applied before the night minima so storms stack. */
+export const RAIN_RIG = {
+  sky: 0.62,
+  fog: 0.62,
+  sun: 0.5,
+  hemi: 0.75,
+  env: 1.25,
+} as const;
+function scaleHex(hex: number, f: number) {
+  const r = Math.min(255, Math.round(((hex >> 16) & 0xff) * f));
+  const g = Math.min(255, Math.round(((hex >> 8) & 0xff) * f));
+  const b = Math.min(255, Math.round((hex & 0xff) * f));
+  return (r << 16) | (g << 8) | b;
+}
+/** Effective lighting rig: template channels by day, overcast in rain, darkened minima at night. */
 export function resolveMood(template: BackgroundTemplate, weather: WeatherFlags): ResolvedMood {
-  if (!weather.night)
-    return {
-      sky: { ...template.sky },
-      fog: { ...template.fog },
-      sun: { ...template.sun },
-      hemi: { ...template.hemi },
-      env: template.env,
-    };
+  const base = weather.rain
+    ? {
+        sky: { top: scaleHex(template.sky.top, RAIN_RIG.sky), horizon: scaleHex(template.sky.horizon, RAIN_RIG.sky) },
+        fog: { ...template.fog, color: scaleHex(template.fog.color, RAIN_RIG.fog) },
+        sun: { ...template.sun, intensity: template.sun.intensity * RAIN_RIG.sun },
+        hemi: { ...template.hemi, intensity: template.hemi.intensity * RAIN_RIG.hemi },
+        env: template.env * RAIN_RIG.env,
+      }
+    : {
+        sky: { ...template.sky },
+        fog: { ...template.fog },
+        sun: { ...template.sun },
+        hemi: { ...template.hemi },
+        env: template.env,
+      };
+  if (!weather.night) return base;
   return {
     sky: {
-      top: minHex(template.sky.top, NIGHT_RIG.skyTop),
-      horizon: minHex(template.sky.horizon, NIGHT_RIG.skyHorizon),
+      top: minHex(base.sky.top, NIGHT_RIG.skyTop),
+      horizon: minHex(base.sky.horizon, NIGHT_RIG.skyHorizon),
     },
     fog: {
-      color: minHex(template.fog.color, NIGHT_RIG.fog),
-      near: template.fog.near,
-      far: template.fog.far,
+      color: minHex(base.fog.color, NIGHT_RIG.fog),
+      near: base.fog.near,
+      far: base.fog.far,
     },
-    sun: { color: NIGHT_RIG.sun.color, intensity: Math.min(template.sun.intensity, NIGHT_RIG.sun.intensity) },
+    sun: { color: NIGHT_RIG.sun.color, intensity: Math.min(base.sun.intensity, NIGHT_RIG.sun.intensity) },
     hemi: {
       sky: NIGHT_RIG.hemi.sky,
       ground: NIGHT_RIG.hemi.ground,
-      intensity: Math.min(template.hemi.intensity, NIGHT_RIG.hemi.intensity),
+      intensity: Math.min(base.hemi.intensity, NIGHT_RIG.hemi.intensity),
     },
-    env: Math.min(template.env, NIGHT_RIG.env),
+    env: Math.min(base.env, NIGHT_RIG.env),
   };
 }
 /** Deterministic ring slots for one shape ring; pure and headless-safe. */
