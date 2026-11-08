@@ -30,11 +30,13 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-4).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-6).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
     "Emberfall Causeway",
+    "Chompworks",
+    "Machine Gauntlet",
   ]);
   expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
   expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
@@ -46,12 +48,16 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:jurassic-junction", -1)).toBe("custom:dungeon");
   expect(stepTrackId("custom:jurassic-junction", 1)).toBe("custom:emberfall-causeway");
   expect(stepTrackId("custom:emberfall-causeway", -1)).toBe("custom:jurassic-junction");
-  expect(stepTrackId("custom:emberfall-causeway", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:emberfall-causeway");
+  expect(stepTrackId("custom:emberfall-causeway", 1)).toBe("custom:chompworks");
+  expect(stepTrackId("custom:chompworks", -1)).toBe("custom:emberfall-causeway");
+  expect(stepTrackId("custom:chompworks", 1)).toBe("custom:machine-gauntlet");
+  expect(stepTrackId("custom:machine-gauntlet", -1)).toBe("custom:chompworks");
+  expect(stepTrackId("custom:machine-gauntlet", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:machine-gauntlet");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:emberfall-causeway");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:machine-gauntlet");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:emberfall-causeway");
+  expect(stepTrackId(undefined, -1)).toBe("custom:machine-gauntlet");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

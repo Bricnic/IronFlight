@@ -22,6 +22,7 @@ import { solidQuaternion } from "./euler";
 import { scaleSolidUVs } from "./solid-uv";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
+import { buildToyCheckpoint } from "./toy-track-view";
 /** Implicit ground texture per track; shared by the renderer and the editor. */
 export function groundMapForTrack(trackId: string) {
   return trackId === "canyon-plunge"
@@ -244,31 +245,28 @@ export class CourseView extends T.Group {
     g.name = `checkpoint-${gate.id}`;
     g.position.set(gate.x, Math.max(0, gate.y - 2.6), gate.z);
     g.rotation.y = Math.atan2(gate.nx, gate.nz);
-    const mat = new T.MeshStandardMaterial({
-      color: track.color,
-      roughness: 0.6,
-    });
-    for (const side of [-1, 1]) {
-      const pole = new T.Mesh(
-        new T.CylinderGeometry(0.13, 0.2, 5.2, 10),
-        mat,
-      );
-      pole.position.set((side * gate.width) / 2, 2.6, 0);
-      g.add(pole);
+    if (gate.appearance) {
+      g.add(buildToyCheckpoint(gate.appearance));
+      g.userData.keepFrame = true;
+    } else {
+      const mat = new T.MeshStandardMaterial({ color: track.color, roughness: 0.6 });
+      for (const side of [-1, 1]) {
+        const pole = new T.Mesh(new T.CylinderGeometry(0.13, 0.2, 5.2, 10), mat);
+        pole.position.set((side * gate.width) / 2, 2.6, 0);
+        g.add(pole);
+      }
+      const banner = new T.Mesh(new T.BoxGeometry(gate.width, 0.35, 0.35), mat);
+      banner.position.y = 5.1;
+      g.add(banner);
     }
-    const banner = new T.Mesh(
-      new T.BoxGeometry(gate.width, 0.35, 0.35),
-      mat,
-    );
-    banner.position.y = 5.1;
-    g.add(banner);
     const caption =
       index === total - 1 && !track.ring
         ? "FINISH"
         : `CHECKPOINT ${index + 1}`;
     g.userData.label = caption;
     const label = this.label(caption, track.color);
-    label.position.y = 5.7;
+    label.name = "gate-label";
+    label.position.y = gate.appearance === "blue-tile" ? 22.4 : gate.appearance ? 20.2 : 5.7;
     label.rotation.y = Math.PI;
     g.add(label);
     return g;
@@ -281,7 +279,7 @@ export class CourseView extends T.Group {
   addCheckpointGate(track: Track, gate: Checkpoint) {
     const prev = this.gateModels[this.gateModels.length - 1];
     if (prev && !track.ring) {
-      const old = prev.children[3] as T.Mesh | undefined;
+      const old = prev.getObjectByName("gate-label") as T.Mesh | undefined;
       if (old) {
         prev.remove(old);
         old.geometry.dispose();
@@ -290,7 +288,8 @@ export class CourseView extends T.Group {
         material.dispose();
         prev.userData.label = `CHECKPOINT ${this.gateModels.length}`;
         const label = this.label(prev.userData.label, track.color);
-        label.position.y = 5.7;
+        label.name = old.name;
+        label.position.copy(old.position);
         label.rotation.y = Math.PI;
         prev.add(label);
       }
@@ -780,7 +779,10 @@ export class CourseView extends T.Group {
         g.lookAt(truck.x, g.position.y, truck.z);
       });
     this.gateModels.forEach((g, i) => {
-      g.visible = i >= run.checkpoint;
+      if (g.userData.keepFrame) {
+        const label = g.getObjectByName("gate-label");
+        if (label) label.visible = i >= run.checkpoint;
+      } else g.visible = i >= run.checkpoint;
       g.scale.setScalar(1);
     });
     for (const p of run.track.collectibles) {

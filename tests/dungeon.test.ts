@@ -425,20 +425,21 @@ beforeEach(() => {
   });
 });
 
-const DUNGEON_MIN_TRIANGLES: Record<DungeonKind, number> = {
+const DUNGEON_MIN_TRIANGLES = {
   hands: 30000,
   scissors: 6000,
   clippers: 4000,
   cage: 4000,
   "jail-cell": 2500,
   candle: 800,
+  "lime-chomper": 10000,
   raptor: 2000,
   pterosaur: 2000,
   spinosaurus: 2000,
   "ember-wyvern": 2000,
-};
+} satisfies Partial<Record<DungeonKind, number>>;
 
-for (const kind of Object.keys(DUNGEON_MIN_TRIANGLES) as DungeonKind[]) {
+for (const kind of Object.keys(DUNGEON_MIN_TRIANGLES) as (keyof typeof DUNGEON_MIN_TRIANGLES)[]) {
   it(`${kind} model is dense, grounded and moderately sized`, () => {
     const model = buildDungeonModel({
       id: `test-${kind}`,
@@ -457,7 +458,7 @@ for (const kind of Object.keys(DUNGEON_MIN_TRIANGLES) as DungeonKind[]) {
     expect(box.min.y).toBeGreaterThan(-0.5);
     expect(box.min.y).toBeLessThan(6);
     expect(size.x).toBeLessThan(30);
-    expect(size.z).toBeLessThan(30);
+    expect(size.z).toBeLessThan(kind === "lime-chomper" ? 45 : 30);
     expect(size.y).toBeLessThan(25);
   });
 }

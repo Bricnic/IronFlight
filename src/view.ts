@@ -1015,6 +1015,14 @@ export class GameView {
     this.camera.updateMatrixWorld();
     this.renderer.render(this.scene, this.camera);
   }
+  /** Top-down inspection framing for QA screenshots; caller freezes rAF first. */
+  overhead(x: number, z: number, height = 150) {
+    this.render(true);
+    this.camera.position.set(x, height, z + 0.5);
+    this.camera.lookAt(x, 0, z);
+    this.camera.updateMatrixWorld();
+    this.renderer.render(this.scene, this.camera);
+  }
   inspectCamera() {
     const p = this.camera.position;
     return {

@@ -69,7 +69,7 @@
     {"id":"start-2","name":"Start lane orange","kind":"tile","x":-83.5,"y":8.35,"z":50,"w":11,"h":1.3,"d":22,"color":12802606},
     {"id":"start-3","name":"Start lane amber","kind":"tile","x":-72.5,"y":8.35,"z":50,"w":11,"h":1.3,"d":22,"color":13338393},
     {"id":"raptor-turn","name":"Raptor junction","kind":"tile","x":-56,"y":8.35,"z":50,"w":22,"h":1.3,"d":22,"color":7881885},
-    {"id":"start-back","name":"Tile edge guard","kind":"barrier","x":-110.5,"y":9.675,"z":50,"w":1,"h":1.35,"d":22,"color":16314584},
+    {"id":"start-back","name":"Tile edge guard","kind":"barrier","x":-110.5,"y":9.675,"z":50,"w":1,"h":1.35,"d":20.4,"color":16314584},
     {"id":"start-inner","name":"Tile edge guard","kind":"barrier","x":-89,"y":9.675,"z":39.4,"w":44,"h":1.35,"d":0.8,"color":1277585},
     {"id":"start-outer","name":"Tile edge guard","kind":"barrier","x":-89,"y":9.675,"z":60.6,"w":44,"h":1.35,"d":0.8,"color":11877689},
     {"id":"raptor-edge","name":"Tile edge guard","kind":"barrier","x":-45.4,"y":9.675,"z":50,"w":0.8,"h":1.35,"d":22,"color":2251181},

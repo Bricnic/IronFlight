@@ -2,12 +2,16 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isDinosaur, type DinosaurKind } from "./custom-level";
+import { isDinosaur, isGauntletMachine, type DinosaurKind } from "./custom-level";
+import { GauntletPhysics } from "./gauntlet-physics";
+import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import {
   DINOSAUR_BITE,
   DINOSAUR_COOLDOWN,
   DINOSAUR_LUNGE,
   dinosaurPose,
+  limeJawPose,
+  LIME_JAW,
   dungeonHazards,
   snapStriking,
   SNAP_CYCLE,
@@ -25,7 +29,9 @@ type Mechanism = {
 };
 export class DungeonPhysics {
   mechanisms: Mechanism[] = [];
+  readonly gauntlet: GauntletPhysics;
   constructor(private sim: Simulation) {
+    this.gauntlet = new GauntletPhysics(sim);
     if (!sim.courseTrack) return;
     for (const h of dungeonHazards(sim.courseTrack)) this.addHazard(h);
   }
@@ -47,6 +53,7 @@ export class DungeonPhysics {
       d: number,
       lx: number,
       lz: number,
+      baseY = 0,
     ) => {
       // Local furniture offset rotated by yaw, matching root.rotation.y.
       const yaw = h.yaw ?? 0;
@@ -54,7 +61,7 @@ export class DungeonPhysics {
         R.ColliderDesc.cuboid(w / 2, hgt / 2, d / 2)
           .setTranslation(
             h.x + lx * Math.cos(yaw) + lz * Math.sin(yaw),
-            (h.y ?? 0) + hgt / 2,
+            (h.y ?? 0) + baseY + hgt / 2,
             h.z - lx * Math.sin(yaw) + lz * Math.cos(yaw),
           )
           .setRotation(yawQuat())
@@ -62,7 +69,13 @@ export class DungeonPhysics {
       );
       m.colliders.push(c);
     };
-    if (h.kind === "cage") {
+    if (isGauntletMachine(h.kind)) {
+      this.gauntlet.add(m.h);
+      if (h.kind === "screw-field") solid(SCREW_FIELD_SIZE, 1.2, SCREW_FIELD_SIZE, 0, 0, -1.2);
+      if (h.kind === "volcano")
+        m.colliders.push(world.createCollider(R.ColliderDesc.cone(3.5, 6.7)
+          .setTranslation(h.x, (h.y ?? 0) + 3.5, h.z)));
+    } else if (h.kind === "cage") {
       solid(CAGE.w, CAGE.h, CAGE.d, 0, 0);
     } else if (h.kind === "clippers") {
       solid(CLIPPER_BACK.w, CLIPPER_BACK.h, CLIPPER_BACK.d, 0, CLIPPER_BACK.z);
@@ -78,6 +91,7 @@ export class DungeonPhysics {
     m.h.x = x;
     m.h.y = y;
     m.h.z = z;
+    this.gauntlet.move(id, dx, dy, dz);
     for (const c of m.colliders) {
       const p = c.translation();
       c.setTranslation({ x: p.x + dx, y: p.y + dy, z: p.z + dz });
@@ -88,6 +102,7 @@ export class DungeonPhysics {
     const at = this.mechanisms.findIndex((mm) => mm.h.id === id);
     if (at < 0) return;
     const [m] = this.mechanisms.splice(at, 1);
+    this.gauntlet.remove(id);
     for (const c of m.colliders) this.sim.world.removeCollider(c, true);
   }
   private attackWithDinosaur(m: Mechanism, kind: DinosaurKind, p: R.Vector) {
@@ -120,10 +135,26 @@ export class DungeonPhysics {
     s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
   }
   after() {
+    const launched = this.gauntlet.after();
     const s = this.sim,
       p = s.body.translation();
     for (const m of this.mechanisms) {
       const h = m.h;
+      if (h.kind === "lime-chomper") {
+        if (s.status !== "driving" || !limeJawPose(s.time + h.phase).striking) continue;
+        const yaw = h.yaw ?? 0;
+        const dx = p.x - h.x, dz = p.z - h.z;
+        const across = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+        const forward = dx * Math.sin(yaw) + dz * Math.cos(yaw);
+        const y = p.y - (h.y ?? 0);
+        if (Math.abs(across) <= LIME_JAW.halfWidth && forward >= LIME_JAW.back &&
+            forward <= LIME_JAW.tip && y >= -0.5 && y <= 5.8) {
+          m.contacts++;
+          s.damage("chassis-front", 10000);
+          s.damageEvents.push({ source: h.kind, part: "chassis-front", time: s.time });
+        }
+        continue;
+      }
       if (isDinosaur(h.kind)) {
         this.attackWithDinosaur(m, h.kind, p);
         continue;
@@ -168,20 +199,26 @@ export class DungeonPhysics {
       for (const part of s.partDefs)
         s.fireDamage(part.id, part.hp * 0.01 * DT * candleExposure);
     }
+    return launched;
   }
   snapshot() {
     return {
-      hazards: this.mechanisms.map((m) => ({
-        id: m.h.id,
-        kind: m.h.kind,
-        x: m.h.x,
-        z: m.h.z,
-        colliders: m.colliders.length,
-        contacts: m.contacts,
-        striking: isDinosaur(m.h.kind)
-          ? !!m.bite && dinosaurPose(this.sim.time - m.bite.started).striking
-          : snapStriking(this.sim.time + m.h.phase),
-      })),
+      hazards: this.mechanisms.map((m) => {
+        const machine = this.gauntlet.inspect(m.h.id);
+        return {
+          id: m.h.id,
+          kind: m.h.kind,
+          x: machine?.x ?? m.h.x,
+          z: machine?.z ?? m.h.z,
+          colliders: m.colliders.length + (machine?.colliders ?? 0),
+          contacts: machine?.contacts ?? m.contacts,
+          striking: machine?.striking ?? (m.h.kind === "lime-chomper"
+            ? limeJawPose(this.sim.time + m.h.phase).striking
+            : isDinosaur(m.h.kind)
+              ? !!m.bite && dinosaurPose(this.sim.time - m.bite.started).striking
+              : snapStriking(this.sim.time + m.h.phase)),
+        };
+      }),
     };
   }
 }

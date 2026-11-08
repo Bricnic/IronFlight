@@ -484,6 +484,7 @@ export class Simulation {
   }
   step(input: Input = {}) {
     input = this.fairground.controls(input);
+    if (this.dungeon.gauntlet.holding) input = { brake: 1 };
     this.previousPosition.copy(this.body.translation());
     this.previousRotation.copy(this.body.rotation());
     this.inFlames = false;
@@ -813,10 +814,11 @@ export class Simulation {
     this.props.captureVelocities();
     this.comic.before();
     this.ghosts.update();
+    this.dungeon.gauntlet.before();
     this.world.step(this.events, this.hammerHooks);
     this.checkSlimeContact();
     this.comic.after();
-    this.dungeon.after();
+    const screwHit = this.dungeon.after();
     const fairgroundHit = this.fairground.after(before);
     this.ghosts.attack();
     for (let i = 0; i < 4; i++) {
@@ -835,6 +837,7 @@ export class Simulation {
     if (
       !hammerHit &&
       !axeHit &&
+      !screwHit &&
       !fairgroundHit &&
       impact > 10 &&
       this.time - this.lastImpact > 0.2
@@ -1281,6 +1284,35 @@ export class Simulation {
   private readonly fullHealth = this.partDefs.reduce((sum, p) => sum + p.hp, 0);
   private remainingHealth() {
     return [...this.parts.values()].reduce((sum, p) => sum + p.health, 0);
+  }
+  /** Parts shed by a machine count toward its damage budget. */
+  applyHazardDamage(source: string, fraction: number, detach: number | "prepare" = 0) {
+    const capacity = this.partDefs.reduce((sum, part) => sum + part.hp, 0);
+    const budget = fraction * capacity;
+    const target = Math.max(0, this.remainingHealth() - budget);
+    if (detach) {
+      const parts = [...this.parts.entries()]
+        .filter(([id, part]) => !id.startsWith("chassis") && part.health > 0)
+        .sort(([a, ap], [b, bp]) => Number(a.startsWith("wheel")) - Number(b.startsWith("wheel")) || ap.health - bp.health);
+      if (detach === "prepare") {
+        // If the next part costs more than one pulse, weaken it with this pulse.
+        const next = parts[0];
+        if (next && next[1].health > budget)
+          this.damage(next[0], Math.min(budget, next[1].health - budget));
+      } else {
+        for (const [id, part] of parts.slice(0, detach)) {
+          this.damage(id, part.health);
+          this.damageEvents.push({ source: source + "-part", part: id, time: this.time });
+        }
+      }
+    }
+    if (target <= 0) this.damage("chassis-front", 10000);
+    else {
+      const health = this.remainingHealth();
+      const ratio = Math.max(0, 1 - target / health);
+      for (const [id, part] of this.parts) this.damage(id, part.health * ratio);
+    }
+    this.damageEvents.push({ source, part: "chassis-front", time: this.time });
   }
   private updateSmolder() {
     if (!this.smolderTriggered && this.fireDamageTaken > 0.5 + 1e-9) {

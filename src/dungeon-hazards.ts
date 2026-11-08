@@ -76,6 +76,21 @@ export const CAGE = { w: 3, h: 4, d: 3 } as const;
  */
 export const CLIPPER_BACK = { w: 8.5, h: 3.5, d: 3.5, z: -3.0 } as const;
 
+export const LIME_JAW = { halfWidth: 8.2, back: 8, tip: 24, hinge: 6 } as const;
+export const LIME_JAW_PERIOD = 5.4;
+export function limeJawPose(time: number) {
+  const opening = 1.7;
+  const snapStart = 4.05;
+  const snapEnd = 4.22;
+  const t = ((time % LIME_JAW_PERIOD) + LIME_JAW_PERIOD) % LIME_JAW_PERIOD;
+  const rise = Math.min(1, t / opening);
+  const snap = Math.max(0, Math.min(1, (t - snapStart) / (snapEnd - snapStart)));
+  return {
+    openness: rise * rise * (3 - 2 * rise) * (1 - snap ** 2),
+    striking: t < 0.48 || t >= 4.17,
+  };
+}
+
 export const DINOSAUR_BITE: Record<DinosaurKind, { height: number; reach: number }> = {
   raptor: { height: 3.5, reach: 4.3 },
   pterosaur: { height: 3, reach: 4.8 },

@@ -74,7 +74,7 @@
   "solids": [
     {"id":"lava-lake","name":"Lava lake","kind":"lava","x":7,"y":-1,"z":50,"w":720,"h":1,"d":720,"color":16734751,"locked":true},
     {"id":"tower-cap","name":"Teal starting deck","kind":"tile","x":102,"y":37.4,"z":-113,"w":22,"h":1.2,"d":32,"color":1476493},
-    {"id":"tower-start-bar","name":"Colored edge guard","kind":"barrier","x":102,"y":38.675,"z":-128.5,"w":22,"h":1.35,"d":1,"color":11877689},
+    {"id":"tower-start-bar","name":"Colored edge guard","kind":"barrier","x":102,"y":38.675,"z":-128.5,"w":20.3,"h":1.35,"d":1,"color":11877689},
     {"id":"tower-deck-west","name":"Colored edge guard","kind":"barrier","x":91.425,"y":38.675,"z":-113.5,"w":0.85,"h":1.35,"d":31,"color":2447525},
     {"id":"tower-deck-east","name":"Colored edge guard","kind":"barrier","x":112.575,"y":38.675,"z":-113.5,"w":0.85,"h":1.35,"d":31,"color":2447525},
     {"id":"tower-upper","name":"Blue tower block","kind":"tile","x":102,"y":31.6,"z":-112.5,"w":16,"h":10.4,"d":21,"color":2447525},

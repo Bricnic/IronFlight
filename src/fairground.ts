@@ -3,6 +3,8 @@ import { Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import type { Simulation, Input } from "./simulation";
 import type { CustomPrefab } from "./custom-level";
+import { courseSolids } from "./course";
+import { arenaSolids } from "./arena";
 
 export const CAROUSEL_RADIUS = 26;
 export const CAROUSEL_SLOT_RADIUS = 17;
@@ -88,6 +90,22 @@ export class Fairground {
   slipSteer = 0;
   private nextSteer = 0;
   private random = randomFor("fairground-skids");
+  /** Highest lava/slime surface under a point; -Infinity when clear below. */
+  private hazardSurfaceAt(x: number, z: number, kind: "lava" | "slime"): number {
+    const pools = (this.sim.courseTrack
+      ? courseSolids(this.sim.courseTrack)
+      : arenaSolids()
+    ).filter((sd) => sd.kind === kind);
+    let surface = -Infinity;
+    for (const pool of pools) {
+      if (
+        Math.abs(x - pool.x) < pool.w / 2 &&
+        Math.abs(z - pool.z) < pool.d / 2
+      )
+        surface = Math.max(surface, pool.y + pool.h / 2);
+    }
+    return surface;
+  }
   private bananaId = 0;
   private bumperContacts = new Set<string>();
   riding: string | null = null;
@@ -485,17 +503,49 @@ export class Fairground {
       }
     }
     for (const b of this.bananas) {
-      if (!b.grounded) {
-        b.vy -= 9.81 * DT;
-        b.y += b.vy * DT;
-        if (b.y <= 0.22) {
-          b.y = 0.22;
-          b.grounded = true;
-          b.groundedAt = s.time;
-          b.expires = s.time + 5 + b.random() * 2;
-        }
-        b.sensor.setTranslation({ x: b.x, y: b.y, z: b.z });
+      if (b.grounded) continue;
+      b.vy -= 9.81 * DT;
+      b.y += b.vy * DT;
+      // Land on the actual surface below (floating tracks included).
+      const ray = new R.Ray({ x: b.x, y: b.y, z: b.z }, { x: 0, y: -1, z: 0 });
+      const hit = s.world.castRay(
+        ray,
+        500,
+        true,
+        R.QueryFilterFlags.EXCLUDE_DYNAMIC |
+          R.QueryFilterFlags.EXCLUDE_KINEMATIC |
+          R.QueryFilterFlags.EXCLUDE_SENSORS,
+        undefined,
+        b.sensor,
+      );
+      const lavaY = this.hazardSurfaceAt(b.x, b.z, "lava");
+      const slimeY = this.hazardSurfaceAt(b.x, b.z, "slime");
+      const hitY = hit ? b.y - hit.timeOfImpact : -Infinity;
+      const splatY = Math.max(hitY >= lavaY ? hitY : -Infinity, slimeY);
+      if (splatY > -Infinity && b.y <= splatY + 0.22) {
+        b.y = splatY + 0.22;
+        b.grounded = true;
+        b.groundedAt = s.time;
+        b.expires = s.time + 5 + b.random() * 2;
+      } else if (b.y <= lavaY) {
+        // Missed the track over lava: swallowed without a splat.
+        b.grounded = true;
+        b.expires = -1;
+      } else if (
+        !Number.isFinite(lavaY) &&
+        splatY === -Infinity &&
+        b.y <= 0.22
+      ) {
+        // Legacy floor for groundless voids without hazards.
+        b.y = 0.22;
+        b.grounded = true;
+        b.groundedAt = s.time;
+        b.expires = s.time + 5 + b.random() * 2;
+      } else if (b.y < -100) {
+        b.grounded = true;
+        b.expires = -1;
       }
+      b.sensor.setTranslation({ x: b.x, y: b.y, z: b.z });
     }
     for (let i = 0; i < 4; i++) {
       if (s.parts.get(s.partDefs[i + 2].id)!.body) continue;

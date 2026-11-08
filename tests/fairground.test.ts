@@ -6,6 +6,7 @@ import {
   toTrack,
   validateCustomLevel,
   type CustomPrefab,
+  type CustomSolid,
 } from "../src/custom-level";
 import { bumperDamage, CAROUSEL_OMEGA } from "../src/fairground";
 import original from "../levels/official/Fairground.json";
@@ -14,9 +15,11 @@ beforeAll(initPhysics);
 function fixture(
   prefabs: CustomPrefab[],
   spawn = { x: 0, y: 2.1, z: -40, yaw: 0 },
+  extraSolids: CustomSolid[] = [],
 ) {
   const level = blankLevel("Fairground Fixture");
   level.prefabs = prefabs;
+  level.solids = [...level.solids, ...extraSolids];
   level.spawn = spawn;
   registerCustomTrack(toTrack(validateCustomLevel(level)));
   const sim = new Simulation();
@@ -254,6 +257,41 @@ it("balloons drop at 5–10 second intervals; peels expire and both airborne and
     sim.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     sim.run(0.05);
     expect(sim.fairground.slipping).toBe(true);
+  } finally {
+    sim.dispose();
+  }
+});
+it("peels splat on elevated track decks instead of falling to y=0", () => {
+  const sim = fixture(
+    [{ id: "balloon", kind: "hot-air-balloon", x: 20, y: 20, z: 20 }],
+    { x: -60, y: 2.1, z: -60, yaw: 0 },
+    [
+      { id: "deck", kind: "road", x: 20, y: 8, z: 20, w: 40, h: 1, d: 40, color: 0x888888 },
+    ],
+  );
+  try {
+    sim.run(12);
+    const splat = sim.fairground.bananas.find((b) => b.grounded);
+    expect(splat, "a peel should have splatted on the deck").toBeDefined();
+    expect(splat!.y).toBeCloseTo(8.5 + 0.22, 1);
+  } finally {
+    sim.dispose();
+  }
+});
+it("peels over lava burn up instead of splatting through to the ground", () => {
+  const sim = fixture(
+    [{ id: "balloon", kind: "hot-air-balloon", x: 20, y: 20, z: 20 }],
+    { x: -60, y: 2.1, z: -60, yaw: 0 },
+    [
+      { id: "lake", kind: "lava", x: 20, y: 2, z: 20, w: 40, h: 2, d: 40, color: 0xff4400 },
+    ],
+  );
+  try {
+    for (let t = 0; t < 15; t += 0.25) {
+      sim.run(0.25);
+      for (const b of sim.fairground.bananas)
+        expect(b.grounded, `peel ${b.id} must not splat over lava`).toBe(false);
+    }
   } finally {
     sim.dispose();
   }

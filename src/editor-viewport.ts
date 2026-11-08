@@ -1,13 +1,16 @@
 import * as T from "three";
 import {
   PROP_PREFAB_KINDS,
+  CHECKPOINT_WIDTHS,
   isDinosaur,
+  isGauntletMachine,
   type CustomLevel,
   type CustomSolid,
 } from "./custom-level";
 import type { EditorSelection, EditorStore } from "./editor-state";
 import { magneticTileMaterial, pbr, slimeMaterial } from "./materials";
 import { buildDungeonModel } from "./dungeon-view";
+import { buildToyCheckpoint } from "./toy-track-view";
 import { scaleSolidUVs } from "./solid-uv";
 import { validRect, type ClipRect } from "./editor-clip";
 type ViewportHit = { object: unknown; distance?: number; point?: T.Vector3 };
@@ -409,7 +412,8 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           current.item.kind,
         );
         const isDragon = current.item.kind === "dragon";
-        const canYaw = isProp || isDragon || isDinosaur(current.item.kind);
+        const canYaw = isProp || isDragon || isDinosaur(current.item.kind) ||
+          isGauntletMachine(current.item.kind) || current.item.kind === "lime-chomper";
         if (rotateAxis === "yaw" && canYaw)
           store.updateSelected({ yaw: (current.item.yaw ?? 0) + dx * 0.01 });
         else if (rotateAxis === "pitch" && isProp)
@@ -550,8 +554,18 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         group.add(removed);
       }
       for (const [i, cp] of level.checkpoints.entries()) {
+        const previous = level.checkpoints[i - 1] ?? level.spawn;
+        const yaw = cp.yaw ?? Math.atan2(cp.x - previous.x, cp.z - previous.z);
+        if (preview && cp.appearance) {
+          const frame = buildToyCheckpoint(cp.appearance);
+          frame.position.set(cp.x, Math.max(0, (cp.y ?? 2) - 2.6), cp.z);
+          frame.rotation.y = yaw;
+          frame.userData.pick = { kind: "checkpoint", index: i };
+          frame.userData.locked = !!cp.locked;
+          group.add(frame);
+        }
         const gate = new T.Mesh(
-          new T.PlaneGeometry(24, 8),
+          new T.PlaneGeometry(cp.appearance ? CHECKPOINT_WIDTHS[cp.appearance] : 24, 8),
           new T.MeshBasicMaterial({
             color:
               selection != null &&
@@ -565,12 +579,13 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           }),
         );
         gate.position.set(cp.x, cp.y ?? 2, cp.z);
+        gate.rotation.y = yaw;
         gate.userData.pick = { kind: "checkpoint", index: i };
         gate.userData.locked = !!cp.locked;
         group.add(gate);
       }
       for (const p of level.prefabs) {
-        if (preview && isDinosaur(p.kind)) {
+        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || p.kind === "lime-chomper")) {
           const { root } = buildDungeonModel({ ...p, kind: p.kind, phase: 0 });
           root.userData.pick = { kind: "prefab", id: p.id };
           root.userData.locked = !!p.locked;
