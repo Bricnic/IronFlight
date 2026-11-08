@@ -57,6 +57,7 @@ import {
   WRECKER_SUSPENSION_REST,
   WRECKER_WHEEL_RADIUS,
 } from "./tow-truck";
+import { createWatermelonCar } from "./watermelon-car";
 import { CONCEPT_VEHICLES } from "./concept-vehicles";
 import { THEMED_VEHICLES } from "./themed-vehicles";
 import { GENERATED_VEHICLES } from "./generated-vehicles";
@@ -70,6 +71,7 @@ export type VehicleId =
   | "snow-groomer"
   | "hot-rod"
   | "tow-truck"
+  | "watermelon-car"
   | (typeof CONCEPT_VEHICLES)[number]["id"]
   | (typeof THEMED_VEHICLES)[number]["id"]
   | (typeof GENERATED_VEHICLES)[number]["id"];
@@ -200,6 +202,13 @@ export const VEHICLES: VehicleDef[] = [
     suspensionRest: WRECKER_SUSPENSION_REST,
     build: (options) => createTowTruck(options),
     seriesDecal: false,
+  },
+  {
+    id: "watermelon-car",
+    name: "Watermelon Car",
+    blurb: "Fresh-pressed show truck. Rind paint, roof slice, monster appetite.",
+    ...standardChassis,
+    build: (options) => createWatermelonCar(options),
   },
   ...[...CONCEPT_VEHICLES, ...THEMED_VEHICLES, ...GENERATED_VEHICLES].map(
     (vehicle) => ({
