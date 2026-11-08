@@ -1,0 +1,1505 @@
+{
+  "name": "Machine Gauntlet",
+  "mode": "race",
+  "spawn": {
+    "x": 0,
+    "y": 11.1,
+    "z": -156,
+    "yaw": 0
+  },
+  "checkpoints": [
+    {
+      "name": "Safe center gate",
+      "x": 0,
+      "y": 10.9,
+      "z": 111,
+      "yaw": 0
+    },
+    {
+      "name": "Slime detour entrance",
+      "x": 0,
+      "y": 10.9,
+      "z": 220,
+      "yaw": 0
+    },
+    {
+      "name": "Checkered finish",
+      "x": -46,
+      "y": 10.9,
+      "z": 340,
+      "yaw": 0
+    }
+  ],
+  "solids": [
+    {
+      "id": "lava-lake",
+      "name": "Lava lake",
+      "kind": "lava",
+      "x": -5,
+      "y": -1,
+      "z": 78,
+      "w": 910,
+      "h": 1,
+      "d": 970,
+      "color": 16734751,
+      "locked": true
+    },
+    {
+      "id": "start-pad",
+      "name": "Red car start deck",
+      "kind": "support",
+      "x": 0,
+      "y": 8.4,
+      "z": -150.5,
+      "w": 26,
+      "h": 1.2,
+      "d": 43,
+      "color": 3623256
+    },
+    {
+      "id": "start-back",
+      "name": "Edge guard",
+      "kind": "barrier",
+      "x": 0,
+      "y": 9.65,
+      "z": -171.5,
+      "w": 26,
+      "h": 1.3,
+      "d": 1,
+      "color": 3623256
+    },
+    {
+      "id": "start-edge-left",
+      "name": "Edge guard",
+      "kind": "barrier",
+      "x": -12.5,
+      "y": 9.65,
+      "z": -150.5,
+      "w": 1,
+      "h": 1.3,
+      "d": 41,
+      "color": 3623256
+    },
+    {
+      "id": "start-edge-right",
+      "name": "Edge guard",
+      "kind": "barrier",
+      "x": 12.5,
+      "y": 9.65,
+      "z": -150.5,
+      "w": 1,
+      "h": 1.3,
+      "d": 41,
+      "color": 3623256
+    },
+    {
+      "id": "field-flare",
+      "name": "Wide approach to the screw field",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": -114.5,
+      "w": 56,
+      "h": 1.2,
+      "d": 29,
+      "color": 1922957,
+      "footprint": [
+        {
+          "x": -13,
+          "z": -14.5
+        },
+        {
+          "x": 13,
+          "z": -14.5
+        },
+        {
+          "x": 28,
+          "z": 14.5
+        },
+        {
+          "x": -28,
+          "z": 14.5
+        }
+      ]
+    },
+    {
+      "id": "screw-field-approach--1",
+      "name": "Direction chevron",
+      "kind": "support",
+      "x": -1.4,
+      "y": 9.028,
+      "z": -111.9,
+      "w": 0.5,
+      "h": 0.029,
+      "d": 3.6,
+      "color": 16117977,
+      "yaw": 0.89
+    },
+    {
+      "id": "screw-field-approach-1",
+      "name": "Direction chevron",
+      "kind": "support",
+      "x": 1.4,
+      "y": 9.028,
+      "z": -111.9,
+      "w": 0.5,
+      "h": 0.029,
+      "d": 3.6,
+      "color": 16117977,
+      "yaw": -0.89
+    },
+    {
+      "id": "field-exit",
+      "name": "Blue screw field exit",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": -30.5,
+      "w": 56,
+      "h": 1.2,
+      "d": 27,
+      "color": 1922957
+    },
+    {
+      "id": "volcano-flare",
+      "name": "Taper into the volcano ramp",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": -6.5,
+      "w": 56,
+      "h": 1.2,
+      "d": 21,
+      "color": 14715442,
+      "footprint": [
+        {
+          "x": -28,
+          "z": -10.5
+        },
+        {
+          "x": 28,
+          "z": -10.5
+        },
+        {
+          "x": 13,
+          "z": 10.5
+        },
+        {
+          "x": -13,
+          "z": 10.5
+        }
+      ]
+    },
+    {
+      "id": "volcano-stripe-0",
+      "name": "Volcano warning stripe",
+      "kind": "support",
+      "x": -11,
+      "y": 9.027,
+      "z": 0,
+      "w": 1.65,
+      "h": 0.03,
+      "d": 2.8,
+      "color": 2238774,
+      "yaw": 0.35
+    },
+    {
+      "id": "volcano-stripe-1",
+      "name": "Volcano warning stripe",
+      "kind": "support",
+      "x": -8.25,
+      "y": 9.027,
+      "z": 0,
+      "w": 1.65,
+      "h": 0.03,
+      "d": 2.8,
+      "color": 15122253,
+      "yaw": 0.35
+    },
+    {
+      "id": "volcano-stripe-2",
+      "name": "Volcano warning stripe",
+      "kind": "support",
+      "x": -5.5,
+      "y": 9.027,
+      "z": 0,
+      "w": 1.65,
+      "h": 0.03,
+      "d": 2.8,
+      "color": 2238774,
+      "yaw": 0.35
+    },
+    {
+      "id": "volcano-stripe-3",
+      "name": "Volcano warning stripe",
+      "kind": "support",
+      "x": -2.75,
+      "y": 9.027,
+      "z": 0,
+      "w": 1.65,
+      "h": 0.03,
+      "d": 2.8,
+      "color": 15122253,
+      "yaw": 0.35
+    },
+    {
+      "id": "volcano-stripe-4",
+      "name": "Volcano warning stripe",
+      "kind": "support",
+      "x": 0,
+      "y": 9.027,
+      "z": 0,
+      "w": 1.65,
+      "h": 0.03,
+      "d": 2.8,
+      "color": 2238774,
+      "yaw": 0.35
+    },
+    {
+      "id": "volcano-stripe-5",
+      "name": "Volcano warning stripe",
+      "kind": "support",
+      "x": 2.75,
+      "y": 9.027,
+      "z": 0,
+      "w": 1.65,
+      "h": 0.03,
+      "d": 2.8,
+      "color": 15122253,
+      "yaw": 0.35
+    },
+    {
+      "id": "volcano-stripe-6",
+      "name": "Volcano warning stripe",
+      "kind": "support",
+      "x": 5.5,
+      "y": 9.027,
+      "z": 0,
+      "w": 1.65,
+      "h": 0.03,
+      "d": 2.8,
+      "color": 2238774,
+      "yaw": 0.35
+    },
+    {
+      "id": "volcano-stripe-7",
+      "name": "Volcano warning stripe",
+      "kind": "support",
+      "x": 8.25,
+      "y": 9.027,
+      "z": 0,
+      "w": 1.65,
+      "h": 0.03,
+      "d": 2.8,
+      "color": 15122253,
+      "yaw": 0.35
+    },
+    {
+      "id": "volcano-stripe-8",
+      "name": "Volcano warning stripe",
+      "kind": "support",
+      "x": 11,
+      "y": 9.027,
+      "z": 0,
+      "w": 1.65,
+      "h": 0.03,
+      "d": 2.8,
+      "color": 2238774,
+      "yaw": 0.35
+    },
+    {
+      "id": "volcano-ramp-low",
+      "name": "Volcano jump approach",
+      "kind": "ramp",
+      "x": 0,
+      "y": 9.711652,
+      "z": 10.61767,
+      "w": 26,
+      "h": 1.2,
+      "d": 13.257451,
+      "color": 3623256,
+      "angle": -0.197396,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "volcano-ramp-low-left",
+      "name": "Reflective ramp marking",
+      "kind": "support",
+      "x": -12.2,
+      "y": 10.314252,
+      "z": 10.50255,
+      "w": 0.35,
+      "h": 0.026,
+      "d": 13.257451,
+      "color": 16117977,
+      "angle": -0.197396
+    },
+    {
+      "id": "volcano-ramp-low-right",
+      "name": "Reflective ramp marking",
+      "kind": "support",
+      "x": 12.2,
+      "y": 10.314252,
+      "z": 10.50255,
+      "w": 0.35,
+      "h": 0.026,
+      "d": 13.257451,
+      "color": 16117977,
+      "angle": -0.197396
+    },
+    {
+      "id": "volcano-ramp-low-dash-0",
+      "name": "Reflective ramp marking",
+      "kind": "support",
+      "x": 0,
+      "y": 9.605752,
+      "z": 6.96005,
+      "w": 0.48,
+      "h": 0.026,
+      "d": 3.645799,
+      "color": 16117977,
+      "angle": -0.197396
+    },
+    {
+      "id": "volcano-ramp-low-dash-1",
+      "name": "Reflective ramp marking",
+      "kind": "support",
+      "x": 0,
+      "y": 10.905752,
+      "z": 13.46005,
+      "w": 0.48,
+      "h": 0.026,
+      "d": 3.645799,
+      "color": 16117977,
+      "angle": -0.197396
+    },
+    {
+      "id": "volcano-ramp-high",
+      "name": "Volcano jump lip",
+      "kind": "ramp",
+      "x": 0,
+      "y": 13.983167,
+      "z": 25.696724,
+      "w": 26,
+      "h": 1.2,
+      "d": 17.994721,
+      "color": 3623256,
+      "angle": -0.334052,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "volcano-ramp-high-left",
+      "name": "Reflective ramp marking",
+      "kind": "support",
+      "x": -12.2,
+      "y": 14.564719,
+      "z": 25.504262,
+      "w": 0.35,
+      "h": 0.026,
+      "d": 17.994721,
+      "color": 16117977,
+      "angle": -0.334052
+    },
+    {
+      "id": "volcano-ramp-high-right",
+      "name": "Reflective ramp marking",
+      "kind": "support",
+      "x": 12.2,
+      "y": 14.564719,
+      "z": 25.504262,
+      "w": 0.35,
+      "h": 0.026,
+      "d": 17.994721,
+      "color": 16117977,
+      "angle": -0.334052
+    },
+    {
+      "id": "volcano-ramp-high-dash-0",
+      "name": "Reflective ramp marking",
+      "kind": "support",
+      "x": 0,
+      "y": 12.509552,
+      "z": 19.582596,
+      "w": 0.48,
+      "h": 0.026,
+      "d": 3.299032,
+      "color": 16117977,
+      "angle": -0.334052
+    },
+    {
+      "id": "volcano-ramp-high-dash-1",
+      "name": "Reflective ramp marking",
+      "kind": "support",
+      "x": 0,
+      "y": 14.476219,
+      "z": 25.249262,
+      "w": 0.48,
+      "h": 0.026,
+      "d": 3.299032,
+      "color": 16117977,
+      "angle": -0.334052
+    },
+    {
+      "id": "volcano-ramp-high-dash-2",
+      "name": "Reflective ramp marking",
+      "kind": "support",
+      "x": 0,
+      "y": 16.442885,
+      "z": 30.915929,
+      "w": 0.48,
+      "h": 0.026,
+      "d": 3.299032,
+      "color": 16117977,
+      "angle": -0.334052
+    },
+    {
+      "id": "volcano-island",
+      "name": "Isolated volcano base",
+      "kind": "support",
+      "x": 0,
+      "y": 8.4,
+      "z": 48,
+      "w": 16.5,
+      "h": 1.2,
+      "d": 18,
+      "color": 12466468
+    },
+    {
+      "id": "volcano-landing",
+      "name": "Wide landing after the crater",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 77.5,
+      "w": 48,
+      "h": 1.2,
+      "d": 31,
+      "color": 7493258
+    },
+    {
+      "id": "gate-approach",
+      "name": "Triple gate apron",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 98,
+      "w": 56,
+      "h": 1.2,
+      "d": 10,
+      "color": 11450306,
+      "footprint": [
+        {
+          "x": -24,
+          "z": -5
+        },
+        {
+          "x": 24,
+          "z": -5
+        },
+        {
+          "x": 28,
+          "z": 5
+        },
+        {
+          "x": -28,
+          "z": 5
+        }
+      ]
+    },
+    {
+      "id": "gate-deck",
+      "name": "Triple gate platform",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 114.5,
+      "w": 56,
+      "h": 1.2,
+      "d": 23,
+      "color": 11450306
+    },
+    {
+      "id": "gate-lane--18",
+      "name": "Gate choice marking",
+      "kind": "support",
+      "x": -18,
+      "y": 9.022,
+      "z": 103.7,
+      "w": 6,
+      "h": 0.026,
+      "d": 1.2,
+      "color": 12466468
+    },
+    {
+      "id": "gate-lane-0",
+      "name": "Gate choice marking",
+      "kind": "support",
+      "x": 0,
+      "y": 9.022,
+      "z": 103.7,
+      "w": 6,
+      "h": 0.026,
+      "d": 1.2,
+      "color": 1473145
+    },
+    {
+      "id": "gate-lane-18",
+      "name": "Gate choice marking",
+      "kind": "support",
+      "x": 18,
+      "y": 9.022,
+      "z": 103.7,
+      "w": 6,
+      "h": 0.026,
+      "d": 1.2,
+      "color": 12466468
+    },
+    {
+      "id": "hazard-deck-0",
+      "name": "Tank and claw approach slate",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 133,
+      "w": 56,
+      "h": 1.2,
+      "d": 14,
+      "color": 3623256
+    },
+    {
+      "id": "hazard-deck-1",
+      "name": "Tank and claw approach blue",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 147,
+      "w": 56,
+      "h": 1.2,
+      "d": 14,
+      "color": 1922957
+    },
+    {
+      "id": "hazard-deck-2",
+      "name": "Tank and claw approach teal",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 161,
+      "w": 56,
+      "h": 1.2,
+      "d": 14,
+      "color": 1473145
+    },
+    {
+      "id": "hazard-deck-3",
+      "name": "Tank and claw approach slate",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 175,
+      "w": 56,
+      "h": 1.2,
+      "d": 14,
+      "color": 3623256
+    },
+    {
+      "id": "hazard-deck-4",
+      "name": "Tank and claw approach teal",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 189,
+      "w": 56,
+      "h": 1.2,
+      "d": 14,
+      "color": 1473145
+    },
+    {
+      "id": "hazard-deck-5",
+      "name": "Tank and claw approach purple",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 203,
+      "w": 56,
+      "h": 1.2,
+      "d": 14,
+      "color": 7493258
+    },
+    {
+      "id": "hazard-deck-6",
+      "name": "Tank and claw approach teal",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 217,
+      "w": 56,
+      "h": 1.2,
+      "d": 14,
+      "color": 1473145
+    },
+    {
+      "id": "tank-edge-left",
+      "name": "Edge guard",
+      "kind": "barrier",
+      "x": -27.6,
+      "y": 9.65,
+      "z": 171.5,
+      "w": 0.8,
+      "h": 1.3,
+      "d": 91,
+      "color": 3623256
+    },
+    {
+      "id": "tank-edge-right",
+      "name": "Edge guard",
+      "kind": "barrier",
+      "x": 27.6,
+      "y": 9.65,
+      "z": 171.5,
+      "w": 0.8,
+      "h": 1.3,
+      "d": 91,
+      "color": 3623256
+    },
+    {
+      "id": "tank-bypass-mark--1",
+      "name": "Direction chevron",
+      "kind": "support",
+      "x": -17.4,
+      "y": 9.028,
+      "z": 142.1,
+      "w": 0.5,
+      "h": 0.029,
+      "d": 3.6,
+      "color": 16117977,
+      "yaw": 0.89
+    },
+    {
+      "id": "tank-bypass-mark-1",
+      "name": "Direction chevron",
+      "kind": "support",
+      "x": -14.6,
+      "y": 9.028,
+      "z": 142.1,
+      "w": 0.5,
+      "h": 0.029,
+      "d": 3.6,
+      "color": 16117977,
+      "yaw": -0.89
+    },
+    {
+      "id": "claw-bypass-mark--1",
+      "name": "Direction chevron",
+      "kind": "support",
+      "x": 10.6,
+      "y": 9.028,
+      "z": 183.1,
+      "w": 0.5,
+      "h": 0.029,
+      "d": 3.6,
+      "color": 16117977,
+      "yaw": 0.89
+    },
+    {
+      "id": "claw-bypass-mark-1",
+      "name": "Direction chevron",
+      "kind": "support",
+      "x": 13.4,
+      "y": 9.028,
+      "z": 183.1,
+      "w": 0.5,
+      "h": 0.029,
+      "d": 3.6,
+      "color": 16117977,
+      "yaw": -0.89
+    },
+    {
+      "id": "slime-route-taper",
+      "name": "Narrow down before the slime bend",
+      "kind": "tile",
+      "x": 0,
+      "y": 8.4,
+      "z": 229,
+      "w": 56,
+      "h": 1.2,
+      "d": 10,
+      "color": 1922957,
+      "footprint": [
+        {
+          "x": -28,
+          "z": -5
+        },
+        {
+          "x": 28,
+          "z": -5
+        },
+        {
+          "x": 12,
+          "z": 5
+        },
+        {
+          "x": -12,
+          "z": 5
+        }
+      ]
+    },
+    {
+      "id": "slime-detour-0",
+      "name": "Road curving around the slime",
+      "kind": "support",
+      "x": 0,
+      "y": 8.4,
+      "z": 238,
+      "w": 24,
+      "h": 1.2,
+      "d": 11.894664,
+      "color": 14715442,
+      "footprint": [
+        {
+          "x": -12,
+          "z": -4
+        },
+        {
+          "x": 12,
+          "z": -4
+        },
+        {
+          "x": 12,
+          "z": 5.947332
+        },
+        {
+          "x": -12,
+          "z": 2.052668
+        }
+      ]
+    },
+    {
+      "id": "slime-detour-1",
+      "name": "Road curving around the slime",
+      "kind": "support",
+      "x": -2,
+      "y": 8.4,
+      "z": 248,
+      "w": 28,
+      "h": 1.2,
+      "d": 23.779436,
+      "color": 1473145,
+      "footprint": [
+        {
+          "x": -10,
+          "z": -7.947332
+        },
+        {
+          "x": 14,
+          "z": -4.052668
+        },
+        {
+          "x": 8.685871,
+          "z": 11.889718
+        },
+        {
+          "x": -12.685871,
+          "z": 0.110282
+        }
+      ]
+    },
+    {
+      "id": "slime-detour-2",
+      "name": "Road curving around the slime",
+      "kind": "support",
+      "x": -8.5,
+      "y": 8.4,
+      "z": 259.5,
+      "w": 30.371742,
+      "h": 1.2,
+      "d": 28.810802,
+      "color": 1922957,
+      "footprint": [
+        {
+          "x": -6.185871,
+          "z": -11.389718
+        },
+        {
+          "x": 15.185871,
+          "z": 0.389718
+        },
+        {
+          "x": 3.718494,
+          "z": 14.405401
+        },
+        {
+          "x": -12.718494,
+          "z": -3.405401
+        }
+      ]
+    },
+    {
+      "id": "slime-detour-3",
+      "name": "Road curving around the slime",
+      "kind": "support",
+      "x": -19.5,
+      "y": 8.4,
+      "z": 269.5,
+      "w": 29.436988,
+      "h": 1.2,
+      "d": 27.500798,
+      "color": 14715442,
+      "footprint": [
+        {
+          "x": -1.718494,
+          "z": -13.405401
+        },
+        {
+          "x": 14.718494,
+          "z": 4.405401
+        },
+        {
+          "x": 1.220164,
+          "z": 13.750399
+        },
+        {
+          "x": -14.220164,
+          "z": -4.750399
+        }
+      ]
+    },
+    {
+      "id": "slime-detour-4",
+      "name": "Road curving around the slime",
+      "kind": "support",
+      "x": -31.5,
+      "y": 8.4,
+      "z": 279.5,
+      "w": 30.724506,
+      "h": 1.2,
+      "d": 29.500798,
+      "color": 14715442,
+      "footprint": [
+        {
+          "x": -2.220164,
+          "z": -14.750399
+        },
+        {
+          "x": 13.220164,
+          "z": 3.750399
+        },
+        {
+          "x": 4.362253,
+          "z": 12.60831
+        },
+        {
+          "x": -15.362253,
+          "z": -1.60831
+        }
+      ]
+    },
+    {
+      "id": "slime-detour-5",
+      "name": "Road curving around the slime",
+      "kind": "support",
+      "x": -40.5,
+      "y": 8.4,
+      "z": 292,
+      "w": 30.148828,
+      "h": 1.2,
+      "d": 28.21662,
+      "color": 1473145,
+      "footprint": [
+        {
+          "x": -6.362253,
+          "z": -14.10831
+        },
+        {
+          "x": 13.362253,
+          "z": 0.10831
+        },
+        {
+          "x": 8.074414,
+          "z": 10.683988
+        },
+        {
+          "x": -15.074414,
+          "z": 3.316012
+        }
+      ]
+    },
+    {
+      "id": "slime-detour-6",
+      "name": "Road curving around the slime",
+      "kind": "support",
+      "x": -45,
+      "y": 8.4,
+      "z": 305.5,
+      "w": 26,
+      "h": 1.2,
+      "d": 20.367976,
+      "color": 1922957,
+      "footprint": [
+        {
+          "x": -10.574414,
+          "z": -10.183988
+        },
+        {
+          "x": 12.574414,
+          "z": -2.816012
+        },
+        {
+          "x": 11,
+          "z": 7.417679
+        },
+        {
+          "x": -13,
+          "z": 5.582321
+        }
+      ]
+    },
+    {
+      "id": "slime-detour-7",
+      "name": "Road curving around the slime",
+      "kind": "support",
+      "x": -46,
+      "y": 8.4,
+      "z": 324.5,
+      "w": 24,
+      "h": 1.2,
+      "d": 26.835358,
+      "color": 14715442,
+      "footprint": [
+        {
+          "x": -12,
+          "z": -13.417679
+        },
+        {
+          "x": 12,
+          "z": -11.582321
+        },
+        {
+          "x": 12,
+          "z": 12.5
+        },
+        {
+          "x": -12,
+          "z": 12.5
+        }
+      ]
+    },
+    {
+      "id": "slime-curve-0",
+      "name": "Curved green slime bed",
+      "kind": "slime",
+      "x": 18.5,
+      "y": 6.95,
+      "z": 248.5,
+      "w": 14.15904,
+      "h": 1.5,
+      "d": 10.43561,
+      "color": 8841266,
+      "footprint": [
+        {
+          "x": -6.960244,
+          "z": -3.782195
+        },
+        {
+          "x": 5.960244,
+          "z": -5.217805
+        },
+        {
+          "x": 7.07952,
+          "z": 4.855679
+        },
+        {
+          "x": -6.07952,
+          "z": 4.144321
+        }
+      ]
+    },
+    {
+      "id": "slime-curve-1",
+      "name": "Curved green slime bed",
+      "kind": "slime",
+      "x": 18,
+      "y": 6.95,
+      "z": 257.5,
+      "w": 15.15904,
+      "h": 1.5,
+      "d": 13.663038,
+      "color": 8841266,
+      "footprint": [
+        {
+          "x": -5.57952,
+          "z": -4.855679
+        },
+        {
+          "x": 7.57952,
+          "z": -4.144321
+        },
+        {
+          "x": 5.140445,
+          "z": 6.831519
+        },
+        {
+          "x": -7.140445,
+          "z": 2.168481
+        }
+      ]
+    },
+    {
+      "id": "slime-curve-2",
+      "name": "Curved green slime bed",
+      "kind": "slime",
+      "x": 14.5,
+      "y": 6.95,
+      "z": 266.5,
+      "w": 17.28089,
+      "h": 1.5,
+      "d": 16.904948,
+      "color": 8841266,
+      "footprint": [
+        {
+          "x": -3.640445,
+          "z": -6.831519
+        },
+        {
+          "x": 8.640445,
+          "z": -2.168481
+        },
+        {
+          "x": 2.739914,
+          "z": 8.452474
+        },
+        {
+          "x": -7.739914,
+          "z": 0.547526
+        }
+      ]
+    },
+    {
+      "id": "slime-curve-3",
+      "name": "Curved green slime bed",
+      "kind": "slime",
+      "x": 8,
+      "y": 6.95,
+      "z": 275,
+      "w": 18.479828,
+      "h": 1.5,
+      "d": 18.516176,
+      "color": 8841266,
+      "footprint": [
+        {
+          "x": -1.239914,
+          "z": -7.952474
+        },
+        {
+          "x": 9.239914,
+          "z": -0.047526
+        },
+        {
+          "x": -0.065699,
+          "z": 9.258088
+        },
+        {
+          "x": -7.934301,
+          "z": -1.258088
+        }
+      ]
+    },
+    {
+      "id": "slime-curve-4",
+      "name": "Curved green slime bed",
+      "kind": "slime",
+      "x": -1.5,
+      "y": 6.95,
+      "z": 282,
+      "w": 18.868602,
+      "h": 1.5,
+      "d": 18.141462,
+      "color": 8841266,
+      "footprint": [
+        {
+          "x": 1.565699,
+          "z": -8.258088
+        },
+        {
+          "x": 9.434301,
+          "z": 2.258088
+        },
+        {
+          "x": -3.055545,
+          "z": 9.070731
+        },
+        {
+          "x": -7.944455,
+          "z": -3.070731
+        }
+      ]
+    },
+    {
+      "id": "slime-curve-5",
+      "name": "Curved green slime bed",
+      "kind": "slime",
+      "x": -12.5,
+      "y": 6.95,
+      "z": 286.5,
+      "w": 15.88891,
+      "h": 1.5,
+      "d": 15.54193,
+      "color": 8841266,
+      "footprint": [
+        {
+          "x": 3.055545,
+          "z": -7.570731
+        },
+        {
+          "x": 7.944455,
+          "z": 4.570731
+        },
+        {
+          "x": -3.789737,
+          "z": 7.770965
+        },
+        {
+          "x": -7.210263,
+          "z": -4.770965
+        }
+      ]
+    },
+    {
+      "id": "flag-deck",
+      "name": "Checkered flag landing",
+      "kind": "tile",
+      "x": -46,
+      "y": 8.4,
+      "z": 342.5,
+      "w": 24,
+      "h": 1.2,
+      "d": 11,
+      "color": 11450306
+    },
+    {
+      "id": "finish-edge",
+      "name": "Edge guard",
+      "kind": "barrier",
+      "x": -46,
+      "y": 9.65,
+      "z": 347.55,
+      "w": 24,
+      "h": 1.3,
+      "d": 0.9,
+      "color": 3623256
+    },
+    {
+      "id": "finish-post--55",
+      "name": "Checkered flag post",
+      "kind": "support",
+      "x": -55,
+      "y": 13.4,
+      "z": 345,
+      "w": 0.6,
+      "h": 8.8,
+      "d": 0.65,
+      "color": 3623256
+    },
+    {
+      "id": "finish-post--37",
+      "name": "Checkered flag post",
+      "kind": "support",
+      "x": -37,
+      "y": 13.4,
+      "z": 345,
+      "w": 0.6,
+      "h": 8.8,
+      "d": 0.65,
+      "color": 3623256
+    },
+    {
+      "id": "finish-flag-0-0",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -54,
+      "y": 16.75,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 16117977
+    },
+    {
+      "id": "finish-flag-0-1",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -52,
+      "y": 16.75,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 2238774
+    },
+    {
+      "id": "finish-flag-0-2",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -50,
+      "y": 16.75,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 16117977
+    },
+    {
+      "id": "finish-flag-0-3",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -48,
+      "y": 16.75,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 2238774
+    },
+    {
+      "id": "finish-flag-0-4",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -46,
+      "y": 16.75,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 16117977
+    },
+    {
+      "id": "finish-flag-0-5",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -44,
+      "y": 16.75,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 2238774
+    },
+    {
+      "id": "finish-flag-0-6",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -42,
+      "y": 16.75,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 16117977
+    },
+    {
+      "id": "finish-flag-0-7",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -40,
+      "y": 16.75,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 2238774
+    },
+    {
+      "id": "finish-flag-0-8",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -38,
+      "y": 16.75,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 16117977
+    },
+    {
+      "id": "finish-flag-1-0",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -54,
+      "y": 18.55,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 2238774
+    },
+    {
+      "id": "finish-flag-1-1",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -52,
+      "y": 18.55,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 16117977
+    },
+    {
+      "id": "finish-flag-1-2",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -50,
+      "y": 18.55,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 2238774
+    },
+    {
+      "id": "finish-flag-1-3",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -48,
+      "y": 18.55,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 16117977
+    },
+    {
+      "id": "finish-flag-1-4",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -46,
+      "y": 18.55,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 2238774
+    },
+    {
+      "id": "finish-flag-1-5",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -44,
+      "y": 18.55,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 16117977
+    },
+    {
+      "id": "finish-flag-1-6",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -42,
+      "y": 18.55,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 2238774
+    },
+    {
+      "id": "finish-flag-1-7",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -40,
+      "y": 18.55,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 16117977
+    },
+    {
+      "id": "finish-flag-1-8",
+      "name": "Checkered finish square",
+      "kind": "support",
+      "x": -38,
+      "y": 18.55,
+      "z": 345,
+      "w": 2,
+      "h": 1.8,
+      "d": 0.58,
+      "color": 2238774
+    },
+    {
+      "id": "lava-88",
+      "kind": "lava",
+      "x": -0.055089205846783784,
+      "y": 9,
+      "z": -93.03508472740083,
+      "w": 10,
+      "h": 0.5,
+      "d": 10,
+      "color": 16734751
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "gray-start",
+      "name": "Gray starter gate",
+      "kind": "start-gate",
+      "x": 0,
+      "y": 9,
+      "z": -142,
+      "yaw": 0
+    },
+    {
+      "id": "blue-screws",
+      "name": "Blue screw field",
+      "kind": "screw-field",
+      "x": 0,
+      "y": 9,
+      "z": -72,
+      "yaw": 0
+    },
+    {
+      "id": "volcano",
+      "name": "Erupting volcano",
+      "kind": "volcano",
+      "x": 0,
+      "y": 9,
+      "z": 48,
+      "yaw": 0
+    },
+    {
+      "id": "triple-spikes",
+      "name": "White triple gate trap",
+      "kind": "spike-gates",
+      "x": 0,
+      "y": 9,
+      "z": 111,
+      "yaw": 0
+    },
+    {
+      "id": "blue-drill",
+      "name": "Blue triangle drill tank",
+      "kind": "drill-tank",
+      "x": 15,
+      "y": 9,
+      "z": 162,
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "green-claw",
+      "name": "Green crusher claw",
+      "kind": "crusher-claw",
+      "x": -9,
+      "y": 9,
+      "z": 204,
+      "yaw": 3.141592653589793
+    }
+  ],
+  "medals": {
+    "gold": 40,
+    "silver": 56,
+    "bronze": 85
+  },
+  "backgroundTemplate": "pastoral-hills"
+}
