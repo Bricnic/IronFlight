@@ -48,6 +48,12 @@
                                 "sha256":  "3E7EF61FC9C1F4F1A2B89FB7993D305D6D30F54D2B615B46BA60AFF35EF2A5CD",
                                 "levelFile":  "Pumpkin Pass.json",
                                 "notes":  "The orange car at the foot of the yellow straight marks the spawn. Race up the straight, through the junction bend and blue slide, jump the slime pit from the green-mat kicker onto the landing, then take the orange loop turn to the finish ring. With no checkered flag visible, the loop-piece exit becomes the marked finish. Wood floor is lava; rug, vent, launcher, cauldrons and pumpkin omitted as background objects."
+                            },
+                            {
+                                "filename":  "906346ce-c71f-420c-b259-489b97b1130c.jpg",
+                                "sha256":  "752A37BABF15231F1DBD8DE3113B0D0D285D6CA9760907F6A43B1F32C1590FDD",
+                                "levelFile":  "Booster Gap.json",
+                                "notes":  "The green car on the purple ramp marks the spawn. Race under the red arch, over the tan block, jump the green-mat slime pit, then hit the Triple-Loop-style booster to clear the wide middle gap. Thread the orange/blue junction past the lime dinosaur to the standing red brick finish. Wood floor is lava; rug, pegboard, launcher toys and bags omitted as background objects."
                             }
                         ]
 }

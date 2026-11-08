@@ -48,7 +48,10 @@ export const COURSE_PREFAB_KINDS = [
   "dragon",
   "lamp",
   "grandstand",
+  "boost-pad",
 ] as const;
+/** Triple-Loop-style booster footprint in world units, shared by sim and view. */
+export const BOOST_PAD = { w: 10, d: 12 } as const;
 export const DINOSAUR_PREFAB_KINDS = ["raptor", "pterosaur", "spinosaurus", "ember-wyvern"] as const;
 export type DinosaurKind = (typeof DINOSAUR_PREFAB_KINDS)[number];
 export function isDinosaur(kind: string): kind is DinosaurKind {

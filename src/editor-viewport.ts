@@ -142,6 +142,7 @@ const PREFAB_COLORS: Record<string, number> = {
   cage: 0x5a636b,
   "jail-cell": 0x7a8494,
   candle: 0xffb347,
+  "boost-pad": 0x35f0d0,
 };
 /** Minimal orbit: drag rotates, wheel zooms, shift-drag pans. */
 function attachOrbit(

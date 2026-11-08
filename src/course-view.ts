@@ -18,6 +18,7 @@ import {
 } from "./loop-view";
 import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
+import { BOOST_PAD } from "./custom-level";
 import { solidQuaternion } from "./euler";
 import { scaleSolidUVs } from "./solid-uv";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
@@ -81,6 +82,7 @@ export class CourseView extends T.Group {
   }[] = [];
   private gateModels: T.Group[] = [];
   private trampolineModels: T.Group[] = [];
+  private boostPadModels: T.Group[] = [];
   private ringModels: T.Group[] = [];
   private dragonModels: T.Group[] = [];
   private dragonJets: T.Group[] = [];
@@ -441,6 +443,7 @@ export class CourseView extends T.Group {
       this.key = key;
       this.gateModels = [];
       this.trampolineModels = [];
+      this.boostPadModels = [];
       this.ringModels = [];
       this.dragonModels = [];
       this.dragonJets = [];
@@ -585,6 +588,13 @@ export class CourseView extends T.Group {
           tramp.position.set(t.x, t.y - 0.5, t.z);
           this.add(tramp);
           this.trampolineModels.push(tramp);
+        }
+        for (const p of track.custom?.prefabs ?? []) {
+          if (p.kind !== "boost-pad") continue;
+          const pad = buildBoostPadMesh();
+          pad.position.set(p.x, p.y ?? 0, p.z);
+          this.add(pad);
+          this.boostPadModels.push(pad);
         }
         if (track.ring) {
           const ringMesh = buildRingMesh(track.ring.radius);
@@ -812,6 +822,7 @@ export class CourseView extends T.Group {
       axes: this.axeModels.length,
       ghosts: this.ghostGroup?.visible ? this.ghostGroup.children.length : 0,
       trampolines: this.trampolineModels.length,
+      boostPads: this.boostPadModels.length,
       rings: this.ringModels.length,
       loopSegments: this.loopSegmentModels,
       dragons: this.dragonModels.length,
@@ -958,6 +969,32 @@ export function axeStats(group: T.Group) {
       metallic++;
   });
   return { meshes, triangles: Math.round(triangles), metallic };
+}
+export function buildBoostPadMesh() {
+  const group = new T.Group();
+  const pad = new T.Mesh(
+    new T.BoxGeometry(BOOST_PAD.w, 0.1, BOOST_PAD.d),
+    new T.MeshStandardMaterial({
+      color: 0x183c3f,
+      emissive: 0x0e7974,
+      emissiveIntensity: 0.6,
+      roughness: 0.45,
+    }),
+  );
+  pad.position.y = 0.05;
+  group.add(pad);
+  for (const z of [-BOOST_PAD.d / 4, BOOST_PAD.d / 4]) {
+    for (const side of [-1, 1]) {
+      const arrow = new T.Mesh(
+        new T.BoxGeometry(3.7, 0.035, 0.35),
+        new T.MeshBasicMaterial({ color: 0x95fff0 }),
+      );
+      arrow.position.set(side * 1.35, 0.1, z);
+      arrow.rotation.y = side * 0.65;
+      group.add(arrow);
+    }
+  }
+  return group;
 }
 export function buildTrampolineMesh() {
   const group = new T.Group();

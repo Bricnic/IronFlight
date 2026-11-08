@@ -43,5 +43,10 @@
     "file": "Pumpkin Pass.json",
     "thumbnail": "/tracks/pumpkin-pass.png",
     "description": "Race the Halloween toy track: yellow straight, junction bend, blue slide, slime jump and orange loop turn to the finish ring."
+  },
+  {
+    "file": "Booster Gap.json",
+    "thumbnail": "/tracks/booster-gap.png",
+    "description": "Race under the red arch, jump the slime, hit the booster to clear the 40-unit gap, then thread the dino junction to the standing red brick."
   }
 ]

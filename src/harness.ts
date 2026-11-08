@@ -128,6 +128,7 @@ export interface GameHarness {
       axes: number;
       ghosts: number;
       trampolines: number;
+      boostPads: number;
       rings: number;
       loopSegments: number;
       dragons: number;
