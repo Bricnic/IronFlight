@@ -751,7 +751,7 @@ kbd {
   left: 16px;
   padding: 5px 7px;
   background: #122127df;
-  color: var(--track-accent);
+  color: #fff;
   font-size: 9px;
   letter-spacing: 1.2px;
 }
@@ -810,7 +810,7 @@ kbd {
   color: #9fb3b7;
 }
 .play-word {
-  color: var(--track-accent);
+  color: #fff;
   font-weight: 700;
 }
 .selection-footnote {
