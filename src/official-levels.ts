@@ -16,6 +16,7 @@ export const officialFileTracks = entries.map(
     const track = toTrack(validateCustomLevel(definition));
     return {
       ...track,
+      sourceFile: `levels/official/${file}`,
       thumbnail: thumbnail ?? track.thumbnail,
       description: description ?? track.description,
     };

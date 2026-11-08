@@ -54,6 +54,8 @@ export type Track = {
   limit?: number;
   feasibility?: number;
   custom?: CustomLevel;
+  /** Project-relative data file for file-backed levels, e.g. levels/official/Dungeon.json. */
+  sourceFile?: string;
   /** Underground levels render with dark cavern air, fog and torchlight. */
   underground?: boolean;
   /** Background template name; see levels/backgrounds/. */

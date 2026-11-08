@@ -85,6 +85,13 @@ function tuningDefaults(): Plugin {
     },
   };
 }
+const projectRoot = fileURLToPath(new URL("./", import.meta.url)).replace(
+  /[\\/]+$/,
+  "",
+);
+const gameCopyFile = fileURLToPath(
+  new URL("./game-copy.json", import.meta.url),
+);
 const levelsDir = fileURLToPath(new URL("./levels/", import.meta.url));
 const LEVEL_NAME = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,63}$/;
 function levelFile(name: string) {
@@ -101,6 +108,23 @@ function localRequest(req: IncomingMessage) {
       String(req.headers.host ?? ""),
     )
   );
+}
+async function writeGameCopy() {
+  const body = `${JSON.stringify({ root: projectRoot }, null, 2)}\n`;
+  try {
+    if ((await readFile(gameCopyFile, "utf8")) === body) return;
+  } catch {
+    // Missing or unreadable: written below.
+  }
+  await writeFile(gameCopyFile, body, "utf8");
+}
+function gameCopy(): Plugin {
+  return {
+    name: "local-game-copy",
+    async configureServer() {
+      await writeGameCopy();
+    },
+  };
 }
 function customLevels(): Plugin {
   return {
@@ -211,4 +235,6 @@ function customLevels(): Plugin {
     },
   };
 }
-export default defineConfig({ plugins: [tuningDefaults(), customLevels()] });
+export default defineConfig({
+  plugins: [tuningDefaults(), customLevels(), gameCopy()],
+});

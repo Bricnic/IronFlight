@@ -128,6 +128,33 @@ test("turning power supports weaker steering, persists and resets to source defa
   await expect(slider).toHaveValue(String(DEFAULT_TUNING.turningPower));
 });
 
+test("debug menu shows the fully qualified path of the current level", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => {
+    window.__game!.pause(true);
+    window.__game!.startTrack("harbor-sprint", "easy");
+  });
+  await page.keyboard.press("Backquote");
+  const path = page.locator("#debug-level-path");
+  await expect(path).toBeVisible();
+  const builtin = await path.textContent();
+  expect(builtin).toMatch(/^([A-Za-z]:|\/|\\)/);
+  expect(builtin).toMatch(/[/\\]src[/\\]tracks\.ts:harbor-sprint$/);
+  expect(builtin).not.toContain("http");
+  await page.keyboard.press("Backquote");
+  await page.evaluate(() =>
+    window.__game!.startTrack("custom:dungeon", "easy"),
+  );
+  await page.keyboard.press("Backquote");
+  const fileLevel = await path.textContent();
+  expect(fileLevel).toMatch(/^([A-Za-z]:|\/|\\)/);
+  expect(fileLevel).toMatch(/[/\\]levels[/\\]official[/\\]Dungeon\.json$/);
+  expect(fileLevel).not.toContain("http");
+});
+
 test("tuning sliders are alphabetical and axe speed persists", async ({ page }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
