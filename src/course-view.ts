@@ -962,10 +962,11 @@ export function axeStats(group: T.Group) {
 export function buildTrampolineMesh() {
   const group = new T.Group();
   const pad = new T.Mesh(
-    new T.CylinderGeometry(5, 5, 0.5, 40),
+    new T.CylinderGeometry(5, 5, 0.62, 40),
     new T.MeshStandardMaterial({ color: 0x1d2b33, roughness: 0.9 }),
   );
-  pad.position.y = 0.3;
+  // Keep the mat clear of thin road overlays while leaving the rim and bounce sensor in place.
+  pad.position.y = 0.36;
   const rim = new T.Mesh(
     new T.TorusGeometry(5, 0.45, 14, 40),
     new T.MeshStandardMaterial({ color: 0xd84a3a, roughness: 0.6 }),
