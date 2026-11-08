@@ -78,12 +78,14 @@ export class ComicPhysics {
         return c;
       };
       if (["book", "teeth", "computer", "flippers"].includes(h.kind)) {
-        box(0, 0.25, 0, 12, 0.5, 12);
-        if (h.kind === "flippers") box(0, 1.3, 0, 10, 2, 10, true);
-        for (const side of [-1, 1]) box(side * 6.4, 1.5, 4.8, 0.65, 3, 2);
+        const s = h.scale ?? 1;
+        const baseY = h.y ?? 0;
+        box(0, 0.25 * s, 0, 12 * s, 0.5 * s, 12 * s);
+        if (h.kind === "flippers") box(0, 1.3 * s, 0, 10 * s, 2 * s, 10 * s, true);
+        for (const side of [-1, 1]) box(side * 6.4 * s, 1.5 * s, 4.8 * s, 0.65 * s, 3 * s, 2 * s);
         const b = world.createRigidBody(
           R.RigidBodyDesc.kinematicPositionBased()
-            .setTranslation(h.x, 1.2, h.z + 5)
+            .setTranslation(h.x, baseY + 1.2 * s, h.z + 5 * s)
             .setRotation(
               new Quaternion().setFromAxisAngle(
                 new Vector3(1, 0, 0),
@@ -92,13 +94,13 @@ export class ComicPhysics {
             ),
         );
         m.bodies.push(b);
-        box(0, 0, -5, 12, 1.6, 12, false, b);
+        box(0, 0, -5 * s, 12 * s, 1.6 * s, 12 * s, false, b);
         // Matching individual teeth supplement the crushing plate collider.
         for (const side of [-1, 1])
           for (let i = 0; i < 9; i++) {
             const c = world.createCollider(
-              R.ColliderDesc.cone(0.65, 0.34)
-                .setTranslation((i - 4) * 1.25, side * 0.95, -10.6)
+              R.ColliderDesc.cone(0.65 * s, 0.34 * s)
+                .setTranslation((i - 4) * 1.25 * s, side * 0.95 * s, -10.6 * s)
                 .setRotation(
                   new Quaternion().setFromAxisAngle(
                     new Vector3(1, 0, 0),
@@ -248,7 +250,8 @@ export class ComicPhysics {
     for (const m of this.mechanisms) {
       const angle = mechanismAngle(m.h, s.time, m.triggered);
       for (const b of m.bodies) {
-        b.setNextKinematicTranslation({ x: m.h.x, y: 1.2, z: m.h.z + 5 });
+        const js = m.h.scale ?? 1;
+        b.setNextKinematicTranslation({ x: m.h.x, y: (m.h.y ?? 0) + 1.2 * js, z: m.h.z + 5 * js });
         b.setNextKinematicRotation(
           new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), angle),
         );

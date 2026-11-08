@@ -30,7 +30,7 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-10).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-11).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
@@ -41,6 +41,7 @@ it("steps to the next and previous level with wraparound", () => {
     "Fireside Sonata",
     "Pumpkin Pass",
     "Booster Gap",
+    "Evil Tube Run",
   ]);
   expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
   expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
@@ -64,12 +65,14 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:pumpkin-pass", -1)).toBe("custom:fireside-sonata");
   expect(stepTrackId("custom:pumpkin-pass", 1)).toBe("custom:booster-gap");
   expect(stepTrackId("custom:booster-gap", -1)).toBe("custom:pumpkin-pass");
-  expect(stepTrackId("custom:booster-gap", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:booster-gap");
+  expect(stepTrackId("custom:booster-gap", 1)).toBe("custom:evil-tube-run");
+  expect(stepTrackId("custom:evil-tube-run", -1)).toBe("custom:booster-gap");
+  expect(stepTrackId("custom:evil-tube-run", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:evil-tube-run");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:booster-gap");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:evil-tube-run");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:booster-gap");
+  expect(stepTrackId(undefined, -1)).toBe("custom:evil-tube-run");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);
@@ -81,7 +84,7 @@ it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets
   expect(validateTracks([{ ...TRACKS[4], feasibility: 121 }])).not.toEqual([]);
 });
 it("every track resolves a background template", () => {
-  for (const t of [...TRACKS, ...officialTracks.slice(-4)]) {
+  for (const t of [...TRACKS, ...officialTracks.slice(-5)]) {
     expect(t.backgroundTemplate, t.id).toBeDefined();
     expect(getBackgroundTemplate(t.backgroundTemplate).name).toBe(
       t.backgroundTemplate,
