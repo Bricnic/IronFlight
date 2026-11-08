@@ -3,11 +3,13 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { pbr } from "./materials";
 import {
   snapOpenness,
+  limeJawPose,
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
 import { isDinosaur } from "./custom-level";
 import { buildDinosaur, poseDinosaur } from "./dinosaur-view";
+import { buildLimeChomper } from "./toy-track-view";
 import type { Simulation } from "./simulation";
 
 const standard = (color: number, metalness = 0.15, roughness = 0.55) =>
@@ -60,6 +62,7 @@ const labelMessages: Record<string, [string, string]> = {
   hands: ["STONE CLAP", "TIMED CRUSH / DRIVE BETWEEN"],
   scissors: ["GIANT SNIP", "TIMED BLADES / DRIVE BETWEEN"],
   clippers: ["CRUSH CLIP", "TIMED JAWS / DRIVE BETWEEN"],
+  "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
 };
 /** Upright billboard label anchored above the model at the given local height. */
 export function buildDungeonLabel(h: DungeonHazard, topY: number): T.Sprite {
@@ -702,6 +705,9 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     model.pivots = buildCageModel(h, root);
   } else if (h.kind === "candle") {
     model.pivots = buildCandleModel(h, root);
+  } else if (h.kind === "lime-chomper") {
+    model.pivots = [buildLimeChomper(root)];
+    root.add(buildDungeonLabel(h, 21));
   } else if (isDinosaur(h.kind)) {
     model.dinosaur = buildDinosaur(root, h.kind);
     poseDinosaur(model.dinosaur, 0, 0);
@@ -821,6 +827,10 @@ export class DungeonView extends T.Group {
       if (m.dinosaur) {
         const bite = s.dungeon.mechanisms.find(({ h }) => h.id === m.h.id)?.bite;
         poseDinosaur(m.dinosaur, bite ? s.time - bite.started : 0, bite?.turn ?? 0);
+        continue;
+      }
+      if (m.h.kind === "lime-chomper") {
+        m.pivots[0].rotation.x = -0.82 * limeJawPose(s.time + m.h.phase).openness;
         continue;
       }
       const open = snapOpenness(s.time + m.h.phase);

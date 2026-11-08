@@ -8,6 +8,8 @@ import {
   DINOSAUR_COOLDOWN,
   DINOSAUR_LUNGE,
   dinosaurPose,
+  limeJawPose,
+  LIME_JAW,
   dungeonHazards,
   snapStriking,
   SNAP_CYCLE,
@@ -124,6 +126,21 @@ export class DungeonPhysics {
       p = s.body.translation();
     for (const m of this.mechanisms) {
       const h = m.h;
+      if (h.kind === "lime-chomper") {
+        if (s.status !== "driving" || !limeJawPose(s.time + h.phase).striking) continue;
+        const yaw = h.yaw ?? 0;
+        const dx = p.x - h.x, dz = p.z - h.z;
+        const across = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+        const forward = dx * Math.sin(yaw) + dz * Math.cos(yaw);
+        const y = p.y - (h.y ?? 0);
+        if (Math.abs(across) <= LIME_JAW.halfWidth && forward >= LIME_JAW.back &&
+            forward <= LIME_JAW.tip && y >= -0.5 && y <= 5.8) {
+          m.contacts++;
+          s.damage("chassis-front", 10000);
+          s.damageEvents.push({ source: h.kind, part: "chassis-front", time: s.time });
+        }
+        continue;
+      }
       if (isDinosaur(h.kind)) {
         this.attackWithDinosaur(m, h.kind, p);
         continue;
@@ -178,7 +195,9 @@ export class DungeonPhysics {
         z: m.h.z,
         colliders: m.colliders.length,
         contacts: m.contacts,
-        striking: isDinosaur(m.h.kind)
+        striking: m.h.kind === "lime-chomper"
+          ? limeJawPose(this.sim.time + m.h.phase).striking
+          : isDinosaur(m.h.kind)
           ? !!m.bite && dinosaurPose(this.sim.time - m.bite.started).striking
           : snapStriking(this.sim.time + m.h.phase),
       })),

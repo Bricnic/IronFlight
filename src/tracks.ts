@@ -1,4 +1,4 @@
-import type { CustomLevel } from "./custom-level";
+import type { CustomCheckpoint, CustomLevel } from "./custom-level";
 import { getCustomTrack } from "./custom-level";
 export const TRACK_IDS = [
   "triple-loop",
@@ -21,6 +21,8 @@ export type Checkpoint = Point & {
   width: number;
   y: number;
   height: number;
+  yaw?: number;
+  appearance?: CustomCheckpoint["appearance"];
 };
 export type Collectible = Point & {
   id: string;

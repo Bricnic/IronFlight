@@ -58,6 +58,7 @@ export const DUNGEON_PREFAB_KINDS = [
   "cage",
   "jail-cell",
   "candle",
+  "lime-chomper",
   ...DINOSAUR_PREFAB_KINDS,
 ] as const;
 export const PREFAB_KINDS = [
@@ -124,6 +125,12 @@ export interface CustomPoint {
   /** Collectibles only: "ring" salvage tokens or "chest" treasure chests. */
   kind?: string;
 }
+export const CHECKPOINT_WIDTHS = { "yellow-jaws": 22, "blue-tile": 16 } as const;
+export interface CustomCheckpoint extends CustomPoint {
+  /** Fixed heading for a gate whose approach differs from the prior waypoint. */
+  yaw?: number;
+  appearance?: keyof typeof CHECKPOINT_WIDTHS;
+}
 export interface CustomRing {
   name?: string;
   locked?: boolean;
@@ -138,7 +145,7 @@ export interface CustomLevel {
   name: string;
   mode: CustomMode;
   spawn: { x: number; y: number; z: number; yaw: number; locked?: boolean; name?: string };
-  checkpoints: CustomPoint[];
+  checkpoints: CustomCheckpoint[];
   collectibles?: CustomPoint[];
   demolish?: CustomPoint[];
   rings?: CustomRing[];
@@ -211,7 +218,12 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     Array.isArray((level as CustomLevel)?.checkpoints),
     "checkpoints must be an array",
   );
-  checkpoints.forEach((p, i) => checkPoint(errors, p, `checkpoint ${i}`));
+  checkpoints.forEach((p, i) => {
+    checkPoint(errors, p, `checkpoint ${i}`);
+    check(errors, p?.yaw === undefined || finite(p.yaw), `checkpoint ${i} needs a finite yaw`);
+    check(errors, p?.appearance === undefined || p.appearance === "yellow-jaws" || p.appearance === "blue-tile",
+      `checkpoint ${i} has an unknown appearance`);
+  });
   const prefabCheckpoints = Array.isArray((level as CustomLevel)?.prefabs)
     ? (level as CustomLevel).prefabs.filter((p) => p?.kind === "checkpoint")
     : [];
@@ -404,18 +416,23 @@ function hashColor(name: string) {
 }
 /** Adapt a validated level to a playable Track. */
 export function toTrack(level: CustomLevel): Track {
-  const gatePoints = [
+  const gatePoints: CustomCheckpoint[] = [
     ...level.checkpoints,
-    ...level.prefabs.filter((p) => p.kind === "checkpoint"),
+    ...level.prefabs.filter((p) => p.kind === "checkpoint").map(({ x, y, z }) => ({ x, y, z })),
   ];
   const path = [
     { x: level.spawn.x, z: level.spawn.z },
     ...gatePoints.map((p) => ({ x: p.x, z: p.z })),
   ];
-  const checkpoints = gates(path).map((g, i) => ({
-    ...g,
-    y: gatePoints[i].y ?? 2,
-  }));
+  const checkpoints = gates(path).map((g, i) => {
+    const { y, yaw, appearance } = gatePoints[i];
+    return {
+      ...g,
+      y: y ?? 2,
+      ...(yaw === undefined ? {} : { yaw, nx: Math.sin(yaw), nz: Math.cos(yaw) }),
+      ...(appearance ? { appearance, width: CHECKPOINT_WIDTHS[appearance] } : {}),
+    };
+  });
   const trampolines = level.prefabs
     .filter((p) => p.kind === "trampoline")
     .map((p) => ({ x: p.x, y: p.y ?? 0, z: p.z }));
@@ -802,7 +819,7 @@ function refreshGateNormal(track: Track, index: number) {
   const gate = track.checkpoints[index];
   const previous = track.path[index];
   const point = track.path[index + 1];
-  if (!gate || !previous || !point) return;
+  if (!gate || gate.yaw !== undefined || !previous || !point) return;
   const length = Math.hypot(point.x - previous.x, point.z - previous.z);
   if (length <= 1e-6) return; // degenerate segment: keep the old heading
   gate.nx = (point.x - previous.x) / length;

@@ -18,5 +18,10 @@
     "file": "Emberfall Causeway.json",
     "thumbnail": "/tracks/emberfall-causeway.png",
     "description": "Drop down a striped tower ramp, pass a red wyvern on the stacked causeway, and jump the slime before the raptor finish."
+  },
+  {
+    "file": "Chompworks.json",
+    "thumbnail": "/tracks/chompworks.png",
+    "description": "Race beneath five balloons, thread the yellow jaws and blue tile, then time the lime dinosaur's snap before the checkered transporter."
   }
 ]
