@@ -1,4 +1,5 @@
 import { expect, it } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
 import { TRACKS, getTrack, validateTracks } from "../src/tracks";
 import { officialTracks, stepTrackId } from "../src/official-levels";
 it("registers Triple Loop plus eight distinct tracks", () => {
@@ -59,4 +60,15 @@ it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets
     ]),
   ).not.toEqual([]);
   expect(validateTracks([{ ...TRACKS[4], feasibility: 121 }])).not.toEqual([]);
+});
+it("every official level preview is a dedicated screenshot", () => {
+  for (const track of officialTracks) {
+    const file = `public${track.thumbnail}`;
+    expect(existsSync(file), `${track.id} thumbnail ${track.thumbnail} exists`).toBe(true);
+    expect(track.thumbnail.endsWith(".png"), `${track.id} preview is a screenshot, not an illustration`).toBe(true);
+    const bytes = readFileSync(file);
+    expect([...bytes.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+    expect(bytes.readUInt32BE(16), `${track.id} width`).toBeGreaterThanOrEqual(640);
+    expect(bytes.readUInt32BE(20), `${track.id} height`).toBeGreaterThanOrEqual(360);
+  }
 });

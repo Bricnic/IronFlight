@@ -1,7 +1,8 @@
 import { chromium } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 // Level-select thumbnails: real in-game screenshots, one per official level.
-// Usage: PREVIEW_PORT=5199 node scripts/capture-level-previews.mjs
+// Usage: PREVIEW_PORT=5199 node scripts/capture-level-previews.mjs [id...]
+// IDs default to the full official lineup; pass a subset to recapture.
 const PORT = process.env.PREVIEW_PORT ?? "5173";
 const browser = await chromium.launch({
   args: [
@@ -11,7 +12,7 @@ const browser = await chromium.launch({
     "--enable-unsafe-swiftshader",
   ],
 });
-const levels = [
+const allLevels = [
   "triple-loop",
   "harbor-sprint",
   "foundry-run",
@@ -23,7 +24,10 @@ const levels = [
   "sky-slide",
   "custom:fairground",
   "custom:dungeon",
+  "custom:jurassic-junction",
 ];
+const levels = process.argv.slice(2).filter((a) => !a.startsWith("-"));
+const queue = levels.length ? levels : allLevels;
 const file = (id) => id.replace(/^custom:/, "");
 try {
   const page = await browser.newPage({
@@ -50,8 +54,10 @@ try {
     content:
       "#app > :not(#viewport) { visibility: hidden !important; } #viewport { inset: 0 !important; }",
   });
+  await page.evaluate(() => window.dispatchEvent(new Event("resize")));
+  await page.waitForTimeout(500);
   await mkdir("public/tracks", { recursive: true });
-  for (const id of levels) {
+  for (const id of queue) {
     await page.evaluate((id) => {
       window.__captureFreeze = false;
       window.__game.pause(false);
@@ -64,10 +70,13 @@ try {
       window.__captureFreeze = true;
       window.__game.advanceFrames(2, 1, {});
     });
-    await page
-      .locator("#viewport canvas")
-      .screenshot({ path: `public/tracks/${file(id)}.png` });
-    console.log(`Captured ${id}`);
+    const out = `public/tracks/${file(id)}.png`;
+    await page.locator("#viewport canvas").screenshot({ path: out });
+    const bytes = await readFile(out);
+    const w = bytes.readUInt32BE(16),
+      h = bytes.readUInt32BE(20);
+    if (w < 640 || h < 360) throw new Error(`${out} too small: ${w}x${h}`);
+    console.log(`Captured ${id} ${w}x${h}`);
   }
 } finally {
   await browser.close();
