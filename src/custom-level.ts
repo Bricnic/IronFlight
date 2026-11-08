@@ -1,5 +1,6 @@
 import { gates, type CustomTrackId, type Point, type Track } from "./tracks";
 import { isConvexFootprint } from "./solid-clip";
+import { PIANO_KEY_COUNT } from "./piano-keys";
 export const TEXTURE_IDS = [
   "asphalt_02",
   "grass_ground",
@@ -112,6 +113,8 @@ export interface CustomSolid {
   color: number;
   texture?: string;
   footprint?: readonly Point[];
+  /** Piano white-key voice 0-6 (C to B); the key flashes on touch. */
+  pianoKey?: number;
 }
 export interface CustomPrefab {
   name?: string;
@@ -344,6 +347,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
           isConvexFootprint(s.footprint)),
       `solid ${s?.id ?? i} needs a convex footprint with finite x/z vertices`,
     );
+  check(errors, s?.pianoKey === undefined || (Number.isInteger(s.pianoKey) && s.pianoKey >= 0 && s.pianoKey < PIANO_KEY_COUNT), `solid ${s?.id ?? i} needs a piano key from 0 to ${PIANO_KEY_COUNT - 1}`);
   }
   const prefabs = Array.isArray((level as CustomLevel)?.prefabs)
     ? (level as CustomLevel).prefabs

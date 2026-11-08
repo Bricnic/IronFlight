@@ -102,6 +102,10 @@ export class Simulation {
   private hammerColliderOwners = new Map<number, string>();
   private surfaceKinds = new Map<number, string>();
   private solidColliders = new Map<string, RAPIER.Collider>();
+  private colliderSolids = new Map<number, string>();
+  private pianoKeyById = new Map<string, number>();
+  private pianoKeyTrack?: ReturnType<typeof getTrack>;
+  private keyPresses = new Map<number, number>();
   private visitedSurfaces = new Set<string>();
   previousPosition = new Vector3();
   previousRotation = new Quaternion();
@@ -201,6 +205,7 @@ export class Simulation {
     );
     this.surfaceKinds.set(collider.handle, s.kind);
     if (s.id !== undefined) this.solidColliders.set(s.id, collider);
+    if (s.id !== undefined) this.colliderSolids.set(collider.handle, s.id);
   }
   /** Live placement: add one solid collider without resetting the run. */
   addCustomSolid(s: CourseSolid) {
@@ -219,6 +224,7 @@ export class Simulation {
     if (!collider) return;
     this.surfaceKinds.delete(collider.handle);
     this.solidColliders.delete(id);
+    this.colliderSolids.delete(collider.handle);
     this.world.removeCollider(collider, true);
   }
   reset(stage: Stage = this.stage) {
@@ -273,6 +279,10 @@ export class Simulation {
     this.hammerColliderOwners.clear();
     this.surfaceKinds.clear();
     this.solidColliders.clear();
+    this.colliderSolids.clear();
+    this.pianoKeyById.clear();
+    this.pianoKeyTrack = undefined;
+    this.keyPresses.clear();
     this.visitedSurfaces.clear();
     if (stage === "lab")
       this.world.createCollider(
@@ -826,10 +836,21 @@ export class Simulation {
     const screwHit = this.dungeon.after();
     const fairgroundHit = this.fairground.after(before);
     this.ghosts.attack();
+    if (this.courseTrack !== this.pianoKeyTrack) {
+      this.pianoKeyTrack = this.courseTrack;
+      this.pianoKeyById.clear();
+      this.keyPresses.clear();
+      if (this.courseTrack?.custom)
+        for (const s of courseSolids(this.courseTrack))
+          if (s.pianoKey !== undefined) this.pianoKeyById.set(s.id, s.pianoKey);
+    }
     for (let i = 0; i < 4; i++) {
       const ground = this.vehicle.wheelGroundObject(i);
       const kind = ground && this.surfaceKinds.get(ground.handle);
       if (kind) this.visitedSurfaces.add(kind);
+      const solidId = ground && this.colliderSolids.get(ground.handle);
+      const pianoKey = solidId ? this.pianoKeyById.get(solidId) : undefined;
+      if (pianoKey !== undefined) this.keyPresses.set(pianoKey, this.time);
     }
     this.ticks++;
     this.time = this.ticks * DT;
@@ -1408,6 +1429,10 @@ export class Simulation {
     if (id === "chassis-rear")
       for (const p of this.partDefs)
         if ("parent" in p && p.parent === id) this.damage(p.id, 10000);
+  }
+  /** Piano keys struck this run, with their latest strike times. */
+  pianoPresses(): { key: number; at: number }[] {
+    return [...this.keyPresses.entries()].map(([key, at]) => ({ key, at }));
   }
   snapshot(includeSkidPoints = true) {
     const p = this.body.translation(),

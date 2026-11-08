@@ -21,18 +21,14 @@ test("N and P step through levels with wraparound", async ({ page }) => {
     window.__game!.startTrack("sky-slide");
   });
   await expect.poll(trackId, { timeout: 15000 }).toBe("sky-slide");
-  await page.keyboard.press("n");
-  await expect.poll(trackId, { timeout: 15000 }).toBe("custom:fairground");
-  await page.keyboard.press("n");
-  await expect.poll(trackId, { timeout: 15000 }).toBe("custom:dungeon");
-  await page.keyboard.press("n");
-  await expect.poll(trackId, { timeout: 15000 }).toBe("triple-loop");
-  await page.keyboard.press("p");
-  await expect.poll(trackId, { timeout: 15000 }).toBe("custom:dungeon");
-  await page.keyboard.press("p");
-  await expect.poll(trackId, { timeout: 15000 }).toBe("custom:fairground");
-  await page.keyboard.press("p");
-  await expect.poll(trackId, { timeout: 15000 }).toBe("sky-slide");
+  for (const id of ["custom:fairground", "custom:dungeon", "custom:jurassic-junction", "custom:emberfall-causeway", "custom:chompworks", "custom:machine-gauntlet", "custom:amber-undertow", "custom:fireside-sonata", "triple-loop", "harbor-sprint"]) {
+    await page.keyboard.press("n");
+    await expect.poll(trackId, { timeout: 15000 }).toBe(id);
+  }
+  for (const id of ["triple-loop", "custom:fireside-sonata", "custom:amber-undertow", "custom:machine-gauntlet", "custom:chompworks", "custom:emberfall-causeway", "custom:jurassic-junction", "custom:dungeon", "custom:fairground", "sky-slide"]) {
+    await page.keyboard.press("p");
+    await expect.poll(trackId, { timeout: 15000 }).toBe(id);
+  }
 });
 
 test("C opens the vehicle select screen", async ({ page }) => {

@@ -23,6 +23,7 @@ import { scaleSolidUVs } from "./solid-uv";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
 import { buildToyCheckpoint } from "./toy-track-view";
+import { PIANO_FADE_SECONDS, pianoKeyColorAt } from "./piano-keys";
 /** Implicit ground texture per track; shared by the renderer and the editor. */
 export function groundMapForTrack(trackId: string) {
   return trackId === "canyon-plunge"
@@ -792,6 +793,14 @@ export class CourseView extends T.Group {
       g.children[0].rotation.y = sim.time * (g.userData.spin ?? 1);
       if (camera) g.children[1].quaternion.copy(camera.quaternion);
     }
+    for (const { key, at } of sim.pianoPresses()) {
+      const solid = run.track.custom?.solids.find((s) => s.pianoKey === key);
+      const mesh = solid && this.solidMesh(solid.id);
+      if (!solid || !mesh) continue;
+      (mesh.material as T.MeshStandardMaterial).color.setHex(
+        sim.time - at >= PIANO_FADE_SECONDS ? solid.color : pianoKeyColorAt(key, at, sim.time),
+      );
+    }
     const packet = dragonFlame(sim.time);
     for (const { bronze, eyes } of this.dragonGlow)
       updateDragonGlow(bronze, eyes, sim.time, packet);
@@ -953,10 +962,11 @@ export function axeStats(group: T.Group) {
 export function buildTrampolineMesh() {
   const group = new T.Group();
   const pad = new T.Mesh(
-    new T.CylinderGeometry(5, 5, 0.5, 40),
+    new T.CylinderGeometry(5, 5, 0.62, 40),
     new T.MeshStandardMaterial({ color: 0x1d2b33, roughness: 0.9 }),
   );
-  pad.position.y = 0.3;
+  // Keep the mat clear of thin road overlays while leaving the rim and bounce sensor in place.
+  pad.position.y = 0.36;
   const rim = new T.Mesh(
     new T.TorusGeometry(5, 0.45, 14, 40),
     new T.MeshStandardMaterial({ color: 0xd84a3a, roughness: 0.6 }),
