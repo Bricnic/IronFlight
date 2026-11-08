@@ -1,6 +1,7 @@
 {
   "name": "Amber Undertow",
   "mode": "race",
+  "backgroundTemplate": "pastoral-hills",
   "spawn": {
     "x": 0,
     "y": 26.1,

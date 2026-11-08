@@ -30,7 +30,7 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-8).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-9).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
@@ -39,6 +39,7 @@ it("steps to the next and previous level with wraparound", () => {
     "Machine Gauntlet",
     "Amber Undertow",
     "Fireside Sonata",
+    "Pumpkin Pass",
   ]);
   expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
   expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
@@ -58,12 +59,14 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:amber-undertow", -1)).toBe("custom:machine-gauntlet");
   expect(stepTrackId("custom:amber-undertow", 1)).toBe("custom:fireside-sonata");
   expect(stepTrackId("custom:fireside-sonata", -1)).toBe("custom:amber-undertow");
-  expect(stepTrackId("custom:fireside-sonata", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:fireside-sonata");
+  expect(stepTrackId("custom:fireside-sonata", 1)).toBe("custom:pumpkin-pass");
+  expect(stepTrackId("custom:pumpkin-pass", -1)).toBe("custom:fireside-sonata");
+  expect(stepTrackId("custom:pumpkin-pass", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:pumpkin-pass");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:fireside-sonata");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:pumpkin-pass");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:fireside-sonata");
+  expect(stepTrackId(undefined, -1)).toBe("custom:pumpkin-pass");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

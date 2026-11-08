@@ -42,6 +42,12 @@
                                 "sha256":  "C06A281914F18516D0EC598B187B8787B7B3EC011E5B5820323BE8AFC415E700",
                                 "levelFile":  "Fireside Sonata.json",
                                 "notes":  "Spawn on the fireplace mantel. Ramp to the 150-wide white table for the chicane and slalom with two checkpoints. Chair-top bridge arcs onto the piano octave; each white key flashes its rainbow voice and fades back to white. Goal ring past the last key. Wood floor is lava; carpet, vent, toys and the plastic dinosaur omitted as background objects."
+                            },
+                            {
+                                "filename":  "541381e3-c272-4561-a544-2ce6a7c1e826.jpg",
+                                "sha256":  "3E7EF61FC9C1F4F1A2B89FB7993D305D6D30F54D2B615B46BA60AFF35EF2A5CD",
+                                "levelFile":  "Pumpkin Pass.json",
+                                "notes":  "The orange car at the foot of the yellow straight marks the spawn. Race up the straight, through the junction bend and blue slide, jump the slime pit from the green-mat kicker onto the landing, then take the orange loop turn to the finish ring. With no checkered flag visible, the loop-piece exit becomes the marked finish. Wood floor is lava; rug, vent, launcher, cauldrons and pumpkin omitted as background objects."
                             }
                         ]
 }

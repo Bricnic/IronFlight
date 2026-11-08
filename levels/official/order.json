@@ -38,5 +38,10 @@
     "file": "Fireside Sonata.json",
     "thumbnail": "/tracks/fireside-sonata.png",
     "description": "Start atop the fireplace, race a tabletop obstacle course, ride the chair bridge onto the piano keys, and finish through the giant ring."
+  },
+  {
+    "file": "Pumpkin Pass.json",
+    "thumbnail": "/tracks/pumpkin-pass.png",
+    "description": "Race the Halloween toy track: yellow straight, junction bend, blue slide, slime jump and orange loop turn to the finish ring."
   }
 ]
