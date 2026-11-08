@@ -784,6 +784,7 @@ export class GameView {
       root.z,
       this.camera.far,
       s.weather,
+      root.y,
     );
     this.loop.update(s.time);
     this.skids.update(s.skidStrokes);

@@ -63,6 +63,16 @@ it("darkens clouds to storm gray in rain", () => {
   expect(cloudHex(view)).toEqual(day);
 });
 
+it("centers the rain field on the focus height", () => {
+  const view = new BackgroundView();
+  const wet = { night: false, rain: true };
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650, wet, 120);
+  const rain = view.getObjectByName("background-rain")!;
+  expect(rain.position.y).toBeCloseTo(120 - 40, 9);
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650, wet, 0);
+  expect(rain.position.y).toBeCloseTo(-40, 9);
+});
+
 it("follows the focus point and scales to the far plane", () => {
   const view = new BackgroundView();
   view.update(getTrack("triple-loop"), 0, 100, 200, 350);

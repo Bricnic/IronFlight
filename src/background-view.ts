@@ -10,7 +10,7 @@ import {
   type BackgroundTemplate,
 } from "./backgrounds";
 import { DEFAULT_WEATHER, type WeatherFlags } from "./weather";
-import { RAIN_STREAK_COUNT, buildRainStreaks, layoutRainStreaks } from "./rain-streaks";
+import { RAIN_STREAK_COUNT, RAIN_STREAK_HEIGHT, buildRainStreaks, layoutRainStreaks } from "./rain-streaks";
 import type { Track } from "./tracks";
 
 /** Lerp a base color toward the horizon haze by ring distance. */
@@ -191,6 +191,7 @@ export class BackgroundView extends T.Group {
     focusZ: number,
     far: number,
     weather: WeatherFlags = DEFAULT_WEATHER,
+    focusY = 0,
   ) {
     const template = getBackgroundTemplate(
       track?.backgroundTemplate ?? track?.custom?.backgroundTemplate,
@@ -211,6 +212,7 @@ export class BackgroundView extends T.Group {
     this.rainApplied = weather.rain && !template.underground;
     if (this.rain) {
       this.rain.visible = this.rainApplied;
+      this.rain.position.y = focusY - RAIN_STREAK_HEIGHT / 2;
       if (this.rainApplied) layoutRainStreaks(this.rain, time);
     }
     this.position.set(focusX, 0, focusZ);

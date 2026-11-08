@@ -3,7 +3,7 @@ import { mulberry32 } from "./backgrounds";
 
 /** Wind-slanted rain streaks around the camera; layout is a pure function of time. */
 export const RAIN_STREAK_COUNT = 900;
-export const RAIN_STREAK_HEIGHT = 55;
+export const RAIN_STREAK_HEIGHT = 80;
 const RAIN_STREAK_RADIUS = 70;
 const RAIN_FALL_SPEED = 42;
 const RAIN_SLANT = 1.4;
