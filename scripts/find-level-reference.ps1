@@ -15,7 +15,11 @@ param(
     [Parameter(ParameterSetName = 'Find')][string]$DownloadsDirectory,
     [Parameter(Mandatory, ParameterSetName = 'Record')][string]$RecordImage,
     [Parameter(Mandatory, ParameterSetName = 'Record')][string]$LevelFile,
-    [Parameter(ParameterSetName = 'Record')][string]$Notes
+    [Parameter(ParameterSetName = 'Record')][string]$Notes,
+    [Parameter(Mandatory, ParameterSetName = 'Zfight')][string]$ZfightLevelId,
+    [Parameter(Mandatory, ParameterSetName = 'Zfight')][string]$ZfightLevelFile,
+    [Parameter(ParameterSetName = 'Zfight')][int]$PreviewPort = 5173,
+    [Parameter(ParameterSetName = 'Zfight')][string]$ShotDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -61,6 +65,68 @@ function Find-DownloadsDirectory {
 
 function Read-Config {
     Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+}
+
+function Invoke-NodeJson([string]$Script, [string[]]$ScriptArgs) {
+    $out = & node (Join-Path $PSScriptRoot $Script) @ScriptArgs 2>&1
+    if ($LASTEXITCODE -ne 0) { throw ($out -join "`n") }
+    return ($out -join "`n") | ConvertFrom-Json
+}
+
+function Invoke-ZfightGate([string]$LevelId, [string]$LevelFile, [int]$Port, [string]$OutDir) {
+    $root = (Get-Item (Join-Path $PSScriptRoot '..')).FullName
+    $file = $LevelFile
+    if (![IO.Path]::IsPathRooted($file)) { $file = Join-Path $root $file }
+    $item = Get-Item -LiteralPath $file -ErrorAction Stop
+    if (!$OutDir) { $OutDir = Join-Path $root "artifacts/zfight/$($item.BaseName)" }
+
+    $tcp = [Net.Sockets.TcpClient]::new()
+    try { $tcp.Connect('127.0.0.1', $Port) }
+    catch { throw "No dev server on :$Port. Start 'npm run dev -- --port $Port' first." }
+    finally { $tcp.Close() }
+
+    $scan = Invoke-NodeJson 'level-zfight.mjs' @('scan', $item.FullName, '--json')
+    $spots = @($scan.suspects | Sort-Object area -Descending | Select-Object -First 2)
+    $center = $null
+    if (!$spots.Count) {
+        $level = Get-Content -LiteralPath $item.FullName -Raw | ConvertFrom-Json
+        $xs = $level.solids | Measure-Object -Property x -Average
+        $zs = $level.solids | Measure-Object -Property z -Average
+        $center = "$([Math]::Round($xs.Average, 2)),$([Math]::Round($zs.Average, 2))"
+    }
+
+    $env:PREVIEW_PORT = "$Port"
+    $before = @()
+    if ($spots.Count) {
+        $shotArgs = @($LevelId, $OutDir, 'before') + @($spots | ForEach-Object { "$($_.x),$($_.z)" })
+        $before = (Invoke-NodeJson 'capture-overhead.mjs' $shotArgs).shots
+    } else {
+        $before = (Invoke-NodeJson 'capture-overhead.mjs' @($LevelId, $OutDir, 'clean', $center)).shots
+    }
+
+    $clip = Invoke-NodeJson 'level-zfight.mjs' @('clip', $item.FullName, '--apply', '--json')
+    $after = @()
+    if ($spots.Count) {
+        $shotArgs = @($LevelId, $OutDir, 'after') + @($spots | ForEach-Object { "$($_.x),$($_.z)" })
+        $after = (Invoke-NodeJson 'capture-overhead.mjs' $shotArgs).shots
+    }
+
+    if ($clip.remaining.Count) {
+        $pairs = $clip.remaining | ForEach-Object { "$($_.a) x $($_.b) at ($($_.x),$($_.z))" }
+        throw "Z-fighting remains after clipping: $($pairs -join '; '). Shots: $($before -join ', ')"
+    }
+    return [ordered]@{
+        levelFile = $item.FullName
+        suspects = $scan.suspects.Count
+        clipped = $clip.clipped
+        beforeShots = $before
+        afterShots = $after
+    } | ConvertTo-Json -Depth 6
+}
+
+if ($PSCmdlet.ParameterSetName -eq 'Zfight') {
+    Invoke-ZfightGate $ZfightLevelId $ZfightLevelFile $PreviewPort $ShotDirectory
+    return
 }
 
 if ($PSCmdlet.ParameterSetName -eq 'Record') {

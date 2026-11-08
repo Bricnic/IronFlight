@@ -98,6 +98,7 @@ export interface GameHarness {
   environmentProbe(): { x: number; y: number };
   burnoutOverview(focus?: "all" | "start" | "end"): void;
   vehiclePreview(): void;
+  overhead(x: number, z: number, height?: number): void;
   camera(): ReturnType<GameView["inspectCamera"]>;
   signs(): ReturnType<GameView["inspectSigns"]>;
   traceFrames(frames: number, rate: number, input: Input): CameraSample[];

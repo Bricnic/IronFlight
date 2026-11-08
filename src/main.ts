@@ -1132,6 +1132,7 @@ async function boot() {
         hud();
       },
       vehiclePreview: () => view.vehiclePreview(),
+      overhead: (x: number, z: number, height = 150) => view.overhead(x, z, height),
       camera: () => view.inspectCamera(),
       burnoutOverview: (focus) => view.burnoutOverview(focus),
       lavaOverview: () => view.lavaOverview(),
