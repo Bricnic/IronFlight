@@ -1,5 +1,10 @@
 import { beforeAll, test, expect } from "vitest";
 import { Simulation, initPhysics } from "../src/simulation";
+import {
+  registerCustomTrack,
+  toTrack,
+  validateCustomLevel,
+} from "../src/custom-level";
 import { TRACKS } from "../src/tracks";
 import { courseAvailable } from "../src/course";
 import { Quaternion } from "three";
@@ -60,6 +65,31 @@ test("initial jaw collider pose matches the visible open book, then closes destr
   s.run(0.5);
   expect(s.status).toBe("driving");
   s.run(3);
+  expect(s.status).toBe("wrecked");
+  s.dispose();
+});
+test("elevated chomp book crushes a truck on its raised deck", () => {
+  const level = validateCustomLevel({
+    name: "Elevated Book Probe",
+    mode: "race",
+    spawn: { x: 0, y: 11.1, z: -30, yaw: 0 },
+    checkpoints: [{ x: 0, z: 40 }],
+    solids: [
+      { id: "deck", kind: "tile", x: 0, y: 8.4, z: 10, w: 30, h: 1.2, d: 100, color: 0x137e91 },
+    ],
+    prefabs: [{ id: "book-1", kind: "book", x: 0, y: 9, z: 10 }],
+    medals: { gold: 30, silver: 45, bronze: 60 },
+  });
+  const track = toTrack(level);
+  registerCustomTrack(track);
+  const s = new Simulation();
+  s.startTrack(track.id);
+  const m = s.comic.mechanisms.find((m) => m.h.kind === "book")!;
+  expect(m.bodies[0].translation().y).toBeCloseTo(10.2);
+  s.body.setTranslation({ x: 0, y: 10.2, z: 10 }, true);
+  s.run(4);
+  expect(m.contacts).toBeGreaterThan(0);
+  expect(s.damageEvents.some((e) => e.source === "book")).toBe(true);
   expect(s.status).toBe("wrecked");
   s.dispose();
 });

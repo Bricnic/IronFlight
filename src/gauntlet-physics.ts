@@ -2,12 +2,19 @@ import R from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import { isGauntletMachine } from "./custom-level";
-import type { DungeonHazard } from "./dungeon-hazards";
+import { WINDOW_GATE, type DungeonHazard } from "./dungeon-hazards";
+import { hammerStrike } from "./hammer-impact";
 import type { Simulation } from "./simulation";
 import {
   CLAW_CLOSE, CLAW_HOLD, SCREW_POSITIONS, SPIKE_FALL, SPIKE_SIDE_X, TANK,
-  VOLCANO_PLUME_RADIUS, VOLCANO_RIM, screwLift, screwWave, volcanoPhase,
+  VOLCANO_PLUME_RADIUS, VOLCANO_RIM, WINDOW_GATE_COOLDOWN,
+  screwLift, screwWave, volcanoPhase, windowGateBlocked,
 } from "./gauntlet-timing";
+
+/** A mistimed gate crossing hits with exactly a quarter of a hammer strike. */
+export function windowGateDeltaVelocity(radius: Vector3, normal: Vector3, incoming: Vector3) {
+  return hammerStrike(radius, normal, incoming).deltaVelocity.multiplyScalar(0.25);
+}
 
 type TankState = {
   kind: "drill-tank";
@@ -26,6 +33,7 @@ type ClawState = {
 type MachineState = TankState | ClawState
   | { kind: "screw-field"; wave: number; hits: Set<number> }
   | { kind: "spike-gates"; started: [number, number] }
+  | { kind: "window-gate"; lastHit: number }
   | { kind: "start-gate" | "volcano" };
 
 export function localPosition(h: DungeonHazard, p: R.Vector) {
@@ -60,6 +68,7 @@ export class GauntletPhysics {
       case "crusher-claw": state = { kind: h.kind, started: -Infinity, release: -Infinity, caught: false }; break;
       case "screw-field": state = { kind: h.kind, wave: -1, hits: new Set() }; break;
       case "spike-gates": state = { kind: h.kind, started: [-Infinity, -Infinity] }; break;
+      case "window-gate": state = { kind: h.kind, lastHit: -Infinity }; break;
       default: state = { kind: h.kind };
     }
     this.machines.set(h.id, { h, state, contacts: 0 });
@@ -88,6 +97,7 @@ export class GauntletPhysics {
       case "screw-field": striking = screwWave(time, h.phase).shots.some(({ age }) => screwLift(age) > 0.35); break;
       case "volcano": striking = volcanoPhase(time + h.phase).erupting; break;
       case "spike-gates": striking = state.started.some((start) => time - start >= SPIKE_FALL && time - start <= 0.52); break;
+      case "window-gate": striking = windowGateBlocked(time + h.phase); break;
       case "drill-tank": striking = state.contactTicks > 0; break;
       case "crusher-claw": striking = time - state.started < CLAW_CLOSE || time < state.release; break;
     }
@@ -178,6 +188,27 @@ export class GauntletPhysics {
     this.sim.applyHazardDamage(h.kind, 0.05, state.pulses % 2 === 0 ? 1 : "prepare");
     return true;
   }
+  private windowHit(h: DungeonHazard, state: Extract<MachineState, { kind: "window-gate" }>, p: R.Vector, local: { x: number; y: number; z: number }) {
+    const s = this.sim;
+    if (Math.abs(local.z) > WINDOW_GATE.depth || Math.abs(local.x) > WINDOW_GATE.lane ||
+      local.y < -1 || local.y > WINDOW_GATE.top) return false;
+    if (!windowGateBlocked(s.time + h.phase)) return false;
+    if (s.time - state.lastHit < WINDOW_GATE_COOLDOWN) return false;
+    state.lastHit = s.time;
+    const yaw = h.yaw ?? 0, cos = Math.cos(yaw), sin = Math.sin(yaw);
+    const v = s.body.linvel();
+    const incoming = new Vector3(v.x * cos - v.z * sin, v.y, v.x * sin + v.z * cos);
+    let normal = new Vector3(-incoming.x, 0, -incoming.z);
+    if (normal.lengthSq() < 1e-6) normal.set(0, 0, local.z >= 0 ? 1 : -1);
+    else normal.normalize();
+    // Radius from the axle midpoint: the hammer tangent throws the car outward.
+    const radius = new Vector3(local.x, local.y - WINDOW_GATE.height / 2, 0);
+    const delta = windowGateDeltaVelocity(radius, normal, incoming);
+    const world = new Vector3(delta.x * cos + delta.z * sin, delta.y, -delta.x * sin + delta.z * cos);
+    s.body.applyImpulseAtPoint(world.multiplyScalar(s.body.mass()), new Vector3(p.x, p.y + 1, p.z), true);
+    s.applyHazardDamage(h.kind, 0.15, 1);
+    return true;
+  }
   private clawHit(h: DungeonHazard, state: ClawState, p: R.Vector, local: R.Vector) {
     const s = this.sim;
     if (s.time - state.started >= 2.7 && clawReach(local) && !this.holding) {
@@ -216,6 +247,10 @@ export class GauntletPhysics {
         case "spike-gates":
           hit = this.spikeHit(state, local);
           if (hit) s.applyHazardDamage(h.kind, 1);
+          break;
+        case "window-gate":
+          hit = this.windowHit(h, state, p, local);
+          launched ||= hit;
           break;
         case "drill-tank": hit = this.drillHit(h, state, p); break;
         case "crusher-claw": hit = this.clawHit(h, state, p, local); break;

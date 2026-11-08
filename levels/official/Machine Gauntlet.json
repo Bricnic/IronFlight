@@ -1,5 +1,6 @@
 {
   "name": "Machine Gauntlet",
+  "backgroundTemplate": "pastoral-hills",
   "mode": "race",
   "spawn": {
     "x": 0,

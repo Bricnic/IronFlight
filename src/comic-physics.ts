@@ -83,7 +83,7 @@ export class ComicPhysics {
         for (const side of [-1, 1]) box(side * 6.4, 1.5, 4.8, 0.65, 3, 2);
         const b = world.createRigidBody(
           R.RigidBodyDesc.kinematicPositionBased()
-            .setTranslation(h.x, 1.2, h.z + 5)
+            .setTranslation(h.x, (h.y ?? 0) + 1.2, h.z + 5)
             .setRotation(
               new Quaternion().setFromAxisAngle(
                 new Vector3(1, 0, 0),
@@ -248,7 +248,7 @@ export class ComicPhysics {
     for (const m of this.mechanisms) {
       const angle = mechanismAngle(m.h, s.time, m.triggered);
       for (const b of m.bodies) {
-        b.setNextKinematicTranslation({ x: m.h.x, y: 1.2, z: m.h.z + 5 });
+        b.setNextKinematicTranslation({ x: m.h.x, y: (m.h.y ?? 0) + 1.2, z: m.h.z + 5 });
         b.setNextKinematicRotation(
           new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), angle),
         );

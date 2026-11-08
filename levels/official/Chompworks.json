@@ -1,5 +1,6 @@
 {
   "name": "Chompworks",
+  "backgroundTemplate": "pastoral-hills",
   "mode": "race",
   "spawn": {
     "x": 0,

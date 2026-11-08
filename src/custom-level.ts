@@ -55,7 +55,7 @@ export function isDinosaur(kind: string): kind is DinosaurKind {
   return (DINOSAUR_PREFAB_KINDS as readonly string[]).includes(kind);
 }
 export const GAUNTLET_PREFAB_KINDS = [
-  "start-gate", "screw-field", "volcano", "spike-gates", "drill-tank", "crusher-claw",
+  "start-gate", "screw-field", "volcano", "spike-gates", "drill-tank", "crusher-claw", "window-gate",
 ] as const;
 export type GauntletKind = (typeof GAUNTLET_PREFAB_KINDS)[number];
 export function isGauntletMachine(kind: string): kind is GauntletKind {

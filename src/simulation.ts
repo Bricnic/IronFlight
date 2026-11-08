@@ -831,7 +831,6 @@ export class Simulation {
     this.ghosts.update();
     this.dungeon.gauntlet.before();
     this.world.step(this.events, this.hammerHooks);
-    if (!guided) this.checkSlimeContact();
     this.comic.after();
     const screwHit = this.dungeon.after();
     const fairgroundHit = this.fairground.after(before);
@@ -987,26 +986,11 @@ export class Simulation {
   run(seconds: number, input: Input = {}) {
     for (let i = 0; i < Math.round(seconds / DT); i++) this.step(input);
   }
-  private checkSlimeContact() {
-    if (!this.courseTrack?.custom || this.status !== "driving") return;
-    for (const part of ["chassis-front", "chassis-rear"]) {
-      const collider = this.parts.get(part)?.collider;
-      if (!collider) continue;
-      let inSlime = false;
-      this.world.intersectionPairsWith(collider, (other) => {
-        if (this.surfaceKinds.get(other.handle) === "slime") inSlime = true;
-      });
-      if (!inSlime) continue;
-      this.damage("chassis-front", 10000);
-      this.damageEvents.push({ source: "slime", part: "chassis-front", time: this.time });
-      return;
-    }
-  }
   private updateLava() {
     if (this.stage === "lab") return;
     const pools = (
       this.courseTrack ? courseSolids(this.courseTrack) : arenaSolids()
-    ).filter((s) => s.kind === "lava");
+    ).filter((s) => s.kind === "lava" || s.kind === "slime");
     for (const def of this.partDefs) {
       const state = this.parts.get(def.id)!;
       if (!state.lava) {
@@ -1059,7 +1043,7 @@ export class Simulation {
           scorch: 0,
         };
         this.damageEvents.push({
-          source: "lava",
+          source: pool.kind,
           part: def.id,
           time: this.time,
         });
