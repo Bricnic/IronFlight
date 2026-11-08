@@ -39,3 +39,18 @@ test("rain glosses fairground roads and ground", async ({ page }) => {
   await page.locator("#settings-back").click();
   await expect.poll(gloss, { timeout: 30000 }).toBe(0);
 });
+test("rain kicks up spray behind a rolling truck", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => window.__game!.startTrack("harbor-sprint"));
+  const spray = () =>
+    page.evaluate(() => window.__game!.stats().spray.active);
+  await expect.poll(spray, { timeout: 15000 }).toBe(false);
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.locator('[data-weather="rain"] button').click();
+  await page.locator("#settings-back").click();
+  await page.evaluate(() =>
+    window.__game!.advanceFrames(240, 1, { throttle: 1 }),
+  );
+  await expect.poll(spray, { timeout: 30000 }).toBe(true);
+});

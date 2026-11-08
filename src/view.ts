@@ -27,6 +27,7 @@ import { LoopView } from "./loop-view";
 import { BackgroundView } from "./background-view";
 import { getBackgroundTemplate, resolveMood } from "./backgrounds";
 import { buildHeadlightRig, setHeadlightRig } from "./headlights";
+import { buildWheelSpray, updateWheelSpray } from "./wheel-spray";
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
@@ -40,6 +41,7 @@ export class GameView {
   private lavaPitInspection?: { id: string; angle: number };
   private dinoInspection?: string;
   private nitro = new T.Group();
+  private spray = buildWheelSpray();
   private officialCourse = new CourseView();
   private background = new BackgroundView();
   private fire = new TruckFireView();
@@ -96,6 +98,7 @@ export class GameView {
       this.dungeon,
       this.fairground,
       this.nitro,
+      this.spray,
       this.contactShadow,
       this.skids,
       this.fire.smoke,
@@ -634,6 +637,7 @@ export class GameView {
       vehicleId: this.simulation.vehicleId,
       lights: { a: lightA, b: lightB },
       headlights: { on: this.simulation.weather.night && this.headlightRig !== null },
+      spray: { active: this.spray.visible },
       candleLights: this.dungeon.candleLightStats(),
       ...truckStats(this.truck),
       potions: {
@@ -730,6 +734,9 @@ export class GameView {
     this.dungeon.update(s);
     this.fairground.update(s);
     this.nitro.visible = s.comic.effect === "nitro";
+    this.spray.position.copy(root);
+    this.spray.quaternion.copy(q);
+    updateWheelSpray(this.spray, s.time, Math.hypot(s.body.linvel().x, s.body.linvel().z), s.weather.rain);
     this.nitro.position.copy(root);
     this.nitro.quaternion.copy(q);
     for (const jet of this.nitro.children)
