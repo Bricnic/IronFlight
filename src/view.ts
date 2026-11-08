@@ -26,6 +26,7 @@ import { SkidView } from "./skids";
 import { LoopView } from "./loop-view";
 import { BackgroundView } from "./background-view";
 import { getBackgroundTemplate, resolveMood } from "./backgrounds";
+import { buildHeadlightRig, setHeadlightRig } from "./headlights";
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
@@ -54,6 +55,7 @@ export class GameView {
   readonly meshes = new Map<string, T.Group>();
   private dentCounts = new Map<string, number>();
   private lightbar: [T.Mesh?, T.Mesh?] = [];
+  private headlightRig: T.Group | null = null;
   private truck = new T.Group();
   private labFloor = new T.Group();
   private snapCamera = true;
@@ -527,6 +529,8 @@ export class GameView {
       this.truck.getObjectByName("lightbar-a") as T.Mesh | undefined,
       this.truck.getObjectByName("lightbar-b") as T.Mesh | undefined,
     ];
+    this.headlightRig = buildHeadlightRig();
+    this.meshes.get("hood")?.add(this.headlightRig);
   }
   private lightIntensities(): [number, number] {
     return this.lightbar.map(
@@ -629,6 +633,7 @@ export class GameView {
     return {
       vehicleId: this.simulation.vehicleId,
       lights: { a: lightA, b: lightB },
+      headlights: { on: this.simulation.weather.night && this.headlightRig !== null },
       ...truckStats(this.truck),
       potions: {
         jets: this.nitro.visible,
@@ -710,6 +715,7 @@ export class GameView {
     this.sun.intensity = mood.sun.intensity;
     this.sun.color.setHex(mood.sun.color);
     this.scene.environmentIntensity = mood.env;
+    if (this.headlightRig) setHeadlightRig(this.headlightRig, s.weather.night);
     const root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
       q = s.previousRotation
         .clone()

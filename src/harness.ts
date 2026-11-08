@@ -116,6 +116,7 @@ export interface GameHarness {
     fairground: { triangles: number; carouselTriangles: number; carousels: number; bumpers: number; balloons: number; bananas: number };
     vehicleId: string;
     lights: { a: number; b: number };
+    headlights: { on: boolean };
     comicHazards: {
       id: string;
       kind: string;
