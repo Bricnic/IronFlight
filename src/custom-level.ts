@@ -36,6 +36,13 @@ export const COMIC_PREFAB_KINDS = [
   "water",
   "potion",
 ] as const;
+/** Comic jaw traps: the chomping plate family, scalable like dinosaurs. */
+export const JAW_PREFAB_KINDS = [
+  "book",
+  "teeth",
+  "computer",
+  "flippers",
+] as const;
 export const COURSE_PREFAB_KINDS = [
   "carousel",
   "bumper-arena",
@@ -130,7 +137,7 @@ export interface CustomPrefab {
   yaw?: number;
   angle?: number;
   roll?: number;
-  /** Dinosaur body scale; oversized dinosaurs bite much harder. */
+  /** Body scale for dinosaurs and jaw traps; oversized dinosaurs bite much harder. */
   scale?: number;
 }
 export const COLLECTIBLE_KINDS = ["ring", "chest"] as const;
@@ -415,8 +422,9 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     check(
       errors,
       p?.scale === undefined ||
-        (DINOSAUR_PREFAB_KINDS as readonly string[]).includes(p?.kind),
-      `prefab ${p?.id ?? i} scale is only supported on dinosaur kinds`,
+        (DINOSAUR_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
+        (JAW_PREFAB_KINDS as readonly string[]).includes(p?.kind),
+      `prefab ${p?.id ?? i} scale is only supported on dinosaurs and jaw traps`,
     );
   }
   for (const [i, item] of [spawn, ...solids, ...prefabs, ...checkpoints, ...collectibles, ...demolish, ...rings].entries()) {

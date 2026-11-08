@@ -1,0 +1,703 @@
+{
+  "name": "Booster Gap",
+  "mode": "race",
+  "spawn": {
+    "x": 0,
+    "y": 31,
+    "yaw": 0,
+    "z": -84
+  },
+  "checkpoints": [
+    {
+      "name": "Slime landing",
+      "x": 0,
+      "y": 30.9,
+      "yaw": 0,
+      "z": -5.64
+    },
+    {
+      "name": "Gap landing",
+      "x": 0,
+      "y": 30.9,
+      "yaw": 0,
+      "z": 120
+    },
+    {
+      "name": "Redbrick finish",
+      "x": -8,
+      "y": 29.9,
+      "yaw": 0,
+      "z": 252.5
+    }
+  ],
+  "rings": [
+    {
+      "goal": true,
+      "name": "Finish ring",
+      "radius": 8,
+      "x": -8,
+      "y": 32.5,
+      "z": 253
+    }
+  ],
+  "solids": [
+    {
+      "color": 16734751,
+      "d": 1200,
+      "h": 1,
+      "id": "lava-lake",
+      "kind": "lava",
+      "locked": true,
+      "name": "Lava lake",
+      "w": 880,
+      "x": 0,
+      "y": -0.5,
+      "z": 80
+    },
+    {
+      "color": 9323693,
+      "d": 22,
+      "h": 1.2,
+      "id": "p0-start",
+      "kind": "tile",
+      "name": "Purple start",
+      "w": 16,
+      "x": 0,
+      "y": 29.4,
+      "z": -79
+    },
+    {
+      "color": 12597547,
+      "d": 2,
+      "h": 8,
+      "id": "arch-post-l",
+      "kind": "support",
+      "name": "Red arch post",
+      "w": 2,
+      "x": -7,
+      "y": 33,
+      "z": -66
+    },
+    {
+      "color": 12597547,
+      "d": 2,
+      "h": 8,
+      "id": "arch-post-r",
+      "kind": "support",
+      "name": "Red arch post",
+      "w": 2,
+      "x": 7,
+      "y": 33,
+      "z": -66
+    },
+    {
+      "color": 12597547,
+      "d": 2,
+      "h": 2,
+      "id": "arch-beam",
+      "kind": "support",
+      "name": "Red arch beam",
+      "w": 16,
+      "x": 0,
+      "y": 37.5,
+      "z": -66
+    },
+    {
+      "color": 14267266,
+      "d": 16,
+      "h": 1.2,
+      "id": "tan-block",
+      "kind": "tile",
+      "name": "Tan block",
+      "w": 16,
+      "x": 0,
+      "y": 29.4,
+      "z": -60
+    },
+    {
+      "angle": -0.209385,
+      "color": 15231504,
+      "d": 16.357261,
+      "h": 1.15,
+      "id": "k1-slime-kicker",
+      "kind": "ramp",
+      "name": "Slime kicker",
+      "w": 16,
+      "x": 0,
+      "y": 30.637559,
+      "z": -43.82
+    },
+    {
+      "color": 8444978,
+      "d": 14,
+      "h": 1.3,
+      "id": "slime-pit",
+      "kind": "slime",
+      "name": "Slime pit",
+      "w": 16,
+      "x": 0,
+      "y": 25.85,
+      "z": -28.64
+    },
+    {
+      "color": 4478255,
+      "d": 14,
+      "h": 5.1,
+      "id": "basin-w",
+      "kind": "support",
+      "name": "Slime basin wall",
+      "w": 0.7,
+      "x": -8.35,
+      "y": 24.4,
+      "z": -28.64
+    },
+    {
+      "color": 4478255,
+      "d": 14,
+      "h": 5.1,
+      "id": "basin-e",
+      "kind": "support",
+      "name": "Slime basin wall",
+      "w": 0.7,
+      "x": 8.35,
+      "y": 24.4,
+      "z": -28.64
+    },
+    {
+      "color": 1549208,
+      "d": 10,
+      "h": 1.3,
+      "id": "l1-landing",
+      "kind": "tile",
+      "name": "Teal landing",
+      "w": 16,
+      "x": 0,
+      "y": 28.85,
+      "z": -16.64
+    },
+    {
+      "color": 8085159,
+      "d": 12,
+      "h": 1.3,
+      "id": "l2-runout",
+      "kind": "tile",
+      "name": "Violet runout",
+      "w": 16,
+      "x": 0,
+      "y": 28.85,
+      "z": -5.64
+    },
+    {
+      "color": 3817284,
+      "d": 50,
+      "h": 1.2,
+      "id": "b1-straight",
+      "kind": "tile",
+      "name": "Booster straight",
+      "w": 16,
+      "x": 0,
+      "y": 28.9,
+      "z": 25.36
+    },
+    {
+      "angle": -0.209385,
+      "color": 15231504,
+      "d": 16.357261,
+      "h": 1.15,
+      "id": "k2-gap-kicker",
+      "kind": "ramp",
+      "name": "Gap kicker",
+      "w": 16,
+      "x": 0,
+      "y": 30.637559,
+      "z": 58.54
+    },
+    {
+      "color": 15231504,
+      "d": 40,
+      "h": 1.3,
+      "id": "f1-gap-landing",
+      "kind": "tile",
+      "name": "Gap landing",
+      "w": 24,
+      "x": 0,
+      "y": 28.85,
+      "z": 120.7
+    },
+    {
+      "color": 3817284,
+      "d": 36,
+      "h": 1.2,
+      "id": "r1-runout",
+      "kind": "tile",
+      "name": "Runout",
+      "w": 20,
+      "x": 0,
+      "y": 28.65,
+      "z": 158.7
+    },
+    {
+      "color": 15231504,
+      "d": 36,
+      "h": 1.2,
+      "id": "j1-bend",
+      "kind": "tile",
+      "name": "Orange bend",
+      "w": 16,
+      "x": 8,
+      "y": 28.4,
+      "yaw": 0.4,
+      "z": 190
+    },
+    {
+      "color": 3829720,
+      "d": 36,
+      "h": 1.2,
+      "id": "j2-bend",
+      "kind": "tile",
+      "name": "Blue bend",
+      "w": 16,
+      "x": -2,
+      "y": 28.15,
+      "yaw": -0.35,
+      "z": 215
+    },
+    {
+      "color": 3817284,
+      "d": 30,
+      "h": 1.2,
+      "id": "f2-finish",
+      "kind": "tile",
+      "name": "Finish straight",
+      "w": 16,
+      "x": -8,
+      "y": 27.9,
+      "z": 245
+    },
+    {
+      "color": 12597547,
+      "d": 3,
+      "h": 8,
+      "id": "finish-brick",
+      "kind": "barrier",
+      "name": "Standing red brick",
+      "w": 3,
+      "x": -8,
+      "y": 32,
+      "z": 258
+    },
+    {
+      "color": 4868690,
+      "d": 16,
+      "h": 1.2,
+      "id": "pad-dino",
+      "kind": "tile",
+      "name": "Dino platform",
+      "w": 12,
+      "x": 22,
+      "y": 28.15,
+      "z": 200
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-p0-1",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": -4,
+      "y": 15,
+      "z": -80
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-p0-2",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 4,
+      "y": 15,
+      "z": -80
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-tan",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 0,
+      "y": 14.5,
+      "z": -60
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 30,
+      "id": "post-k1",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 0,
+      "y": 15.5,
+      "z": -44
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 28,
+      "id": "post-pit",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 0,
+      "y": 11.5,
+      "z": -29
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-l1",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 0,
+      "y": 14,
+      "z": -17
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-l2",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 0,
+      "y": 14,
+      "z": -6
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-b1-1",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": -4,
+      "y": 14.5,
+      "z": 15
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-b1-2",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 4,
+      "y": 14.5,
+      "z": 15
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-b1-3",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": -4,
+      "y": 14.5,
+      "z": 35
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-b1-4",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 4,
+      "y": 14.5,
+      "z": 35
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 30,
+      "id": "post-k2",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 0,
+      "y": 15.5,
+      "z": 59
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-f1-1",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": -6,
+      "y": 14,
+      "z": 120
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-f1-2",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 6,
+      "y": 14,
+      "z": 120
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-f1-3",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": -6,
+      "y": 14,
+      "z": 135
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-f1-4",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 6,
+      "y": 14,
+      "z": 135
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-r1",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 0,
+      "y": 14,
+      "z": 160
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-j1-1",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 8,
+      "y": 14,
+      "z": 190
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-j1-2",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 1,
+      "y": 14,
+      "z": 174
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-j1-3",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 15,
+      "y": 14,
+      "z": 206
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-j2-1",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": -2,
+      "y": 13.5,
+      "z": 215
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-j2-2",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": -8,
+      "y": 13.5,
+      "z": 230
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-j2-3",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 4,
+      "y": 13.5,
+      "z": 200
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-f2",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": -8,
+      "y": 13,
+      "z": 245
+    },
+    {
+      "color": 9080209,
+      "d": 3,
+      "h": 29,
+      "id": "post-dino",
+      "kind": "support",
+      "name": "Pier",
+      "w": 3,
+      "x": 22,
+      "y": 13.5,
+      "z": 200
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "boost-1",
+      "kind": "boost-pad",
+      "x": 0,
+      "y": 29.5,
+      "z": 35
+    },
+    {
+      "id": "dino-1",
+      "kind": "lime-chomper",
+      "x": 22,
+      "y": 28.75,
+      "yaw": 4,
+      "z": 200
+    },
+    {
+      "id": "lamp-b1-1",
+      "kind": "lamp",
+      "x": -7,
+      "y": 29.5,
+      "z": 10
+    },
+    {
+      "id": "lamp-b1-2",
+      "kind": "lamp",
+      "x": 7,
+      "y": 29.5,
+      "z": 10
+    },
+    {
+      "id": "lamp-b1-3",
+      "kind": "lamp",
+      "x": -7,
+      "y": 29.5,
+      "z": 45
+    },
+    {
+      "id": "lamp-b1-4",
+      "kind": "lamp",
+      "x": 7,
+      "y": 29.5,
+      "z": 45
+    },
+    {
+      "id": "trash-1",
+      "kind": "trash",
+      "x": -6,
+      "y": 30,
+      "z": -80
+    },
+    {
+      "id": "trash-2",
+      "kind": "trash",
+      "x": 6,
+      "y": 30,
+      "z": -80
+    },
+    {
+      "id": "trash-3",
+      "kind": "trash",
+      "x": -6,
+      "y": 29.5,
+      "z": 20
+    },
+    {
+      "id": "trash-4",
+      "kind": "trash",
+      "x": 6,
+      "y": 29.5,
+      "z": 20
+    },
+    {
+      "id": "trash-5",
+      "kind": "trash",
+      "x": -6,
+      "y": 29.5,
+      "z": 130
+    },
+    {
+      "id": "trash-6",
+      "kind": "trash",
+      "x": 6,
+      "y": 29.5,
+      "z": 130
+    },
+    {
+      "id": "balloon-1",
+      "kind": "hot-air-balloon",
+      "x": 0,
+      "y": 70,
+      "z": 60
+    }
+  ],
+  "medals": {
+    "bronze": 90,
+    "gold": 35,
+    "silver": 55
+  },
+  "limit": 240,
+  "backgroundTemplate": "toybox-volcano"
+}

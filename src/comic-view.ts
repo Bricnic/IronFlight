@@ -273,6 +273,7 @@ export function buildComicModel(h: ComicHazard): Model {
     }
   };
   if (["book", "teeth", "computer", "flippers"].includes(h.kind)) {
+    root.scale.setScalar(h.scale ?? 1);
     const isBook = h.kind === "book",
       isComputer = h.kind === "computer",
       isTrap = h.kind === "flippers";

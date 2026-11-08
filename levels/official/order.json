@@ -48,5 +48,10 @@
     "file": "Booster Gap.json",
     "thumbnail": "/tracks/booster-gap.png",
     "description": "Race under the red arch, jump the slime, hit the booster to clear the 40-unit gap, then thread the dino junction to the standing red brick."
+  },
+  {
+    "file": "Evil Tube Run.json",
+    "thumbnail": "/tracks/evil-tube-run.png",
+    "description": "Dodge a double-size chomp book, thread the screw field, ride the EVIL tube across the lava pit, and jump the crater before the checkered finish."
   }
 ]

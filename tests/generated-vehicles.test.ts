@@ -8,6 +8,7 @@ import {
   driveDungeonToCompletion,
 } from "./dungeon-drive";
 import { driveEmberfallToCompletion } from "./emberfall-drive";
+import { driveEvilTubeToCompletion } from "./evil-tube-drive";
 import { driveFiresideToCompletion } from "./fireside-drive";
 import { driveGauntletToCompletion } from "./gauntlet-drive";
 import { driveJurassicToCompletion } from "./jurassic-drive";
@@ -33,6 +34,7 @@ const DRIVES: {
     drive: driveEmberfallToCompletion,
     timeout: 120000,
   },
+  { level: "custom:evil-tube-run", drive: driveEvilTubeToCompletion, timeout: 180000 },
   { level: "custom:fireside-sonata", drive: driveFiresideToCompletion, timeout: 180000 },
   { level: "custom:jurassic-junction", drive: driveJurassicToCompletion, timeout: 120000 },
   { level: "custom:machine-gauntlet", drive: driveGauntletToCompletion, timeout: 120000 },
