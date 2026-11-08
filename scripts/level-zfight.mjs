@@ -11,7 +11,7 @@ const MIN_AREA = 0.01; // ignore dust
 const MIN_SLAB_AREA = 0.5;
 const MAX_SHRINK = 0.25; // per clip, per slab
 const EDGE_TOL = 0.01;
-const rot = (p, yaw) => ({ x: p.x * Math.cos(yaw) - p.z * Math.sin(yaw), z: p.x * Math.sin(yaw) + p.z * Math.cos(yaw) });
+const rot = (p, yaw) => ({ x: p.x * Math.cos(yaw) + p.z * Math.sin(yaw), z: -p.x * Math.sin(yaw) + p.z * Math.cos(yaw) }); // three.js rotation.y, matching src/euler.ts
 const twiceArea = (pts) => pts.reduce((a, p, i) => { const q = pts[(i + 1) % pts.length]; return a + p.x * q.z - p.z * q.x; }, 0);
 // Port of solid-clip.ts clipFootprint: keep the normal-facing side.
 function clipHalf(poly, point, normal) {

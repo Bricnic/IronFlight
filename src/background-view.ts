@@ -4,9 +4,12 @@ import { pbr } from "./materials";
 import {
   getBackgroundTemplate,
   layoutRing,
+  mulberry32,
+  resolveMood,
   type BackgroundShapeRing,
   type BackgroundTemplate,
 } from "./backgrounds";
+import { DEFAULT_WEATHER, type WeatherFlags } from "./weather";
 import type { Track } from "./tracks";
 
 /** Lerp a base color toward the horizon haze by ring distance. */
@@ -14,6 +17,36 @@ export function applyHaze(base: T.Color, horizon: T.Color, radius: number): T.Co
   return base.lerp(horizon, Math.min(0.45, Math.max(0, radius) / 1400));
 }
 
+/** Seeded star points on the upper sky dome; fog-free so they read at night. */
+export const STAR_COUNT = 300;
+export function buildStarField(count: number): T.Points {
+  const rand = mulberry32(0x5eed);
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const azimuth = rand() * Math.PI * 2;
+    const altitude = 0.08 + rand() * 0.85;
+    const r = 580 * Math.cos(altitude);
+    positions[i * 3] = Math.cos(azimuth) * r;
+    positions[i * 3 + 1] = 580 * Math.sin(altitude);
+    positions[i * 3 + 2] = Math.sin(azimuth) * r;
+  }
+  const geometry = new T.BufferGeometry();
+  geometry.setAttribute("position", new T.BufferAttribute(positions, 3));
+  const material = new T.PointsMaterial({
+    size: 1.6,
+    sizeAttenuation: false,
+    color: 0xdceaff,
+    transparent: true,
+    opacity: 0.9,
+    fog: false,
+    depthWrite: false,
+  });
+  const stars = new T.Points(geometry, material);
+  stars.name = "background-stars";
+  stars.raycast = () => {};
+  stars.frustumCulled = false;
+  return stars;
+}
 /** Deterministic 0..1 hash for per-shape variation without RNG state. */
 function hash(n: number) {
   return Math.abs(Math.sin(n * 12.9898) * 43758.5453) % 1;
@@ -142,6 +175,9 @@ export class BackgroundView extends T.Group {
   private shapeCount = 0;
   private matCache = new Map<string, T.Material>();
   private clouds: { sprite: T.Sprite; baseX: number; drift: number }[] = [];
+  private skyMaterial: T.ShaderMaterial | null = null;
+  private stars: T.Points | null = null;
+  private nightApplied = false;
 
   update(
     track: Track | null,
@@ -149,6 +185,7 @@ export class BackgroundView extends T.Group {
     focusX: number,
     focusZ: number,
     far: number,
+    weather: WeatherFlags = DEFAULT_WEATHER,
   ) {
     const template = getBackgroundTemplate(
       track?.backgroundTemplate ?? track?.custom?.backgroundTemplate,
@@ -159,6 +196,13 @@ export class BackgroundView extends T.Group {
       this.key = key;
       this.builtTrack = track;
     }
+    const mood = resolveMood(template, weather);
+    if (this.skyMaterial) {
+      this.skyMaterial.uniforms.topColor.value.setHex(mood.sky.top);
+      this.skyMaterial.uniforms.horizonColor.value.setHex(mood.sky.horizon);
+    }
+    this.nightApplied = weather.night && !template.underground;
+    if (this.stars) this.stars.visible = this.nightApplied;
     this.position.set(focusX, 0, focusZ);
     this.scale.setScalar(far / 650);
     for (const cloud of this.clouds)
@@ -172,6 +216,8 @@ export class BackgroundView extends T.Group {
       template: this.templateName,
       shapes: this.shapeCount,
       clouds: this.clouds.length,
+      stars: this.nightApplied && this.stars ? STAR_COUNT : 0,
+      night: this.nightApplied,
     };
   }
 
@@ -279,8 +325,16 @@ export class BackgroundView extends T.Group {
     this.clouds = [];
     this.templateName = template.name;
     this.shapeCount = 0;
+    this.skyMaterial = null;
+    this.stars = null;
     const horizon = new T.Color(template.fog.color);
-    if (!template.underground) this.add(this.buildSky(template));
+    if (!template.underground) {
+      const sky = this.buildSky(template);
+      this.skyMaterial = sky.material as T.ShaderMaterial;
+      this.add(sky);
+      this.stars = buildStarField(STAR_COUNT);
+      this.add(this.stars);
+    }
     for (const ring of template.shapes) this.buildRing(ring, horizon);
     if (!template.underground && template.clouds && template.clouds.count > 0)
       this.buildClouds(template);

@@ -42,6 +42,24 @@
                                 "sha256":  "C06A281914F18516D0EC598B187B8787B7B3EC011E5B5820323BE8AFC415E700",
                                 "levelFile":  "Fireside Sonata.json",
                                 "notes":  "Spawn on the fireplace mantel. Ramp to the 150-wide white table for the chicane and slalom with two checkpoints. Chair-top bridge arcs onto the piano octave; each white key flashes its rainbow voice and fades back to white. Goal ring past the last key. Wood floor is lava; carpet, vent, toys and the plastic dinosaur omitted as background objects."
+                            },
+                            {
+                                "filename":  "541381e3-c272-4561-a544-2ce6a7c1e826.jpg",
+                                "sha256":  "3E7EF61FC9C1F4F1A2B89FB7993D305D6D30F54D2B615B46BA60AFF35EF2A5CD",
+                                "levelFile":  "Pumpkin Pass.json",
+                                "notes":  "The orange car at the foot of the yellow straight marks the spawn. Race up the straight, through the junction bend and blue slide, jump the slime pit from the green-mat kicker onto the landing, then take the orange loop turn to the finish ring. With no checkered flag visible, the loop-piece exit becomes the marked finish. Wood floor is lava; rug, vent, launcher, cauldrons and pumpkin omitted as background objects."
+                            },
+                            {
+                                "filename":  "906346ce-c71f-420c-b259-489b97b1130c.jpg",
+                                "sha256":  "752A37BABF15231F1DBD8DE3113B0D0D285D6CA9760907F6A43B1F32C1590FDD",
+                                "levelFile":  "Booster Gap.json",
+                                "notes":  "The green car on the purple ramp marks the spawn. Race under the red arch, over the tan block, jump the green-mat slime pit, then hit the Triple-Loop-style booster to clear the wide middle gap. Thread the orange/blue junction past the lime dinosaur to the standing red brick finish. Wood floor is lava; rug, pegboard, launcher toys and bags omitted as background objects."
+                            },
+                            {
+                                "filename":  "img20261108_09314160.png",
+                                "sha256":  "D2DDAE9680FE9F874771B335A6F146D9AB4FC368647005E09C8B797F1CD9345B",
+                                "levelFile":  "Evil Tube Run.json",
+                                "notes":  "Hand-sketch coursemap. Spawn top-left down the west straight past the 2x chomp book (half on the road) into the southwest corner. Yellow trap path: harmless bumps feed the EVIL tube, which auto-drives its fixed guided descent at 21 u/s (about 3x cruise) into a spiked lava dead end (do not enter). Correct pink path east across the bottom through the screw field and over the lava pit jump. Transit tube auto-drives around the southeast bend. North up the east straight between the teeth and the lava spill, climb to the shooter tube, which carries the car across the 55-unit lava-pit road gap (read into as across: a literal into landing is unsurvivable, and the pink correct-path line continues past the tube to the finish). Timed volcano jump, then the checkered finish."
                             }
                         ]
 }

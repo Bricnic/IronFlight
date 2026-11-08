@@ -19,6 +19,9 @@ test("normal startup shows the illustrated official lineup and keeps the simulat
     "Machine Gauntlet",
     "Amber Undertow",
     "Fireside Sonata",
+    "Pumpkin Pass",
+    "Booster Gap",
+    "Evil Tube Run",
     "Slime Surge",
   ]);
   for (const t of TRACKS) {
@@ -121,7 +124,7 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(18);
+  await expect(page.locator(".track-card")).toHaveCount(21);
   expect(
     await page
       .locator("#level-select")

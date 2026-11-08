@@ -30,7 +30,7 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-9).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-12).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
@@ -39,6 +39,9 @@ it("steps to the next and previous level with wraparound", () => {
     "Machine Gauntlet",
     "Amber Undertow",
     "Fireside Sonata",
+    "Pumpkin Pass",
+    "Booster Gap",
+    "Evil Tube Run",
     "Slime Surge",
   ]);
   expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
@@ -59,8 +62,14 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:amber-undertow", -1)).toBe("custom:machine-gauntlet");
   expect(stepTrackId("custom:amber-undertow", 1)).toBe("custom:fireside-sonata");
   expect(stepTrackId("custom:fireside-sonata", -1)).toBe("custom:amber-undertow");
-  expect(stepTrackId("custom:fireside-sonata", 1)).toBe("custom:slime-surge");
-  expect(stepTrackId("custom:slime-surge", -1)).toBe("custom:fireside-sonata");
+  expect(stepTrackId("custom:fireside-sonata", 1)).toBe("custom:pumpkin-pass");
+  expect(stepTrackId("custom:pumpkin-pass", -1)).toBe("custom:fireside-sonata");
+  expect(stepTrackId("custom:pumpkin-pass", 1)).toBe("custom:booster-gap");
+  expect(stepTrackId("custom:booster-gap", -1)).toBe("custom:pumpkin-pass");
+  expect(stepTrackId("custom:booster-gap", 1)).toBe("custom:evil-tube-run");
+  expect(stepTrackId("custom:evil-tube-run", -1)).toBe("custom:booster-gap");
+  expect(stepTrackId("custom:evil-tube-run", 1)).toBe("custom:slime-surge");
+  expect(stepTrackId("custom:slime-surge", -1)).toBe("custom:evil-tube-run");
   expect(stepTrackId("custom:slime-surge", 1)).toBe("triple-loop");
   expect(stepTrackId("triple-loop", -1)).toBe("custom:slime-surge");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");

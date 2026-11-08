@@ -18,6 +18,7 @@ import {
 } from "./loop-view";
 import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
+import { BOOST_PAD } from "./custom-level";
 import { solidQuaternion } from "./euler";
 import { scaleSolidUVs } from "./solid-uv";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
@@ -82,6 +83,9 @@ export class CourseView extends T.Group {
   }[] = [];
   private gateModels: T.Group[] = [];
   private trampolineModels: T.Group[] = [];
+  private boostPadModels: T.Group[] = [];
+  private gateGlowLevel = 0;
+  private lampGlowLevel = 0;
   private ringModels: T.Group[] = [];
   private dragonModels: T.Group[] = [];
   private dragonJets: T.Group[] = [];
@@ -252,7 +256,8 @@ export class CourseView extends T.Group {
       g.add(buildToyCheckpoint(gate.appearance));
       g.userData.keepFrame = true;
     } else {
-      const mat = new T.MeshStandardMaterial({ color: track.color, roughness: 0.6 });
+      const mat = new T.MeshStandardMaterial({ color: track.color, roughness: 0.6, emissive: track.color, emissiveIntensity: 0 });
+      mat.userData.nightGlow = { day: 0, night: GATE_NIGHT_GLOW };
       for (const side of [-1, 1]) {
         const pole = new T.Mesh(new T.CylinderGeometry(0.13, 0.2, 5.2, 10), mat);
         pole.position.set((side * gate.width) / 2, 2.6, 0);
@@ -320,6 +325,8 @@ export class CourseView extends T.Group {
               m.map.dispose();
             m.dispose();
           }
+        } else if (o instanceof T.Sprite) {
+          (o.material as T.Material).dispose();
         }
       });
       g.removeFromParent();
@@ -447,12 +454,17 @@ export class CourseView extends T.Group {
               m.map.dispose();
             m.dispose();
           }
+        } else if (o instanceof T.Sprite) {
+          (o.material as T.Material).dispose();
         }
       });
       this.clear();
       this.key = key;
       this.gateModels = [];
       this.trampolineModels = [];
+      this.boostPadModels = [];
+      this.gateGlowLevel = 0;
+      this.lampGlowLevel = 0;
       this.ringModels = [];
       this.dragonModels = [];
       this.dragonJets = [];
@@ -598,6 +610,13 @@ export class CourseView extends T.Group {
           tramp.position.set(t.x, t.y - 0.5, t.z);
           this.add(tramp);
           this.trampolineModels.push(tramp);
+        }
+        for (const p of track.custom?.prefabs ?? []) {
+          if (p.kind !== "boost-pad") continue;
+          const pad = buildBoostPadMesh();
+          pad.position.set(p.x, p.y ?? 0, p.z);
+          this.add(pad);
+          this.boostPadModels.push(pad);
         }
         if (track.ring) {
           const ringMesh = buildRingMesh(track.ring.radius);
@@ -820,6 +839,11 @@ export class CourseView extends T.Group {
     for (const { bronze, eyes } of this.dragonGlow)
       updateDragonGlow(bronze, eyes, sim.time, packet);
     for (const jets of this.dragonJets) updateDragonJets(jets, sim.time, packet);
+    const night = sim.weather.night;
+    this.gateGlowLevel = 0;
+    for (const g of this.gateModels) this.gateGlowLevel += applyNightGlow(g, night);
+    this.lampGlowLevel = 0;
+    for (const g of this.lampModels) this.lampGlowLevel += applyNightGlow(g, night);
   }
   inspect() {
     return {
@@ -827,6 +851,9 @@ export class CourseView extends T.Group {
       axes: this.axeModels.length,
       ghosts: this.ghostGroup?.visible ? this.ghostGroup.children.length : 0,
       trampolines: this.trampolineModels.length,
+      boostPads: this.boostPadModels.length,
+      gateGlow: this.gateGlowLevel,
+      lampGlow: this.lampGlowLevel,
       rings: this.ringModels.length,
       loopSegments: this.loopSegmentModels,
       dragons: this.dragonModels.length,
@@ -974,6 +1001,32 @@ export function axeStats(group: T.Group) {
   });
   return { meshes, triangles: Math.round(triangles), metallic };
 }
+export function buildBoostPadMesh() {
+  const group = new T.Group();
+  const pad = new T.Mesh(
+    new T.BoxGeometry(BOOST_PAD.w, 0.1, BOOST_PAD.d),
+    new T.MeshStandardMaterial({
+      color: 0x183c3f,
+      emissive: 0x0e7974,
+      emissiveIntensity: 0.6,
+      roughness: 0.45,
+    }),
+  );
+  pad.position.y = 0.05;
+  group.add(pad);
+  for (const z of [-BOOST_PAD.d / 4, BOOST_PAD.d / 4]) {
+    for (const side of [-1, 1]) {
+      const arrow = new T.Mesh(
+        new T.BoxGeometry(3.7, 0.035, 0.35),
+        new T.MeshBasicMaterial({ color: 0x95fff0 }),
+      );
+      arrow.position.set(side * 1.35, 0.1, z);
+      arrow.rotation.y = side * 0.65;
+      group.add(arrow);
+    }
+  }
+  return group;
+}
 export function buildTrampolineMesh() {
   const group = new T.Group();
   const pad = new T.Mesh(
@@ -1075,6 +1128,46 @@ export function buildPumpkinMesh() {
 }
 
 /** Arena light tower: concrete pole with an emissive lamp bar on top. */
+/** Shared radial glow sprite texture; DataTexture keeps builders headless-safe. */
+let glowTexture: T.DataTexture | null = null;
+export function makeGlowTexture(): T.DataTexture {
+  if (glowTexture) return glowTexture;
+  const size = 64;
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++)
+    for (let x = 0; x < size; x++) {
+      const dx = (x - size / 2) / (size / 2);
+      const dy = (y - size / 2) / (size / 2);
+      const d = Math.min(1, Math.hypot(dx, dy));
+      const a = Math.round(255 * Math.pow(1 - d, 2.2));
+      const i = (y * size + x) * 4;
+      data[i] = 255;
+      data[i + 1] = 244;
+      data[i + 2] = 214;
+      data[i + 3] = a;
+    }
+  glowTexture = new T.DataTexture(data, size, size);
+  glowTexture.needsUpdate = true;
+  return glowTexture;
+}
+/** Drive tagged emissive materials and lamp glow sprites; returns the lit count. */
+export const GATE_NIGHT_GLOW = 3.5;
+export function applyNightGlow(root: T.Object3D, night: boolean): number {
+  let lit = 0;
+  root.traverse((o) => {
+    if (o instanceof T.Mesh) {
+      const mat = o.material as T.MeshStandardMaterial;
+      const glow = mat?.userData?.nightGlow as { day: number; night: number } | undefined;
+      if (glow && typeof mat.emissiveIntensity === "number") {
+        mat.emissiveIntensity = night ? glow.night : glow.day;
+        if (night) lit++;
+      }
+    } else if (o instanceof T.Sprite && o.name === "lamp-glow") {
+      o.visible = night;
+    }
+  });
+  return lit;
+}
 export function buildLampPost() {
   const group = new T.Group();
   const pole = new T.Mesh(
@@ -1082,12 +1175,25 @@ export function buildLampPost() {
     new T.MeshStandardMaterial({ color: 0x767c76, roughness: 0.9 }),
   );
   pole.castShadow = true;
-  const bar = new T.Mesh(
-    new T.BoxGeometry(5, 1, 0.7),
-    new T.MeshStandardMaterial({ color: 0xfaf8e8, emissive: 0xfff5cd, emissiveIntensity: 2 }),
-  );
+  const barMat = new T.MeshStandardMaterial({ color: 0xfaf8e8, emissive: 0xfff5cd, emissiveIntensity: 2 });
+  barMat.userData.nightGlow = { day: 2, night: 4 };
+  const bar = new T.Mesh(new T.BoxGeometry(5, 1, 0.7), barMat);
   bar.position.y = 13;
-  group.add(pole, bar);
+  const glow = new T.Sprite(
+    new T.SpriteMaterial({
+      map: makeGlowTexture(),
+      blending: T.AdditiveBlending,
+      depthWrite: false,
+      transparent: true,
+      opacity: 0.85,
+    }),
+  );
+  glow.name = "lamp-glow";
+  glow.raycast = () => {};
+  glow.scale.set(9, 9, 1);
+  glow.position.y = 13;
+  glow.visible = false;
+  group.add(pole, bar, glow);
   return group;
 }
 /** Treasure chest pickup: plank body, arched lid, iron bands, gold lock. */

@@ -127,6 +127,34 @@ it("edits the exact id block when one id prefixes another", () => {
   expect(out).toContain('"id":"toy-road-2","x":10,"y":9.675,"z":36');
 });
 
+it("rotates yawed boxes like the engine, so true butt joints scan clean", () => {
+  // End-to-end pair under three.js rotation.y (see src/euler.ts): local +z
+  // maps to (sin yaw, cos yaw). A mirrored rotation would lay these
+  // side-by-side and report a large false overlap.
+  const dir = { x: Math.sin(0.6), z: Math.cos(0.6) };
+  const end = { x: 5 * dir.x, z: 5 * dir.z };
+  const butt: ZLevel = {
+    solids: [
+      { ...box("a", 0, 0, 16, 10, 111), yaw: 0.6 },
+      {
+        ...box("b", end.x + 5.1 * dir.x, end.z + 5.1 * dir.z, 16, 10, 222),
+        yaw: 0.6,
+      },
+    ],
+  };
+  expect(scanLevel(butt).suspects).toEqual([]);
+  const overlapped: ZLevel = {
+    solids: [
+      { ...box("a", 0, 0, 16, 10, 111), yaw: 0.6 },
+      {
+        ...box("b", end.x + 4 * dir.x, end.z + 4 * dir.z, 16, 10, 222),
+        yaw: 0.6,
+      },
+    ],
+  };
+  expect(scanLevel(overlapped).suspects).toHaveLength(1);
+});
+
 it("official lineup has no coplanar top-face suspects", () => {
   const dir = new URL("../levels/official/", import.meta.url);
   const files = readdirSync(dir).filter((f) => f.endsWith(".json") && f !== "order.json");

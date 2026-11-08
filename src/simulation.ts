@@ -19,6 +19,8 @@ import { Quaternion, Vector3 } from "three";
 import { solidQuaternion } from "./euler";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
+import { BOOST_PAD } from "./custom-level";
+import { DEFAULT_WEATHER, type WeatherFlags } from "./weather";
 import { type PartState } from "./damage";
 import { getVehicle, type VehicleId } from "./vehicles";
 import {
@@ -73,6 +75,7 @@ export class Simulation {
   vehicle!: RAPIER.DynamicRayCastVehicleController;
   stage: Stage;
   vehicleId: VehicleId = "monster-truck";
+  weather: WeatherFlags = { ...DEFAULT_WEATHER };
   trackRun?: TrackRun;
   courseTrack?: ReturnType<typeof getTrack>;
   activeHazards: Hazard[] = [];
@@ -554,6 +557,30 @@ export class Simulation {
         true,
       );
       this.boostTicks++;
+    }
+    for (const p of this.courseTrack?.custom?.prefabs ?? []) {
+      if (p.kind !== "boost-pad") continue;
+      const padY = p.y ?? 0;
+      if (
+        Math.abs(position.x - p.x) < BOOST_PAD.w / 2 &&
+        Math.abs(position.z - p.z) < BOOST_PAD.d / 2 &&
+        position.y > padY &&
+        position.y < padY + 4 &&
+        this.wheelPositions().filter((_, i) => this.vehicle.wheelIsInContact(i))
+          .length >= 2 &&
+        this.parts.get("chassis-front")!.health > 0 &&
+        this.parts.get("chassis-rear")!.health > 0
+      ) {
+        const padDelta = Math.min(
+          25 * this.tuning.boostPower * DT,
+          Math.max(0, 75 * this.effectiveTopSpeed - longitudinal),
+        );
+        this.body.applyImpulse(
+          forward.clone().multiplyScalar(padDelta * this.body.mass()),
+          true,
+        );
+        this.boostTicks++;
+      }
     }
     const dragonIntensity =
       officialRouteX === undefined

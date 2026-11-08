@@ -40,6 +40,21 @@
     "description": "Start atop the fireplace, race a tabletop obstacle course, ride the chair bridge onto the piano keys, and finish through the giant ring."
   },
   {
+    "file": "Pumpkin Pass.json",
+    "thumbnail": "/tracks/pumpkin-pass.png",
+    "description": "Race the Halloween toy track: yellow straight, junction bend, blue slide, slime jump and orange loop turn to the finish ring."
+  },
+  {
+    "file": "Booster Gap.json",
+    "thumbnail": "/tracks/booster-gap.png",
+    "description": "Race under the red arch, jump the slime, hit the booster to clear the 40-unit gap, then thread the dino junction to the standing red brick."
+  },
+  {
+    "file": "Evil Tube Run.json",
+    "thumbnail": "/tracks/evil-tube-run.png",
+    "description": "Dodge a double-size chomp book, thread the screw field, shun the EVIL tube trap past the bumps, ride the transit tube across the lava, and jump the crater before the checkered finish."
+  },
+  {
     "file": "Slime Surge.json",
     "thumbnail": "/tracks/slime-surge.png",
     "description": "Thread walled gates, jump the crater, ride the auto-steer tube, time the spinning window, dodge the chomp book and jump to the red finish over melting slime."
