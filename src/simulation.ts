@@ -1,5 +1,6 @@
 import { ComicPhysics } from "./comic-physics";
 import { DungeonPhysics } from "./dungeon-physics";
+import { GuidedPipe } from "./guided-pipe";
 import { Fairground, CAROUSEL_OMEGA } from "./fairground";
 import { GhostSwarm } from "./ghosts";
 import { AxeArray } from "./axes";
@@ -60,6 +61,7 @@ export class Simulation {
   world!: RAPIER.World;
   comic!: ComicPhysics;
   dungeon!: DungeonPhysics;
+  guidedPipe!: GuidedPipe;
   fairground!: Fairground;
   ghosts!: GhostSwarm;
   ghostsEnabled = true;
@@ -349,6 +351,7 @@ export class Simulation {
     );
     this.comic = new ComicPhysics(this);
     this.dungeon = new DungeonPhysics(this);
+    this.guidedPipe = new GuidedPipe(this);
     this.fairground = new Fairground(this);
     this.ghosts = new GhostSwarm(this);
     this.axes = new AxeArray(this);
@@ -483,8 +486,10 @@ export class Simulation {
     }
   }
   step(input: Input = {}) {
+    const guided = this.guidedPipe.beforeStep();
     input = this.fairground.controls(input);
-    if (this.dungeon.gauntlet.holding) input = { brake: 1 };
+    if (guided) input = {};
+    else if (this.dungeon.gauntlet.holding) input = { brake: 1 };
     this.previousPosition.copy(this.body.translation());
     this.previousRotation.copy(this.body.rotation());
     this.inFlames = false;
@@ -784,7 +789,7 @@ export class Simulation {
     }
     // Suspension only uses fixed surfaces. A rotating hammer must not become
     // driveable ground and inject suspension impulses into a passing tire.
-    if (this.parts.get("chassis-front")!.health > 0)
+    if (!guided && this.parts.get("chassis-front")!.health > 0)
       this.vehicle.updateVehicle(
         DT,
         RAPIER.QueryFilterFlags.EXCLUDE_DYNAMIC |
@@ -816,7 +821,7 @@ export class Simulation {
     this.ghosts.update();
     this.dungeon.gauntlet.before();
     this.world.step(this.events, this.hammerHooks);
-    this.checkSlimeContact();
+    if (!guided) this.checkSlimeContact();
     this.comic.after();
     const screwHit = this.dungeon.after();
     const fairgroundHit = this.fairground.after(before);
@@ -832,9 +837,12 @@ export class Simulation {
     const hammerHit = this.resolveHammerImpacts(before);
     const axeHit = this.axes.resolve(before);
     this.slide.bounce();
-    this.resolveLanding(before, impact);
-    this.recordSkids(throttle, steer);
+    if (!guided) {
+      this.resolveLanding(before, impact);
+      this.recordSkids(throttle, steer);
+    }
     if (
+      !guided &&
       !hammerHit &&
       !axeHit &&
       !screwHit &&
@@ -1407,6 +1415,7 @@ export class Simulation {
     return {
       comic: this.comic.snapshot(),
       dungeon: this.dungeon.snapshot(),
+      pipeRide: this.guidedPipe.snapshot(),
       fairground: this.fairground.snapshot(),
       ghosts: this.ghosts.snapshot(),
       axes: this.axes.snapshot(),
