@@ -77,7 +77,7 @@ export class ComicPhysics {
         (sensor ? m.sensors : m.colliders).push(c);
         return c;
       };
-      if (["book", "teeth", "computer", "flippers"].includes(h.kind)) {
+      if (["book", "teeth", "computer", "flippers", "donut"].includes(h.kind)) {
         const s = h.scale ?? 1;
         const baseY = h.y ?? 0;
         box(0, 0.25 * s, 0, 12 * s, 0.5 * s, 12 * s);
@@ -282,7 +282,7 @@ export class ComicPhysics {
       p = s.body.translation();
     for (const m of this.mechanisms) {
       const h = m.h;
-      if (["book", "teeth", "computer", "flippers"].includes(h.kind)) {
+      if (["book", "teeth", "computer", "flippers", "donut"].includes(h.kind)) {
         if (
           h.kind === "flippers" &&
           m.sensors.some((c) => this.intersects(c)) &&

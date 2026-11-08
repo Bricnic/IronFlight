@@ -12,6 +12,7 @@ const KINDS: ComicKind[] = [
   "burner",
   "water",
   "potion",
+  "donut",
 ];
 const TITLES: Record<ComicKind, string> = {
   book: "CURSED CHAPTER",
@@ -22,6 +23,7 @@ const TITLES: Record<ComicKind, string> = {
   burner: "HOT WHEELS",
   water: "SKIM OR SWIM",
   potion: "PICK YOUR POISON",
+  donut: "GLAZED MENACE",
 };
 
 let drawn: string[];

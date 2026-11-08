@@ -114,6 +114,7 @@ const PREFAB_COLORS: Record<string, number> = {
   teeth: 0xffffff,
   computer: 0x6ae0c8,
   flippers: 0xe0a46a,
+  donut: 0xff9ecb,
   hydrant: 0xe06a6a,
   burner: 0xff7a1f,
   water: 0x4fb8ff,

@@ -5,6 +5,7 @@ export type ComicKind =
   | "teeth"
   | "computer"
   | "flippers"
+  | "donut"
   | "hydrant"
   | "burner"
   | "water"

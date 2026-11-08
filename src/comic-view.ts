@@ -75,6 +75,7 @@ const labelMessages: Record<string, [string, string]> = {
   teeth: ["BITE CLUB", "WAIT FOR THE JAW / DRIVE AROUND"],
   computer: ["FATAL ERROR", "CRUSHING LAPTOP / DRIVE AROUND"],
   flippers: ["COLOUR SNAP", "TOUCH THE PAD AND IT SNAPS"],
+  donut: ["GLAZED MENACE", "WAIT FOR THE JAW / DRIVE AROUND"],
   hydrant: ["PRESSURE POP", "LAUNCHES YOU / 90 MPH RUPTURE"],
   burner: ["HOT WHEELS", "JUMP THE FIRE / DRIVE AROUND"],
   water: ["SKIM OR SWIM", "ENTER >200 MPH / KEEP 180+"],
@@ -272,18 +273,21 @@ export function buildComicModel(h: ComicHazard): Model {
       brow.rotation.z = side * 0.25;
     }
   };
-  if (["book", "teeth", "computer", "flippers"].includes(h.kind)) {
+  if (["book", "teeth", "computer", "flippers", "donut"].includes(h.kind)) {
     root.scale.setScalar(h.scale ?? 1);
     const isBook = h.kind === "book",
       isComputer = h.kind === "computer",
-      isTrap = h.kind === "flippers";
+      isTrap = h.kind === "flippers",
+      isDonut = h.kind === "donut";
     const cover = isBook
       ? leather
       : isComputer
         ? metal
         : isTrap
           ? standard(0x963bc0, 0.55, 0.35)
-          : gum;
+          : isDonut
+            ? standard(0xd9a066, 0, 0.7)
+            : gum;
     box(12, 0.5, 12, cover, 0, 0.25);
     bolts(root, 5.65, 5.65, 0.57);
     const jaw = new T.Group();
@@ -409,12 +413,39 @@ export function buildComicModel(h: ComicHazard): Model {
         spring.rotation.y = Math.PI / 2;
       }
       eyes(upper, 0.1, -5.95);
+    } else if (isDonut) {
+      const frosting = add(
+        new T.TorusGeometry(4.2, 1.0, 24, 72),
+        standard(0xf27bb0, 0, 0.45),
+        0,
+        -0.9,
+        0,
+        upper,
+      );
+      frosting.rotation.x = Math.PI / 2;
+      const sprinkles = [0x31bbce, 0xffd04c, 0x7ae08a, 0xffffff];
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        const bit = box(
+          0.5,
+          0.18,
+          0.18,
+          standard(sprinkles[i % sprinkles.length], 0, 0.4),
+          Math.cos(a) * 4.2,
+          0.15,
+          Math.sin(a) * 4.2,
+          upper,
+          0.05,
+        );
+        bit.rotation.y = a;
+      }
+      eyes(upper, 0.1, -5.95);
     } else {
       eyes(upper, 0.1, -5.95);
       const tongue = box(3, 0.4, 6, standard(0xb74a69, 0, 0.42), 0, 0.7, 0);
       tongue.rotation.y = 0.12;
     }
-    if (!isComputer && !isTrap) {
+    if (!isComputer && !isTrap && !isDonut) {
       // Deep oval throat and sculpted lip replace the first pass's flat page slab.
       const throat = sphere(4.25, dark, 0, -1.28, 0, upper);
       throat.scale.set(1.14, 0.16, 1.03);

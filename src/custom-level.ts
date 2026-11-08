@@ -31,6 +31,7 @@ export const COMIC_PREFAB_KINDS = [
   "teeth",
   "computer",
   "flippers",
+  "donut",
   "hydrant",
   "burner",
   "water",
@@ -42,6 +43,7 @@ export const JAW_PREFAB_KINDS = [
   "teeth",
   "computer",
   "flippers",
+  "donut",
 ] as const;
 export const COURSE_PREFAB_KINDS = [
   "carousel",
