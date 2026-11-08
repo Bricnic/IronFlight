@@ -19,7 +19,7 @@ const route = [
   [338, -135, 10, 5], [338, -160, 10, 5],
   [374, -268, 6, 4], [374, -342, 22, 7], [374, -374, 12, 0],
 ];
-const EVIL_MOUTH = 12;
+const TRANSIT_MOUTH = 12;
 const SHOOTER_MOUTH = 20;
 const VOLCANO_WAIT = 21;
 
@@ -74,7 +74,7 @@ function rideTube(sim: Simulation, label: string) {
   expect(sim.snapshot(false).integrity, label).toBe(1);
 }
 
-/** Drive the sketch route: book bypass, screws, lava jump, both tubes, crater jump. Returns elapsed sim seconds. */
+/** Drive the sketch route: book bypass, screws, lava jump, transit plus shooter tubes, crater jump. Returns elapsed sim seconds. */
 export function driveEvilTubeToCompletion(vehicleId?: string): number {
   registerCustomTrack(officialFileTracks.find((t) => t.id === id)!);
   let elapsed = 0;
@@ -85,17 +85,17 @@ export function driveEvilTubeToCompletion(vehicleId?: string): number {
   try {
     sim.startTrack(id);
     const volcano = sim.dungeon.gauntlet.machines.get("north-crater")!.h;
-    let next = runWaypoints(sim, 0, EVIL_MOUTH, 150, (p) => {
+    let next = runWaypoints(sim, 0, TRANSIT_MOUTH, 150, (p) => {
       if (Math.abs(p.x - 161.58) < 4 && Math.abs(p.z + 16) < 8 && p.y > 25) jumpedPit = true;
     });
-    expect(next, "evil tube approach").toBeGreaterThan(EVIL_MOUTH);
-    rideTube(sim, "evil-tube");
-    const evilExit = sim.body.translation();
-    expect(evilExit.x).toBeCloseTo(321.4, 0);
-    expect(evilExit.z).toBeCloseTo(20, 0);
+    expect(next, "transit tube approach").toBeGreaterThan(TRANSIT_MOUTH);
+    rideTube(sim, "transit-tube");
+    const transitExit = sim.body.translation();
+    expect(transitExit.x).toBeCloseTo(321.4, 0);
+    expect(transitExit.z).toBeCloseTo(20, 0);
     expect(sim.body.linvel().x).toBeGreaterThan(10);
 
-    next = runWaypoints(sim, EVIL_MOUTH + 1, SHOOTER_MOUTH, 150);
+    next = runWaypoints(sim, TRANSIT_MOUTH + 1, SHOOTER_MOUTH, 150);
     expect(next, "shooter tube approach").toBeGreaterThan(SHOOTER_MOUTH);
     rideTube(sim, "shooter-tube");
     const shooterExit = sim.body.translation();

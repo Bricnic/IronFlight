@@ -59,8 +59,8 @@
       "z": -16
     },
     {
-      "id": "evil-tube",
-      "name": "EVIL guided tube",
+      "id": "transit-tube",
+      "name": "Transit guided tube",
       "kind": "guided-pipe",
       "x": 231.4,
       "y": 23,
@@ -115,6 +115,23 @@
       "x": 366,
       "y": 4,
       "z": -270
+    },
+    {
+      "id": "evil-tube",
+      "name": "EVIL guided tube",
+      "kind": "guided-pipe",
+      "x": -24,
+      "y": 23,
+      "z": 33,
+      "yaw": 0
+    },
+    {
+      "id": "evil-spikes",
+      "name": "Evil spike jaws",
+      "kind": "teeth",
+      "x": -60,
+      "y": 8,
+      "z": 135
     }
   ],
   "medals": {
@@ -269,18 +286,6 @@
       "w": 16,
       "h": 1.2,
       "d": 40,
-      "color": 3623256
-    },
-    {
-      "id": "trap-end",
-      "name": "Edge guard",
-      "kind": "barrier",
-      "x": -24,
-      "y": 23.65,
-      "z": 36,
-      "w": 16,
-      "h": 1.3,
-      "d": 1,
       "color": 3623256
     },
     {
@@ -765,7 +770,7 @@
     },
     {
       "id": "seg-b4",
-      "name": "Evil tube approach",
+      "name": "Transit tube approach",
       "kind": "road",
       "x": 221.48952721646197,
       "y": 22.4,
@@ -777,7 +782,7 @@
     },
     {
       "id": "exit-pad",
-      "name": "Evil tube runout",
+      "name": "Transit tube runout",
       "kind": "tile",
       "x": 326,
       "y": 8.4,
@@ -1320,6 +1325,30 @@
       "h": 1.8,
       "d": 0.58,
       "color": 2238774
+    },
+    {
+      "id": "evil-lava-pit",
+      "name": "Evil lava pit",
+      "kind": "lava",
+      "x": -60,
+      "y": 8,
+      "z": 132,
+      "w": 24,
+      "h": 0.6,
+      "d": 30,
+      "color": 16734751
+    },
+    {
+      "id": "evil-teeth-pillar",
+      "name": "Evil spike rock pillar",
+      "kind": "support",
+      "x": -60,
+      "y": 3,
+      "z": 135,
+      "w": 12,
+      "h": 10,
+      "d": 12,
+      "color": 5927552
     }
   ]
 }

@@ -134,3 +134,38 @@ it("the lava spill destroys parts on contact", () => {
     sim.dispose();
   }
 });
+
+it("the evil tube shoots the trap path into a spiked lava dead end", () => {
+  const sim = race();
+  try {
+    sim.body.setTranslation({ x: -24, y: 24.8, z: -12 }, true);
+    let entered = false;
+    for (let i = 0; i < 25 / DT && sim.status === "driving"; i++) {
+      const ride = sim.guidedPipe.snapshot();
+      if (ride?.id === "evil-tube") {
+        entered = true;
+        break;
+      }
+      if (ride) break;
+      const p = sim.body.translation();
+      if (p.z > 40) break;
+      const v = sim.body.linvel();
+      const speed = Math.hypot(v.x, v.z);
+      const steer = Math.max(-1, Math.min(1, (-24 - p.x) * 0.3));
+      sim.step({ steer, throttle: speed < 8 ? 1 : 0 });
+    }
+    expect(entered).toBe(true);
+    expect(sim.guidedPipe.snapshot()?.id).toBe("evil-tube");
+    for (let i = 0; i < 20 / DT && sim.guidedPipe.snapshot(); i++) sim.step({});
+    expect(sim.guidedPipe.snapshot()).toBeNull();
+    const exit = sim.body.translation();
+    expect(exit.x).toBeCloseTo(-60, 0);
+    expect(exit.z).toBeGreaterThan(110);
+    for (let i = 0; i < 5 / DT && sim.status === "driving"; i++) sim.step({ brake: 1 });
+    expect(sim.status).toBe("wrecked");
+    expect(sim.damageEvents.some((e) => e.source === "lava" || e.source === "teeth")).toBe(true);
+    expect(sim.trackRun!.status).not.toBe("completed");
+  } finally {
+    sim.dispose();
+  }
+});

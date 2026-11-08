@@ -21,7 +21,7 @@ export default defineConfig({
   },
   projects: [{ name: "swiftshader", testIgnore: ["**/fps.spec.ts"] }],
   webServer: {
-    command: "npm run dev -- --port 5250 --strictPort",
+    command: "node C:/Code/DemolitionDerby/node_modules/vite/bin/vite.js --port 5250 --strictPort --host 127.0.0.1",
     url: "http://127.0.0.1:5250",
     reuseExistingServer: false,
   },
