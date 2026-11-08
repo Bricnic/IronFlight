@@ -49,3 +49,10 @@ it("local Poly Haven material maps match their recorded hashes", () => {
     }
   }
 });
+
+it("header icon references resolve to committed files", () => {
+  const main = readFileSync("src/main.ts", "utf8");
+  const refs = [...main.matchAll(/\/icons\/[a-z0-9-]+\.png/g)].map((m) => m[0]);
+  expect(refs.length).toBeGreaterThan(0);
+  for (const ref of refs) expect(existsSync(`public${ref}`)).toBe(true);
+});
