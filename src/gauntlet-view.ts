@@ -1,11 +1,11 @@
 import * as T from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import type { GauntletKind } from "./custom-level";
-import type { DungeonHazard } from "./dungeon-hazards";
+import { WINDOW_GATE, type DungeonHazard } from "./dungeon-hazards";
 import type { GauntletPhysics } from "./gauntlet-physics";
 import {
   SCREW_FIELD_SIZE, SCREW_POSITIONS, SPIKE_SIDE_X, VOLCANO_RIM,
-  clawOpenness, screwLift, screwWave, spikeHeight, volcanoPhase,
+  clawOpenness, screwLift, screwWave, spikeHeight, volcanoPhase, windowGateAngle,
 } from "./gauntlet-timing";
 
 const surface = (color: number, metalness = 0.28, roughness = 0.38) =>
@@ -201,10 +201,37 @@ function crusherClaw(root: T.Group): Animate {
   };
 }
 
+function windowGate(root: T.Group, h: DungeonHazard): Animate {
+  const green = surface(0x2f7c32), lime = surface(0x67cf28, 0.45);
+  const white = surface(0xf2f4ef, 0.1, 0.5);
+  const glass = new T.MeshStandardMaterial({ color: 0xdfeef2, transparent: true, opacity: 0.45, roughness: 0.15, metalness: 0.1 });
+  for (const side of [-1, 1]) {
+    box(root, green, [side * WINDOW_GATE.postX, WINDOW_GATE.postH / 2, 0], [WINDOW_GATE.postW, WINDOW_GATE.postH, WINDOW_GATE.gateD], 0.15);
+    box(root, green, [side * WINDOW_GATE.wallX, WINDOW_GATE.wallH / 2, 0], [WINDOW_GATE.wallW, WINDOW_GATE.wallH, WINDOW_GATE.gateD], 0.15);
+  }
+  box(root, green, [0, WINDOW_GATE.lintelY, 0], [WINDOW_GATE.span * 2, WINDOW_GATE.lintelH, WINDOW_GATE.gateD], 0.15);
+  box(root, lime, [0, 5.5, 0], [1, 1, 1], 0.2);
+  const pivot = new T.Group();
+  pivot.name = "window-blade";
+  root.add(pivot);
+  const W = WINDOW_GATE.lane * 2, H = WINDOW_GATE.height;
+  box(pivot, white, [0, 0.25, 0], [W, 0.5, 0.35]);
+  box(pivot, white, [0, H - 0.25, 0], [W, 0.5, 0.35]);
+  box(pivot, white, [-W / 2 + 0.25, H / 2, 0], [0.5, H, 0.35]);
+  box(pivot, white, [W / 2 - 0.25, H / 2, 0], [0.5, H, 0.35]);
+  box(pivot, white, [0, H / 2, 0], [0.35, H - 0.5, 0.3]);
+  box(pivot, white, [0, H / 2, 0], [W - 0.5, 0.35, 0.3]);
+  mesh(pivot, new T.BoxGeometry(W - 0.5, H - 0.5, 0.08), glass, [0, H / 2, 0]);
+  return (time) => {
+    pivot.rotation.y = windowGateAngle(time + h.phase);
+  };
+}
+
 export function buildGauntletMachine(root: T.Group, h: DungeonHazard & { kind: GauntletKind }): Animate {
   const build = {
     "start-gate": startGate, "screw-field": screwField, volcano,
     "spike-gates": spikeGates, "drill-tank": drillTank, "crusher-claw": crusherClaw,
+    "window-gate": windowGate,
   }[h.kind];
   const animate = build(root, h);
   animate(0);

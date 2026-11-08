@@ -77,6 +77,13 @@ export const CAGE = { w: 3, h: 4, d: 3 } as const;
  * roll over, so only the back (`z` local offset) collides.
  */
 export const CLIPPER_BACK = { w: 8.5, h: 3.5, d: 3.5, z: -3.0 } as const;
+/** Revolving window gate furniture, shared by colliders and models. */
+export const WINDOW_GATE = {
+  lane: 5, height: 5, top: 6, depth: 1.6,
+  postX: 6.5, postW: 2, postH: 6,
+  wallX: 10.25, wallW: 5.5, wallH: 4,
+  lintelY: 6.75, lintelH: 1.5, span: 13, gateD: 2.4,
+} as const;
 
 export const LIME_JAW = { halfWidth: 8.2, back: 8, tip: 24, hinge: 6 } as const;
 export const LIME_JAW_PERIOD = 5.4;

@@ -73,6 +73,7 @@ export class CourseView extends T.Group {
   private key = "";
   private hazardTime = 0;
   private lavaMaterials: T.MeshStandardMaterial[] = [];
+  private slimeMaterials: T.MeshStandardMaterial[] = [];
   private hazards: {
     h: Hazard;
     root: T.Group;
@@ -83,6 +84,10 @@ export class CourseView extends T.Group {
   private gateModels: T.Group[] = [];
   private trampolineModels: T.Group[] = [];
   private boostPadModels: T.Group[] = [];
+  private gateGlowLevel = 0;
+  private wetSurfaces: Wettable[] = [];
+  private wetGlossLevel = 0;
+  private lampGlowLevel = 0;
   private ringModels: T.Group[] = [];
   private dragonModels: T.Group[] = [];
   private dragonJets: T.Group[] = [];
@@ -188,6 +193,12 @@ export class CourseView extends T.Group {
     const mat = this.buildSolidMaterial(track, s);
     const { stone, cliff, groundMap, roadMap } = this.solidMaps(track, s);
     if (s.kind === "lava") this.lavaMaterials.push(mat);
+    if (s.kind === "slime") this.slimeMaterials.push(mat);
+    if (
+      (s.kind === "road" || s.kind === "ramp" || s.kind === "loop" || s.kind === "ground") &&
+      mat instanceof T.MeshStandardMaterial
+    )
+      this.wetSurfaces.push({ mat, roughness: mat.roughness, env: mat.envMapIntensity, color: mat.color.getHex() });
     const geometry = s.footprint
       ? new T.ExtrudeGeometry(
           new T.Shape(s.footprint.map(({ x, z }) => new T.Vector2(x, -z))),
@@ -252,7 +263,8 @@ export class CourseView extends T.Group {
       g.add(buildToyCheckpoint(gate.appearance));
       g.userData.keepFrame = true;
     } else {
-      const mat = new T.MeshStandardMaterial({ color: track.color, roughness: 0.6 });
+      const mat = new T.MeshStandardMaterial({ color: track.color, roughness: 0.6, emissive: track.color, emissiveIntensity: 0 });
+      mat.userData.nightGlow = { day: 0, night: GATE_NIGHT_GLOW };
       for (const side of [-1, 1]) {
         const pole = new T.Mesh(new T.CylinderGeometry(0.13, 0.2, 5.2, 10), mat);
         pole.position.set((side * gate.width) / 2, 2.6, 0);
@@ -320,6 +332,8 @@ export class CourseView extends T.Group {
               m.map.dispose();
             m.dispose();
           }
+        } else if (o instanceof T.Sprite) {
+          (o.material as T.Material).dispose();
         }
       });
       g.removeFromParent();
@@ -363,6 +377,10 @@ export class CourseView extends T.Group {
       mesh.material as T.MeshStandardMaterial,
     );
     if (lava >= 0) this.lavaMaterials.splice(lava, 1);
+    const slime = this.slimeMaterials.indexOf(
+      mesh.material as T.MeshStandardMaterial,
+    );
+    if (slime >= 0) this.slimeMaterials.splice(slime, 1);
     mesh.removeFromParent();
     mesh.geometry.dispose();
     (mesh.material as T.Material).dispose();
@@ -408,10 +426,16 @@ export class CourseView extends T.Group {
     const lava = this.lavaMaterials.indexOf(
       mesh.material as T.MeshStandardMaterial,
     );
+    const slime = this.slimeMaterials.indexOf(
+      mesh.material as T.MeshStandardMaterial,
+    );
     (mesh.material as T.Material).dispose();
     mesh.material = this.buildSolidMaterial(track, s);
     if (lava >= 0)
       this.lavaMaterials[lava] =
+        mesh.material as T.MeshStandardMaterial;
+    if (slime >= 0)
+      this.slimeMaterials[slime] =
         mesh.material as T.MeshStandardMaterial;
   }
 
@@ -437,6 +461,8 @@ export class CourseView extends T.Group {
               m.map.dispose();
             m.dispose();
           }
+        } else if (o instanceof T.Sprite) {
+          (o.material as T.Material).dispose();
         }
       });
       this.clear();
@@ -444,6 +470,8 @@ export class CourseView extends T.Group {
       this.gateModels = [];
       this.trampolineModels = [];
       this.boostPadModels = [];
+      this.gateGlowLevel = 0;
+      this.lampGlowLevel = 0;
       this.ringModels = [];
       this.dragonModels = [];
       this.dragonJets = [];
@@ -456,7 +484,9 @@ export class CourseView extends T.Group {
       this.hazards = [];
       this.pickupModels.clear();
       this.meshes = [];
+      this.wetSurfaces = [];
       this.lavaMaterials = [];
+      this.slimeMaterials = [];
       if (run) {
         const track = run.track;
         if (!track.legacy)
@@ -754,6 +784,8 @@ export class CourseView extends T.Group {
       material.map!.offset.set((sim.time * 0.035) % 1, (sim.time * 0.025) % 1);
       material.map!.updateMatrix();
     }
+    for (const material of this.slimeMaterials)
+      material.userData.time.value = sim.time;
     for (const model of this.hazards) {
       if (model.rotor) model.rotor.rotation.z = sim.hammerPhase;
       if (model.flames) {
@@ -815,6 +847,12 @@ export class CourseView extends T.Group {
     for (const { bronze, eyes } of this.dragonGlow)
       updateDragonGlow(bronze, eyes, sim.time, packet);
     for (const jets of this.dragonJets) updateDragonJets(jets, sim.time, packet);
+    const night = sim.weather.night;
+    this.gateGlowLevel = 0;
+    for (const g of this.gateModels) this.gateGlowLevel += applyNightGlow(g, night);
+    this.lampGlowLevel = 0;
+    for (const g of this.lampModels) this.lampGlowLevel += applyNightGlow(g, night);
+    this.wetGlossLevel = applyWetGloss(this.wetSurfaces, sim.weather.rain);
   }
   inspect() {
     return {
@@ -823,6 +861,9 @@ export class CourseView extends T.Group {
       ghosts: this.ghostGroup?.visible ? this.ghostGroup.children.length : 0,
       trampolines: this.trampolineModels.length,
       boostPads: this.boostPadModels.length,
+      gateGlow: this.gateGlowLevel,
+      wetGloss: this.wetGlossLevel,
+      lampGlow: this.lampGlowLevel,
       rings: this.ringModels.length,
       loopSegments: this.loopSegmentModels,
       dragons: this.dragonModels.length,
@@ -1097,6 +1138,70 @@ export function buildPumpkinMesh() {
 }
 
 /** Arena light tower: concrete pole with an emissive lamp bar on top. */
+/** Shared radial glow sprite texture; DataTexture keeps builders headless-safe. */
+let glowTexture: T.DataTexture | null = null;
+export function makeGlowTexture(): T.DataTexture {
+  if (glowTexture) return glowTexture;
+  const size = 64;
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++)
+    for (let x = 0; x < size; x++) {
+      const dx = (x - size / 2) / (size / 2);
+      const dy = (y - size / 2) / (size / 2);
+      const d = Math.min(1, Math.hypot(dx, dy));
+      const a = Math.round(255 * Math.pow(1 - d, 2.2));
+      const i = (y * size + x) * 4;
+      data[i] = 255;
+      data[i + 1] = 244;
+      data[i + 2] = 214;
+      data[i + 3] = a;
+    }
+  glowTexture = new T.DataTexture(data, size, size);
+  glowTexture.needsUpdate = true;
+  return glowTexture;
+}
+/** Drive tagged emissive materials and lamp glow sprites; returns the lit count. */
+export const GATE_NIGHT_GLOW = 3.5;
+/** Wet-road gloss: low roughness plus an env kick for sky reflections. */
+export const WET_ROUGHNESS = 0.22;
+export const WET_ENV = 1.25;
+export const WET_ALBEDO = 0.72;
+export interface Wettable {
+  mat: T.MeshStandardMaterial;
+  roughness: number;
+  env: number;
+  color: number;
+}
+function scaleColor(hex: number, f: number) {
+  const r = Math.round(((hex >> 16) & 0xff) * f);
+  const g = Math.round(((hex >> 8) & 0xff) * f);
+  const b = Math.round((hex & 0xff) * f);
+  return (r << 16) | (g << 8) | b;
+}
+export function applyWetGloss(surfaces: Wettable[], rain: boolean): number {
+  for (const w of surfaces) {
+    w.mat.roughness = rain ? WET_ROUGHNESS : w.roughness;
+    w.mat.envMapIntensity = rain ? WET_ENV : w.env;
+    w.mat.color.setHex(rain ? scaleColor(w.color, WET_ALBEDO) : w.color);
+  }
+  return rain ? surfaces.length : 0;
+}
+export function applyNightGlow(root: T.Object3D, night: boolean): number {
+  let lit = 0;
+  root.traverse((o) => {
+    if (o instanceof T.Mesh) {
+      const mat = o.material as T.MeshStandardMaterial;
+      const glow = mat?.userData?.nightGlow as { day: number; night: number } | undefined;
+      if (glow && typeof mat.emissiveIntensity === "number") {
+        mat.emissiveIntensity = night ? glow.night : glow.day;
+        if (night) lit++;
+      }
+    } else if (o instanceof T.Sprite && o.name === "lamp-glow") {
+      o.visible = night;
+    }
+  });
+  return lit;
+}
 export function buildLampPost() {
   const group = new T.Group();
   const pole = new T.Mesh(
@@ -1104,12 +1209,25 @@ export function buildLampPost() {
     new T.MeshStandardMaterial({ color: 0x767c76, roughness: 0.9 }),
   );
   pole.castShadow = true;
-  const bar = new T.Mesh(
-    new T.BoxGeometry(5, 1, 0.7),
-    new T.MeshStandardMaterial({ color: 0xfaf8e8, emissive: 0xfff5cd, emissiveIntensity: 2 }),
-  );
+  const barMat = new T.MeshStandardMaterial({ color: 0xfaf8e8, emissive: 0xfff5cd, emissiveIntensity: 2 });
+  barMat.userData.nightGlow = { day: 2, night: 4 };
+  const bar = new T.Mesh(new T.BoxGeometry(5, 1, 0.7), barMat);
   bar.position.y = 13;
-  group.add(pole, bar);
+  const glow = new T.Sprite(
+    new T.SpriteMaterial({
+      map: makeGlowTexture(),
+      blending: T.AdditiveBlending,
+      depthWrite: false,
+      transparent: true,
+      opacity: 0.85,
+    }),
+  );
+  glow.name = "lamp-glow";
+  glow.raycast = () => {};
+  glow.scale.set(9, 9, 1);
+  glow.position.y = 13;
+  glow.visible = false;
+  group.add(pole, bar, glow);
   return group;
 }
 /** Treasure chest pickup: plank body, arched lid, iron bands, gold lock. */

@@ -15,6 +15,7 @@ import { HAZARDS, hammerAngle } from "./hazards";
 import { truckStats } from "./truck";
 import { pbr, flameMaterial, lavaMaterial } from "./materials";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { buildSkyEnvScene } from "./sky-env";
 import { arenaSolids } from "./arena";
 import { ChaseCamera } from "./camera";
 import type { CourseSolid } from "./course";
@@ -25,7 +26,9 @@ import { TruckFireView } from "./truck-fire";
 import { SkidView } from "./skids";
 import { LoopView } from "./loop-view";
 import { BackgroundView } from "./background-view";
-import { getBackgroundTemplate } from "./backgrounds";
+import { getBackgroundTemplate, resolveMood } from "./backgrounds";
+import { buildHeadlightRig, setHeadlightRig } from "./headlights";
+import { buildWheelSpray, updateWheelSpray } from "./wheel-spray";
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
@@ -39,6 +42,10 @@ export class GameView {
   private lavaPitInspection?: { id: string; angle: number };
   private dinoInspection?: string;
   private nitro = new T.Group();
+  private spray = buildWheelSpray();
+  private roomEnv: T.Texture | null = null;
+  private skyEnv: { key: string; tex: T.Texture } | null = null;
+  private pmrem: T.PMREMGenerator | null = null;
   private officialCourse = new CourseView();
   private background = new BackgroundView();
   private fire = new TruckFireView();
@@ -54,6 +61,7 @@ export class GameView {
   readonly meshes = new Map<string, T.Group>();
   private dentCounts = new Map<string, number>();
   private lightbar: [T.Mesh?, T.Mesh?] = [];
+  private headlightRig: T.Group | null = null;
   private truck = new T.Group();
   private labFloor = new T.Group();
   private snapCamera = true;
@@ -94,6 +102,7 @@ export class GameView {
       this.dungeon,
       this.fairground,
       this.nitro,
+      this.spray,
       this.contactShadow,
       this.skids,
       this.fire.smoke,
@@ -149,14 +158,14 @@ export class GameView {
     this.applyQuality("high");
     this.renderer.toneMapping = T.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.25;
-    const pmrem = new T.PMREMGenerator(this.renderer);
+    this.pmrem = new T.PMREMGenerator(this.renderer);
     const room = new RoomEnvironment();
-    this.scene.environment = pmrem.fromScene(room, 0.04, 0.1, 100, {
+    this.roomEnv = this.pmrem.fromScene(room, 0.04, 0.1, 100, {
       size: 128,
     }).texture;
+    this.scene.environment = this.roomEnv;
     this.scene.environmentIntensity = 0.7;
     room.dispose();
-    pmrem.dispose();
     this.scene.background = new T.Color(0xc5d0cf);
     this.scene.fog = new T.Fog(0xc5d0cf, 140, 430);
     this.hemi = new T.HemisphereLight(0xe5f0ff, 0x514733, 2);
@@ -527,7 +536,32 @@ export class GameView {
       this.truck.getObjectByName("lightbar-a") as T.Mesh | undefined,
       this.truck.getObjectByName("lightbar-b") as T.Mesh | undefined,
     ];
+    this.headlightRig = buildHeadlightRig();
+    this.meshes.get("hood")?.add(this.headlightRig);
   }
+  /** Clear day keeps the studio room; night/rain bake a matching sky dome. */
+  private applyEnvironment(mood: { sky: { top: number; horizon: number } }, baked: boolean) {
+    const key = baked ? `${mood.sky.top}:${mood.sky.horizon}` : "room";
+    if (this.skyEnv?.key === key || (!baked && !this.skyEnv)) {
+      if (!baked) this.scene.environment = this.roomEnv;
+      return;
+    }
+    if (!baked) {
+      if (this.skyEnv) this.skyEnv.tex.dispose();
+      this.skyEnv = null;
+      this.scene.environment = this.roomEnv;
+      return;
+    }
+    if (!this.pmrem || !this.roomEnv) return;
+    if (this.skyEnv) this.skyEnv.tex.dispose();
+    const scene = buildSkyEnvScene(mood.sky.top, mood.sky.horizon);
+    const tex = this.pmrem.fromScene(scene, 0.04).texture;
+    (scene.children[0] as T.Mesh).geometry.dispose();
+    ((scene.children[0] as T.Mesh).material as T.Material).dispose();
+    this.skyEnv = { key, tex };
+    this.scene.environment = tex;
+  }
+
   private lightIntensities(): [number, number] {
     return this.lightbar.map(
       (dome) =>
@@ -629,6 +663,9 @@ export class GameView {
     return {
       vehicleId: this.simulation.vehicleId,
       lights: { a: lightA, b: lightB },
+      headlights: { on: this.simulation.weather.night && this.headlightRig !== null },
+      spray: { active: this.spray.visible },
+      candleLights: this.dungeon.candleLightStats(),
       ...truckStats(this.truck),
       potions: {
         jets: this.nitro.visible,
@@ -654,6 +691,7 @@ export class GameView {
       renderTriangles: this.renderer.info.render.triangles,
       geometries: this.renderer.info.memory.geometries,
       textures: this.renderer.info.memory.textures,
+      weather: { ...this.simulation.weather },
       video: {
         tier: this.videoTier,
         pixelRatio: this.renderer.getPixelRatio(),
@@ -697,17 +735,20 @@ export class GameView {
     const template = getBackgroundTemplate(
       s.courseTrack?.backgroundTemplate ?? s.courseTrack?.custom?.backgroundTemplate,
 );
-    (this.scene.background as T.Color).setHex(template.fog.color);
+    const mood = resolveMood(template, s.weather);
+    (this.scene.background as T.Color).setHex(mood.fog.color);
     const fog = this.scene.fog as T.Fog;
-    fog.color.setHex(template.fog.color);
-    fog.near = template.fog.near * this.fogScale;
-    fog.far = template.fog.far * this.fogScale;
-    this.hemi.color.setHex(template.hemi.sky);
-    this.hemi.groundColor.setHex(template.hemi.ground);
-    this.hemi.intensity = template.hemi.intensity;
-    this.sun.intensity = template.sun.intensity;
-    this.sun.color.setHex(template.sun.color);
-    this.scene.environmentIntensity = template.env;
+    fog.color.setHex(mood.fog.color);
+    fog.near = mood.fog.near * this.fogScale;
+    fog.far = mood.fog.far * this.fogScale;
+    this.hemi.color.setHex(mood.hemi.sky);
+    this.hemi.groundColor.setHex(mood.hemi.ground);
+    this.hemi.intensity = mood.hemi.intensity;
+    this.sun.intensity = mood.sun.intensity;
+    this.sun.color.setHex(mood.sun.color);
+    this.scene.environmentIntensity = mood.env;
+    this.applyEnvironment(mood, s.weather.night || s.weather.rain);
+    if (this.headlightRig) setHeadlightRig(this.headlightRig, s.weather.night);
     const root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
       q = s.previousRotation
         .clone()
@@ -721,6 +762,9 @@ export class GameView {
     this.dungeon.update(s);
     this.fairground.update(s);
     this.nitro.visible = s.comic.effect === "nitro";
+    this.spray.position.copy(root);
+    this.spray.quaternion.copy(q);
+    updateWheelSpray(this.spray, s.time, Math.hypot(s.body.linvel().x, s.body.linvel().z), s.weather.rain);
     this.nitro.position.copy(root);
     this.nitro.quaternion.copy(q);
     for (const jet of this.nitro.children)
@@ -739,6 +783,8 @@ export class GameView {
       root.x,
       root.z,
       this.camera.far,
+      s.weather,
+      root.y,
     );
     this.loop.update(s.time);
     this.skids.update(s.skidStrokes);

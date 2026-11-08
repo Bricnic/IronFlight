@@ -27,6 +27,15 @@ function sprites(view: BackgroundView) {
   return out;
 }
 
+function cloudHex(view: BackgroundView) {
+  const out: number[] = [];
+  view.traverse((o) => {
+    if (o instanceof Sprite && o.name === "background-cloud")
+      out.push((o.material as import("three").SpriteMaterial).color.getHex());
+  });
+  return out;
+}
+
 it("builds a sky dome, shapes and clouds for a track", () => {
   const view = new BackgroundView();
   view.update(getTrack("triple-loop"), 0, 0, 0, 650);
@@ -37,6 +46,31 @@ it("builds a sky dome, shapes and clouds for a track", () => {
   expect(sprites(view)).toHaveLength(12);
   expect(stats.shapes).toBeGreaterThan(0);
   expect(stats.clouds).toBe(12);
+});
+
+it("darkens clouds to storm gray in rain", () => {
+  const view = new BackgroundView();
+  const dry = { night: false, rain: false };
+  const wet = { night: false, rain: true };
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650, dry);
+  const day = cloudHex(view);
+  expect(day.length).toBeGreaterThan(0);
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650, wet);
+  const storm = cloudHex(view);
+  expect(storm).not.toEqual(day);
+  for (const hex of storm) expect(hex).toBeLessThan(0x808080);
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650, dry);
+  expect(cloudHex(view)).toEqual(day);
+});
+
+it("centers the rain field on the focus height", () => {
+  const view = new BackgroundView();
+  const wet = { night: false, rain: true };
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650, wet, 120);
+  const rain = view.getObjectByName("background-rain")!;
+  expect(rain.position.y).toBeCloseTo(120 - 40, 9);
+  view.update(getTrack("triple-loop"), 0, 0, 0, 650, wet, 0);
+  expect(rain.position.y).toBeCloseTo(-40, 9);
 });
 
 it("follows the focus point and scales to the far plane", () => {

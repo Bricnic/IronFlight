@@ -1,3 +1,4 @@
+import { DEFAULT_WEATHER, parseWeatherFlags, type WeatherFlags } from "./weather";
 export type VideoQuality = "low" | "medium" | "high";
 export interface QualitySpec {
   /** Pixel-ratio cap (also capped by devicePixelRatio at apply time). */
@@ -15,6 +16,8 @@ export const QUALITY: Record<VideoQuality, QualitySpec> = {
 };
 export interface GameSettings {
   video: VideoQuality;
+  night: boolean;
+  rain: boolean;
 }
 const SETTINGS_KEY = "iron-flight-settings-v1";
 export interface SettingsStorage {
@@ -33,18 +36,19 @@ export function loadSettings(
     if (raw) {
       const parsed = JSON.parse(raw) as unknown;
       const video = (parsed as { video?: unknown } | null)?.video;
-      if (isTier(video)) return { video };
+      if (isTier(video)) return { video, ...parseWeatherFlags(parsed) };
     }
   } catch {
     // Corrupt JSON falls through to the default.
   }
-  return { video: "high" };
+  return { video: "high", ...DEFAULT_WEATHER };
 }
 export function saveSettings(
   video: VideoQuality,
+  weather: WeatherFlags = DEFAULT_WEATHER,
   storage: SettingsStorage = globalThis.localStorage,
 ): GameSettings {
-  const settings = { video };
+  const settings = { video, ...weather };
   storage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   return settings;
 }

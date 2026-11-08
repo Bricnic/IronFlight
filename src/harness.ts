@@ -116,6 +116,9 @@ export interface GameHarness {
     fairground: { triangles: number; carouselTriangles: number; carousels: number; bumpers: number; balloons: number; bananas: number };
     vehicleId: string;
     lights: { a: number; b: number };
+    headlights: { on: boolean };
+    spray: { active: boolean };
+    candleLights: { active: number; total: number };
     comicHazards: {
       id: string;
       kind: string;
@@ -123,12 +126,24 @@ export interface GameHarness {
       animated: boolean;
       ramp?: { position: number[]; angle: number };
     }[];
+    background: {
+      template: string;
+      shapes: number;
+      clouds: number;
+      stars: number;
+      night: boolean;
+      rainStreaks: number;
+      rain: boolean;
+    };
     officialCourse: {
       key: string;
       axes: number;
       ghosts: number;
       trampolines: number;
       boostPads: number;
+      gateGlow: number;
+      wetGloss: number;
+      lampGlow: number;
       rings: number;
       loopSegments: number;
       dragons: number;
@@ -172,6 +187,10 @@ export interface GameHarness {
     renderTriangles: number;
     geometries: number;
     textures: number;
+    weather: {
+      night: boolean;
+      rain: boolean;
+    };
     video: {
       tier: string;
       pixelRatio: number;

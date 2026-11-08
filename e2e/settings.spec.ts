@@ -41,7 +41,7 @@ test("settings page toggles video quality live", async ({ page }) => {
   const stored = await page.evaluate(() =>
     localStorage.getItem("iron-flight-settings-v1"),
   );
-  expect(JSON.parse(stored!)).toEqual({ video: "high" });
+  expect(JSON.parse(stored!)).toEqual({ video: "high", night: false, rain: false });
   await page.locator("#settings-back").click();
   await expect(page.locator("#settings-screen")).toBeHidden();
 });
@@ -63,4 +63,31 @@ test("video tier persists across reload", async ({ page }) => {
       timeout: 15000,
     })
     .toMatchObject({ tier: "low", shadows: false, far: 350 });
+});
+
+test("weather toggles flip badges, stats and storage", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  const weather = () => page.evaluate(() => window.__game!.stats().weather);
+  await expect.poll(weather, { timeout: 15000 }).toEqual({ night: false, rain: false });
+  await expect(page.locator("#weather-night")).toBeHidden();
+  await expect(page.locator("#weather-rain")).toBeHidden();
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.locator("#settings-screen")).toBeVisible();
+  await page.locator('[data-weather="night"] button').click();
+  await expect.poll(weather, { timeout: 15000 }).toEqual({ night: true, rain: false });
+  await page.locator('[data-weather="rain"] button').click();
+  await expect.poll(weather, { timeout: 15000 }).toEqual({ night: true, rain: true });
+  await page.locator("#settings-back").click();
+  await expect(page.locator("#weather-night")).toBeVisible();
+  await expect(page.locator("#weather-rain")).toBeVisible();
+  const stored = await page.evaluate(() =>
+    localStorage.getItem("iron-flight-settings-v1"),
+  );
+  expect(JSON.parse(stored!)).toMatchObject({ night: true, rain: true });
+  await page.reload();
+  await page.waitForFunction(() => !!window.__game);
+  await expect.poll(weather, { timeout: 15000 }).toEqual({ night: true, rain: true });
+  await expect(page.locator("#weather-night")).toBeVisible();
+  await expect(page.locator("#weather-rain")).toBeVisible();
 });

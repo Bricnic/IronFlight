@@ -1,4 +1,5 @@
 import { TEXTURE_IDS } from "./custom-level";
+import type { WeatherFlags } from "./weather";
 
 export const SHAPE_KINDS = [
   "hill",
@@ -275,7 +276,7 @@ export function backgroundForLevel(level: {
   return DEFAULT_BACKGROUND_TEMPLATE;
 }
 
-function mulberry32(seed: number) {
+export function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
     a |= 0;
@@ -293,6 +294,79 @@ export interface RingSlot {
   scale: number;
 }
 
+/** Fixed night rig; per-channel minima keep dark templates from brightening. */
+export const NIGHT_RIG = {
+  skyTop: 0x0d1c36,
+  skyHorizon: 0x274a73,
+  fog: 0x14263f,
+  sun: { color: 0x8fb4e8, intensity: 0.35 },
+  hemi: { sky: 0x24344d, ground: 0x05070c, intensity: 0.3 },
+  env: 0.08,
+} as const;
+export interface ResolvedMood {
+  sky: { top: number; horizon: number };
+  fog: { color: number; near: number; far: number };
+  sun: { color: number; intensity: number };
+  hemi: { sky: number; ground: number; intensity: number };
+  env: number;
+};
+function minHex(day: number, night: number) {
+  const r = Math.min((day >> 16) & 0xff, (night >> 16) & 0xff);
+  const g = Math.min((day >> 8) & 0xff, (night >> 8) & 0xff);
+  const b = Math.min(day & 0xff, night & 0xff);
+  return (r << 16) | (g << 8) | b;
+}
+/** Overcast multipliers for rain; applied before the night minima so storms stack. */
+export const RAIN_RIG = {
+  sky: 0.62,
+  fog: 0.62,
+  sun: 0.5,
+  hemi: 0.75,
+  env: 1.25,
+} as const;
+function scaleHex(hex: number, f: number) {
+  const r = Math.min(255, Math.round(((hex >> 16) & 0xff) * f));
+  const g = Math.min(255, Math.round(((hex >> 8) & 0xff) * f));
+  const b = Math.min(255, Math.round((hex & 0xff) * f));
+  return (r << 16) | (g << 8) | b;
+}
+/** Effective lighting rig: template channels by day, overcast in rain, darkened minima at night. */
+export function resolveMood(template: BackgroundTemplate, weather: WeatherFlags): ResolvedMood {
+  const base = weather.rain
+    ? {
+        sky: { top: scaleHex(template.sky.top, RAIN_RIG.sky), horizon: scaleHex(template.sky.horizon, RAIN_RIG.sky) },
+        fog: { ...template.fog, color: scaleHex(template.fog.color, RAIN_RIG.fog) },
+        sun: { ...template.sun, intensity: template.sun.intensity * RAIN_RIG.sun },
+        hemi: { ...template.hemi, intensity: template.hemi.intensity * RAIN_RIG.hemi },
+        env: template.env * RAIN_RIG.env,
+      }
+    : {
+        sky: { ...template.sky },
+        fog: { ...template.fog },
+        sun: { ...template.sun },
+        hemi: { ...template.hemi },
+        env: template.env,
+      };
+  if (!weather.night) return base;
+  return {
+    sky: {
+      top: minHex(base.sky.top, NIGHT_RIG.skyTop),
+      horizon: minHex(base.sky.horizon, NIGHT_RIG.skyHorizon),
+    },
+    fog: {
+      color: minHex(base.fog.color, NIGHT_RIG.fog),
+      near: base.fog.near,
+      far: base.fog.far,
+    },
+    sun: { color: NIGHT_RIG.sun.color, intensity: Math.min(base.sun.intensity, NIGHT_RIG.sun.intensity) },
+    hemi: {
+      sky: NIGHT_RIG.hemi.sky,
+      ground: NIGHT_RIG.hemi.ground,
+      intensity: Math.min(base.hemi.intensity, NIGHT_RIG.hemi.intensity),
+    },
+    env: Math.min(base.env, NIGHT_RIG.env),
+  };
+}
 /** Deterministic ring slots for one shape ring; pure and headless-safe. */
 export function layoutRing(count: number, radius: number, seed: number): RingSlot[] {
   if (!(count >= 1)) return [];

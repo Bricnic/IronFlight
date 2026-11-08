@@ -18,6 +18,7 @@ import {
   DUNGEON_STRIKE,
   CAGE,
   CLIPPER_BACK,
+  WINDOW_GATE,
   type DungeonHazard,
 } from "./dungeon-hazards";
 type Mechanism = {
@@ -75,6 +76,12 @@ export class DungeonPhysics {
       if (h.kind === "volcano")
         m.colliders.push(world.createCollider(R.ColliderDesc.cone(3.5, 6.7)
           .setTranslation(h.x, (h.y ?? 0) + 3.5, h.z)));
+      if (h.kind === "window-gate") {
+        solid(WINDOW_GATE.postW, WINDOW_GATE.postH, WINDOW_GATE.gateD, -WINDOW_GATE.postX, 0);
+        solid(WINDOW_GATE.postW, WINDOW_GATE.postH, WINDOW_GATE.gateD, WINDOW_GATE.postX, 0);
+        solid(WINDOW_GATE.wallW, WINDOW_GATE.wallH, WINDOW_GATE.gateD, -WINDOW_GATE.wallX, 0);
+        solid(WINDOW_GATE.wallW, WINDOW_GATE.wallH, WINDOW_GATE.gateD, WINDOW_GATE.wallX, 0);
+      }
     } else if (h.kind === "cage") {
       solid(CAGE.w, CAGE.h, CAGE.d, 0, 0);
     } else if (h.kind === "clippers") {

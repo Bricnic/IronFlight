@@ -106,10 +106,18 @@ export function lavaMaterial() {
   return material;
 }
 
-function patternSurface(material: T.MeshStandardMaterial, pattern: string) {
+function patternSurface(
+  material: T.MeshStandardMaterial,
+  pattern: string,
+  uniforms: Record<string, { value: unknown }> = {},
+) {
   material.customProgramCacheKey = () => pattern;
   material.onBeforeCompile = (shader) => {
-    const varying = "varying vec2 vSurfaceUv;\n";
+    Object.assign(shader.uniforms, uniforms);
+    const declarations = Object.keys(uniforms)
+      .map((name) => `uniform float ${name};\n`)
+      .join("");
+    const varying = `varying vec2 vSurfaceUv;\n${declarations}`;
     shader.vertexShader = varying + shader.vertexShader.replace(
       "#include <uv_vertex>", "#include <uv_vertex>\n vSurfaceUv = uv;",
     );
@@ -121,15 +129,19 @@ function patternSurface(material: T.MeshStandardMaterial, pattern: string) {
   return material;
 }
 
-/** Opaque green liquid with swirls visible from the approach ramp. */
+/** Opaque green liquid, oozing diagonally with run time like the lava flow. */
 export function slimeMaterial(color: number) {
-  return patternSurface(
+  const time = { value: 0 };
+  const material = patternSurface(
     new T.MeshStandardMaterial({ color, emissive: 0x285b03, emissiveIntensity: 0.75, roughness: 0.28 }),
-    `vec2 p = vSurfaceUv * vec2(11.0, 7.0);
+    `vec2 p = (vSurfaceUv + slimeTime * vec2(0.012, 0.0085)) * vec2(11.0, 7.0);
       float eddy = sin(p.x * 1.8 + cos(p.y * 2.7)) * cos(p.y * 2.1 + sin(p.x));
       float streak = sin(p.x * 2.7 + p.y * 3.1 + eddy * 1.9);
       diffuseColor.rgb *= 0.72 + eddy * 0.18 + smoothstep(0.5, 1.0, streak) * 0.36;`,
+    { slimeTime: time },
   );
+  material.userData.time = time;
+  return material;
 }
 
 /** Molded edges, diagonal bracing and corner magnets on colored toy tiles. */

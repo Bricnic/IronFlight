@@ -5,6 +5,7 @@ import {
   saveSettings,
   type VideoQuality,
 } from "../src/settings";
+import { DEFAULT_WEATHER } from "../src/weather";
 
 function memoryStorage() {
   const map = new Map<string, string>();
@@ -16,25 +17,25 @@ function memoryStorage() {
 }
 
 it("defaults to high video quality", () => {
-  expect(loadSettings(memoryStorage())).toEqual({ video: "high" });
+  expect(loadSettings(memoryStorage())).toEqual({ video: "high", ...DEFAULT_WEATHER });
 });
 
 it("round-trips the video tier through storage", () => {
   const storage = memoryStorage();
   for (const tier of ["low", "medium", "high"] as VideoQuality[]) {
-    expect(saveSettings(tier, storage)).toEqual({ video: tier });
-    expect(loadSettings(storage)).toEqual({ video: tier });
+    expect(saveSettings(tier, { night: true, rain: false }, storage)).toEqual({ video: tier, night: true, rain: false });
+    expect(loadSettings(storage)).toEqual({ video: tier, night: true, rain: false });
   }
 });
 
 it("repairs missing or invalid stored tiers to high", () => {
   const storage = memoryStorage();
   storage.setItem("iron-flight-settings-v1", JSON.stringify({ video: "ultra" }));
-  expect(loadSettings(storage)).toEqual({ video: "high" });
+  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER });
   storage.setItem("iron-flight-settings-v1", "{broken");
-  expect(loadSettings(storage)).toEqual({ video: "high" });
+  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER });
   storage.setItem("iron-flight-settings-v1", JSON.stringify({}));
-  expect(loadSettings(storage)).toEqual({ video: "high" });
+  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER });
 });
 
 it("low sacrifices pixel ratio, shadows, far plane and fog", () => {

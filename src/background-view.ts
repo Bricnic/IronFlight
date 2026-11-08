@@ -4,9 +4,13 @@ import { pbr } from "./materials";
 import {
   getBackgroundTemplate,
   layoutRing,
+  mulberry32,
+  resolveMood,
   type BackgroundShapeRing,
   type BackgroundTemplate,
 } from "./backgrounds";
+import { DEFAULT_WEATHER, type WeatherFlags } from "./weather";
+import { RAIN_STREAK_COUNT, RAIN_STREAK_HEIGHT, buildRainStreaks, layoutRainStreaks } from "./rain-streaks";
 import type { Track } from "./tracks";
 
 /** Lerp a base color toward the horizon haze by ring distance. */
@@ -14,6 +18,38 @@ export function applyHaze(base: T.Color, horizon: T.Color, radius: number): T.Co
   return base.lerp(horizon, Math.min(0.45, Math.max(0, radius) / 1400));
 }
 
+/** Seeded star points on the upper sky dome; fog-free so they read at night. */
+export const STAR_COUNT = 300;
+/** Storm-gray cloud tint while raining. */
+export const STORM_CLOUD = 0x59616e;
+export function buildStarField(count: number): T.Points {
+  const rand = mulberry32(0x5eed);
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const azimuth = rand() * Math.PI * 2;
+    const altitude = 0.08 + rand() * 0.85;
+    const r = 580 * Math.cos(altitude);
+    positions[i * 3] = Math.cos(azimuth) * r;
+    positions[i * 3 + 1] = 580 * Math.sin(altitude);
+    positions[i * 3 + 2] = Math.sin(azimuth) * r;
+  }
+  const geometry = new T.BufferGeometry();
+  geometry.setAttribute("position", new T.BufferAttribute(positions, 3));
+  const material = new T.PointsMaterial({
+    size: 1.6,
+    sizeAttenuation: false,
+    color: 0xdceaff,
+    transparent: true,
+    opacity: 0.9,
+    fog: false,
+    depthWrite: false,
+  });
+  const stars = new T.Points(geometry, material);
+  stars.name = "background-stars";
+  stars.raycast = () => {};
+  stars.frustumCulled = false;
+  return stars;
+}
 /** Deterministic 0..1 hash for per-shape variation without RNG state. */
 function hash(n: number) {
   return Math.abs(Math.sin(n * 12.9898) * 43758.5453) % 1;
@@ -141,7 +177,12 @@ export class BackgroundView extends T.Group {
   private templateName = "";
   private shapeCount = 0;
   private matCache = new Map<string, T.Material>();
-  private clouds: { sprite: T.Sprite; baseX: number; drift: number }[] = [];
+  private clouds: { sprite: T.Sprite; baseX: number; drift: number; day: number }[] = [];
+  private skyMaterial: T.ShaderMaterial | null = null;
+  private stars: T.Points | null = null;
+  private nightApplied = false;
+  private rain: T.LineSegments | null = null;
+  private rainApplied = false;
 
   update(
     track: Track | null,
@@ -149,6 +190,8 @@ export class BackgroundView extends T.Group {
     focusX: number,
     focusZ: number,
     far: number,
+    weather: WeatherFlags = DEFAULT_WEATHER,
+    focusY = 0,
   ) {
     const template = getBackgroundTemplate(
       track?.backgroundTemplate ?? track?.custom?.backgroundTemplate,
@@ -159,12 +202,29 @@ export class BackgroundView extends T.Group {
       this.key = key;
       this.builtTrack = track;
     }
+    const mood = resolveMood(template, weather);
+    if (this.skyMaterial) {
+      this.skyMaterial.uniforms.topColor.value.setHex(mood.sky.top);
+      this.skyMaterial.uniforms.horizonColor.value.setHex(mood.sky.horizon);
+    }
+    this.nightApplied = weather.night && !template.underground;
+    if (this.stars) this.stars.visible = this.nightApplied;
+    this.rainApplied = weather.rain && !template.underground;
+    if (this.rain) {
+      this.rain.visible = this.rainApplied;
+      this.rain.position.y = focusY - RAIN_STREAK_HEIGHT / 2;
+      if (this.rainApplied) layoutRainStreaks(this.rain, time);
+    }
     this.position.set(focusX, 0, focusZ);
     this.scale.setScalar(far / 650);
-    for (const cloud of this.clouds)
+    for (const cloud of this.clouds) {
       cloud.sprite.position.x =
         ((((cloud.baseX + time * cloud.drift + 700) % 1400) + 1400) % 1400) -
         700;
+      (cloud.sprite.material as T.SpriteMaterial).color.setHex(
+        weather.rain ? STORM_CLOUD : cloud.day,
+      );
+    }
   }
 
   stats() {
@@ -172,6 +232,10 @@ export class BackgroundView extends T.Group {
       template: this.templateName,
       shapes: this.shapeCount,
       clouds: this.clouds.length,
+      stars: this.nightApplied && this.stars ? STAR_COUNT : 0,
+      night: this.nightApplied,
+      rainStreaks: this.rainApplied && this.rain ? RAIN_STREAK_COUNT : 0,
+      rain: this.rainApplied,
     };
   }
 
@@ -279,8 +343,19 @@ export class BackgroundView extends T.Group {
     this.clouds = [];
     this.templateName = template.name;
     this.shapeCount = 0;
+    this.skyMaterial = null;
+    this.stars = null;
+    this.rain = null;
     const horizon = new T.Color(template.fog.color);
-    if (!template.underground) this.add(this.buildSky(template));
+    if (!template.underground) {
+      const sky = this.buildSky(template);
+      this.skyMaterial = sky.material as T.ShaderMaterial;
+      this.add(sky);
+      this.stars = buildStarField(STAR_COUNT);
+      this.add(this.stars);
+      this.rain = buildRainStreaks(RAIN_STREAK_COUNT);
+      this.add(this.rain);
+    }
     for (const ring of template.shapes) this.buildRing(ring, horizon);
     if (!template.underground && template.clouds && template.clouds.count > 0)
       this.buildClouds(template);
@@ -573,8 +648,9 @@ export class BackgroundView extends T.Group {
       const w = 70 + t * 50;
       sprite.position.set(Math.cos(slot.angle) * radius, y, Math.sin(slot.angle) * radius);
       sprite.scale.set(w, w * 0.45, 1);
+      sprite.name = "background-cloud";
       this.add(sprite);
-      this.clouds.push({ sprite, baseX: sprite.position.x, drift: clouds.drift * 3 });
+      this.clouds.push({ sprite, baseX: sprite.position.x, drift: clouds.drift * 3, day: clouds.color });
     }
   }
 }

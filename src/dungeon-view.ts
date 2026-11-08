@@ -13,6 +13,7 @@ import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildGuidedPipe } from "./guided-pipe-view";
+import { assignCandleLights, buildCandleLightPool, CANDLE_LIGHT_COUNT, type CandleSource } from "./candle-lights";
 import type { Simulation } from "./simulation";
 
 const standard = (color: number, metalness = 0.15, roughness = 0.55) =>
@@ -747,6 +748,7 @@ export class DungeonView extends T.Group {
   private key = "";
   private builtTrack?: Simulation["courseTrack"];
   private models: Model[] = [];
+  private candlePool: T.PointLight[] = [];
   /** Live editing: shift one hazard model by delta. */
   moveModel(id: string, dx: number, dy: number, dz: number) {
     const m = this.models.find((m) => m.h.id === id);
@@ -891,6 +893,33 @@ export class DungeonView extends T.Group {
         });
       }
     }
+    if (this.candlePool.length === 0) this.candlePool = buildCandleLightPool();
+    for (const light of this.candlePool) if (!light.parent) this.add(light);
+    const focus = s.body.translation();
+    assignCandleLights(
+      this.candlePool,
+      this.candleSources(),
+      new T.Vector3(focus.x, focus.y, focus.z),
+      s.weather.night,
+      s.time,
+    );
+  }
+  candleSources(): CandleSource[] {
+    return this.models
+      .filter((m) => m.h.kind === "candle")
+      .map((m) => ({
+        id: m.h.id,
+        x: m.root.position.x,
+        z: m.root.position.z,
+        y: m.root.position.y,
+        phase: m.h.phase,
+      }));
+  }
+  candleLightStats() {
+    return {
+      active: this.candlePool.filter((l) => l.visible).length,
+      total: CANDLE_LIGHT_COUNT,
+    };
   }
   inspect() {
     return this.models.map((m) => ({

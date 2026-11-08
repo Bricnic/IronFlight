@@ -20,6 +20,9 @@ import { solidQuaternion } from "./euler";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
 import { BOOST_PAD } from "./custom-level";
+import { DEFAULT_WEATHER, type WeatherFlags } from "./weather";
+/** Wet-asphalt grip multiplier: softer yaw bite, longer slides. */
+export const RAIN_GRIP_SCALE = 0.55;
 import { type PartState } from "./damage";
 import { getVehicle, type VehicleId } from "./vehicles";
 import {
@@ -74,6 +77,8 @@ export class Simulation {
   vehicle!: RAPIER.DynamicRayCastVehicleController;
   stage: Stage;
   vehicleId: VehicleId = "monster-truck";
+  weather: WeatherFlags = { ...DEFAULT_WEATHER };
+  private wetWheelsApplied = false;
   trackRun?: TrackRun;
   courseTrack?: ReturnType<typeof getTrack>;
   activeHazards: Hazard[] = [];
@@ -336,6 +341,7 @@ export class Simulation {
         );
     }
     this.vehicle = this.world.createVehicleController(this.body);
+    this.wetWheelsApplied = false;
     this.vehicle.indexUpAxis = 1;
     this.vehicle.setIndexForwardAxis = 2;
     const ride = getVehicle(this.vehicleId);
@@ -687,6 +693,13 @@ export class Simulation {
           !this.parts.get(this.partDefs[i + 2].id)!.body &&
           this.vehicle.wheelIsInContact(i),
       ).length / 2;
+    const gripScale = this.weather.rain ? RAIN_GRIP_SCALE : 1;
+    if (this.wetWheelsApplied !== this.weather.rain) {
+      this.wetWheelsApplied = this.weather.rain;
+      this.wheelPositions().forEach((_, i) =>
+        this.vehicle.setWheelSideFrictionStiffness(i, 1.1 * gripScale),
+      );
+    }
     const localUp = new Vector3(0, 1, 0).applyQuaternion(
       new Quaternion().copy(this.body.rotation()),
     );
@@ -697,7 +710,7 @@ export class Simulation {
           Math.sin(this.steeringAngle) *
           this.tuning.turningPower) /
         3.3 + (this.fairground.riding ? CAROUSEL_OMEGA * this.tuning.carouselSpeed : 0);
-      const delta = (targetYaw - yaw) * Math.min(1, 18 * DT) * frontGrip;
+      const delta = (targetYaw - yaw) * Math.min(1, 18 * DT) * frontGrip * gripScale;
       this.body.applyTorqueImpulse(
         localUp.clone().multiplyScalar(delta * this.body.principalInertia().y),
         true,
@@ -710,7 +723,7 @@ export class Simulation {
       const slip = lateral.dot(new Vector3().copy(this.body.linvel()).sub(this.fairground.deckVelocity()));
       this.body.applyImpulse(
         lateral.multiplyScalar(
-          -slip * this.body.mass() * Math.min(1, 6 * DT) * frontGrip,
+          -slip * this.body.mass() * Math.min(1, 6 * DT) * frontGrip * gripScale,
         ),
         true,
       );
@@ -856,7 +869,6 @@ export class Simulation {
     this.ghosts.update();
     this.dungeon.gauntlet.before();
     this.world.step(this.events, this.hammerHooks);
-    if (!guided) this.checkSlimeContact();
     this.comic.after();
     const screwHit = this.dungeon.after();
     const fairgroundHit = this.fairground.after(before);
@@ -1012,26 +1024,11 @@ export class Simulation {
   run(seconds: number, input: Input = {}) {
     for (let i = 0; i < Math.round(seconds / DT); i++) this.step(input);
   }
-  private checkSlimeContact() {
-    if (!this.courseTrack?.custom || this.status !== "driving") return;
-    for (const part of ["chassis-front", "chassis-rear"]) {
-      const collider = this.parts.get(part)?.collider;
-      if (!collider) continue;
-      let inSlime = false;
-      this.world.intersectionPairsWith(collider, (other) => {
-        if (this.surfaceKinds.get(other.handle) === "slime") inSlime = true;
-      });
-      if (!inSlime) continue;
-      this.damage("chassis-front", 10000);
-      this.damageEvents.push({ source: "slime", part: "chassis-front", time: this.time });
-      return;
-    }
-  }
   private updateLava() {
     if (this.stage === "lab") return;
     const pools = (
       this.courseTrack ? courseSolids(this.courseTrack) : arenaSolids()
-    ).filter((s) => s.kind === "lava");
+    ).filter((s) => s.kind === "lava" || s.kind === "slime");
     for (const def of this.partDefs) {
       const state = this.parts.get(def.id)!;
       if (!state.lava) {
@@ -1084,7 +1081,7 @@ export class Simulation {
           scorch: 0,
         };
         this.damageEvents.push({
-          source: "lava",
+          source: pool.kind,
           part: def.id,
           time: this.time,
         });
