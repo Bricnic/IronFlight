@@ -28,5 +28,10 @@
     "file": "Machine Gauntlet.json",
     "thumbnail": "/tracks/machine-gauntlet.png",
     "description": "Dodge rising screws, jump a timed eruption, pick the safe gate and outrun the drill tank and crusher claw before the slime detour."
+  },
+  {
+    "file": "Amber Undertow.json",
+    "thumbnail": "/tracks/amber-undertow.png",
+    "description": "Ride a guided amber pipe onto the purple causeway, duck under twin silver overpasses, and jump the slime before the checkered finish."
   }
 ]

@@ -30,6 +30,12 @@
       "sha256": "015B53BE8F6853216AE61C34C8E712C3E2148A1738F11E8358D01774C418F569",
       "levelFile": "Machine Gauntlet.json",
       "notes": "The red car starts behind the gray gate. The missing road was built through the screw field, volcano jump, white triple gate, drill tank and claw. This reference calls for driving around the curved slime before the checkered finish."
+    },
+    {
+      "filename": "d0a9f098-01c2-44b7-8e2a-fbf0bdd47aae.jfif",
+      "sha256": "3A17DA89E872ADAB2CA7B8966B9E63CA27BC84622DF918D5BCFF524CB81E8F9D",
+      "levelFile": "Amber Undertow.json",
+      "notes": "The raised red tile marks the start. The amber pipe takes over steering through its purple exit causeway and hands control back on the black road. The turquoise tile has an open hole to the lava, and both silver overpasses are driven under. The volcano sits beside the pink bend, and the purple ramp crosses the slime to the checkered finish."
     }
   ]
 }

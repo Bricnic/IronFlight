@@ -11,6 +11,7 @@ import { isDinosaur, isGauntletMachine } from "./custom-level";
 import { buildDinosaur, poseDinosaur } from "./dinosaur-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
+import { buildGuidedPipe } from "./guided-pipe-view";
 import type { Simulation } from "./simulation";
 
 const standard = (color: number, metalness = 0.15, roughness = 0.55) =>
@@ -710,6 +711,8 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "lime-chomper") {
     model.pivots = [buildLimeChomper(root)];
     root.add(buildDungeonLabel(h, 21));
+  } else if (h.kind === "guided-pipe") {
+    buildGuidedPipe(root);
   } else if (isGauntletMachine(h.kind)) {
     model.machine = buildGauntletMachine(root, { ...h, kind: h.kind });
   } else if (isDinosaur(h.kind)) {

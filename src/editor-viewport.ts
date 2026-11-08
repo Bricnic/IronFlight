@@ -413,7 +413,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         );
         const isDragon = current.item.kind === "dragon";
         const canYaw = isProp || isDragon || isDinosaur(current.item.kind) ||
-          isGauntletMachine(current.item.kind) || current.item.kind === "lime-chomper";
+          isGauntletMachine(current.item.kind) || current.item.kind === "lime-chomper" || current.item.kind === "guided-pipe";
         if (rotateAxis === "yaw" && canYaw)
           store.updateSelected({ yaw: (current.item.yaw ?? 0) + dx * 0.01 });
         else if (rotateAxis === "pitch" && isProp)
@@ -585,7 +585,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         group.add(gate);
       }
       for (const p of level.prefabs) {
-        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || p.kind === "lime-chomper")) {
+        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe")) {
           const { root } = buildDungeonModel({ ...p, kind: p.kind, phase: 0 });
           root.userData.pick = { kind: "prefab", id: p.id };
           root.userData.locked = !!p.locked;
