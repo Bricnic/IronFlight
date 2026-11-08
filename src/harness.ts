@@ -131,6 +131,8 @@ export interface GameHarness {
       clouds: number;
       stars: number;
       night: boolean;
+      rainStreaks: number;
+      rain: boolean;
     };
     officialCourse: {
       key: string;

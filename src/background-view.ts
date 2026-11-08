@@ -10,6 +10,7 @@ import {
   type BackgroundTemplate,
 } from "./backgrounds";
 import { DEFAULT_WEATHER, type WeatherFlags } from "./weather";
+import { RAIN_STREAK_COUNT, buildRainStreaks, layoutRainStreaks } from "./rain-streaks";
 import type { Track } from "./tracks";
 
 /** Lerp a base color toward the horizon haze by ring distance. */
@@ -178,6 +179,8 @@ export class BackgroundView extends T.Group {
   private skyMaterial: T.ShaderMaterial | null = null;
   private stars: T.Points | null = null;
   private nightApplied = false;
+  private rain: T.LineSegments | null = null;
+  private rainApplied = false;
 
   update(
     track: Track | null,
@@ -203,6 +206,11 @@ export class BackgroundView extends T.Group {
     }
     this.nightApplied = weather.night && !template.underground;
     if (this.stars) this.stars.visible = this.nightApplied;
+    this.rainApplied = weather.rain && !template.underground;
+    if (this.rain) {
+      this.rain.visible = this.rainApplied;
+      if (this.rainApplied) layoutRainStreaks(this.rain, time);
+    }
     this.position.set(focusX, 0, focusZ);
     this.scale.setScalar(far / 650);
     for (const cloud of this.clouds)
@@ -218,6 +226,8 @@ export class BackgroundView extends T.Group {
       clouds: this.clouds.length,
       stars: this.nightApplied && this.stars ? STAR_COUNT : 0,
       night: this.nightApplied,
+      rainStreaks: this.rainApplied && this.rain ? RAIN_STREAK_COUNT : 0,
+      rain: this.rainApplied,
     };
   }
 
@@ -327,6 +337,7 @@ export class BackgroundView extends T.Group {
     this.shapeCount = 0;
     this.skyMaterial = null;
     this.stars = null;
+    this.rain = null;
     const horizon = new T.Color(template.fog.color);
     if (!template.underground) {
       const sky = this.buildSky(template);
@@ -334,6 +345,8 @@ export class BackgroundView extends T.Group {
       this.add(sky);
       this.stars = buildStarField(STAR_COUNT);
       this.add(this.stars);
+      this.rain = buildRainStreaks(RAIN_STREAK_COUNT);
+      this.add(this.rain);
     }
     for (const ring of template.shapes) this.buildRing(ring, horizon);
     if (!template.underground && template.clouds && template.clouds.count > 0)
