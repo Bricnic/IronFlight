@@ -255,7 +255,7 @@ export class CourseView extends T.Group {
       g.userData.keepFrame = true;
     } else {
       const mat = new T.MeshStandardMaterial({ color: track.color, roughness: 0.6, emissive: track.color, emissiveIntensity: 0 });
-      mat.userData.nightGlow = { day: 0, night: 2.2 };
+      mat.userData.nightGlow = { day: 0, night: GATE_NIGHT_GLOW };
       for (const side of [-1, 1]) {
         const pole = new T.Mesh(new T.CylinderGeometry(0.13, 0.2, 5.2, 10), mat);
         pole.position.set((side * gate.width) / 2, 2.6, 0);
@@ -1136,6 +1136,7 @@ export function makeGlowTexture(): T.DataTexture {
   return glowTexture;
 }
 /** Drive tagged emissive materials and lamp glow sprites; returns the lit count. */
+export const GATE_NIGHT_GLOW = 3.5;
 export function applyNightGlow(root: T.Object3D, night: boolean): number {
   let lit = 0;
   root.traverse((o) => {

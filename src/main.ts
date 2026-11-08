@@ -112,10 +112,11 @@ async function boot() {
   });
   header.insertAdjacentHTML(
     "beforeend",
-    `<button id="level-select-button" class="header-action"><img src="/icons/level-select.png" width="24" height="24" alt=""><span>Level select</span></button>
+    `<span id="weather-night" class="weather-badge" hidden>NIGHT</span><span id="weather-rain" class="weather-badge" hidden>RAIN</span>
+    <button id="level-select-button" class="header-action"><img src="/icons/level-select.png" width="24" height="24" alt=""><span>Level select</span></button>
     <button id="vehicle-select-button" class="header-action"><img src="/icons/select-vehicle.png" width="24" height="24" alt=""><span>Select vehicle</span></button>
     <button id="level-editor-button" class="header-action"><img src="/icons/level-editor.png" width="24" height="24" alt=""><span>Level editor</span></button>
-    <button id="settings-button" class="header-action"><img src="/icons/settings.png" width="24" height="24" alt=""><span>Settings</span></button><span id="weather-night" class="weather-badge" hidden>NIGHT</span><span id="weather-rain" class="weather-badge" hidden>RAIN</span>`,
+    <button id="settings-button" class="header-action"><img src="/icons/settings.png" width="24" height="24" alt=""><span>Settings</span></button>`,
   );
   const keys = new Set<string>();
   let cameraTrace: CameraSample[] = [],

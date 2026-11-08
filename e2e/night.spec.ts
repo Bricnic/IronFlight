@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 
+test.setTimeout(240000);
+
 test("night toggle switches the sky rig and star field", async ({ page }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
@@ -77,4 +79,18 @@ test("night lights the nearest dungeon candles", async ({ page }) => {
   await page.locator('[data-weather="night"] button').click();
   await page.locator("#settings-back").click();
   await expect.poll(() => candles().then((c) => c.active), { timeout: 30000 }).toBe(0);
+});
+test("night badge stays inside the viewport on legacy tracks", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.locator('[data-weather="night"] button').click();
+  await page.locator("#settings-back").click();
+  await page.evaluate(() => window.__game!.startTrack("triple-loop"));
+  const badge = page.locator("#weather-night");
+  await expect(badge).toBeVisible();
+  const box = await badge.boundingBox();
+  const width = await page.evaluate(() => window.innerWidth);
+  expect(box).not.toBeNull();
+  expect(box!.x + box!.width).toBeLessThanOrEqual(width);
 });

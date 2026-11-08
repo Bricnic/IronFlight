@@ -5,17 +5,17 @@ export function buildHeadlightRig(): T.Group {
   const rig = new T.Group();
   rig.name = "headlight-rig";
   for (const side of [-1, 1]) {
-    const spot = new T.SpotLight(0xffeecf, 250, 70, 0.42, 0.6, 1.5);
+    const spot = new T.SpotLight(0xffeecf, 3500, 95, 0.38, 0.6, 1.5);
     spot.position.set(side * 0.92, 0.1, 0.95);
     spot.target.position.set(side * 0.3, -0.5, 14);
     spot.castShadow = false;
     rig.add(spot, spot.target);
     const cone = new T.Mesh(
-      new T.ConeGeometry(3.2, 14, 24, 1, true),
+      new T.ConeGeometry(4.2, 24, 24, 1, true),
       new T.MeshBasicMaterial({
         color: 0xffedb8,
         transparent: true,
-        opacity: 0.12,
+        opacity: 0.06,
         blending: T.AdditiveBlending,
         depthWrite: false,
         fog: false,
@@ -25,7 +25,7 @@ export function buildHeadlightRig(): T.Group {
     cone.name = "headlight-cone";
     cone.raycast = () => {};
     cone.rotation.x = -Math.PI / 2;
-    cone.position.set(side * 0.92, 0.1, 0.95 + 7);
+    cone.position.set(side * 0.92, 0.1, 0.95 + 12);
     rig.add(cone);
     const bulb = new T.Mesh(
       new T.SphereGeometry(0.16, 16, 12),

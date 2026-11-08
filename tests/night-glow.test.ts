@@ -3,6 +3,7 @@ import * as T from "three";
 import {
   applyNightGlow,
   buildLampPost,
+  GATE_NIGHT_GLOW,
   makeGlowTexture,
 } from "../src/course-view";
 
@@ -22,6 +23,24 @@ it("hangs a hidden additive glow sprite on the lamp bar", () => {
   const mat = glow.material as T.SpriteMaterial;
   expect(mat.blending).toBe(T.AdditiveBlending);
   expect(mat.map).toBe(makeGlowTexture());
+});
+
+it("drives gate tags to the shared night emissive", () => {
+  expect(GATE_NIGHT_GLOW).toBeGreaterThanOrEqual(3);
+  const group = new T.Group();
+  const gate = new T.Mesh(
+    new T.BoxGeometry(1, 1, 1),
+    new T.MeshStandardMaterial({ emissive: 0xffffff, emissiveIntensity: 0 }),
+  );
+  (gate.material as T.MeshStandardMaterial).userData.nightGlow = {
+    day: 0,
+    night: GATE_NIGHT_GLOW,
+  };
+  group.add(gate);
+  expect(applyNightGlow(group, true)).toBe(1);
+  expect((gate.material as T.MeshStandardMaterial).emissiveIntensity).toBe(
+    GATE_NIGHT_GLOW,
+  );
 });
 
 it("builds a headless-safe radial glow texture", () => {

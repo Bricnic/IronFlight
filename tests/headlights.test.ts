@@ -25,6 +25,15 @@ it("builds twin spotlights with visible cones and bulbs", () => {
     expect(spot.distance).toBeGreaterThanOrEqual(40);
     expect(spot.castShadow).toBe(false);
   }
+  for (const spot of spots) {
+    expect(spot.intensity).toBeGreaterThanOrEqual(3000);
+    expect(spot.distance).toBeGreaterThanOrEqual(90);
+  }
+  for (const cone of cones) {
+    const geo = cone.geometry as T.ConeGeometry;
+    expect(geo.parameters.height).toBeGreaterThanOrEqual(20);
+    expect((cone.material as T.MeshBasicMaterial).opacity).toBeLessThanOrEqual(0.08);
+  }
   for (const cone of cones) {
     const mat = cone.material as T.MeshBasicMaterial;
     expect(mat.blending).toBe(T.AdditiveBlending);

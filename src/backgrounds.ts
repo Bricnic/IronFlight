@@ -296,9 +296,9 @@ export interface RingSlot {
 
 /** Fixed night rig; per-channel minima keep dark templates from brightening. */
 export const NIGHT_RIG = {
-  skyTop: 0x050b18,
-  skyHorizon: 0x0e1c38,
-  fog: 0x0b1526,
+  skyTop: 0x0d1c36,
+  skyHorizon: 0x274a73,
+  fog: 0x14263f,
   sun: { color: 0x8fb4e8, intensity: 0.35 },
   hemi: { sky: 0x24344d, ground: 0x05070c, intensity: 0.3 },
   env: 0.08,

@@ -59,6 +59,18 @@ it("dims every light channel and darkens the sky at night", () => {
   );
 });
 
+it("keeps a deep-blue night sky without lifting dark templates", () => {
+  const pastoral = getBackgroundTemplate("pastoral-hills");
+  const mood = resolveMood(pastoral, night);
+  expect(luminance(mood.sky.top)).toBeGreaterThan(15);
+  expect(luminance(mood.sky.horizon)).toBeGreaterThan(40);
+  const cavern = getBackgroundTemplate("cavern-dark");
+  const cavernMood = resolveMood(cavern, night);
+  expect(cavernMood.sky.top).toBe(cavern.sky.top);
+  expect(cavernMood.sky.horizon).toBe(cavern.sky.horizon);
+  expect(cavernMood.fog.color).toBe(cavern.fog.color);
+});
+
 it("leaves the lighting rig alone when only raining", () => {
   const template = getBackgroundTemplate("pastoral-hills");
   expect(resolveMood(template, rain)).toEqual(resolveMood(template, day));
