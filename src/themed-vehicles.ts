@@ -20,7 +20,7 @@ import {
   stack,
 } from "./themed-vehicle-body";
 
-type Palette = [
+export type Palette = [
   paint: number,
   accent: number,
   rim: number,
@@ -28,7 +28,7 @@ type Palette = [
   spokes: number,
 ];
 
-function vehicle<Id extends string>(
+export function vehicle<Id extends string>(
   id: Id,
   name: string,
   blurb: string,

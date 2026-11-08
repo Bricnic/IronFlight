@@ -9,7 +9,9 @@ import { createTowTruck, towTruckStats } from "../src/tow-truck";
 import { createTruck, truckStats } from "../src/truck";
 import { CONCEPT_VEHICLES } from "../src/concept-vehicles";
 import { THEMED_VEHICLES } from "../src/themed-vehicles";
+import { GENERATED_VEHICLES } from "../src/generated-vehicles";
 import briefs from "../visual-plan/refs/gemini/themed/briefs.json";
+import generatedBriefs from "../visual-plan/refs/gemini/generated/briefs.json";
 
 const NEW_CARS = [
   { id: "hovercraft", build: createHovercraft, stats: hovercraftStats },
@@ -18,6 +20,7 @@ const NEW_CARS = [
   { id: "tow-truck", build: createTowTruck, stats: towTruckStats },
   ...CONCEPT_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
   ...THEMED_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
+  ...GENERATED_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
 ] as const;
 
 it("catalogs the new cars on the shared part slots", () => {
@@ -79,7 +82,7 @@ it("new cars carry high-poly detail near truck density", () => {
 });
 
 it("the Gemini concepts use detailed geometry and four animated wheel assemblies", () => {
-  for (const { id, build } of [...CONCEPT_VEHICLES, ...THEMED_VEHICLES]) {
+  for (const { id, build } of [...CONCEPT_VEHICLES, ...THEMED_VEHICLES, ...GENERATED_VEHICLES]) {
     const { triangles, treadBlocks } = truckStats(build());
     expect(triangles, id).toBeGreaterThanOrEqual(90_000);
     expect(treadBlocks, id).toBeGreaterThanOrEqual(384);
@@ -90,6 +93,14 @@ it("the garage includes one vehicle for each of the twenty themed concepts", () 
   const ids = THEMED_VEHICLES.map((vehicle) => vehicle.id);
   expect(ids).toEqual(briefs.map((concept) => concept.id));
   expect(new Set(ids).size).toBe(20);
+});
+
+it("the garage matches the generated-vehicle ledger entry for entry", () => {
+  const ids = GENERATED_VEHICLES.map((vehicle: { id: string }) => vehicle.id);
+  expect(ids).toEqual(
+    generatedBriefs.map((concept: { id: string }) => concept.id),
+  );
+  expect(new Set(ids).size).toBe(ids.length);
 });
 
 it("tow truck runs four wheels with no tag axle", () => {

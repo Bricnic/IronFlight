@@ -1,0 +1,15 @@
+{
+  "count": 10,
+  "keyFile": "C:\\Code\\gemini_api_key.txt",
+  "styleReference": "public/vehicles/monster-truck.png",
+  "artDir": "visual-plan/refs/gemini/generated",
+  "modelSteps": 150,
+  "timeoutMinutes": 90,
+  "port": 5240,
+  "push": true,
+  "pushTarget": "main",
+  "knownFailures": [
+    "completes all 15 chests within the five-minute limit",
+    "every track resolves a background template"
+  ]
+}

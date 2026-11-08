@@ -59,6 +59,7 @@ import {
 } from "./tow-truck";
 import { CONCEPT_VEHICLES } from "./concept-vehicles";
 import { THEMED_VEHICLES } from "./themed-vehicles";
+import { GENERATED_VEHICLES } from "./generated-vehicles";
 export type VehicleId =
   | "monster-truck"
   | "sports-car"
@@ -70,7 +71,8 @@ export type VehicleId =
   | "hot-rod"
   | "tow-truck"
   | (typeof CONCEPT_VEHICLES)[number]["id"]
-  | (typeof THEMED_VEHICLES)[number]["id"];
+  | (typeof THEMED_VEHICLES)[number]["id"]
+  | (typeof GENERATED_VEHICLES)[number]["id"];
 export interface VehiclePart {
   id: string;
   pos: readonly [number, number, number];
@@ -199,7 +201,8 @@ export const VEHICLES: VehicleDef[] = [
     build: (options) => createTowTruck(options),
     seriesDecal: false,
   },
-  ...[...CONCEPT_VEHICLES, ...THEMED_VEHICLES].map((vehicle) => ({
+  ...[...CONCEPT_VEHICLES, ...THEMED_VEHICLES, ...GENERATED_VEHICLES].map(
+    (vehicle) => ({
     ...vehicle,
     ...standardChassis,
     seriesDecal: false as const,

@@ -4,6 +4,7 @@ import { TRACK_IDS, getTrack } from "../src/tracks";
 import { ROUTES } from "../src/routes";
 import { VEHICLES } from "../src/vehicles";
 import { THEMED_VEHICLES } from "../src/themed-vehicles";
+import { GENERATED_VEHICLES } from "../src/generated-vehicles";
 import { courseDriver } from "./course-driver";
 import { loopDriver } from "./loop-driver";
 beforeAll(initPhysics);
@@ -25,6 +26,7 @@ expect(VEHICLES.map((v) => v.id)).toEqual([
   "ice-cream-van",
   "baja-beetle",
   ...THEMED_VEHICLES.map((vehicle) => vehicle.id),
+  ...GENERATED_VEHICLES.map((vehicle: { id: string }) => vehicle.id),
 ]);
 for (const v of VEHICLES) {
   it(`headless matrix: ${v.id} completes triple-loop (easy)`, () => {
