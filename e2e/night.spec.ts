@@ -62,3 +62,19 @@ test("night lights checkpoint gates and lamp posts", async ({ page }) => {
     .poll(() => glow().then((g) => g.lampGlow), { timeout: 30000 })
     .toBeGreaterThan(0);
 });
+test("night lights the nearest dungeon candles", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => window.__game!.startTrack("custom:dungeon"));
+  const candles = () =>
+    page.evaluate(() => window.__game!.stats().candleLights);
+  await expect.poll(candles, { timeout: 30000 }).toMatchObject({ active: 0, total: 8 });
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.locator('[data-weather="night"] button').click();
+  await page.locator("#settings-back").click();
+  await expect.poll(() => candles().then((c) => c.active), { timeout: 30000 }).toBeGreaterThan(0);
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.locator('[data-weather="night"] button').click();
+  await page.locator("#settings-back").click();
+  await expect.poll(() => candles().then((c) => c.active), { timeout: 30000 }).toBe(0);
+});

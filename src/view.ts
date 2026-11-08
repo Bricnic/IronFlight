@@ -634,6 +634,7 @@ export class GameView {
       vehicleId: this.simulation.vehicleId,
       lights: { a: lightA, b: lightB },
       headlights: { on: this.simulation.weather.night && this.headlightRig !== null },
+      candleLights: this.dungeon.candleLightStats(),
       ...truckStats(this.truck),
       potions: {
         jets: this.nitro.visible,

@@ -117,6 +117,7 @@ export interface GameHarness {
     vehicleId: string;
     lights: { a: number; b: number };
     headlights: { on: boolean };
+    candleLights: { active: number; total: number };
     comicHazards: {
       id: string;
       kind: string;
