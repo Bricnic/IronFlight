@@ -73,6 +73,7 @@ export class CourseView extends T.Group {
   private key = "";
   private hazardTime = 0;
   private lavaMaterials: T.MeshStandardMaterial[] = [];
+  private slimeMaterials: T.MeshStandardMaterial[] = [];
   private hazards: {
     h: Hazard;
     root: T.Group;
@@ -192,6 +193,7 @@ export class CourseView extends T.Group {
     const mat = this.buildSolidMaterial(track, s);
     const { stone, cliff, groundMap, roadMap } = this.solidMaps(track, s);
     if (s.kind === "lava") this.lavaMaterials.push(mat);
+    if (s.kind === "slime") this.slimeMaterials.push(mat);
     if (
       (s.kind === "road" || s.kind === "ramp" || s.kind === "loop" || s.kind === "ground") &&
       mat instanceof T.MeshStandardMaterial
@@ -375,6 +377,10 @@ export class CourseView extends T.Group {
       mesh.material as T.MeshStandardMaterial,
     );
     if (lava >= 0) this.lavaMaterials.splice(lava, 1);
+    const slime = this.slimeMaterials.indexOf(
+      mesh.material as T.MeshStandardMaterial,
+    );
+    if (slime >= 0) this.slimeMaterials.splice(slime, 1);
     mesh.removeFromParent();
     mesh.geometry.dispose();
     (mesh.material as T.Material).dispose();
@@ -420,10 +426,16 @@ export class CourseView extends T.Group {
     const lava = this.lavaMaterials.indexOf(
       mesh.material as T.MeshStandardMaterial,
     );
+    const slime = this.slimeMaterials.indexOf(
+      mesh.material as T.MeshStandardMaterial,
+    );
     (mesh.material as T.Material).dispose();
     mesh.material = this.buildSolidMaterial(track, s);
     if (lava >= 0)
       this.lavaMaterials[lava] =
+        mesh.material as T.MeshStandardMaterial;
+    if (slime >= 0)
+      this.slimeMaterials[slime] =
         mesh.material as T.MeshStandardMaterial;
   }
 
@@ -474,6 +486,7 @@ export class CourseView extends T.Group {
       this.meshes = [];
       this.wetSurfaces = [];
       this.lavaMaterials = [];
+      this.slimeMaterials = [];
       if (run) {
         const track = run.track;
         if (!track.legacy)
@@ -771,6 +784,8 @@ export class CourseView extends T.Group {
       material.map!.offset.set((sim.time * 0.035) % 1, (sim.time * 0.025) % 1);
       material.map!.updateMatrix();
     }
+    for (const material of this.slimeMaterials)
+      material.userData.time.value = sim.time;
     for (const model of this.hazards) {
       if (model.rotor) model.rotor.rotation.z = sim.hammerPhase;
       if (model.flames) {

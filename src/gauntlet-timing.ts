@@ -45,6 +45,21 @@ export function spikeHeight(age: number) {
 }
 
 export const TANK = { aggro: 28, speed: 3.4, leash: 13, turn: 1.9 } as const;
+export const WINDOW_GATE_PERIOD = 10;
+export const WINDOW_GATE_BLOCK_HALF_ANGLE = 0.8;
+export const WINDOW_GATE_COOLDOWN = 1.5;
+/** Revolving sash angle in radians; flat across the lane (blocking) at 0 and PI. Shared by physics and views. */
+export function windowGateAngle(time: number) {
+  const t = (((time % WINDOW_GATE_PERIOD) + WINDOW_GATE_PERIOD) % WINDOW_GATE_PERIOD) / WINDOW_GATE_PERIOD;
+  return t * Math.PI * 2;
+}
+/** True while the sash covers the lane; about half of each slow revolution. */
+export function windowGateBlocked(time: number) {
+  const a = windowGateAngle(time);
+  const flat = Math.abs(Math.atan2(Math.sin(a), Math.cos(a)));
+  return Math.min(flat, Math.PI - flat) <= WINDOW_GATE_BLOCK_HALF_ANGLE;
+}
+
 export const CLAW_CLOSE = 0.24;
 export const CLAW_HOLD = 1;
 export function clawOpenness(age: number, held: boolean) {

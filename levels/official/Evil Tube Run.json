@@ -1349,6 +1349,42 @@
       "h": 10,
       "d": 12,
       "color": 5927552
+    },
+    {
+      "id": "evil-causeway-0",
+      "name": "Evil guided pipe exit tile",
+      "kind": "tile",
+      "x": -38,
+      "y": 8.4,
+      "z": 97,
+      "w": 36,
+      "h": 1.2,
+      "d": 8,
+      "color": 5909038
+    },
+    {
+      "id": "evil-causeway-1",
+      "name": "Evil guided pipe exit tile",
+      "kind": "tile",
+      "x": -50,
+      "y": 8.4,
+      "z": 105,
+      "w": 20,
+      "h": 1.2,
+      "d": 8,
+      "color": 8141360
+    },
+    {
+      "id": "evil-causeway-2",
+      "name": "Evil guided pipe exit tile",
+      "kind": "tile",
+      "x": -56,
+      "y": 8.4,
+      "z": 113,
+      "w": 16,
+      "h": 1.2,
+      "d": 8,
+      "color": 5909038
     }
   ]
 }
