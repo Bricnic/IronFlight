@@ -48,3 +48,18 @@ test("C opens the vehicle select screen", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("L returns to level select from an active run", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => {
+    const g = window.__game!;
+    g.pause(true);
+    g.startTrack("harbor-sprint");
+  });
+  await expect(page.locator("#level-select")).toBeHidden();
+  await page.keyboard.press("l");
+  await expect(page.locator("#level-select")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Choose your track.", exact: true }),
+  ).toBeVisible();
+});

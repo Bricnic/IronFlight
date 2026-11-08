@@ -108,7 +108,7 @@ async function boot() {
   });
   header.insertAdjacentHTML(
     "beforeend",
-    `<button id="level-select-button">Level select</button>
+    `<button id="level-select-button" class="header-action"><img src="/icons/level-select.png" width="24" height="24" alt=""><span>Level select</span></button>
     <button id="vehicle-select-button" class="header-action"><img src="/icons/select-vehicle.png" width="24" height="24" alt=""><span>Select vehicle</span></button>
     <button id="level-editor-button" class="header-action"><img src="/icons/level-editor.png" width="24" height="24" alt=""><span>Level editor</span></button>
     <button id="settings-button" class="header-action"><img src="/icons/settings.png" width="24" height="24" alt=""><span>Settings</span></button>`,
