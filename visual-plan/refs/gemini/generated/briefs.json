@@ -4,5 +4,59 @@
     "name": "Fire Engine",
     "brief": "Bright fire-engine red derby ladder truck at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Tall enclosed cab with split windshield and chrome bumper, long body with a cream side stripe, silver extension ladder racked on top, side hose reels and diamond-plate steps, small red roof beacon. Painted metal body, chrome rails, rubber tires.",
     "category": "realistic"
+  },
+  {
+    "id": "garbage-truck",
+    "name": "Garbage Truck",
+    "brief": "Forest-green sanitation garbage truck at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Tall cab-over cab with split windshield, ribbed compactor box body with light-gray side panels, rear loader hopper with hydraulic arms, roof marker lights and side access ladder. Painted metal body, steel rails, rubber tires.",
+    "category": "realistic"
+  },
+  {
+    "id": "cement-mixer",
+    "name": "Cement Mixer",
+    "brief": "Off-white construction cement mixer truck at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Compact cab-over cab with big windshield and roof beacon, large drum with orange spiral stripes on a steel cradle, rear discharge chute and fenders. Painted metal cab, steel drum, rubber tires.",
+    "category": "realistic"
+  },
+  {
+    "id": "stretch-limo",
+    "name": "Stretch Limo",
+    "brief": "Gloss black stretch limousine at chunky monster-truck scale with four wheels on two axles and four chunky low-profile derby tires. Extra-long sedan body with six tinted side windows divided by chrome pillars, chrome beltline spears and bumpers, formal upright chrome grille with round headlamps, trunk deck with chrome strip, small roof antenna. Gloss painted metal, chrome trim, dark glass, rubber tires.",
+    "category": "realistic"
+  },
+  {
+    "id": "rubber-ducky",
+    "name": "Rubber Ducky",
+    "brief": "Giant yellow rubber-duck bath-toy derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Rounded vinyl duck body with an orange beak nose and smile seam, big cartoon eyes on the windshield, layered wing-feather doors, tail-feather tuft with a rear spoiler wing, orange bullbar, bath bubbles. Glossy yellow plastic body, orange beak, rubber tires.",
+    "category": "silly"
+  },
+  {
+    "id": "couch-cruiser",
+    "name": "Couch Cruiser",
+    "brief": "Living-room sofa derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Brown leather three-cushion couch body with rolled armrests and teal throw pillows, brass floor lamp on the rear deck, rug-pattern side skirts with fringe, dark grab frame over the middle seat, tubular bumpers with white tow loops. Leather upholstery, fabric cushions, brass lamp, rubber tires.",
+    "category": "silly"
+  },
+  {
+    "id": "shopping-cart",
+    "name": "Shopping Cart",
+    "brief": "Oversized chrome supermarket shopping-cart derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Wire-basket body with chrome grid-mesh sides, red plastic push handle and child seat at the back, cereal boxes, cans and produce stocked inside, small caster-style front bumper. Chrome wire, red plastic trim, cardboard boxes, rubber tires.",
+    "category": "silly"
+  },
+  {
+    "id": "apex-wheeler",
+    "name": "Apex Open-Wheeler",
+    "brief": "F1-style open-wheeler Grand Prix derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread derby tires. Low pointed nose, wide front wing with endplates, sculpted sidepods with intakes, open cockpit with halo, driver helmet, airbox and shark-fin engine cover, twin exhausts, tall rear wing and diffuser. Gloss orange painted panels, carbon-black trim, rubber tires.",
+    "category": "wild"
+  },
+  {
+    "id": "sidecar-sprint",
+    "name": "Sidecar Sprint",
+    "brief": "Vintage motorcycle-with-sidecar derby car at chunky monster-truck scale that reads as a retro bike with a sidecar from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Navy teardrop fuel-tank nose with round headlamp and slatted grille, handlebars with grips and mirror, leather saddle seat with tail fin, brass exhaust pipes, boat-shaped sidecar pod with a tiny bolted windshield on the left flank. Painted metal, brass pipes, leather seat, rubber tires.",
+    "category": "wild"
+  },
+  {
+    "id": "turbo-trike",
+    "name": "Turbo Trike",
+    "brief": "Custom trike derby car at chunky monster-truck scale that reads as a three-wheeler trike from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Long raked chrome front fork nose with twin headlamps and ape-hanger bars, low purple chopper tank with cyan flames, finned V-twin engine with chrome slash-cut exhausts, quilted brown saddle seat, wide purple rear fenders with cyan flames, tall chrome sissy bar. Gloss painted metal, chrome fork and pipes, leather seat, rubber tires.",
+    "category": "wild"
   }
 ]
