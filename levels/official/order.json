@@ -58,5 +58,10 @@
     "file": "Slime Surge.json",
     "thumbnail": "/tracks/slime-surge.png",
     "description": "Thread walled gates, jump the crater, ride the auto-steer tube, time the spinning window, dodge the chomp book and jump to the red finish over melting slime."
+  },
+  {
+    "file": "Ring Chase.json",
+    "thumbnail": "/tracks/ring-chase.png",
+    "description": "Loop the arena for 18 rings: dodge the carousel and bumper brawl, time the chomp book and two glazed donut jaws, and outrun three ghosts."
   }
 ]

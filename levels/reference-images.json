@@ -60,6 +60,11 @@
                                 "sha256":  "D2DDAE9680FE9F874771B335A6F146D9AB4FC368647005E09C8B797F1CD9345B",
                                 "levelFile":  "Evil Tube Run.json",
                                 "notes":  "Hand-sketch coursemap. Spawn top-left down the west straight past the 2x chomp book (half on the road) into the southwest corner. Yellow trap path: harmless bumps feed the EVIL tube, which auto-drives its fixed guided descent at 21 u/s (about 3x cruise) over a short tiled causeway into a spiked lava dead end (do not enter). Correct pink path east across the bottom through the screw field and over the lava pit jump. Transit tube auto-drives around the southeast bend. North up the east straight between the teeth and the lava spill, climb to the shooter tube, which carries the car across the 55-unit lava-pit road gap (read into as across: a literal into landing is unsurvivable, and the pink correct-path line continues past the tube to the finish). Timed volcano jump, then the checkered finish."
+                            },
+                            {
+                                "filename":  "0d5a7e6b-38d1-499c-bba6-63becb67c9dd.jpg",
+                                "sha256":  "32A0F87D3CEFDA41BD2578A38B69B23876BB4F6461CDE8E5D9F92A25026B5CD3",
+                                "levelFile":  "Ring Chase.json"
                             }
                         ]
 }

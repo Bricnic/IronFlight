@@ -23,6 +23,7 @@ test("normal startup shows the illustrated official lineup and keeps the simulat
     "Booster Gap",
     "Evil Tube Run",
     "Slime Surge",
+    "Ring Chase",
   ]);
   for (const t of TRACKS) {
     await expect(
@@ -124,7 +125,7 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(21);
+  await expect(page.locator(".track-card")).toHaveCount(22);
   expect(
     await page
       .locator("#level-select")
