@@ -127,6 +127,8 @@ export interface CustomPrefab {
   yaw?: number;
   angle?: number;
   roll?: number;
+  /** Dinosaur body scale; oversized dinosaurs bite much harder. */
+  scale?: number;
 }
 export const COLLECTIBLE_KINDS = ["ring", "chest"] as const;
 export type CollectibleKind = (typeof COLLECTIBLE_KINDS)[number];
@@ -401,6 +403,17 @@ export function validateCustomLevel(input: unknown): CustomLevel {
       p?.roll === undefined ||
         (PROP_PREFAB_KINDS as readonly string[]).includes(p?.kind),
       `prefab ${p?.id ?? i} roll is only supported on prop kinds`,
+    );
+    check(
+      errors,
+      p?.scale === undefined || (finite(p.scale) && p.scale > 0),
+      `prefab ${p?.id ?? i} needs a positive finite scale`,
+    );
+    check(
+      errors,
+      p?.scale === undefined ||
+        (DINOSAUR_PREFAB_KINDS as readonly string[]).includes(p?.kind),
+      `prefab ${p?.id ?? i} scale is only supported on dinosaur kinds`,
     );
   }
   for (const [i, item] of [spawn, ...solids, ...prefabs, ...checkpoints, ...collectibles, ...demolish, ...rings].entries()) {

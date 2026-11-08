@@ -109,30 +109,68 @@ export class DungeonPhysics {
     const s = this.sim;
     if (s.status !== "driving") return;
     const { h } = m;
-    const { height, reach } = DINOSAUR_BITE[kind];
+    const sc = h.scale ?? 1;
+    const { height: baseHeight, reach: baseReach } = DINOSAUR_BITE[kind];
+    const height = baseHeight * sc, reach = baseReach * sc;
+    // Taller heads rear higher; grow the vertical window by the extra head
+    // height so track-level cars stay in reach. Identical at scale 1.
+    const dyTrigger = 3 * sc + baseHeight * (sc - 1);
+    const dyStrike = 2.6 * sc + baseHeight * (sc - 1);
     const dx = p.x - h.x, dz = p.z - h.z;
     const dy = p.y - ((h.y ?? 0) + height);
     const yaw = h.yaw ?? 0;
     if (s.time - (m.bite?.started ?? -Infinity) >= DINOSAUR_COOLDOWN) {
       const aim = Math.atan2(dx, dz) - yaw;
       const turn = Math.atan2(Math.sin(aim), Math.cos(aim));
-      if (Math.abs(turn) <= 1.25 && Math.abs(dy) <= 3 && Math.hypot(dx, dz) <= 10)
+      // Aggro range stays flat: the lunge carries the bigger bite, and existing routes stay fair.
+      if (Math.abs(turn) <= 1.25 && Math.abs(dy) <= dyTrigger && Math.hypot(dx, dz) <= 10)
         m.bite = { started: s.time, turn, hit: false };
     }
     const bite = m.bite;
     if (!bite || bite.hit) return;
     const pose = dinosaurPose(s.time - bite.started);
-    if (!pose.striking || Math.abs(dy) > 2.6) return;
+    if (!pose.striking || Math.abs(dy) > dyStrike) return;
     const angle = yaw + bite.turn * pose.turn;
     const x = Math.sin(angle), z = Math.cos(angle);
-    const mouth = reach + pose.lunge * DINOSAUR_LUNGE;
-    if (Math.hypot(dx - x * mouth, dz - z * mouth) > 3.1) return;
+    const mouth = reach + pose.lunge * DINOSAUR_LUNGE * sc;
+    if (Math.hypot(dx - x * mouth, dz - z * mouth) > 3.1 * sc) return;
     bite.hit = true;
     m.contacts++;
-    s.damage("chassis-front", 32);
     const shove = s.body.mass() * 1.4;
     s.body.applyImpulse({ x: x * shove, y: 0, z: z * shove }, true);
-    s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
+    if (sc > 1) {
+      this.ripWithDinosaur(kind, h, x, z, mouth, height);
+    } else {
+      s.damage("chassis-front", 32);
+      s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
+    }
+  }
+  /** Oversized bite: tear off the 3 parts nearest the mouth, splash 40% everywhere else. */
+  private ripWithDinosaur(
+    kind: DinosaurKind, h: DungeonHazard, x: number, z: number, mouth: number, height: number,
+  ) {
+    const s = this.sim;
+    const q = new Quaternion().copy(s.body.rotation());
+    const t = s.body.translation();
+    const jaw = new Vector3(h.x + x * mouth, (h.y ?? 0) + height, h.z + z * mouth);
+    const ripped = new Set(
+      s.partDefs
+        .filter((d) => !s.parts.get(d.id)!.body)
+        .map((d) => ({ d, dist: new Vector3(...d.pos).applyQuaternion(q).add(t).distanceTo(jaw) }))
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 3)
+        .map(({ d }) => d.id),
+    );
+    for (const id of ripped) {
+      s.damage(id, s.parts.get(id)!.health);
+      s.damageEvents.push({ source: kind, part: id, time: s.time });
+    }
+    for (const d of s.partDefs) {
+      if (ripped.has(d.id)) continue;
+      const st = s.parts.get(d.id)!;
+      if (st.body || st.health <= 0) continue;
+      s.damage(d.id, st.health * 0.4);
+    }
   }
   after() {
     const launched = this.gauntlet.after();

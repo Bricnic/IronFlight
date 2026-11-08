@@ -91,6 +91,8 @@ export interface GameHarness {
   place(position: { x: number; y: number; z: number }, yaw: number): void;
   lavaOverview(): void;
   lavaPitOverview(id: string, angle?: number): void;
+  dinosaurOverview(id: string): void;
+  dinosaurStrike(id: string): ReturnType<GameView["dinosaurStrike"]>;
   hazardOverview(id: string): void;
   setVelocity(velocity: { x: number; y: number; z: number }): void;
   basinProbe(angle: number): number[][];

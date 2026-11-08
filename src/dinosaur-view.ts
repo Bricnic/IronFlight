@@ -40,10 +40,23 @@ export function buildDinosaur(root: T.Group, kind: DinosaurKind) {
   const low = kind === "spinosaurus";
   const trunk = low ? 1.35 : 2.15;
   const { height, reach } = DINOSAUR_BITE[kind];
-  oval(root, skin, [0, trunk, -0.4], [1.12, 0.99, low ? 2.05 : 1.5]);
-  oval(root, accent, [0, trunk - 0.43, 0.22], [0.86, 0.55, 1.28]);
-  link(root, skin, [0, trunk, -1.3], [0.25, trunk - 0.55, -3.6], 0.78, 0.4);
-  link(root, skin, [0.25, trunk - 0.55, -3.6], [0.72, trunk - 0.33, -5.2], 0.4, 0.02);
+  // Strike rig: the body hunches forward over planted feet while the tail
+  // counter-rotates upward; the neck and head then pitch down at the truck.
+  const body = new T.Group();
+  body.position.set(0, trunk - 0.8, -0.55);
+  body.rotation.order = "YXZ";
+  root.add(body);
+  const tail = new T.Group();
+  tail.position.set(0, 0.8, -0.75);
+  body.add(tail);
+  const trunkMesh = oval(root, skin, [0, trunk, -0.4], [1.12, 0.99, low ? 2.05 : 1.5]);
+  const bellyMesh = oval(root, accent, [0, trunk - 0.43, 0.22], [0.86, 0.55, 1.28]);
+  const tailBase = link(root, skin, [0, trunk, -1.3], [0.25, trunk - 0.55, -3.6], 0.78, 0.4);
+  const tailTip = link(root, skin, [0.25, trunk - 0.55, -3.6], [0.72, trunk - 0.33, -5.2], 0.4, 0.02);
+  body.attach(trunkMesh);
+  body.attach(bellyMesh);
+  tail.attach(tailBase);
+  tail.attach(tailTip);
   for (const side of [-1, 1]) {
     oval(root, skin, [side * 0.9, trunk - 0.46, -0.64], [0.6, 0.76, 0.73]);
     link(root, skin, [side * 0.95, trunk - 0.4, -0.77], [side * 1.18, 0.27, -0.91], 0.45, 0.29);
@@ -51,8 +64,10 @@ export function buildDinosaur(root: T.Group, kind: DinosaurKind) {
     for (let toe = -1; toe <= 1; toe++)
       oval(root, ivory, [side * 1.19 + toe * 0.21, 0.15, 0.05], [0.085, 0.095, 0.2]);
     if (!winged) {
-      link(root, skin, [side * 0.74, trunk + 0.2, 0.7], [side * 1.06, trunk - 0.48, 1.36], 0.32, 0.18);
-      oval(root, accent, [side * 1.08, trunk - 0.47, 1.4], [0.25, 0.17, 0.45]);
+      const arm = link(root, skin, [side * 0.74, trunk + 0.2, 0.7], [side * 1.06, trunk - 0.48, 1.36], 0.32, 0.18);
+      const forearm = oval(root, accent, [side * 1.08, trunk - 0.47, 1.4], [0.25, 0.17, 0.45]);
+      body.attach(arm);
+      body.attach(forearm);
     } else {
       const outline = new T.Shape([
         new T.Vector2(0, 0.95), new T.Vector2(side * 2.15, 1.3),
@@ -62,8 +77,11 @@ export function buildDinosaur(root: T.Group, kind: DinosaurKind) {
       const membrane = new T.ExtrudeGeometry(outline, { depth: 0.16, bevelEnabled: false }).rotateX(Math.PI / 2);
       const wing = mesh(root, membrane, accent, [side * 0.65, trunk + 0.52, 0]);
       wing.rotation.z = side * 0.22;
-      link(root, skin, [side * 0.6, trunk + 0.5, 0.95], [side * 2.7, trunk + 0.98, 1.25], 0.26, 0.17);
-      link(root, skin, [side * 2.7, trunk + 0.98, 1.25], [side * 6, trunk + 1.6, -0.95], 0.17, 0.03);
+      const sparNear = link(root, skin, [side * 0.6, trunk + 0.5, 0.95], [side * 2.7, trunk + 0.98, 1.25], 0.26, 0.17);
+      const sparFar = link(root, skin, [side * 2.7, trunk + 0.98, 1.25], [side * 6, trunk + 1.6, -0.95], 0.17, 0.03);
+      body.attach(wing);
+      body.attach(sparNear);
+      body.attach(sparFar);
     }
   }
   if (low) {
@@ -71,17 +89,20 @@ export function buildDinosaur(root: T.Group, kind: DinosaurKind) {
       new T.Vector2(-4.1, 1.5), new T.Vector2(-2.8, 2.5), new T.Vector2(-1.6, 4.2),
       new T.Vector2(-0.4, 4.55), new T.Vector2(0.6, 3.75), new T.Vector2(1.3, 2),
     ]);
-    mesh(root, new T.ExtrudeGeometry(sail, { depth: 0.26, bevelEnabled: false }).rotateY(-Math.PI / 2), accent, [0.13, 0, 0]);
+    const sailMesh = mesh(root, new T.ExtrudeGeometry(sail, { depth: 0.26, bevelEnabled: false }).rotateY(-Math.PI / 2), accent, [0.13, 0, 0]);
+    body.attach(sailMesh);
   } else if (!winged) {
     for (let i = 0; i < 4; i++) {
       const fin = mesh(root, new T.ConeGeometry(0.44, 1.04 - i * 0.13, 4), accent, [0, 3.29 - i * 0.15, -0.55 - i * 0.68]);
       fin.rotation.x = -0.32;
+      body.attach(fin);
     }
   }
 
   const neck = new T.Group(), head = new T.Group(), jaw = new T.Group();
-  root.add(neck);
-  neck.position.set(0, trunk, 0.4);
+  body.add(neck);
+  neck.position.set(0, 0.8, 0.95);
+  neck.rotation.order = "YXZ";
   const headY = height - trunk;
   const neckBone = link(neck, skin, [0, 0, 0], [0, headY, 1.55], 0.87, 0.66);
   neck.add(head);
@@ -113,14 +134,27 @@ export function buildDinosaur(root: T.Group, kind: DinosaurKind) {
     oval(head, black, [side * 0.39, 0.37, muzzle - 0.35], [0.12, 0.072, 0.14]);
   }
   ball.dispose();
-  return { neck, neckBone, head, jaw };
+  return { neck, neckBone, head, jaw, body, tail };
+}
+
+/** Downward aim from a perched head to its target; never aims up. */
+export function dinosaurAimPitch(headY: number, targetY: number, dist: number) {
+  return Math.max(0, Math.min(1.0, Math.atan2(headY - targetY, Math.max(0.001, dist))));
 }
 
 export function poseDinosaur(
-  model: ReturnType<typeof buildDinosaur>, elapsed: number, turn: number,
+  model: ReturnType<typeof buildDinosaur>, elapsed: number, turn: number, aimPitch = 0,
 ) {
   const pose = dinosaurPose(elapsed);
+  // The chomp rides the lunge envelope: it commits as the head extends and
+  // relaxes as the envelope decays, so the return is smooth by construction.
+  // Pivot weights sum to 1, aiming the muzzle aimPitch below horizontal.
+  const bend = aimPitch * pose.lunge;
+  model.body.rotation.x = bend * 0.45;
+  model.tail.rotation.x = bend * 0.35;
   model.neck.rotation.y = turn * pose.turn;
+  model.neck.rotation.x = bend * 0.35;
+  model.head.rotation.x = bend * 0.2;
   const extension = DINOSAUR_LUNGE * pose.lunge;
   model.head.position.z = 1.25 + extension;
   const height = model.head.position.y;
