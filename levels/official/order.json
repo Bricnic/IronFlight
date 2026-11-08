@@ -33,5 +33,10 @@
     "file": "Amber Undertow.json",
     "thumbnail": "/tracks/amber-undertow.png",
     "description": "Ride a guided amber pipe onto the purple causeway, duck under twin silver overpasses, and jump the slime before the checkered finish."
+  },
+  {
+    "file": "Fireside Sonata.json",
+    "thumbnail": "/tracks/fireside-sonata.png",
+    "description": "Start atop the fireplace, race a tabletop obstacle course, ride the chair bridge onto the piano keys, and finish through the giant ring."
   }
 ]

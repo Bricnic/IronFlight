@@ -23,6 +23,7 @@ import { scaleSolidUVs } from "./solid-uv";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
 import { buildToyCheckpoint } from "./toy-track-view";
+import { PIANO_FADE_SECONDS, pianoKeyColorAt } from "./piano-keys";
 /** Implicit ground texture per track; shared by the renderer and the editor. */
 export function groundMapForTrack(trackId: string) {
   return trackId === "canyon-plunge"
@@ -791,6 +792,14 @@ export class CourseView extends T.Group {
       g.position.y = p.y + Math.sin(sim.time * 3) * 0.2;
       g.children[0].rotation.y = sim.time * (g.userData.spin ?? 1);
       if (camera) g.children[1].quaternion.copy(camera.quaternion);
+    }
+    for (const { key, at } of sim.pianoPresses()) {
+      const solid = run.track.custom?.solids.find((s) => s.pianoKey === key);
+      const mesh = solid && this.solidMesh(solid.id);
+      if (!solid || !mesh) continue;
+      (mesh.material as T.MeshStandardMaterial).color.setHex(
+        sim.time - at >= PIANO_FADE_SECONDS ? solid.color : pianoKeyColorAt(key, at, sim.time),
+      );
     }
     const packet = dragonFlame(sim.time);
     for (const { bronze, eyes } of this.dragonGlow)

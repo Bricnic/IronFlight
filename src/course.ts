@@ -46,6 +46,8 @@ export type CourseSolid = {
   uvOffsetZ?: number;
   /** Clipped polygon in local X/Z, extruded through the solid's height. */
   footprint?: readonly Point[];
+  /** Piano white-key voice 0-6 (C to B); the key flashes on touch. */
+  pianoKey?: number;
 };
 
 function miteredRoads(path: readonly Point[], closed: boolean) {
