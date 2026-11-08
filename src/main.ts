@@ -1138,6 +1138,8 @@ async function boot() {
       lavaOverview: () => view.lavaOverview(),
       hazardOverview: (id) => view.hazardOverview(id),
       lavaPitOverview: (id, angle) => view.lavaPitOverview(id, angle),
+      dinosaurOverview: (id) => view.dinosaurOverview(id),
+      dinosaurStrike: (id) => view.dinosaurStrike(id),
       setVelocity: (velocity) => sim.body.setLinvel(velocity, true),
       basinProbe: (angle) => view.basinProbe(angle),
       dropPartInLava: (id) => {
