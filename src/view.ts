@@ -25,7 +25,7 @@ import { TruckFireView } from "./truck-fire";
 import { SkidView } from "./skids";
 import { LoopView } from "./loop-view";
 import { BackgroundView } from "./background-view";
-import { getBackgroundTemplate } from "./backgrounds";
+import { getBackgroundTemplate, resolveMood } from "./backgrounds";
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
@@ -698,17 +698,18 @@ export class GameView {
     const template = getBackgroundTemplate(
       s.courseTrack?.backgroundTemplate ?? s.courseTrack?.custom?.backgroundTemplate,
 );
-    (this.scene.background as T.Color).setHex(template.fog.color);
+    const mood = resolveMood(template, s.weather);
+    (this.scene.background as T.Color).setHex(mood.fog.color);
     const fog = this.scene.fog as T.Fog;
-    fog.color.setHex(template.fog.color);
-    fog.near = template.fog.near * this.fogScale;
-    fog.far = template.fog.far * this.fogScale;
-    this.hemi.color.setHex(template.hemi.sky);
-    this.hemi.groundColor.setHex(template.hemi.ground);
-    this.hemi.intensity = template.hemi.intensity;
-    this.sun.intensity = template.sun.intensity;
-    this.sun.color.setHex(template.sun.color);
-    this.scene.environmentIntensity = template.env;
+    fog.color.setHex(mood.fog.color);
+    fog.near = mood.fog.near * this.fogScale;
+    fog.far = mood.fog.far * this.fogScale;
+    this.hemi.color.setHex(mood.hemi.sky);
+    this.hemi.groundColor.setHex(mood.hemi.ground);
+    this.hemi.intensity = mood.hemi.intensity;
+    this.sun.intensity = mood.sun.intensity;
+    this.sun.color.setHex(mood.sun.color);
+    this.scene.environmentIntensity = mood.env;
     const root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
       q = s.previousRotation
         .clone()
@@ -740,6 +741,7 @@ export class GameView {
       root.x,
       root.z,
       this.camera.far,
+      s.weather,
     );
     this.loop.update(s.time);
     this.skids.update(s.skidStrokes);

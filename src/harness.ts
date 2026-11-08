@@ -123,6 +123,13 @@ export interface GameHarness {
       animated: boolean;
       ramp?: { position: number[]; angle: number };
     }[];
+    background: {
+      template: string;
+      shapes: number;
+      clouds: number;
+      stars: number;
+      night: boolean;
+    };
     officialCourse: {
       key: string;
       axes: number;
