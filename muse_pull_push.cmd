@@ -21,9 +21,13 @@ if errorlevel 1 (
 
 if defined DRYRUN goto muse_merge
 
+set "PULL_LOG=%TEMP%\muse-pull-push.pull.log"
+if exist "%PULL_LOG%" del "%PULL_LOG%"
 echo Attempting a normal pull first...
-git pull --no-rebase --no-edit origin main
-if errorlevel 1 goto pull_failed
+git pull --no-rebase --no-edit origin main > "%PULL_LOG%" 2>&1
+set "PULL_RC=%errorlevel%"
+type "%PULL_LOG%"
+if not "%PULL_RC%"=="0" goto pull_failed
 
 git ls-files --unmerged | findstr /r /c:"." >nul 2>nul
 if not errorlevel 1 (
@@ -36,11 +40,18 @@ goto plain_push
 
 :pull_failed
 git ls-files --unmerged | findstr /r /c:"." >nul 2>nul
-if errorlevel 1 (
-    echo Pull failed with no merge conflicts. Review the Git output above before trying again.
-    goto error
+if not errorlevel 1 (
+    echo Normal pull hit merge conflicts. Falling through to Muse for a semantic merge.
+    goto muse_merge
 )
-echo Normal pull hit merge conflicts. Falling through to Muse for a semantic merge.
+findstr /c:"would be overwritten by merge" "%PULL_LOG%" >nul 2>nul
+if not errorlevel 1 (
+    echo Normal pull refused to start because local changes collide with remote changes.
+    echo Falling through to Muse for a semantic merge.
+    goto muse_merge
+)
+echo Pull failed with no merge conflicts. Review the Git output above before trying again.
+goto error
 
 :muse_merge
 where muse >nul 2>nul

@@ -10,6 +10,12 @@ proceed safely, report failure (see below) instead of guessing.
 1. If the tree already has an in-progress merge (`git ls-files --unmerged`
    shows entries), skip straight to step 2 — the caller already tried a
    plain pull. Otherwise `git pull --no-rebase --no-edit origin main`.
+   If the pull refuses because local changes would be overwritten (dirty
+   tree, no unmerged entries), first preserve the local work exactly
+   like push.cmd does: `git add --all`, and only if
+   `git diff --cached --quiet` reports differences,
+   `git commit -m "Update game files"`. Then pull again and continue to
+   step 2 if it conflicts, or step 3 if it comes in clean.
 2. If the pull reports merge conflicts, resolve every conflicted file
    SEMANTICALLY (see below), verify, and complete the merge.
 3. Stage and commit any remaining changes exactly like push.cmd does:
