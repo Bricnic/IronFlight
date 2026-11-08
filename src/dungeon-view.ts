@@ -7,9 +7,10 @@ import {
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
-import { isDinosaur } from "./custom-level";
+import { isDinosaur, isGauntletMachine } from "./custom-level";
 import { buildDinosaur, poseDinosaur } from "./dinosaur-view";
 import { buildLimeChomper } from "./toy-track-view";
+import { buildGauntletMachine } from "./gauntlet-view";
 import type { Simulation } from "./simulation";
 
 const standard = (color: number, metalness = 0.15, roughness = 0.55) =>
@@ -21,6 +22,7 @@ type Model = {
   pivots: T.Group[];
   triangles: number;
   dinosaur?: ReturnType<typeof buildDinosaur>;
+  machine?: ReturnType<typeof buildGauntletMachine>;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
 function consolidate(root: T.Group) {
@@ -708,6 +710,8 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "lime-chomper") {
     model.pivots = [buildLimeChomper(root)];
     root.add(buildDungeonLabel(h, 21));
+  } else if (isGauntletMachine(h.kind)) {
+    model.machine = buildGauntletMachine(root, { ...h, kind: h.kind });
   } else if (isDinosaur(h.kind)) {
     model.dinosaur = buildDinosaur(root, h.kind);
     poseDinosaur(model.dinosaur, 0, 0);
@@ -824,6 +828,10 @@ export class DungeonView extends T.Group {
       this.add(m.root);
     }
     for (const m of this.models) {
+      if (m.machine) {
+        m.machine(s.time, s.dungeon.gauntlet.machines.get(m.h.id)?.state);
+        continue;
+      }
       if (m.dinosaur) {
         const bite = s.dungeon.mechanisms.find(({ h }) => h.id === m.h.id)?.bite;
         poseDinosaur(m.dinosaur, bite ? s.time - bite.started : 0, bite?.turn ?? 0);
@@ -860,7 +868,7 @@ export class DungeonView extends T.Group {
       id: m.h.id,
       kind: m.h.kind,
       triangles: m.triangles,
-      animated: m.pivots.length > 0 || !!m.dinosaur,
+      animated: m.pivots.length > 0 || !!m.dinosaur || (!!m.machine && m.h.kind !== "start-gate"),
     }));
   }
 }

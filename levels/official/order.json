@@ -23,5 +23,10 @@
     "file": "Chompworks.json",
     "thumbnail": "/tracks/chompworks.png",
     "description": "Race beneath five balloons, thread the yellow jaws and blue tile, then time the lime dinosaur's snap before the checkered transporter."
+  },
+  {
+    "file": "Machine Gauntlet.json",
+    "thumbnail": "/tracks/machine-gauntlet.png",
+    "description": "Dodge rising screws, jump a timed eruption, pick the safe gate and outrun the drill tank and crusher claw before the slime detour."
   }
 ]

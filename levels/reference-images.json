@@ -24,6 +24,12 @@
       "sha256": "F124F98A97C08FB23D07451CE047F524A66A7A1F7E417AC2E17B190C56349B16",
       "levelFile": "Chompworks.json",
       "notes": "The red car marks the launcher start, and the checkered silver transporter marks the finish. The yellow jaws and the upright blue tile form ordered checkpoints. The orange loops frame the stationary lime dinosaur, and five balloons fly over the course."
+    },
+    {
+      "filename": "5b374bdf-d380-4718-bfaf-a31b4d33da66.jfif",
+      "sha256": "015B53BE8F6853216AE61C34C8E712C3E2148A1738F11E8358D01774C418F569",
+      "levelFile": "Machine Gauntlet.json",
+      "notes": "The red car starts behind the gray gate. The missing road was built through the screw field, volcano jump, white triple gate, drill tank and claw. This reference calls for driving around the curved slime before the checkered finish."
     }
   ]
 }
