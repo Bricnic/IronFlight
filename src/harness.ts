@@ -137,6 +137,8 @@ export interface GameHarness {
       ghosts: number;
       trampolines: number;
       boostPads: number;
+      gateGlow: number;
+      lampGlow: number;
       rings: number;
       loopSegments: number;
       dragons: number;

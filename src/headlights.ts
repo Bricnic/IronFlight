@@ -23,6 +23,7 @@ export function buildHeadlightRig(): T.Group {
       }),
     );
     cone.name = "headlight-cone";
+    cone.raycast = () => {};
     cone.rotation.x = -Math.PI / 2;
     cone.position.set(side * 0.92, 0.1, 0.95 + 7);
     rig.add(cone);

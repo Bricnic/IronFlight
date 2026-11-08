@@ -43,6 +43,7 @@ export function buildStarField(count: number): T.Points {
   });
   const stars = new T.Points(geometry, material);
   stars.name = "background-stars";
+  stars.raycast = () => {};
   stars.frustumCulled = false;
   return stars;
 }
