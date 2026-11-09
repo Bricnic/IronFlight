@@ -63,5 +63,10 @@
     "file": "Ring Chase.json",
     "thumbnail": "/tracks/ring-chase.png",
     "description": "Loop the arena for 18 rings: dodge the carousel and bumper brawl, time the chomp book and two glazed donut jaws, and outrun three ghosts."
+  },
+  {
+    "file": "Volcano Loop.json",
+    "thumbnail": "/tracks/volcano-loop.png",
+    "description": "Circle the loop past the chomp book, hands and squish cup, then boost the lava gap beside the erupting volcano to the finish."
   }
 ]

@@ -1,0 +1,181 @@
+{
+  "name": "Volcano Loop",
+  "backgroundTemplate": "toybox-volcano",
+  "mode": "race",
+  "spawn": {
+    "x": 100,
+    "y": 2,
+    "z": -100,
+    "yaw": 0
+  },
+  "checkpoints": [
+    {
+      "name": "East straight",
+      "x": 100,
+      "y": 2,
+      "yaw": 0,
+      "z": 30
+    },
+    {
+      "name": "Chomp turn",
+      "x": 30,
+      "y": 2,
+      "yaw": -1.5707963267948966,
+      "z": 100
+    },
+    {
+      "name": "Hands alley",
+      "x": -100,
+      "y": 2,
+      "yaw": 3.141592653589793,
+      "z": 10
+    },
+    {
+      "name": "Cup alley",
+      "x": -100,
+      "y": 2,
+      "yaw": 3.141592653589793,
+      "z": -70
+    },
+    {
+      "name": "Volcano finish",
+      "x": -30,
+      "y": 2,
+      "yaw": 1.5707963267948966,
+      "z": -100
+    }
+  ],
+  "solids": [
+    {
+      "id": "vl-ground-south",
+      "kind": "ground",
+      "x": 0,
+      "y": -0.65,
+      "z": 34,
+      "w": 320,
+      "h": 1.3,
+      "d": 252,
+      "color": 12107409,
+      "locked": true,
+      "texture": "grass_ground"
+    },
+    {
+      "id": "vl-ground-north",
+      "kind": "ground",
+      "x": 0,
+      "y": -0.65,
+      "z": -134,
+      "w": 320,
+      "h": 1.3,
+      "d": 52,
+      "color": 12107409,
+      "locked": true,
+      "texture": "grass_ground"
+    },
+    {
+      "id": "vl-ground-gap-west",
+      "kind": "ground",
+      "x": -114,
+      "y": -0.65,
+      "z": -100,
+      "w": 92,
+      "h": 1.3,
+      "d": 16,
+      "color": 12107409,
+      "locked": true,
+      "texture": "grass_ground"
+    },
+    {
+      "id": "vl-ground-gap-east",
+      "kind": "ground",
+      "x": 52,
+      "y": -0.65,
+      "z": -100,
+      "w": 216,
+      "h": 1.3,
+      "d": 16,
+      "color": 12107409,
+      "locked": true,
+      "texture": "grass_ground"
+    },
+    {
+      "id": "vl-gap-lava",
+      "kind": "lava",
+      "x": -62,
+      "y": -4,
+      "z": -100,
+      "w": 16,
+      "h": 1,
+      "d": 20,
+      "color": 16738850
+    },
+    {
+      "id": "vl-lava-n",
+      "kind": "lava",
+      "x": 0,
+      "y": -0.02,
+      "z": -175,
+      "w": 380,
+      "h": 0.1,
+      "d": 30,
+      "color": 16738850
+    },
+    {
+      "id": "vl-lava-s",
+      "kind": "lava",
+      "x": 0,
+      "y": -0.02,
+      "z": 175,
+      "w": 380,
+      "h": 0.1,
+      "d": 30,
+      "color": 16738850
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "book-chomp",
+      "kind": "book",
+      "x": 30,
+      "y": 0,
+      "z": 115
+    },
+    {
+      "id": "hands-alley",
+      "kind": "hands",
+      "x": -82,
+      "y": 0,
+      "z": 10,
+      "phase": 0
+    },
+    {
+      "id": "cup-squish",
+      "kind": "cup",
+      "x": -82,
+      "y": 0,
+      "z": -70,
+      "phase": 0
+    },
+    {
+      "id": "volcano-jump",
+      "kind": "volcano",
+      "x": -62,
+      "y": 0,
+      "z": -86,
+      "phase": 0
+    },
+    {
+      "id": "boost-gap",
+      "kind": "boost-pad",
+      "x": -84,
+      "y": 0,
+      "z": -100
+    }
+  ],
+  "medals": {
+    "gold": 70,
+    "silver": 110,
+    "bronze": 180
+  },
+  "limit": 240
+}

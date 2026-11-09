@@ -65,6 +65,12 @@
                                 "filename":  "0d5a7e6b-38d1-499c-bba6-63becb67c9dd.jpg",
                                 "sha256":  "32A0F87D3CEFDA41BD2578A38B69B23876BB4F6461CDE8E5D9F92A25026B5CD3",
                                 "levelFile":  "Ring Chase.json"
+                            },
+                            {
+                                "filename":  "4c605165-bda3-4723-b9bb-cf4a34725048.jpg",
+                                "sha256":  "00C373CECC1E2CE2F27441117756E1BE491FF3339A1BD81E8440FE9B97F81F93",
+                                "levelFile":  "Volcano Loop.json",
+                                "notes":  "Hand-sketch loop. Start top-right down the east straight, chomp book on the south bend, hands and squish cup up the west alley, boost-pad jump over the lava gap beside the erupting volcano, finish gate on the north straight."
                             }
                         ]
 }
