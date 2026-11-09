@@ -25,6 +25,7 @@ export const PROP_PREFAB_KINDS = [
   "gravestone",
   "snowman",
   "skull",
+  "pumpkin",
 ] as const;
 export const COMIC_PREFAB_KINDS = [
   "book",

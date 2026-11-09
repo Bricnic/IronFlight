@@ -8,7 +8,8 @@ export type PropKind =
   | "barrel"
   | "gravestone"
   | "snowman"
-  | "skull";
+  | "skull"
+  | "pumpkin";
 export type PropDefinition = {
   id: string;
   kind: PropKind;
@@ -55,6 +56,7 @@ function propHeight(kind: string) {
   if (kind === "gravestone") return 0.9;
   if (kind === "trash") return 0.65;
   if (kind === "skull") return 0.45;
+  if (kind === "pumpkin") return 0.7;
   return 0.7;
 }
 export class Destructibles {
@@ -148,6 +150,16 @@ export class Destructibles {
             RAPIER.ColliderDesc.cuboid(0.7, 0.9, 0.25)
               .setMass(120)
               .setFriction(0.7),
+            body,
+          ),
+        );
+      else if (kind === "pumpkin")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.ball(0.7)
+              .setMass(8)
+              .setFriction(0.5)
+              .setRestitution(0.35),
             body,
           ),
         );
