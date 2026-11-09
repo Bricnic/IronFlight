@@ -144,6 +144,7 @@ const PREFAB_COLORS: Record<string, number> = {
   cup: 0x6b4226,
   clip: 0xe3b341,
   robot: 0xc23b2e,
+  flagpole: 0xb03a2e,
   "loose-blocks": 0xe0a458,
   "burning-coals": 0xff5a1f,
   cage: 0x5a636b,
@@ -593,7 +594,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         group.add(gate);
       }
       for (const p of level.prefabs) {
-        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe")) {
+        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe" || p.kind === "flagpole")) {
           const { root } = buildDungeonModel({ ...p, kind: p.kind, phase: 0 });
           root.userData.pick = { kind: "prefab", id: p.id };
           root.userData.locked = !!p.locked;

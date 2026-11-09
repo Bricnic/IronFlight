@@ -12,7 +12,7 @@ import { isDinosaur, isGauntletMachine } from "./custom-level";
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
-import { buildGuidedPipe } from "./guided-pipe-view";
+import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
 import { assignCandleLights, buildCandleLightPool, CANDLE_LIGHT_COUNT, type CandleSource } from "./candle-lights";
 import type { Simulation } from "./simulation";
 
@@ -69,6 +69,7 @@ const labelMessages: Record<string, [string, string]> = {
   clippers: ["CRUSH CLIP", "TIMED JAWS / DRIVE BETWEEN"],
   cup: ["SQUISH CUP", "TIMED SQUASH / DRIVE BETWEEN"],
   clip: ["BAG CLIP", "LETHAL SNAP / CROSS WHEN FLAT"],
+  flagpole: ["FLAG POLE", "RIDE UP / KNOCK THE FLAG"],
   robot: ["SCRAP BOT", "MODERATE STOMP / TIME IT"],
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
 };
@@ -827,6 +828,9 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     root.add(buildDungeonLabel(h, 21));
   } else if (h.kind === "guided-pipe") {
     buildGuidedPipe(root);
+  } else if (h.kind === "flagpole") {
+    model.pivots = [buildFlagpole(root)];
+    root.add(buildDungeonLabel(h, 36));
   } else if (isGauntletMachine(h.kind)) {
     model.machine = buildGauntletMachine(root, { ...h, kind: h.kind });
   } else if (isDinosaur(h.kind)) {
@@ -999,6 +1003,12 @@ export class DungeonView extends T.Group {
       } else if (m.h.kind === "clip" && m.pivots.length >= 1) {
         // Flat ramp while crossable; the jaw snaps up when the trap fires.
         m.pivots[0].rotation.x = (1 - open) * -1.15;
+      } else if (m.h.kind === "flagpole" && m.pivots.length >= 1) {
+        const knocked = s.guidedPipe.knocked;
+        m.pivots[0].position.y =
+          knocked?.id === m.h.id
+            ? Math.max(0.6, 29.5 - (s.time - knocked.at) * 25)
+            : 29.5;
       } else if (m.h.kind === "robot" && m.pivots.length >= 2) {
         // Arms wind up while crossable, then smash down on the stomp.
         m.pivots[0].rotation.x = open * -1.2;

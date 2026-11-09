@@ -86,6 +86,7 @@ export const DUNGEON_PREFAB_KINDS = [
   "clip",
   "robot",
   "guided-pipe",
+  "flagpole",
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
 ] as const;
