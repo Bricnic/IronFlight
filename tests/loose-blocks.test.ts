@@ -151,7 +151,7 @@ it("deals minor damage when a block falls onto the truck", () => {
 });
 
 it("builds a letter-faced cube model headlessly", () => {
-  const model = buildLooseBlockModel({ id: "block-7", x: 0, z: 0 });
+  const model = buildLooseBlockModel({ id: "block-7", kind: "loose-blocks", x: 0, z: 0 });
   expect(model.triangles).toBeGreaterThan(0);
   let boxes = 0;
   let letters = 0;

@@ -507,6 +507,7 @@ async function boot() {
       });
     else if (prefab.kind === "loose-blocks")
       sim.looseBlocks.addBlock({
+        kind: prefab.kind,
         id: prefab.id,
         x: prefab.x,
         z: prefab.z,
