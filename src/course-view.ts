@@ -20,7 +20,7 @@ import { flameMaterial } from "./materials";
 import { courseSolids, type CourseSolid } from "./course";
 import { BOOST_PAD } from "./custom-level";
 import { solidQuaternion } from "./euler";
-import { scaleSolidUVs } from "./solid-uv";
+import { scaleSolidUVs, solidNeedsUVScaling } from "./solid-uv";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
 import { buildToyCheckpoint } from "./toy-track-view";
@@ -207,13 +207,15 @@ export class CourseView extends T.Group {
           .rotateX(-Math.PI / 2)
           .translate(0, -s.h / 2, 0)
       : new T.BoxGeometry(s.w, s.h, s.d);
+    if (solidNeedsUVScaling(s, stone, cliff)) {
+      scaleSolidUVs(geometry, s, s.kind === "ground" || !!s.footprint, s.kind === "lava" ? 9 : 3);
+    }
     if (
       stone ||
       cliff ||
       s.texture ||
       ["ground", "road", "ramp", "loop"].includes(s.kind)
     ) {
-      scaleSolidUVs(geometry, s, s.kind === "ground" || !!s.footprint);
       mat.userData.surface = s.texture
         ? s.texture
         : stone

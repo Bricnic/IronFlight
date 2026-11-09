@@ -9,6 +9,7 @@ export function scaleSolidUVs(
   geometry: T.BufferGeometry,
   s: { kind: string; x: number; z: number; uvOffsetX?: number; uvOffsetZ?: number },
   worldAligned = s.kind === "ground",
+  tileSize = 3,
 ) {
   const pos = geometry.attributes.position as T.BufferAttribute;
   const normals = geometry.attributes.normal as T.BufferAttribute;
@@ -19,11 +20,25 @@ export function scaleSolidUVs(
       i,
       (top
         ? pos.getX(i) + (worldAligned ? s.x : s.uvOffsetX ?? 0)
-        : pos.getX(i) + pos.getZ(i) + (s.uvOffsetX ?? 0) + (s.uvOffsetZ ?? 0)) / 3,
+        : pos.getX(i) + pos.getZ(i) + (s.uvOffsetX ?? 0) + (s.uvOffsetZ ?? 0)) / tileSize,
       (top
         ? pos.getZ(i) + (worldAligned ? s.z : s.uvOffsetZ ?? 0)
-        : pos.getY(i)) / 3,
+        : pos.getY(i)) / tileSize,
     );
   }
   uv.needsUpdate = true;
+}
+
+/** Kinds whose UVs must tile with world scale (lava lakes included). */
+export function solidNeedsUVScaling(
+  s: { kind: string; texture?: string },
+  stone: boolean,
+  cliff: boolean,
+): boolean {
+  return (
+    stone ||
+    cliff ||
+    !!s.texture ||
+    ["ground", "road", "ramp", "loop", "lava"].includes(s.kind)
+  );
 }

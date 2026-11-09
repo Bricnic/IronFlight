@@ -6,11 +6,11 @@ for (const id of ["custom:amber-undertow", "custom:fireside-sonata"]) {
     await page.waitForFunction(() => !!window.__game);
     const snap = await page.evaluate((t) => {
       const g = window.__game!;
-      g.startTrack(t as "custom:amber-undertow");
+      g.startTrack(t as "custom:amber-undertow", "easy");
       g.pause(false);
       g.advanceFrames(25, 1, {});
       g.pause(true);
-      return g.snapshot(false);
+      return g.snapshot();
     }, id);
     expect(snap.integrity).toBeGreaterThan(0);
   });
