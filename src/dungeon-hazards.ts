@@ -69,6 +69,9 @@ export const DUNGEON_STRIKE: Record<
   cup: { radius: 7, slam: 6 },
   clip: { radius: 7, slam: 6 },
 };
+/** Scrap-bot stomp: moderate timed damage, never instantly lethal. */
+export const ROBOT_STOMP_RADIUS = 6;
+export const ROBOT_STOMP_DAMAGE = 25;
 /** Cage furniture dimensions, shared by the collider builder and the artist. */
 export const CAGE = { w: 3, h: 4, d: 3 } as const;
 /**

@@ -142,6 +142,7 @@ const PREFAB_COLORS: Record<string, number> = {
   clippers: 0x9fb8cc,
   cup: 0x6b4226,
   clip: 0xe3b341,
+  robot: 0xc23b2e,
   "loose-blocks": 0xe0a458,
   "burning-coals": 0xff5a1f,
   cage: 0x5a636b,

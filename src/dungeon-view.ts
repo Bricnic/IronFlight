@@ -69,6 +69,7 @@ const labelMessages: Record<string, [string, string]> = {
   clippers: ["CRUSH CLIP", "TIMED JAWS / DRIVE BETWEEN"],
   cup: ["SQUISH CUP", "TIMED SQUASH / DRIVE BETWEEN"],
   clip: ["BAG CLIP", "LETHAL SNAP / CROSS WHEN FLAT"],
+  robot: ["SCRAP BOT", "MODERATE STOMP / TIME IT"],
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
 };
 /** Upright billboard label anchored above the model at the given local height. */
@@ -633,6 +634,49 @@ function buildClipModel(h: DungeonHazard, root: T.Group): T.Group[] {
   root.add(pivot);
   return [pivot];
 }
+function buildRobotModel(h: DungeonHazard, root: T.Group): T.Group[] {
+  const red = standard(0xc23b2e, 0.35, 0.5);
+  const dark = standard(0x2b2f33, 0.7, 0.5);
+  const lamp = new T.MeshStandardMaterial({
+    color: 0xffe28a,
+    emissive: 0xffb830,
+    emissiveIntensity: 2,
+  });
+  for (const side of [-1, 1]) {
+    const leg = new T.Mesh(new T.BoxGeometry(0.9, 3, 0.9), dark);
+    leg.position.set(side * 0.8, 1.5, 0);
+    leg.castShadow = true;
+    root.add(leg);
+  }
+  const torso = new T.Mesh(new T.BoxGeometry(3.2, 3, 2.2), red);
+  torso.position.set(0, 4.5, 0);
+  torso.castShadow = true;
+  torso.receiveShadow = true;
+  root.add(torso);
+  const head = new T.Mesh(new T.BoxGeometry(1.8, 1.4, 1.8), red);
+  head.position.set(0, 6.7, 0);
+  head.castShadow = true;
+  root.add(head);
+  const eyes = new T.Mesh(new T.BoxGeometry(1.4, 0.3, 0.2), lamp);
+  eyes.position.set(0, 6.8, 0.95);
+  root.add(eyes);
+  const pivots: T.Group[] = [];
+  for (const side of [-1, 1]) {
+    const arm = new T.Group();
+    arm.position.set(side * 2.1, 5.5, 0);
+    const limb = new T.Mesh(new T.BoxGeometry(0.8, 3.4, 0.8), red);
+    limb.position.set(0, -1.4, 0);
+    limb.castShadow = true;
+    arm.add(limb);
+    const claw = new T.Mesh(new T.BoxGeometry(1.2, 0.8, 1.2), dark);
+    claw.position.set(0, -3.2, 0);
+    claw.castShadow = true;
+    arm.add(claw);
+    root.add(arm);
+    pivots.push(arm);
+  }
+  return pivots;
+}
 function buildCageModel(h: DungeonHazard, root: T.Group): T.Group[] {
   const iron = standard(0x2b2f33, 0.7, 0.5);
   const base = new T.Mesh(new T.CylinderGeometry(1.85, 2.0, 0.35, 24), iron);
@@ -770,6 +814,9 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     root.add(buildDungeonLabel(h, 16));
   } else if (h.kind === "clip") {
     model.pivots = buildClipModel(h, root);
+    root.add(buildDungeonLabel(h, 13));
+  } else if (h.kind === "robot") {
+    model.pivots = buildRobotModel(h, root);
     root.add(buildDungeonLabel(h, 13));
   } else if (h.kind === "cage") {
     model.pivots = buildCageModel(h, root);
@@ -952,6 +999,10 @@ export class DungeonView extends T.Group {
       } else if (m.h.kind === "clip" && m.pivots.length >= 1) {
         // Flat ramp while crossable; the jaw snaps up when the trap fires.
         m.pivots[0].rotation.x = (1 - open) * -1.15;
+      } else if (m.h.kind === "robot" && m.pivots.length >= 2) {
+        // Arms wind up while crossable, then smash down on the stomp.
+        m.pivots[0].rotation.x = open * -1.2;
+        m.pivots[1].rotation.x = open * -1.2;
       } else if (m.h.kind === "candle") {
         m.pivots.forEach((f, i) => {
           const base = (f.userData.base as number | undefined) ?? 1;

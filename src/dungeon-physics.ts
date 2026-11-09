@@ -16,6 +16,8 @@ import {
   snapStriking,
   SNAP_CYCLE,
   DUNGEON_STRIKE,
+  ROBOT_STOMP_RADIUS,
+  ROBOT_STOMP_DAMAGE,
   CAGE,
   CLIPPER_BACK,
   WINDOW_GATE,
@@ -202,6 +204,25 @@ export class DungeonPhysics {
       }
       if (isDinosaur(h.kind)) {
         this.attackWithDinosaur(m, h.kind, p);
+        continue;
+      }
+      if (h.kind === "robot") {
+        const shifted = s.time + h.phase;
+        const cycle = Math.floor(shifted / SNAP_CYCLE);
+        if (!snapStriking(shifted) || cycle === m.lastCycle) continue;
+        const rdx = p.x - h.x,
+          rdz = p.z - h.z;
+        if (rdx * rdx + rdz * rdz > ROBOT_STOMP_RADIUS * ROBOT_STOMP_RADIUS)
+          continue;
+        if (Math.abs(p.y - ((h.y ?? 0) + 1.5)) > 4) continue;
+        m.lastCycle = cycle;
+        m.contacts++;
+        s.damage("chassis-front", ROBOT_STOMP_DAMAGE);
+        s.damageEvents.push({
+          source: h.kind,
+          part: "chassis-front",
+          time: s.time,
+        });
         continue;
       }
       const strike =
