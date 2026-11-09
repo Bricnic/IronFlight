@@ -82,6 +82,7 @@ export const DUNGEON_PREFAB_KINDS = [
   "candle",
   "lime-chomper",
   "cup",
+  "clip",
   "guided-pipe",
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,

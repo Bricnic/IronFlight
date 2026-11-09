@@ -68,6 +68,7 @@ const labelMessages: Record<string, [string, string]> = {
   scissors: ["GIANT SNIP", "TIMED BLADES / DRIVE BETWEEN"],
   clippers: ["CRUSH CLIP", "TIMED JAWS / DRIVE BETWEEN"],
   cup: ["SQUISH CUP", "TIMED SQUASH / DRIVE BETWEEN"],
+  clip: ["BAG CLIP", "LETHAL SNAP / CROSS WHEN FLAT"],
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
 };
 /** Upright billboard label anchored above the model at the given local height. */
@@ -595,6 +596,43 @@ function buildCupModel(h: DungeonHazard, root: T.Group): T.Group[] {
   root.add(pivot);
   return [pivot];
 }
+function buildClipModel(h: DungeonHazard, root: T.Group): T.Group[] {
+  const steel = brushedSteel(0xb9c2cc);
+  const dark = standard(0x3a4046, 0.75, 0.45);
+  // Flat bed plate: the safe ramp while the trap is closed.
+  const bed = new T.Mesh(new T.BoxGeometry(7.4, 0.4, 6.2), steel);
+  bed.position.set(0, 0.2, 0);
+  bed.castShadow = true;
+  bed.receiveShadow = true;
+  root.add(bed);
+  for (const side of [-1, 1]) {
+    const rail = new T.Mesh(new T.BoxGeometry(1.0, 0.5, 6.2), dark);
+    rail.position.set(side * 4.2, 0.25, 0);
+    rail.castShadow = true;
+    root.add(rail);
+  }
+  // Spring-steel upper jaw on a rear hinge; wire handles ride along.
+  const pivot = new T.Group();
+  pivot.position.set(0, 0.9, -2.6);
+  const jaw = new T.Mesh(new T.BoxGeometry(6.6, 0.35, 5.6), steel);
+  jaw.position.set(0, 0.2, 2.6);
+  jaw.castShadow = true;
+  pivot.add(jaw);
+  const tip = new T.Mesh(new T.BoxGeometry(6.6, 0.35, 1.1), steel);
+  tip.position.set(0, -0.15, 5.4);
+  tip.rotation.x = 0.5;
+  tip.castShadow = true;
+  pivot.add(tip);
+  for (const side of [-1, 1]) {
+    const wire = new T.Mesh(new T.CylinderGeometry(0.14, 0.14, 4.6, 10), dark);
+    wire.position.set(side * 2.4, 1.4, -1.4);
+    wire.rotation.x = 1.1;
+    wire.castShadow = true;
+    pivot.add(wire);
+  }
+  root.add(pivot);
+  return [pivot];
+}
 function buildCageModel(h: DungeonHazard, root: T.Group): T.Group[] {
   const iron = standard(0x2b2f33, 0.7, 0.5);
   const base = new T.Mesh(new T.CylinderGeometry(1.85, 2.0, 0.35, 24), iron);
@@ -730,6 +768,9 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "cup") {
     model.pivots = buildCupModel(h, root);
     root.add(buildDungeonLabel(h, 16));
+  } else if (h.kind === "clip") {
+    model.pivots = buildClipModel(h, root);
+    root.add(buildDungeonLabel(h, 13));
   } else if (h.kind === "cage") {
     model.pivots = buildCageModel(h, root);
   } else if (h.kind === "candle") {
@@ -908,6 +949,9 @@ export class DungeonView extends T.Group {
         m.pivots[1].rotation.x = 0.05 + open * 0.85;
       } else if (m.h.kind === "cup" && m.pivots.length >= 1) {
         m.pivots[0].position.y = 1.2 + open * 7;
+      } else if (m.h.kind === "clip" && m.pivots.length >= 1) {
+        // Flat ramp while crossable; the jaw snaps up when the trap fires.
+        m.pivots[0].rotation.x = (1 - open) * -1.15;
       } else if (m.h.kind === "candle") {
         m.pivots.forEach((f, i) => {
           const base = (f.userData.base as number | undefined) ?? 1;

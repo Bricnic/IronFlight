@@ -60,13 +60,14 @@ export function snapStriking(time: number) {
 }
 /** Strike-zone radius and downward slam per trap kind; the shut trap is instantly lethal. */
 export const DUNGEON_STRIKE: Record<
-  "hands" | "scissors" | "clippers" | "cup",
+  "hands" | "scissors" | "clippers" | "cup" | "clip",
   { radius: number; slam: number }
 > = {
   hands: { radius: 8, slam: 4 },
   scissors: { radius: 7, slam: 0 },
   clippers: { radius: 7.5, slam: 5 },
   cup: { radius: 7, slam: 6 },
+  clip: { radius: 7, slam: 6 },
 };
 /** Cage furniture dimensions, shared by the collider builder and the artist. */
 export const CAGE = { w: 3, h: 4, d: 3 } as const;
