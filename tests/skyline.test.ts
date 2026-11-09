@@ -54,3 +54,15 @@ it("completes a physical full lap through all sixteen sectors", () => {
   expect(s.snapshot().integrity).toBeGreaterThan(0.8);
   s.dispose();
 });
+
+it("spawns facing gate-1 with the finish gate co-located at the start", () => {
+  const t = getTrack("skyline-circuit");
+  // Car forward for spawn yaw follows the sim quaternion convention (+Z rotated about Y).
+  const fwd = { x: Math.sin(t.spawn.yaw), z: Math.cos(t.spawn.yaw) };
+  const first = t.checkpoints[0]!;
+  const dx = first.x - t.spawn.x, dz = first.z - t.spawn.z;
+  const dot = (fwd.x * dx + fwd.z * dz) / Math.hypot(dx, dz);
+  expect(dot).toBeGreaterThan(0.9);
+  const last = t.checkpoints[t.checkpoints.length - 1]!;
+  expect(Math.hypot(last.x - t.spawn.x, last.z - t.spawn.z)).toBeLessThan(1);
+});
