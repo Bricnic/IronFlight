@@ -1,11 +1,14 @@
 import * as T from "three";
 import { vehicle } from "./themed-vehicles";
-import { finish } from "./concept-vehicle-kit";
+import { finish, type XYZ } from "./concept-vehicle-kit";
+import type { PartId } from "./damage";
 import {
   cabin,
   door,
   fenders,
+  glow,
   gold,
+  openSeat,
   sides,
   stack,
 } from "./themed-vehicle-body";
@@ -5411,6 +5414,7031 @@ export const GENERATED_VEHICLES = [
           part,
           new T.CylinderGeometry(0.05, 0.05, 0.08, 20).rotateZ(Math.PI / 2),
           [x, -0.85, z],
+          k.steel,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "hearse",
+    "Hearse",
+    "Midnight coach-built hearse with curtained glass and silver landau trim.",
+    [1842724, 12172999, 3948872, 0.76, 10],
+    (k) => {
+      const chrome = finish(0xe9edf1, 0.14, 0.95);
+      const tint = finish(0x11161c, 0.1, 0.55);
+      const curtain = finish(0x6e1423, 0.82, 0.05);
+      const curtainDark = finish(0x460c17, 0.86, 0.04);
+      const trim = gold();
+
+      // ---- Nose (hood): long formal hood, upright chrome grille, round lamps ----
+      k.hull("hood", [
+        [0.45, -0.15, 0.62, 1.1, 1.03],
+        [1.6, -0.17, 0.58, 1.08, 1.0],
+        [2.55, -0.2, 0.5, 1.0, 0.94],
+      ]);
+      k.oval("hood", [0.7, 0.1, 1.0], [0, 0.6, 1.55]);
+      k.bar("hood", [0, 0.66, 0.7], [0, 0.62, 2.45], 0.025, chrome);
+      k.oval("hood", [0.05, 0.07, 0.05], [0, 0.68, 2.42], chrome);
+      k.panel("hood", [1.12, 0.58, 0.1], [0, 0.14, 2.58], chrome, 0.04);
+      k.panel("hood", [0.96, 0.44, 0.08], [0, 0.14, 2.6], k.dark, 0.02);
+      for (let i = 0; i < 7; i++)
+        k.bar(
+          "hood",
+          [-0.36 + i * 0.12, -0.05, 2.65],
+          [-0.36 + i * 0.12, 0.33, 2.65],
+          0.02,
+          chrome,
+        );
+      k.bar("hood", [-0.48, 0.35, 2.64], [0.48, 0.35, 2.64], 0.025, chrome);
+      k.bar("hood", [-0.48, -0.07, 2.64], [0.48, -0.07, 2.64], 0.025, chrome);
+      for (const side of sides) {
+        k.lamp("hood", [side * 0.76, 0.28, 2.58], 0.15);
+        k.lamp("hood", [side * 0.76, -0.02, 2.58], 0.07, k.amber);
+        k.oval("hood", [0.3, 0.26, 0.75], [side * 1.0, 0.35, 1.6]);
+        k.panel("hood", [0.06, 0.05, 1.6], [side * 1.1, 0.5, 1.7], chrome, 0.012);
+      }
+
+      // ---- Coach cabin: tall glasshouse, chrome windshield surround, wipers ----
+      cabin(
+        k,
+        { front: 2.45, back: -2.55, height: 2.02, width: 1.05, slant: 0.28 },
+      );
+      for (const side of sides)
+        k.bar(
+          "roof",
+          [side * 1.0, 0.5, 2.43],
+          [side * 1.0, 1.98, 2.15],
+          0.045,
+          chrome,
+        );
+      k.bar("roof", [-1.0, 1.98, 2.15], [1.0, 1.98, 2.15], 0.04, chrome);
+      k.bar("roof", [-1.0, 0.52, 2.44], [1.0, 0.52, 2.44], 0.035, chrome);
+      for (const side of sides) {
+        k.bar(
+          "roof",
+          [side * 0.55, 0.62, 2.42],
+          [side * 0.2, 1.12, 2.33],
+          0.016,
+          k.dark,
+        );
+        k.bar(
+          "roof",
+          [side * 0.2, 1.12, 2.33],
+          [side * 0.2, 1.28, 2.31],
+          0.012,
+          k.dark,
+        );
+      }
+      for (const side of sides) {
+        const x = side * 1.16;
+        // Chrome window rails along the top and belt.
+        k.bar("roof", [side * 1.1, 1.94, 2.08], [side * 1.1, 1.94, -2.28], 0.032, chrome);
+        k.bar("roof", [side * 1.08, 0.55, 2.1], [side * 1.08, 0.55, -2.3], 0.032, chrome);
+        // B-pillar and A-pillar framing the door glass.
+        k.bar("roof", [side * 1.1, 0.55, 0.55], [side * 1.1, 1.94, 0.55], 0.06, k.paint);
+        k.bar("roof", [side * 1.15, 0.55, 0.55], [side * 1.15, 1.94, 0.55], 0.028, chrome);
+        k.bar("roof", [side * 1.1, 0.55, 2.08], [side * 1.1, 1.94, 2.08], 0.05, k.paint);
+        // Curtained windows: front door glass plus the long coach glass.
+        for (const [z0, z1] of [
+          [2.0, 0.65],
+          [0.45, -2.0],
+        ] as const) {
+          const mid = (z0 + z1) / 2;
+          const len = z0 - z1;
+          k.panel("roof", [0.09, 0.18, len], [x, 1.78, mid], curtain, 0.03);
+          const pleats = Math.max(6, Math.round(len / 0.17));
+          for (let i = 0; i < pleats; i++) {
+            const z = z0 - 0.09 - (i * (len - 0.18)) / (pleats - 1);
+            const pleat = k.mesh(
+              "roof",
+              new T.SphereGeometry(1, 18, 12),
+              [x, 1.62, z],
+              i % 2 ? curtainDark : curtain,
+            );
+            pleat.scale.set(0.06, 0.12, 0.075);
+          }
+          for (const edge of [z0 - 0.12, z1 + 0.12]) {
+            const inward = edge > mid ? -1 : 1;
+            k.tube(
+              "roof",
+              [
+                [x, 1.7, edge],
+                [x, 1.35, edge + inward * 0.12],
+                [x, 0.95, edge + inward * 0.3],
+              ],
+              0.055,
+              curtain,
+              24,
+            );
+            const tie = k.mesh(
+              "roof",
+              new T.SphereGeometry(1, 18, 12),
+              [x, 0.92, edge + inward * 0.3],
+              trim,
+            );
+            tie.scale.set(0.045, 0.06, 0.06);
+          }
+          k.panel("roof", [0.03, 0.75, len - 0.7], [side * 1.14, 1.28, mid], tint, 0.01);
+        }
+        // Solid C-pillar with a silver landau S-scroll.
+        k.panel("roof", [0.14, 1.2, 0.55], [side * 1.1, 1.25, -2.2], k.paint, 0.04);
+        k.bar("roof", [side * 1.18, 0.68, -2.42], [side * 1.18, 1.82, -2.42], 0.025, chrome);
+        k.bar("roof", [side * 1.18, 0.68, -1.98], [side * 1.18, 1.82, -1.98], 0.025, chrome);
+        k.tube(
+          "roof",
+          [
+            [side * 1.19, 0.95, -2.1],
+            [side * 1.2, 1.12, -2.32],
+            [side * 1.2, 1.32, -2.1],
+            [side * 1.19, 1.55, -2.3],
+          ],
+          0.032,
+          chrome,
+          40,
+        );
+        for (const [y, z] of [
+          [0.92, -2.08],
+          [1.58, -2.32],
+        ] as const)
+          k.mesh(
+            "roof",
+            new T.CylinderGeometry(0.06, 0.06, 0.05, 24).rotateZ(Math.PI / 2),
+            [side * 1.2, y, z],
+            chrome,
+          );
+      }
+      // Roof drip rails and the tall whip antenna over the coach.
+      for (const side of sides)
+        k.bar("roof", [side * 1.1, 2.03, 2.1], [side * 1.1, 2.03, -2.32], 0.028, chrome);
+      k.bar("roof", [0.72, 2.06, -2.15], [0.72, 2.72, -2.26], 0.012, k.dark);
+      k.oval("roof", [0.025, 0.045, 0.025], [0.72, 2.74, -2.26], chrome);
+      // Cabin interior: dash, bench, wheel, and a coffin on rollers.
+      k.panel("roof", [1.7, 0.22, 0.4], [0, 0.78, 1.9], k.dark, 0.06);
+      k.panel("roof", [1.7, 0.32, 0.5], [0, 0.68, 1.0], k.dark, 0.08);
+      k.mesh(
+        "roof",
+        new T.TorusGeometry(0.17, 0.028, 12, 48),
+        [0.45, 0.92, 1.62],
+        k.dark,
+      ).rotation.x = -0.5;
+      const coffinWood = finish(0x3a2418, 0.6, 0.1);
+      k.panel("roof", [0.72, 0.3, 1.8], [0, 0.75, -1.1], coffinWood, 0.05);
+      k.panel("roof", [0.6, 0.1, 1.6], [0, 0.93, -1.1], coffinWood, 0.04);
+      for (const side of sides)
+        for (const z of [-1.6, -1.1, -0.6])
+          k.bar(
+            "roof",
+            [side * 0.38, 0.78, z - 0.12],
+            [side * 0.38, 0.78, z + 0.12],
+            0.02,
+            chrome,
+          );
+
+      // ---- Flanks: long body sides, chrome spears, handles, mirrors ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [-2.5, -0.15],
+            [2.4, -0.15],
+            [2.3, 0.45],
+            [-2.4, 0.47],
+          ],
+          0.12,
+          side * 1.12,
+          k.paint,
+          0.03,
+        );
+        k.bar(d, [side * 1.2, 0.44, 2.3], [side * 1.2, 0.44, -2.4], 0.028, chrome);
+        k.panel(d, [0.05, 0.07, 4.6], [side * 1.19, 0.02, -0.05], chrome, 0.015);
+        k.panel(d, [0.06, 0.05, 4.7], [side * 1.18, -0.12, -0.05], k.dark, 0.012);
+        for (const z of [1.35, -0.85]) {
+          k.panel(d, [0.07, 0.05, 0.28], [side * 1.22, 0.3, z], chrome, 0.018);
+          k.bar(d, [side * 1.19, -0.1, z + 0.4], [side * 1.19, 0.42, z + 0.4], 0.012, k.dark);
+        }
+        k.bar(d, [side * 1.15, 0.9, 1.95], [side * 1.4, 0.98, 2.0], 0.028, k.dark);
+        k.panel(d, [0.1, 0.26, 0.18], [side * 1.43, 0.98, 2.0], chrome, 0.03);
+        k.panel(d, [0.07, 0.2, 0.02], [side * 1.43, 0.98, 1.9], k.steel, 0.008);
+        k.panel(d, [0.05, 0.06, 0.12], [side * 1.19, 0.15, 2.3], k.amber, 0.012);
+        k.panel(d, [0.05, 0.06, 0.12], [side * 1.19, 0.15, -2.42], k.red, 0.012);
+      }
+
+      // ---- Tail: coach rear door with glass, wiper, vertical lamps ----
+      k.hull("bed", [
+        [-2.78, -0.18, 0.55, 1.0, 0.94],
+        [-0.85, -0.15, 0.62, 1.08, 1.02],
+      ]);
+      k.panel("bed", [1.5, 1.0, 0.06], [0, 1.25, -2.48], k.dark, 0.03).rotation.x = 0.13;
+      k.panel("bed", [1.32, 0.84, 0.05], [0, 1.26, -2.5], tint, 0.02).rotation.x = 0.13;
+      k.bar("bed", [-0.72, 1.7, -2.4], [0.72, 1.7, -2.4], 0.03, chrome);
+      k.bar("bed", [-0.72, 0.82, -2.56], [0.72, 0.82, -2.56], 0.03, chrome);
+      for (const side of sides)
+        k.bar(
+          "bed",
+          [side * 0.72, 0.82, -2.56],
+          [side * 0.72, 1.7, -2.4],
+          0.03,
+          chrome,
+        );
+      k.bar("bed", [0.3, 0.95, -2.57], [-0.2, 1.25, -2.53], 0.014, k.dark);
+      k.panel("bed", [1.7, 0.35, 0.25], [0, 1.82, -2.42], k.paint, 0.06);
+      k.panel("bed", [1.8, 0.35, 0.15], [0, 0.65, -2.62], k.paint, 0.05);
+      k.panel("bed", [1.7, 0.5, 0.08], [0, 0.25, -2.8], k.paint, 0.03);
+      k.bar("bed", [-0.3, 0.55, -2.83], [0.3, 0.55, -2.83], 0.03, chrome);
+      k.panel("bed", [0.44, 0.14, 0.05], [0, 0.05, -2.83], k.accent, 0.015);
+      for (const side of sides) {
+        k.panel("bed", [0.2, 0.5, 0.05], [side * 0.82, 0.3, -2.79], chrome, 0.02);
+        k.panel("bed", [0.14, 0.42, 0.07], [side * 0.82, 0.3, -2.8], k.red, 0.02);
+        k.lamp("bed", [side * 0.82, 0.0, -2.8], 0.05, k.white, -1);
+      }
+
+      // ---- Chrome bumpers with overriders ----
+      k.panel("bumper-front", [2.4, 0.22, 0.3], [0, -0.12, 2.78], chrome, 0.08);
+      k.panel("bumper-front", [2.42, 0.07, 0.31], [0, -0.12, 2.78], k.dark, 0.03);
+      for (const side of sides) {
+        k.panel(
+          "bumper-front",
+          [0.24, 0.34, 0.36],
+          [side * 0.7, -0.08, 2.78],
+          chrome,
+          0.06,
+        );
+        k.lamp("bumper-front", [side * 1.02, -0.1, 2.9], 0.06, k.amber);
+      }
+      k.panel("bumper-front", [0.44, 0.13, 0.04], [0, -0.12, 2.94], k.accent, 0.012);
+      k.panel("bumper-rear", [2.4, 0.22, 0.3], [0, -0.1, -2.9], chrome, 0.08);
+      for (const side of sides)
+        k.panel(
+          "bumper-rear",
+          [0.24, 0.34, 0.36],
+          [side * 0.7, -0.06, -2.9],
+          chrome,
+          0.06,
+        );
+      k.tailLights(-3.02, 0.12);
+
+      // ---- Chassis dress: arches, boards, shocks, tank, exhaust ----
+      fenders(k, k.paint);
+      for (const side of sides) {
+        k.panel("chassis-front", [0.42, 0.09, 1.1], [side * 1.35, -0.32, 0], chrome, 0.03);
+        k.panel("chassis-front", [0.36, 0.04, 1.0], [side * 1.35, -0.26, 0], k.dark, 0.015);
+        k.shock(
+          "chassis-front",
+          [side * 1.2, -0.8, 1.65],
+          [side * 0.8, -0.2, 1.65],
+          k.accent,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.2, -0.8, -1.65],
+          [side * 0.8, -0.2, -1.65],
+          k.accent,
+        );
+        k.tube(
+          "chassis-rear",
+          [
+            [side * 0.5, -0.45, -1.9],
+            [side * 0.5, -0.45, -2.7],
+            [side * 0.55, -0.42, -3.0],
+          ],
+          0.07,
+          chrome,
+          24,
+        );
+        k.oval("chassis-rear", [0.09, 0.09, 0.05], [side * 0.55, -0.42, -3.01], k.dark);
+      }
+      k.bar("chassis-front", [0.75, -0.55, 0.5], [0.75, -0.55, -0.3], 0.26, k.steel);
+      for (const z of [0.3, -0.1])
+        k.mesh(
+          "chassis-front",
+          new T.TorusGeometry(0.27, 0.03, 10, 40),
+          [0.75, -0.55, z],
+          k.dark,
+        );
+      k.panel("chassis-front", [0.5, 0.4, 0.7], [-0.75, -0.5, 0.1], k.dark, 0.06);
+      k.bar("chassis-front", [0, -0.55, 0.2], [0, -0.55, 2.3], 0.07, k.steel);
+      k.bar("chassis-rear", [0, -0.55, -0.6], [0, -0.55, -2.6], 0.07, k.steel);
+      k.oval("chassis-front", [0.5, 0.3, 0.4], [0, -0.5, 0.6], k.dark);
+
+      // Dark wheel centers with chrome medallions.
+      const caps = [
+        ["wheel-fl", 2.06, 1.65],
+        ["wheel-fr", -2.06, 1.65],
+        ["wheel-rl", 2.06, -1.65],
+        ["wheel-rr", -2.06, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.14, 0.14, 0.05, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.dark,
+        );
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.055, 0.055, 0.07, 20).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          chrome,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "fuel-tanker",
+    "Fuel Tanker",
+    "Silver fuel tanker with a cylindrical tank, hose reels, and hazard diamonds.",
+    [13225684, 12725806, 4869973, 0.88, 6],
+    (k) => {
+      const tankSteel = finish(0xdde2e6, 0.3, 0.6);
+      const hose = finish(0x571d18, 0.82, 0.05);
+      const cream = finish(0xf2ede2, 0.5, 0.1);
+
+      // ---- Nose (hood): cab-over face, grille, stacked round headlamps ----
+      k.hull("hood", [
+        [0.42, -0.15, 0.62, 1.12, 1.1],
+        [2.44, -0.15, 0.62, 1.1, 1.06],
+      ]);
+      k.panel("hood", [1.3, 0.55, 0.1], [0, 0.28, 2.47], k.dark, 0.05);
+      for (let i = 0; i < 5; i++)
+        k.panel(
+          "hood",
+          [1.14, 0.035, 0.05],
+          [0, 0.1 + i * 0.09, 2.53],
+          k.steel,
+          0.008,
+        );
+      k.bar("hood", [-0.65, 0.56, 2.5], [0.65, 0.56, 2.5], 0.03, k.steel);
+      k.bar("hood", [-0.65, 0.0, 2.5], [0.65, 0.0, 2.5], 0.03, k.steel);
+      for (const side of sides) {
+        k.bar(
+          "hood",
+          [side * 0.65, 0.0, 2.5],
+          [side * 0.65, 0.56, 2.5],
+          0.03,
+          k.steel,
+        );
+        k.lamp("hood", [side * 0.82, 0.36, 2.5], 0.13);
+        k.lamp("hood", [side * 0.82, 0.04, 2.48], 0.11);
+        k.panel(
+          "hood",
+          [0.16, 0.06, 0.06],
+          [side * 0.82, -0.12, 2.5],
+          k.amber,
+          0.015,
+        );
+      }
+
+      // ---- Cab upper (roof): windshield, sun visor, markers, interior ----
+      cabin(
+        k,
+        { front: 2.42, back: 0.5, height: 2.02, width: 1.1, slant: 0.16 },
+      );
+      k.bar("roof", [0, 0.6, 2.45], [0, 1.9, 2.32], 0.055, k.dark);
+      for (const side of sides)
+        k.bar(
+          "roof",
+          [side * 0.45, 0.78, 2.47],
+          [side * 0.2, 1.28, 2.41],
+          0.022,
+          k.dark,
+        );
+      // Sun visor over the windshield with a dark underside and arms.
+      k.panel("roof", [2.05, 0.06, 0.5], [0, 1.94, 2.58], k.paint, 0.025).rotation.x =
+        -0.15;
+      k.panel("roof", [1.99, 0.03, 0.44], [0, 1.905, 2.58], k.dark, 0.012).rotation.x =
+        -0.15;
+      for (const side of sides)
+        k.bar(
+          "roof",
+          [side * 0.95, 1.9, 2.32],
+          [side * 0.95, 1.93, 2.78],
+          0.022,
+          k.dark,
+        );
+      // Five amber clearance markers across the cab roof brow.
+      k.panel("roof", [1.95, 0.06, 0.1], [0, 2.06, 2.28], k.dark, 0.02);
+      for (const x of [-0.8, -0.4, 0, 0.4, 0.8])
+        k.panel("roof", [0.16, 0.08, 0.09], [x, 2.12, 2.26], k.amber, 0.02);
+      // Cab interior seen through the glass: dash, seats, wheel.
+      k.panel("roof", [1.8, 0.2, 0.4], [0, 0.75, 2.0], k.dark, 0.06);
+      for (const side of sides) {
+        k.panel("roof", [0.55, 0.5, 0.55], [side * 0.5, 0.75, 1.2], k.dark, 0.08);
+        k.panel("roof", [0.55, 0.6, 0.18], [side * 0.5, 1.05, 0.9], k.dark, 0.07);
+      }
+      k.mesh(
+        "roof",
+        new T.TorusGeometry(0.16, 0.026, 12, 48),
+        [0.5, 0.9, 1.75],
+        k.dark,
+      ).rotation.x = -0.5;
+
+      // ---- Cab doors: glass, mirrors, grab rails, steps ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [0.5, -0.08],
+            [2.36, -0.08],
+            [2.3, 0.62],
+            [0.56, 0.62],
+          ],
+          0.1,
+          side * 1.12,
+          k.paint,
+          0.03,
+        );
+        k.panel(d, [0.06, 0.62, 1.35], [side * 1.19, 1.06, 1.43], k.glass, 0.02);
+        k.bar(d, [side * 1.2, 1.39, 0.72], [side * 1.2, 1.39, 2.14], 0.03, k.dark);
+        k.bar(d, [side * 1.2, 0.73, 0.72], [side * 1.2, 0.73, 2.14], 0.03, k.dark);
+        k.bar(d, [side * 1.2, 0.73, 0.72], [side * 1.2, 1.39, 0.72], 0.03, k.dark);
+        k.bar(d, [side * 1.2, 0.73, 2.14], [side * 1.2, 1.39, 2.14], 0.03, k.dark);
+        k.panel(d, [0.06, 0.1, 1.86], [side * 1.19, 0.28, 1.42], k.dark, 0.02);
+        k.panel(d, [0.07, 0.06, 0.3], [side * 1.22, 0.55, 1.95], k.steel, 0.02);
+        k.bar(d, [side * 1.15, 1.35, 2.25], [side * 1.42, 1.42, 2.3], 0.03, k.dark);
+        k.panel(d, [0.1, 0.28, 0.18], [side * 1.45, 1.42, 2.3], k.dark, 0.03);
+        k.panel(d, [0.07, 0.22, 0.03], [side * 1.45, 1.42, 2.195], k.steel, 0.012);
+        k.bar(d, [side * 1.24, 0.1, 2.3], [side * 1.24, 0.7, 2.3], 0.028, k.steel);
+        k.panel(d, [0.34, 0.07, 0.3], [side * 1.12, -0.14, 1.0], k.steel, 0.02);
+        k.panel(d, [0.3, 0.07, 0.26], [side * 1.1, -0.3, 1.0], k.dark, 0.02);
+        k.panel(d, [0.05, 0.06, 0.12], [side * 1.19, -0.02, 0.6], k.amber, 0.012);
+        k.panel(d, [0.05, 0.06, 0.12], [side * 1.19, -0.02, 2.28], k.amber, 0.012);
+      }
+
+      // ---- Tank cradle: spine, saddles, skirts with compartments ----
+      k.hull("bed", [
+        [-2.55, -0.25, 0.2, 0.85, 0.85],
+        [0.35, -0.25, 0.2, 0.85, 0.85],
+      ]);
+      for (const z of [-0.75, -1.45]) {
+        k.panel("bed", [1.7, 0.45, 0.26], [0, 0.05, z], k.dark, 0.05);
+        k.panel("bed", [1.74, 0.1, 0.3], [0, 0.3, z], k.steel, 0.03);
+      }
+      for (const side of sides) {
+        k.panel("bed", [0.3, 0.5, 2.3], [side * 0.95, -0.1, -1.05], k.paint, 0.05);
+        for (const z of [-0.6, -1.5]) {
+          k.panel("bed", [0.05, 0.36, 0.66], [side * 1.12, -0.1, z], k.dark, 0.015);
+          k.panel(
+            "bed",
+            [0.06, 0.3, 0.6],
+            [side * 1.13, -0.1, z],
+            tankSteel,
+            0.015,
+          );
+          k.bar(
+            "bed",
+            [side * 1.17, -0.1, z - 0.12],
+            [side * 1.17, -0.1, z + 0.12],
+            0.02,
+            k.dark,
+          );
+        }
+        k.panel("bed", [0.05, 0.07, 0.14], [side * 1.11, 0.18, 0.05], k.amber, 0.012);
+        k.panel("bed", [0.05, 0.07, 0.14], [side * 1.11, 0.18, -2.15], k.red, 0.012);
+      }
+
+      // ---- Tank shell: brushed cylinder, end rings, red bands ----
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.98, 0.98, 2.9, 72).rotateX(Math.PI / 2),
+        [0, 1.06, -1.1],
+        tankSteel,
+      );
+      for (const z of [0.35, -2.55])
+        k.mesh(
+          "bed",
+          new T.TorusGeometry(0.97, 0.035, 12, 72),
+          [0, 1.06, z],
+          tankSteel,
+        );
+      k.oval("bed", [0.3, 0.3, 0.1], [0, 1.06, 0.35], tankSteel);
+      k.oval("bed", [0.3, 0.3, 0.08], [0, 1.06, -2.55], tankSteel);
+      for (const z of [-0.4, -1.1, -1.8])
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(1.0, 1.0, 0.2, 72).rotateX(Math.PI / 2),
+          [0, 1.06, z],
+          k.accent,
+        );
+      for (const z of [-0.53, -0.27, -1.23, -0.97, -1.93, -1.67])
+        k.mesh(
+          "bed",
+          new T.TorusGeometry(0.995, 0.016, 8, 72),
+          [0, 1.06, z],
+          k.steel,
+        );
+      const rivet = new T.SphereGeometry(0.028, 8, 6);
+      for (const z of [-0.4, -1.1, -1.8])
+        for (let i = 0; i < 26; i++) {
+          const a = (i / 26) * Math.PI * 2;
+          k.mesh(
+            "bed",
+            rivet,
+            [Math.cos(a) * 1.0, 1.06 + Math.sin(a) * 1.0, z + 0.13],
+            k.steel,
+          );
+        }
+
+      // ---- Tank crown: manway hatch, dome vents, walkway ----
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.2, 0.22, 0.18, 32),
+        [0, 2.08, -0.75],
+        tankSteel,
+      );
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.24, 0.24, 0.07, 32),
+        [0, 2.2, -0.75],
+        k.dark,
+      );
+      k.bar("bed", [-0.18, 2.26, -0.75], [0.18, 2.26, -0.75], 0.028, k.steel);
+      for (const z of [-1.35, -1.55]) {
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(0.12, 0.13, 0.08, 24),
+          [0, 2.0, z],
+          k.dark,
+        );
+        k.oval("bed", [0.12, 0.1, 0.12], [0, 2.06, z], tankSteel);
+      }
+      k.oval("bed", [0.1, 0.08, 0.1], [0, 2.06, -2.3], tankSteel);
+      k.panel("bed", [0.5, 0.05, 1.5], [0, 2.09, -1.5], k.dark, 0.015);
+      for (const z of [-0.85, -1.45, -2.1])
+        k.panel("bed", [0.4, 0.06, 0.08], [0, 2.05, z], k.steel, 0.015);
+
+      // ---- Access ladder up the left tank flank with crown grab rails ----
+      for (const z of [-1.3, -1.6])
+        k.bar("bed", [1.19, 0.05, z], [1.19, 2.0, z], 0.028, k.steel);
+      for (let i = 0; i < 7; i++) {
+        const y = 0.2 + i * 0.27;
+        k.bar("bed", [1.19, y, -1.6], [1.19, y, -1.3], 0.02, k.steel);
+      }
+      for (const y of [0.6, 1.2, 1.8])
+        k.bar("bed", [0.6, y, -1.45], [1.19, y, -1.45], 0.02, k.steel);
+      k.tube(
+        "bed",
+        [
+          [1.19, 2.0, -1.3],
+          [1.05, 2.2, -1.3],
+          [0.7, 2.25, -1.3],
+        ],
+        0.025,
+        k.steel,
+        20,
+      );
+      k.tube(
+        "bed",
+        [
+          [1.19, 2.0, -1.6],
+          [1.05, 2.2, -1.6],
+          [0.7, 2.25, -1.6],
+        ],
+        0.025,
+        k.steel,
+        20,
+      );
+
+      // ---- Side hose tubes with couplings and rear risers ----
+      for (const side of sides) {
+        for (const y of [0.52, 0.72]) {
+          k.tube(
+            "bed",
+            [
+              [side * 1.08, y, 0.3],
+              [side * 1.08, y, -1.2],
+              [side * 1.08, y, -2.4],
+            ],
+            0.065,
+            tankSteel,
+            24,
+          );
+          for (const z of [0.1, -1.1, -2.3])
+            k.mesh(
+              "bed",
+              new T.TorusGeometry(0.07, 0.02, 8, 24),
+              [side * 1.08, y, z],
+              k.dark,
+            );
+          k.mesh(
+            "bed",
+            new T.CylinderGeometry(0.065, 0.065, 0.08, 20).rotateX(Math.PI / 2),
+            [side * 1.08, y, 0.32],
+            k.dark,
+          );
+        }
+        k.tube(
+          "bed",
+          [
+            [side * 1.08, 0.72, -2.4],
+            [side * 1.02, 1.1, -2.62],
+            [side * 0.7, 1.2, -2.76],
+          ],
+          0.06,
+          tankSteel,
+          20,
+        );
+      }
+
+      // ---- Hazard diamonds: flammable + oxidizer pairs, both flanks ----
+      for (const side of sides)
+        for (const [zr, zw] of [
+          [-0.63, -0.95],
+          [-1.95, -2.27],
+        ] as const) {
+          k.panel("bed", [0.05, 0.3, 0.3], [side * 0.99, 1.15, zr], k.red, 0.012)
+            .rotation.x = Math.PI / 4;
+          k.panel("bed", [0.05, 0.3, 0.3], [side * 0.99, 1.15, zw], cream, 0.012)
+            .rotation.x = Math.PI / 4;
+          k.panel(
+            "bed",
+            [0.055, 0.12, 0.12],
+            [side * 0.995, 1.12, zw],
+            k.dark,
+            0.008,
+          ).rotation.x = Math.PI / 4;
+        }
+
+      // ---- Rear hose reel, discharge manifold, placards, work lamp ----
+      k.panel("bed", [1.9, 1.5, 0.14], [0, 0.95, -2.72], k.dark, 0.04);
+      for (const fx of [0.3, 0.9])
+        k.panel("bed", [0.06, 0.8, 0.5], [fx, 1.0, -2.82], k.steel, 0.02);
+      k.bar("bed", [0.3, 1.0, -2.82], [0.9, 1.0, -2.82], 0.05, k.steel);
+      for (const fx of [0.36, 0.84])
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(0.32, 0.32, 0.05, 48).rotateZ(Math.PI / 2),
+          [fx, 1.0, -2.82],
+          k.steel,
+        );
+      for (const cx of [0.48, 0.57, 0.66])
+        k.mesh(
+          "bed",
+          new T.TorusGeometry(0.24, 0.055, 12, 48).rotateY(Math.PI / 2),
+          [cx, 1.0, -2.82],
+          hose,
+        );
+      k.bar("bed", [0.93, 1.0, -2.82], [0.93, 1.22, -2.82], 0.025, k.dark);
+      k.bar("bed", [0.93, 1.22, -2.82], [1.0, 1.22, -2.82], 0.025, k.dark);
+      for (const px of [-0.45, -0.75]) {
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(0.07, 0.07, 1.1, 20),
+          [px, 0.9, -2.82],
+          tankSteel,
+        );
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(0.1, 0.1, 0.08, 20),
+          [px, 1.48, -2.82],
+          k.dark,
+        );
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(0.06, 0.06, 0.14, 16).rotateX(Math.PI / 2),
+          [px, 0.5, -2.9],
+          k.steel,
+        );
+      }
+      k.bar("bed", [-0.75, 1.3, -2.82], [-0.45, 1.3, -2.82], 0.05, tankSteel);
+      k.panel("bed", [0.3, 0.3, 0.05], [0, 1.52, -2.8], k.red, 0.012).rotation.z =
+        Math.PI / 4;
+      k.panel("bed", [0.3, 0.3, 0.05], [0, 1.1, -2.8], cream, 0.012).rotation.z =
+        Math.PI / 4;
+      k.lamp("bed", [0, 1.8, -2.78], 0.07, k.white, -1);
+      for (const side of sides)
+        k.panel(
+          "bed",
+          [0.12, 0.08, 0.05],
+          [side * 0.85, 1.72, -2.78],
+          k.red,
+          0.015,
+        );
+
+      // ---- Front bumper: silver bar, tow eyes, fogs, plate ----
+      k.panel("bumper-front", [2.5, 0.26, 0.34], [0, -0.11, 2.66], k.paint, 0.085);
+      k.panel("bumper-front", [2.3, 0.05, 0.28], [0, 0.03, 2.66], k.dark, 0.015);
+      for (const side of sides) {
+        k.mesh(
+          "bumper-front",
+          new T.TorusGeometry(0.09, 0.032, 12, 32),
+          [side * 0.75, -0.12, 2.845],
+          k.steel,
+        );
+        k.lamp("bumper-front", [side * 0.4, -0.11, 2.84], 0.07);
+      }
+      k.panel("bumper-front", [0.4, 0.12, 0.03], [0, -0.11, 2.845], k.white, 0.01);
+
+      // ---- Rear bumper: step, lights, underride bar, flaps ----
+      k.panel("bumper-rear", [2.3, 0.18, 0.4], [0, -0.14, -2.86], k.steel, 0.06);
+      k.tailLights(-3.06, 0.0);
+      k.bar("bumper-rear", [-1.0, -0.42, -3.0], [1.0, -0.42, -3.0], 0.05, k.dark);
+      for (const side of sides)
+        k.bar(
+          "bumper-rear",
+          [side * 1.0, -0.42, -3.0],
+          [side * 1.0, -0.14, -2.86],
+          0.04,
+          k.dark,
+        );
+      for (let i = 0; i < 4; i++) {
+        const x = -0.75 + i * 0.5;
+        k.panel(
+          "bumper-rear",
+          [0.4, 0.08, 0.04],
+          [x, -0.42, -3.03],
+          i % 2 ? cream : k.red,
+          0.012,
+        );
+      }
+      for (const side of sides) {
+        k.panel(
+          "bumper-rear",
+          [0.55, 0.45, 0.06],
+          [side * 1.65, -0.5, -2.82],
+          k.dark,
+          0.03,
+        );
+        k.panel(
+          "bumper-rear",
+          [0.4, 0.07, 0.3],
+          [side * 1.1, -0.28, -2.9],
+          k.steel,
+          0.02,
+        );
+      }
+      k.bar("bumper-rear", [0, -0.3, -2.9], [0, -0.3, -3.12], 0.06, k.dark);
+
+      // ---- Chassis dressing: fenders, boxes, air tank, shocks, pipes ----
+      fenders(k, k.paint);
+      for (const side of sides) {
+        k.panel(
+          "chassis-front",
+          [0.5, 0.42, 0.9],
+          [side * 0.9, -0.5, 0.6],
+          tankSteel,
+          0.06,
+        );
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.06, 0.06, 0.06, 16),
+          [side * 0.9, -0.26, 0.6],
+          k.dark,
+        );
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          k.accent,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          k.accent,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 0.55, -0.5, -2.3],
+          [side * 0.55, -0.5, -3.05],
+          0.07,
+          k.steel,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 0.55, -0.5, -2.95],
+          [side * 0.55, -0.5, -3.1],
+          0.078,
+          k.dark,
+        );
+      }
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.18, 0.18, 0.9, 32).rotateX(Math.PI / 2),
+        [0, -0.55, 0.9],
+        tankSteel,
+      );
+      for (const z of [1.15, 0.65])
+        k.mesh(
+          "chassis-front",
+          new T.TorusGeometry(0.19, 0.02, 8, 32),
+          [0, -0.55, z],
+          k.dark,
+        );
+      k.bar("chassis-front", [0, -0.68, 0.1], [0, -0.68, 1.6], 0.06, k.steel);
+      k.bar("chassis-rear", [0, -0.68, -0.1], [0, -0.68, -1.6], 0.06, k.steel);
+      k.bar("chassis-rear", [-1.1, -0.5, -2.9], [1.1, -0.5, -2.9], 0.06, k.dark);
+
+      // Bright hub caps over the kit hubs, per the concept's silver rims.
+      const caps = [
+        ["wheel-fl", 2.13, 1.65],
+        ["wheel-fr", -2.13, 1.65],
+        ["wheel-rl", 2.13, -1.65],
+        ["wheel-rr", -2.13, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.38, 0.38, 0.05, 48).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.steel,
+        );
+        const dome = k.mesh(
+          part,
+          new T.SphereGeometry(0.09, 24, 16),
+          [x + Math.sign(x) * 0.03, -0.85, z],
+          k.steel,
+        );
+        dome.scale.x = 0.6;
+      }
+    },
+  ),
+  vehicle(
+    "golf-cart",
+    "Golf Cart",
+    "Cream open golf cart with a canopy roof, bench seat, and a bag rack.",
+    [15787724, 4095311, 7830914, 0.7, 5],
+    (k) => {
+      const white = finish(0xf8f5ee, 0.5, 0.05);
+      const canvas = finish(0xcfc39f, 0.92, 0);
+      const canvasDark = finish(0x8f8668, 0.92, 0);
+      const mat = finish(0x2b2e30, 0.95, 0);
+
+      // ---- Nose cowl (hood): rounded cowl, grille, round headlamps ----
+      k.hull("hood", [
+        [1.05, -0.12, 0.52, 1.02, 0.98],
+        [2.15, -0.16, 0.42, 0.98, 0.92],
+        [2.52, -0.16, 0.28, 0.8, 0.84],
+      ]);
+      k.oval("hood", [0.9, 0.2, 0.7], [0, 0.5, 1.58]);
+      k.panel("hood", [1.5, 0.1, 0.9], [0, 0.56, 1.35], k.paint, 0.04);
+      k.panel("hood", [0.72, 0.2, 0.08], [0, 0.02, 2.53], k.dark, 0.03);
+      for (let i = 0; i < 3; i++)
+        k.panel(
+          "hood",
+          [0.62, 0.025, 0.04],
+          [0, -0.04 + i * 0.06, 2.58],
+          k.steel,
+          0.008,
+        );
+      for (const side of sides) {
+        k.lamp("hood", [side * 0.58, 0.14, 2.5], 0.13);
+        k.lamp("hood", [side * 0.92, -0.04, 2.42], 0.05, k.amber);
+        k.bar(
+          "hood",
+          [side * 0.99, 0.1, 1.2],
+          [side * 0.93, 0.08, 2.3],
+          0.025,
+          k.steel,
+        );
+        k.panel("hood", [0.06, 0.1, 0.5], [side * 1.0, 0.32, 1.6], k.accent, 0.02);
+      }
+      k.oval("hood", [0.12, 0.07, 0.04], [0, 0.32, 2.5], k.accent);
+
+      // ---- Split windshield (hood): twin panes in a black frame ----
+      k.bar("hood", [-0.95, 0.62, 1.62], [0.95, 0.62, 1.62], 0.045, k.dark);
+      k.bar("hood", [-0.95, 1.52, 1.48], [0.95, 1.52, 1.48], 0.045, k.dark);
+      k.bar("hood", [0, 0.62, 1.62], [0, 1.52, 1.48], 0.04, k.dark);
+      for (const side of sides) {
+        k.bar(
+          "hood",
+          [side * 0.95, 0.62, 1.62],
+          [side * 0.95, 1.52, 1.48],
+          0.045,
+          k.dark,
+        );
+        k.panel(
+          "hood",
+          [0.86, 0.82, 0.04],
+          [side * 0.46, 1.07, 1.55],
+          k.glass,
+          0.015,
+        ).rotation.x = -0.15;
+        k.panel("hood", [0.1, 0.06, 0.06], [side * 0.95, 0.58, 1.62], k.dark, 0.02);
+      }
+
+      // ---- Floor (chassis-front): pan, rubber mat, grip studs ----
+      k.panel("chassis-front", [1.9, 0.1, 2.6], [0, -0.14, 0.55], k.paint, 0.04);
+      k.panel("chassis-front", [1.7, 0.05, 2.3], [0, -0.07, 0.5], mat, 0.015);
+      k.panel("chassis-front", [1.78, 0.03, 0.08], [0, -0.06, 1.68], k.steel, 0.01);
+      k.panel("chassis-front", [1.78, 0.03, 0.08], [0, -0.06, -0.68], k.steel, 0.01);
+      const stud = new T.CylinderGeometry(0.022, 0.022, 0.035, 10);
+      for (let ix = 0; ix < 7; ix++)
+        for (let iz = 0; iz < 6; iz++)
+          k.mesh(
+            "chassis-front",
+            stud,
+            [-0.66 + ix * 0.22, -0.04, -0.45 + iz * 0.38],
+            k.steel,
+          );
+
+      // ---- Bench seat: plinth, cushion and backrest with quilting ----
+      k.panel("chassis-front", [1.7, 0.3, 0.82], [0, 0.12, -0.05], k.paint, 0.05);
+      k.panel("chassis-front", [0.5, 0.18, 0.04], [0, 0.12, 0.37], mat, 0.015);
+      k.panel("chassis-front", [0.12, 0.04, 0.05], [0, 0.14, 0.39], k.steel, 0.01);
+      k.panel("chassis-front", [1.74, 0.24, 0.84], [0, 0.4, -0.05], k.accent, 0.09);
+      k.bar("chassis-front", [-0.85, 0.5, 0.35], [0.85, 0.5, 0.35], 0.025, mat);
+      k.bar("chassis-front", [-0.85, 0.5, -0.45], [0.85, 0.5, -0.45], 0.025, mat);
+      for (const side of sides)
+        k.bar(
+          "chassis-front",
+          [side * 0.85, 0.5, -0.45],
+          [side * 0.85, 0.5, 0.35],
+          0.025,
+          mat,
+        );
+      for (let i = -2; i <= 2; i++) {
+        const o = i * 0.22;
+        k.bar(
+          "chassis-front",
+          [o - 0.35, 0.525, -0.4],
+          [o + 0.35, 0.525, 0.3],
+          0.012,
+          mat,
+        );
+        k.bar(
+          "chassis-front",
+          [o - 0.35, 0.525, 0.3],
+          [o + 0.35, 0.525, -0.4],
+          0.012,
+          mat,
+        );
+      }
+      const button = new T.SphereGeometry(0.035, 12, 8);
+      for (let ix = 0; ix < 5; ix++)
+        for (let iz = 0; iz < 3; iz++) {
+          const b = k.mesh(
+            "chassis-front",
+            button,
+            [-0.6 + ix * 0.3, 0.53, -0.3 + iz * 0.25],
+            mat,
+          );
+          b.scale.y = 0.55;
+        }
+      k.panel(
+        "chassis-front",
+        [1.74, 0.72, 0.24],
+        [0, 0.86, -0.52],
+        k.accent,
+        0.09,
+      ).rotation.x = -0.1;
+      for (const y of [0.72, 0.98])
+        k.bar("chassis-front", [-0.82, y, -0.395], [0.82, y, -0.395], 0.02, mat);
+      for (let ix = 0; ix < 5; ix++)
+        for (const y of [0.78, 1.0]) {
+          const b = k.mesh(
+            "chassis-front",
+            button,
+            [-0.6 + ix * 0.3, y, -0.4],
+            mat,
+          );
+          b.scale.z = 0.55;
+        }
+      for (const side of sides)
+        k.panel(
+          "chassis-front",
+          [0.18, 0.2, 0.7],
+          [side * 0.78, 0.5, -0.05],
+          k.accent,
+          0.07,
+        );
+
+      // ---- Dash, pedals and steering (chassis-front) ----
+      k.panel("chassis-front", [1.7, 0.3, 0.32], [0, 0.52, 1.28], k.paint, 0.06);
+      k.panel("chassis-front", [1.7, 0.07, 0.36], [0, 0.7, 1.28], mat, 0.025);
+      for (const side of sides) {
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.075, 0.075, 0.02, 24),
+          [side * 0.32, 0.74, 1.28],
+          mat,
+        );
+        k.mesh(
+          "chassis-front",
+          new T.TorusGeometry(0.075, 0.015, 10, 32).rotateX(Math.PI / 2),
+          [side * 0.32, 0.745, 1.28],
+          k.steel,
+        );
+      }
+      k.panel("chassis-front", [0.3, 0.02, 0.4], [-0.45, 0.75, 1.28], white, 0.005);
+      k.panel("chassis-front", [0.1, 0.04, 0.06], [-0.45, 0.77, 1.42], k.steel, 0.01);
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.07, 0.07, 0.03, 24).rotateX(Math.PI / 2),
+        [0.55, 0.55, 1.11],
+        white,
+      );
+      k.bar("chassis-front", [0.55, 0.55, 1.09], [0.58, 0.59, 1.09], 0.012, k.red);
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.025, 0.025, 0.04, 12).rotateX(Math.PI / 2),
+        [0.72, 0.5, 1.11],
+        k.red,
+      );
+      for (const x of [0.4, 0.68])
+        k.panel("chassis-front", [0.14, 0.04, 0.22], [x, 0.02, 1.32], mat, 0.01).rotation.x =
+          0.5;
+      k.bar("chassis-front", [0.55, 0.35, 1.2], [0.55, 0.82, 0.9], 0.045, k.steel);
+      k.bar("chassis-front", [0.55, 0.3, 1.24], [0.55, 0.5, 1.14], 0.07, k.dark);
+      k.mesh(
+        "chassis-front",
+        new T.TorusGeometry(0.2, 0.032, 12, 48),
+        [0.55, 0.85, 0.87],
+        k.dark,
+      ).rotation.x = -0.55;
+      k.bar("chassis-front", [0.37, 0.85, 0.87], [0.73, 0.85, 0.87], 0.018, k.steel);
+      k.bar("chassis-front", [0.55, 0.85, 0.87], [0.55, 0.68, 0.97], 0.018, k.steel);
+      k.bar(
+        "chassis-front",
+        [0.55, 0.819, 0.819],
+        [0.55, 0.881, 0.921],
+        0.05,
+        k.dark,
+      );
+
+      // ---- Canopy (roof): white top on four cream posts ----
+      k.panel("roof", [2.14, 0.13, 3.42], [0, 2.36, -0.15], white, 0.06);
+      k.panel("roof", [1.9, 0.04, 3.1], [0, 2.28, -0.15], k.paint, 0.015);
+      for (const side of sides) {
+        k.bar(
+          "roof",
+          [side * 0.85, 0.45, 1.62],
+          [side * 1.0, 2.32, 1.5],
+          0.055,
+          k.paint,
+        );
+        k.bar(
+          "roof",
+          [side * 0.9, 0.3, -1.9],
+          [side * 1.0, 2.32, -1.8],
+          0.055,
+          k.paint,
+        );
+        k.bar(
+          "roof",
+          [side * 1.0, 2.32, 1.5],
+          [side * 1.0, 2.32, -1.8],
+          0.05,
+          k.paint,
+        );
+        k.panel("roof", [0.14, 0.14, 0.14], [side * 0.85, 0.5, 1.62], k.paint, 0.03);
+        k.panel("roof", [0.14, 0.14, 0.14], [side * 0.9, 0.5, -1.9], k.paint, 0.03);
+      }
+      k.bar("roof", [-1.0, 2.32, 1.5], [1.0, 2.32, 1.5], 0.05, k.paint);
+      k.bar("roof", [-1.0, 2.32, -1.8], [1.0, 2.32, -1.8], 0.05, k.paint);
+      for (const z of [0.9, -0.15, -1.2])
+        k.bar("roof", [-1.0, 2.3, z], [1.0, 2.3, z], 0.03, k.paint);
+      k.bar("roof", [-1.07, 2.36, 1.56], [1.07, 2.36, 1.56], 0.03, k.paint);
+      k.bar("roof", [-1.07, 2.36, -1.86], [1.07, 2.36, -1.86], 0.03, k.paint);
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.07, 0.09, 0.05, 24),
+        [0, 2.25, -0.15],
+        k.dark,
+      );
+      k.oval("roof", [0.055, 0.03, 0.055], [0, 2.23, -0.15], k.white);
+
+      // ---- Side pods (doors): body, rails, steps, reflectors ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [-1.35, -0.15],
+            [1.45, -0.15],
+            [1.3, 0.32],
+            [-1.2, 0.38],
+          ],
+          0.16,
+          side * 1.0,
+          k.paint,
+          0.04,
+        );
+        k.panel(d, [0.05, 0.1, 2.3], [side * 1.11, 0.12, 0.0], k.accent, 0.02);
+        k.tube(
+          d,
+          [
+            [side * 1.1, 0.4, -1.2],
+            [side * 1.1, 0.42, 0],
+            [side * 1.1, 0.36, 1.3],
+          ],
+          0.04,
+          k.dark,
+          24,
+        );
+        k.bar(d, [side * 1.08, 0.62, -1.15], [side * 1.08, 0.62, 1.15], 0.035, k.dark);
+        for (const z of [-1.1, 0.0, 1.1])
+          k.bar(
+            d,
+            [side * 1.08, 0.38, z],
+            [side * 1.08, 0.62, z],
+            0.028,
+            k.dark,
+          );
+        for (const z of [-0.55, 0.55])
+          k.panel(d, [0.12, 0.07, 0.35], [side * 1.08, 0.67, z], k.accent, 0.03);
+        k.bar(d, [side * 1.05, 0.4, 1.05], [side * 1.05, 0.85, 1.05], 0.03, k.dark);
+        k.panel(d, [0.42, 0.07, 0.6], [side * 1.18, -0.4, 0.35], mat, 0.02);
+        for (let i = 0; i < 4; i++)
+          k.bar(
+            d,
+            [side * 1.0, -0.36, 0.12 + i * 0.15],
+            [side * 1.36, -0.36, 0.12 + i * 0.15],
+            0.015,
+            k.steel,
+          );
+        for (const z of [0.15, 0.55])
+          k.bar(
+            d,
+            [side * 1.0, -0.42, z],
+            [side * 0.95, -0.15, z],
+            0.025,
+            k.dark,
+          );
+        k.panel(d, [0.05, 0.08, 0.14], [side * 1.11, 0.05, 1.3], k.amber, 0.012);
+        k.panel(d, [0.05, 0.08, 0.14], [side * 1.11, 0.05, -1.25], k.red, 0.012);
+      }
+
+      // ---- Rear cowl + bag rack (bed): frame, bags, clubs, bucket ----
+      k.hull("bed", [
+        [-2.55, -0.15, 0.45, 1.0, 0.95],
+        [-0.7, -0.15, 0.55, 1.05, 1.0],
+      ]);
+      k.panel("bed", [1.85, 0.1, 1.0], [0, 0.52, -1.8], mat, 0.03);
+      for (let i = 0; i < 5; i++)
+        k.bar("bed", [-0.88, 0.58, -1.4 - i * 0.2], [0.88, 0.58, -1.4 - i * 0.2], 0.02, k.steel);
+      for (const side of sides) {
+        for (const z of [-1.35, -2.25])
+          k.bar(
+            "bed",
+            [side * 0.88, 0.57, z],
+            [side * 0.88, 1.15, z],
+            0.045,
+            k.paint,
+          );
+        k.bar("bed", [side * 0.88, 1.15, -1.35], [side * 0.88, 1.15, -2.25], 0.045, k.paint);
+        k.bar("bed", [side * 0.88, 0.85, -1.35], [side * 0.88, 0.85, -2.25], 0.03, k.paint);
+      }
+      k.bar("bed", [-0.88, 1.15, -1.35], [0.88, 1.15, -1.35], 0.045, k.paint);
+      k.bar("bed", [-0.88, 1.15, -2.25], [0.88, 1.15, -2.25], 0.045, k.paint);
+      k.bar("bed", [-0.88, 0.85, -2.25], [0.88, 0.85, -2.25], 0.03, k.paint);
+      k.panel("bed", [0.06, 0.5, 0.7], [0, 0.9, -1.8], mat, 0.02);
+      for (const side of sides) {
+        const bx = side * 0.46;
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(0.23, 0.29, 1.0, 36),
+          [bx, 1.05, -1.8],
+          canvas,
+        );
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(0.25, 0.24, 0.2, 36),
+          [bx, 1.52, -1.8],
+          canvasDark,
+        );
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(0.19, 0.19, 0.06, 24),
+          [bx, 1.6, -1.8],
+          mat,
+        );
+        k.mesh(
+          "bed",
+          new T.TorusGeometry(0.28, 0.035, 12, 40).rotateX(Math.PI / 2),
+          [bx, 0.6, -1.8],
+          mat,
+        );
+        k.panel("bed", [0.34, 0.42, 0.14], [bx, 0.95, -2.1], canvasDark, 0.05);
+        k.bar("bed", [bx, 0.8, -2.18], [bx, 1.1, -2.18], 0.015, k.steel);
+        k.panel("bed", [0.16, 0.1, 0.03], [bx, 1.18, -2.02], white, 0.01);
+        for (const sx of [-1, 1])
+          k.bar(
+            "bed",
+            [bx + sx * 0.27, 0.6, -1.8],
+            [bx + sx * 0.24, 1.45, -1.8],
+            0.02,
+            mat,
+          );
+        const fans: Array<[number, number, number]> = [
+          [-0.1, 0.06, 2.12],
+          [-0.05, -0.04, 2.02],
+          [0, 0.08, 2.16],
+          [0.05, -0.06, 2.0],
+          [0.1, 0.02, 2.08],
+        ];
+        fans.forEach(([dx, dz, h], i) => {
+          k.bar(
+            "bed",
+            [bx + dx * 0.3, 1.4, -1.8 + dz * 0.3],
+            [bx + dx, h, -1.8 + dz],
+            0.018,
+            k.steel,
+          );
+          if (i < 2)
+            k.oval("bed", [0.075, 0.06, 0.1], [bx + dx, h + 0.03, -1.8 + dz], k.dark);
+          else
+            k.panel(
+              "bed",
+              [0.05, 0.1, 0.035],
+              [bx + dx, h + 0.02, -1.8 + dz],
+              k.steel,
+              0.012,
+            ).rotation.z = 0.3;
+        });
+      }
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.13, 0.11, 0.22, 24),
+        [0, 0.68, -1.35],
+        white,
+      );
+      const ball = new T.SphereGeometry(0.036, 16, 12);
+      for (const [x, z] of [[-0.05, -1.35], [0.05, -1.35], [0, -1.28]] as const)
+        k.mesh("bed", ball, [x, 0.8, z], white);
+      k.panel("bed", [0.3, 0.3, 0.035], [0.3, 0.98, -2.28], white, 0.015);
+      k.panel("bed", [0.3, 0.06, 0.04], [0.3, 1.05, -2.28], k.accent, 0.01);
+      k.panel("bed", [0.3, 0.04, 0.12], [0.3, 1.16, -2.25], white, 0.015);
+      // Rear face: tail panel, plate, reflectors.
+      k.panel("bed", [1.6, 0.28, 0.08], [0, 0.05, -2.56], k.dark, 0.03);
+      k.panel("bed", [0.34, 0.12, 0.03], [0, 0.05, -2.61], white, 0.01);
+      for (const side of sides)
+        k.panel("bed", [0.12, 0.08, 0.03], [side * 0.68, 0.05, -2.6], k.red, 0.01);
+
+      // ---- Front bumper: black tube guard, loops, pad ----
+      k.tube(
+        "bumper-front",
+        [
+          [-1.0, -0.12, 2.72],
+          [0, -0.16, 2.86],
+          [1.0, -0.12, 2.72],
+        ],
+        0.07,
+        k.dark,
+        24,
+      );
+      k.bar("bumper-front", [-1.0, -0.32, 2.66], [1.0, -0.32, 2.66], 0.05, k.dark);
+      for (const side of sides) {
+        k.bar(
+          "bumper-front",
+          [side * 0.7, -0.32, 2.66],
+          [side * 0.72, -0.13, 2.79],
+          0.045,
+          k.dark,
+        );
+        k.mesh(
+          "bumper-front",
+          new T.TorusGeometry(0.09, 0.028, 12, 32),
+          [side * 0.45, -0.32, 2.68],
+          k.dark,
+        );
+        k.bar(
+          "bumper-front",
+          [side * 0.6, -0.2, 2.4],
+          [side * 0.6, -0.2, 2.7],
+          0.05,
+          k.dark,
+        );
+      }
+      k.panel("bumper-front", [1.7, 0.1, 0.1], [0, -0.12, 2.78], mat, 0.03);
+
+      // ---- Rear bumper: step, lights, flaps ----
+      k.panel("bumper-rear", [2.0, 0.14, 0.42], [0, -0.18, -2.72], k.steel, 0.05);
+      k.tailLights(-2.95, 0.05);
+      for (const side of sides) {
+        k.panel(
+          "bumper-rear",
+          [0.55, 0.45, 0.06],
+          [side * 1.65, -0.45, -2.72],
+          k.dark,
+          0.03,
+        );
+        k.panel(
+          "bumper-rear",
+          [0.4, 0.06, 0.02],
+          [side * 1.65, -0.35, -2.76],
+          white,
+          0.008,
+        );
+        k.bar(
+          "bumper-rear",
+          [side * 0.8, -0.2, -2.5],
+          [side * 0.8, -0.2, -2.7],
+          0.05,
+          k.dark,
+        );
+      }
+
+      // ---- Chassis dressing: fenders, shocks, battery, motor ----
+      fenders(k, k.paint);
+      for (const side of sides) {
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          k.accent,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          k.accent,
+        );
+        k.bar(
+          "chassis-front",
+          [side * 0.95, -0.2, -1.2],
+          [side * 0.95, -0.2, 1.4],
+          0.05,
+          k.steel,
+        );
+      }
+      k.bar("chassis-front", [-0.6, -0.55, 1.65], [0.6, -0.55, 1.65], 0.06, k.steel);
+      k.panel("chassis-front", [1.2, 0.08, 0.6], [0, -0.5, 2.0], k.steel, 0.02);
+      k.panel("chassis-front", [1.2, 0.35, 0.7], [0, -0.28, -0.1], k.dark, 0.05);
+      k.panel("chassis-front", [1.24, 0.06, 0.74], [0, -0.09, -0.1], mat, 0.02);
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.035, 0.035, 0.08, 12),
+        [0.4, -0.03, -0.2],
+        k.red,
+      );
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.035, 0.035, 0.08, 12),
+        [0.5, -0.03, -0.2],
+        k.steel,
+      );
+      k.tube(
+        "chassis-front",
+        [
+          [0.45, -0.1, -0.4],
+          [0.5, -0.4, -0.9],
+          [0.3, -0.55, -1.4],
+        ],
+        0.03,
+        k.red,
+        24,
+      );
+      k.mesh(
+        "chassis-rear",
+        new T.CylinderGeometry(0.22, 0.22, 0.7, 32).rotateZ(Math.PI / 2),
+        [0, -0.55, -1.65],
+        k.dark,
+      );
+      k.mesh(
+        "chassis-rear",
+        new T.CylinderGeometry(0.12, 0.12, 0.74, 24).rotateZ(Math.PI / 2),
+        [0, -0.55, -1.65],
+        k.steel,
+      );
+      for (let i = 0; i < 4; i++)
+        k.panel(
+          "chassis-rear",
+          [0.5, 0.04, 0.08],
+          [0, -0.38, -1.85 + i * 0.13],
+          k.dark,
+          0.01,
+        );
+      k.panel("chassis-rear", [1.4, 0.08, 0.5], [0, -0.5, -2.2], k.steel, 0.02);
+      k.bar("chassis-rear", [-1.1, -0.5, -2.9], [1.1, -0.5, -2.9], 0.06, k.dark);
+
+      // Dark hub caps over the kit hubs.
+      const caps = [
+        ["wheel-fl", 2.02, 1.65],
+        ["wheel-fr", -2.02, 1.65],
+        ["wheel-rl", 2.02, -1.65],
+        ["wheel-rr", -2.02, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps)
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.06, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.dark,
+        );
+    },
+  ),
+  vehicle(
+    "bubble-tub",
+    "Bubble Tub",
+    "Clawfoot bathtub racer full of foam, with a showerhead spoiler and brass feet.",
+    [15922679, 4175574, 11570495, 0.8, 6],
+    (k) => {
+      const brass = gold();
+      const foam = finish(0xf6fbff, 0.28, 0.05);
+      const foamBlue = finish(0xd9ecff, 0.3, 0.05);
+      const matRed = finish(0xc22430, 0.8, 0);
+      const stripeWhite = finish(0xf4f1e6, 0.7, 0);
+      const nozzleDark = finish(0x3a4148, 0.5, 0.4);
+
+      // ---- Nose (hood): front half of the porcelain tub, rolled rim, faucets ----
+      k.hull("hood", [
+        [0.3, -0.02, 0.85, 1.0, 0.98],
+        [1.45, 0.0, 0.92, 1.05, 1.0],
+        [2.25, 0.12, 0.92, 0.82, 0.78],
+      ]);
+      k.oval("hood", [0.88, 0.56, 0.58], [0, 0.5, 2.0]);
+      k.tube(
+        "hood",
+        [
+          [-1.0, 1.0, 0.6],
+          [-1.02, 1.02, 1.5],
+          [-0.7, 1.04, 2.15],
+          [0, 1.05, 2.32],
+          [0.7, 1.04, 2.15],
+          [1.02, 1.02, 1.5],
+          [1.0, 1.0, 0.6],
+        ],
+        0.095,
+        k.paint,
+      );
+      k.panel("hood", [1.7, 0.12, 1.5], [0, 0.62, 1.35], foamBlue, 0.05);
+      // Brass faucet set on the front rim: center spout + cross-handle taps.
+      k.bar("hood", [0, 1.0, 2.05], [0, 1.3, 2.05], 0.06, brass);
+      k.tube(
+        "hood",
+        [
+          [0, 1.3, 2.05],
+          [0, 1.38, 1.85],
+          [0, 1.28, 1.7],
+        ],
+        0.05,
+        brass,
+      );
+      k.oval("hood", [0.06, 0.08, 0.06], [0, 1.24, 1.7], brass);
+      k.oval("hood", [0.1, 0.06, 0.1], [0, 1.03, 2.05], brass);
+      for (const x of [-0.35, 0.35]) {
+        k.bar("hood", [x, 1.0, 2.1], [x, 1.15, 2.1], 0.04, brass);
+        k.bar("hood", [x - 0.09, 1.17, 2.1], [x + 0.09, 1.17, 2.1], 0.025, brass);
+        k.bar("hood", [x, 1.17, 2.01], [x, 1.17, 2.19], 0.025, brass);
+      }
+      // Foam spilling over the nose.
+      k.oval("hood", [0.2, 0.18, 0.2], [-0.45, 1.05, 1.8], foam);
+      k.oval("hood", [0.22, 0.2, 0.22], [0.4, 1.06, 1.9], foamBlue);
+      k.oval("hood", [0.14, 0.13, 0.14], [0.0, 1.12, 2.15], foam);
+      k.oval("hood", [0.11, 0.11, 0.11], [-0.75, 0.9, 1.5], foamBlue);
+
+      // ---- Foam pile (roof): tub overflowing with bath bubbles ----
+      const foamPile: Array<[number, number, number, number]> = [
+        [-0.55, 1.02, 1.55, 0.22],
+        [0.0, 1.0, 1.7, 0.24],
+        [0.55, 1.02, 1.5, 0.22],
+        [-0.7, 1.0, 0.9, 0.23],
+        [-0.2, 1.05, 1.05, 0.25],
+        [0.35, 1.02, 0.95, 0.23],
+        [0.72, 1.0, 0.75, 0.2],
+        [-0.45, 1.0, 0.35, 0.24],
+        [0.1, 1.06, 0.35, 0.26],
+        [0.62, 1.0, 0.1, 0.22],
+        [-0.68, 1.0, -0.3, 0.22],
+        [-0.15, 1.02, -0.3, 0.24],
+        [0.4, 1.0, -0.35, 0.23],
+        [-0.5, 1.0, -0.95, 0.23],
+        [0.05, 1.04, -0.95, 0.25],
+        [0.58, 1.0, -0.9, 0.22],
+        [-0.3, 1.0, -1.55, 0.23],
+        [0.3, 1.02, -1.6, 0.24],
+        [-0.3, 1.3, 1.25, 0.2],
+        [0.25, 1.32, 1.1, 0.21],
+        [-0.1, 1.32, 0.5, 0.22],
+        [0.3, 1.3, -0.05, 0.2],
+        [-0.35, 1.3, -0.6, 0.2],
+        [0.15, 1.32, -1.2, 0.21],
+        [0.0, 1.55, 0.9, 0.17],
+        [-0.15, 1.56, -0.2, 0.18],
+        [0.1, 1.54, -0.85, 0.16],
+      ];
+      foamPile.forEach(([x, y, z, r], i) =>
+        k.oval("roof", [r, r, r], [x, y, z], i % 2 ? foamBlue : foam),
+      );
+
+      // ---- Flanks (doors): tub side walls, rim, bath-mat skirts ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [1.95, 0.02],
+            [1.95, 0.95],
+            [-1.95, 0.95],
+            [-1.95, 0.02],
+          ],
+          0.12,
+          side * 1.0,
+        );
+        k.oval(d, [0.13, 0.42, 1.65], [side * 1.02, 0.62, 0]);
+        k.tube(
+          d,
+          [
+            [side * 1.0, 1.0, 2.0],
+            [side * 1.04, 1.04, 0],
+            [side * 1.0, 1.0, -2.0],
+          ],
+          0.095,
+          k.paint,
+        );
+        // Striped bath-mat side skirt.
+        k.panel(d, [0.07, 0.52, 1.7], [side * 1.1, 0.05, 0], matRed, 0.02);
+        for (let i = 0; i < 5; i++)
+          k.panel(
+            d,
+            [0.085, 0.07, 1.7],
+            [side * 1.1, -0.12 + i * 0.11, 0],
+            stripeWhite,
+            0.015,
+          );
+      }
+      // Hanging loofah on the left flank.
+      k.bar("door-left", [1.0, 1.0, -0.9], [1.12, 0.62, -0.9], 0.015, k.dark);
+      for (const [dx, dy, dz, r] of [
+        [0, 0, 0, 0.11],
+        [0.08, 0.05, 0.04, 0.08],
+        [-0.06, 0.06, -0.05, 0.075],
+        [0.04, -0.07, -0.06, 0.08],
+        [-0.05, -0.05, 0.07, 0.075],
+      ] as const)
+        k.oval(
+          "door-left",
+          [r, r, r],
+          [1.14 + dx, 0.5 + dy, -0.9 + dz],
+          k.accent,
+        );
+      // Towel ring + towel on the right flank.
+      k.mesh(
+        "door-right",
+        new T.TorusGeometry(0.12, 0.025, 12, 32),
+        [-1.16, 0.78, 0.6],
+        brass,
+      ).rotation.y = Math.PI / 2;
+      k.panel("door-right", [0.05, 0.36, 0.3], [-1.16, 0.5, 0.6], stripeWhite, 0.02);
+      k.panel("door-right", [0.06, 0.06, 0.3], [-1.16, 0.62, 0.6], matRed, 0.01);
+
+      // ---- Tail (bed): rear tub + chrome showerhead spoiler on a riser ----
+      k.hull("bed", [
+        [-2.25, 0.12, 0.92, 0.82, 0.78],
+        [-1.45, 0.0, 0.92, 1.05, 1.0],
+        [-0.3, -0.02, 0.85, 1.0, 0.98],
+      ]);
+      k.oval("bed", [0.88, 0.56, 0.58], [0, 0.5, -2.0]);
+      k.tube(
+        "bed",
+        [
+          [1.0, 1.0, -0.6],
+          [1.02, 1.02, -1.5],
+          [0.7, 1.04, -2.15],
+          [0, 1.05, -2.32],
+          [-0.7, 1.04, -2.15],
+          [-1.02, 1.02, -1.5],
+          [-1.0, 1.0, -0.6],
+        ],
+        0.095,
+        k.paint,
+      );
+      k.panel("bed", [1.7, 0.12, 1.5], [0, 0.62, -1.35], foamBlue, 0.05);
+      // Riser pipe, overhead arm, and rain-shower head.
+      k.bar("bed", [0.55, 0.9, -2.15], [0.55, 2.45, -2.15], 0.06, k.steel);
+      k.tube(
+        "bed",
+        [
+          [0.55, 2.45, -2.15],
+          [0.55, 2.55, -1.9],
+          [0.55, 2.5, -1.55],
+        ],
+        0.055,
+        k.steel,
+      );
+      k.bar("bed", [0.55, 2.5, -1.55], [0.55, 2.3, -1.55], 0.05, k.steel);
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.34, 0.38, 0.1, 40),
+        [0.55, 2.22, -1.55],
+        k.steel,
+      );
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.3, 0.3, 0.04, 32),
+        [0.55, 2.16, -1.55],
+        nozzleDark,
+      );
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        k.oval(
+          "bed",
+          [0.025, 0.02, 0.025],
+          [0.55 + Math.cos(a) * 0.19, 2.13, -1.55 + Math.sin(a) * 0.19],
+          k.dark,
+        );
+      }
+      // Handheld wand clipped to the right flank + flexible hose.
+      k.bar("bed", [1.28, 0.75, -1.6], [1.28, 1.15, -1.6], 0.045, k.steel);
+      k.oval("bed", [0.07, 0.14, 0.09], [1.28, 1.24, -1.6], k.steel);
+      k.tube(
+        "bed",
+        [
+          [0.55, 0.95, -2.2],
+          [1.2, 0.6, -2.0],
+          [1.3, 0.5, -1.2],
+          [1.28, 0.75, -1.6],
+        ],
+        0.035,
+        k.steel,
+      );
+      // Brass mixer valves at the riser base.
+      for (const x of [0.2, 0.9]) {
+        k.bar("bed", [x, 0.9, -2.2], [x, 1.05, -2.2], 0.04, brass);
+        k.bar("bed", [x - 0.09, 1.07, -2.2], [x + 0.09, 1.07, -2.2], 0.025, brass);
+        k.bar("bed", [x, 1.07, -2.29], [x, 1.07, -2.11], 0.025, brass);
+      }
+      k.oval("bed", [0.2, 0.18, 0.2], [-0.5, 1.05, -1.85], foam);
+      k.oval("bed", [0.15, 0.14, 0.15], [0.45, 1.08, -2.0], foamBlue);
+      k.oval("bed", [0.11, 0.11, 0.11], [0.8, 0.9, -1.7], foam);
+      for (const side of sides)
+        k.lamp("bed", [side * 0.7, 0.35, -2.42], 0.07, k.red, -1);
+
+      // ---- Bumpers: tubular chrome loops with white grips ----
+      for (const part of ["bumper-front", "bumper-rear"] as const) {
+        const z = part === "bumper-front" ? 2.75 : -2.75;
+        const facing = part === "bumper-front" ? 1 : -1;
+        for (const y of [-0.05, 0.3]) {
+          k.bar(part, [-0.9, y, z], [0.9, y, z], 0.055, k.steel);
+          k.bar(part, [-0.35, y, z], [0.35, y, z], 0.068, stripeWhite);
+        }
+        for (const side of sides) {
+          k.bar(
+            part,
+            [side * 0.9, -0.05, z],
+            [side * 0.9, 0.3, z],
+            0.055,
+            k.steel,
+          );
+          k.bar(
+            part,
+            [side * 0.9, 0.1, z],
+            [side * 0.9, 0.1, z - facing * 0.3],
+            0.05,
+            k.steel,
+          );
+        }
+      }
+      for (const side of sides)
+        k.lamp("bumper-front", [side * 0.55, 0.12, 2.82], 0.07);
+      k.tailLights(-2.82, 0.12);
+
+      // ---- Chassis dress: tub supports, brass claw feet, shocks, pipes ----
+      k.panel("chassis-front", [1.8, 0.15, 1.6], [0, -0.05, 1.2], k.dark, 0.04);
+      k.panel("chassis-rear", [1.8, 0.15, 1.6], [0, -0.05, -1.2], k.dark, 0.04);
+      const feet = [
+        ["chassis-front", 1.5],
+        ["chassis-rear", -1.5],
+      ] as const;
+      for (const [part, z] of feet)
+        for (const side of sides) {
+          const x = side * 0.95;
+          k.tube(
+            part,
+            [
+              [x, 0.15, z],
+              [x * 1.02, -0.15, z],
+              [x * 1.05, -0.35, z],
+            ],
+            0.09,
+            brass,
+          );
+          k.oval(part, [0.09, 0.09, 0.09], [x * 1.05, -0.36, z], brass);
+          k.oval(part, [0.13, 0.09, 0.16], [x * 1.05, -0.45, z + 0.03], brass);
+          for (const tx of [-0.07, 0, 0.07])
+            k.oval(
+              part,
+              [0.035, 0.035, 0.05],
+              [x * 1.05 + tx, -0.47, z + 0.16],
+              brass,
+            );
+        }
+      for (const side of sides) {
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          brass,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          brass,
+        );
+        k.panel(
+          "chassis-front",
+          [0.4, 0.08, 0.5],
+          [side * 1.15, -0.3, 0.15],
+          k.steel,
+          0.02,
+        );
+        k.tube(
+          "chassis-rear",
+          [
+            [side * 0.5, -0.45, -1.9],
+            [side * 0.5, -0.45, -2.5],
+            [side * 0.55, -0.42, -2.78],
+          ],
+          0.07,
+          k.steel,
+          24,
+        );
+      }
+      k.panel("chassis-front", [1.6, 0.1, 0.5], [0, -0.48, 2.3], k.steel, 0.03);
+
+      // Brass hub caps over the kit hubs.
+      const caps = [
+        ["wheel-fl", 2.08, 1.65],
+        ["wheel-fr", -2.08, 1.65],
+        ["wheel-rl", 2.08, -1.65],
+        ["wheel-rr", -2.08, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.06, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          brass,
+        );
+        k.mesh(
+          part,
+          new T.TorusGeometry(0.3, 0.03, 12, 48).rotateY(Math.PI / 2),
+          [x, -0.85, z],
+          brass,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "pillow-fighter",
+    "Pillow Fighter",
+    "Four-poster bed on wheels with quilts, pillows, and a headboard wing.",
+    [9067067, 8369881, 6050120, 0.8, 6],
+    (k) => {
+      const woodDark = finish(0x5a3a22, 0.58, 0.08);
+      const quiltDark = finish(0x3d6ea5, 0.85, 0);
+      const sheetMat = finish(0xf5f0e6, 0.85, 0);
+      const pillowMat = finish(0xefe3cb, 0.9, 0);
+      const skirtMat = finish(0xc9b183, 0.95, 0);
+      const fringeMat = finish(0xe8d9b8, 0.95, 0);
+      const brass = gold();
+      const shadeMat = finish(0xe9d9b0, 0.7, 0);
+
+      // Turned bedpost profile (radius, height), lathed around Y.
+      const postPoints = [
+        [0.17, 0],
+        [0.17, 0.12],
+        [0.11, 0.22],
+        [0.1, 0.34],
+        [0.14, 0.48],
+        [0.14, 0.58],
+        [0.09, 0.72],
+        [0.09, 1.12],
+        [0.13, 1.26],
+        [0.13, 1.36],
+        [0.08, 1.5],
+        [0.1, 1.62],
+        [0.13, 1.72],
+        [0.1, 1.86],
+        [0.11, 1.95],
+      ].map(([r, y]) => new T.Vector2(r, y));
+
+      // ---- Foot of the bed (hood): footboard, front posts, pillow nose ----
+      k.panel("hood", [2.3, 0.5, 0.18], [0, 0.75, 1.82], k.paint, 0.06);
+      k.panel("hood", [2.36, 0.12, 0.24], [0, 1.04, 1.82], k.paint, 0.05);
+      for (const x of [-0.72, 0, 0.72])
+        k.panel("hood", [0.5, 0.28, 0.05], [x, 0.72, 1.92], woodDark, 0.02);
+      for (const side of sides) {
+        k.mesh(
+          "hood",
+          new T.LatheGeometry(postPoints, 48),
+          [side * 1.05, -0.1, 1.82],
+          k.paint,
+        );
+        const collar = k.mesh(
+          "hood",
+          new T.TorusGeometry(0.085, 0.028, 10, 32),
+          [side * 1.05, 1.4, 1.82],
+          brass,
+        );
+        collar.rotation.x = Math.PI / 2;
+        k.oval("hood", [0.13, 0.15, 0.13], [side * 1.05, 1.98, 1.82], k.paint);
+        k.mesh(
+          "hood",
+          new T.SphereGeometry(0.045, 16, 12),
+          [side * 1.05, 2.14, 1.82],
+          brass,
+        );
+        k.lamp("hood", [side * 0.8, 0.72, 1.91], 0.12);
+        k.oval("hood", [0.3, 0.35, 0.25], [side * 0.75, 1.15, 0.7], pillowMat);
+      }
+      // Stacked pillows forming the nose.
+      k.panel("hood", [1.6, 0.3, 1.0], [0, 1.0, 1.25], pillowMat, 0.12);
+      const midPillow = k.oval("hood", [0.6, 0.4, 0.3], [0, 1.3, 1.05], pillowMat);
+      midPillow.rotation.x = 0.18;
+      const topPillow = k.oval("hood", [0.42, 0.28, 0.24], [0, 1.56, 1.2], sheetMat);
+      topPillow.rotation.x = -0.12;
+      topPillow.rotation.y = 0.2;
+      k.mesh(
+        "hood",
+        new T.CylinderGeometry(0.04, 0.04, 0.05, 12).rotateX(Math.PI / 2),
+        [0, 1.32, 1.34],
+        skirtMat,
+      );
+      // Throw blanket folded over the footboard.
+      k.panel("hood", [1.1, 0.07, 0.3], [-0.4, 1.13, 1.82], skirtMat, 0.03);
+      k.panel("hood", [1.1, 0.42, 0.07], [-0.4, 0.9, 1.96], skirtMat, 0.03);
+      k.panel("hood", [1.1, 0.07, 0.02], [-0.4, 0.82, 2.0], k.accent, 0.008);
+
+      // ---- Quilted comforter (roof): blue quilt, stitching, sheets ----
+      k.panel("roof", [2.3, 0.22, 2.7], [0, 0.95, -0.1], k.accent, 0.08);
+      for (const c of [-0.85, -0.51, -0.17, 0.17, 0.51, 0.85]) {
+        k.bar(
+          "roof",
+          [c - 0.23, 1.065, -1.35],
+          [c + 0.23, 1.065, 1.15],
+          0.012,
+          quiltDark,
+        );
+        k.bar(
+          "roof",
+          [c + 0.23, 1.065, -1.35],
+          [c - 0.23, 1.065, 1.15],
+          0.012,
+          quiltDark,
+        );
+      }
+      for (const x of [-0.9, -0.54, -0.18, 0.18, 0.54, 0.9])
+        for (const z of [-1.1, -0.5, 0.1, 0.7])
+          k.mesh(
+            "roof",
+            new T.CylinderGeometry(0.035, 0.035, 0.035, 12),
+            [x, 1.06, z],
+            quiltDark,
+          );
+      // White sheet fold at the head end.
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.11, 0.11, 2.1, 24).rotateZ(Math.PI / 2),
+        [0, 1.08, -1.2],
+        sheetMat,
+      );
+      k.panel("roof", [2.15, 0.07, 0.55], [0, 1.06, -0.9], sheetMat, 0.03);
+      // Throw blanket across the middle with striped bands.
+      k.panel("roof", [2.36, 0.07, 0.65], [0, 1.09, 0.35], skirtMat, 0.03);
+      k.panel("roof", [2.36, 0.075, 0.1], [0, 1.09, 0.15], k.accent, 0.01);
+      k.panel("roof", [2.36, 0.075, 0.1], [0, 1.09, 0.55], quiltDark, 0.01);
+      for (const side of sides)
+        for (const z of [0.15, 0.35, 0.55])
+          k.bar(
+            "roof",
+            [side * 1.18, 1.09, z],
+            [side * 1.18, 0.96, z],
+            0.014,
+            fringeMat,
+          );
+
+      // ---- Bed sides (doors): wood rails, quilt drape, fringed skirts ----
+      for (const side of sides) {
+        const d = door(side);
+        k.panel(d, [0.16, 0.42, 3.7], [side * 1.08, 0.55, -0.05], k.paint, 0.05);
+        k.bar(
+          d,
+          [side * 1.08, 0.78, 1.8],
+          [side * 1.08, 0.78, -1.9],
+          0.05,
+          woodDark,
+        );
+        for (const z of [-1.2, -0.05, 1.1])
+          k.panel(d, [0.2, 0.14, 0.3], [side * 1.08, 0.3, z], woodDark, 0.03);
+        k.panel(d, [0.1, 0.4, 2.5], [side * 1.16, 0.65, -0.1], k.accent, 0.04);
+        for (let i = 0; i < 6; i++)
+          k.mesh(
+            d,
+            new T.SphereGeometry(0.03, 12, 10),
+            [side * 1.17, 0.55, -1.25 + i * 0.5],
+            brass,
+          );
+        // Blanket skirt with stripes and fringe between the wheels.
+        k.panel(d, [0.08, 0.5, 3.5], [side * 1.17, 0.05, -0.05], skirtMat, 0.02);
+        k.panel(d, [0.02, 0.08, 3.3], [side * 1.215, 0.12, -0.05], k.accent, 0.008);
+        k.panel(d, [0.02, 0.08, 3.3], [side * 1.215, -0.05, -0.05], fringeMat, 0.008);
+        for (let i = 0; i < 14; i++) {
+          const z = -1.65 + i * 0.246;
+          k.bar(
+            d,
+            [side * 1.17, -0.2, z],
+            [side * 1.17, -0.34, z],
+            0.014,
+            fringeMat,
+          );
+        }
+      }
+
+      // ---- Head of the bed (bed): headboard, wing, nightstand, lamp ----
+      k.profile(
+        "bed",
+        [
+          [-2.14, 0.4],
+          [-2.14, 1.5],
+          [-2.06, 1.74],
+          [-1.96, 1.84],
+          [-1.86, 1.74],
+          [-1.78, 1.5],
+          [-1.78, 0.4],
+        ],
+        2.2,
+        0,
+        k.paint,
+        0.03,
+      );
+      // Carved shell motif on the headboard face.
+      k.oval("bed", [0.28, 0.32, 0.1], [0, 1.5, -1.76], woodDark);
+      for (let i = -2; i <= 2; i++)
+        k.bar(
+          "bed",
+          [0, 1.32, -1.72],
+          [i * 0.14, 1.68, -1.72],
+          0.022,
+          woodDark,
+        );
+      k.mesh("bed", new T.SphereGeometry(0.05, 16, 12), [0, 1.32, -1.7], brass);
+      for (const side of sides) {
+        k.mesh(
+          "bed",
+          new T.TorusGeometry(0.14, 0.035, 12, 40),
+          [side * 0.8, 1.62, -1.76],
+          woodDark,
+        );
+        k.mesh(
+          "bed",
+          new T.LatheGeometry(postPoints, 48),
+          [side * 1.05, -0.1, -1.95],
+          k.paint,
+        );
+        const rearCollar = k.mesh(
+          "bed",
+          new T.TorusGeometry(0.085, 0.028, 10, 32),
+          [side * 1.05, 1.4, -1.95],
+          brass,
+        );
+        rearCollar.rotation.x = Math.PI / 2;
+        k.bar(
+          "bed",
+          [side * 1.05, 1.83, -1.95],
+          [side * 1.05, 2.08, -1.95],
+          0.055,
+          k.paint,
+        );
+        k.oval("bed", [0.13, 0.15, 0.13], [side * 1.05, 2.16, -1.95], k.paint);
+        k.mesh(
+          "bed",
+          new T.SphereGeometry(0.045, 16, 12),
+          [side * 1.05, 2.32, -1.95],
+          brass,
+        );
+        // Wing pylons rising from the headboard.
+        k.bar(
+          "bed",
+          [side * 0.7, 1.84, -2.0],
+          [side * 0.7, 2.44, -2.2],
+          0.06,
+          k.paint,
+        );
+        k.panel("bed", [0.08, 0.5, 0.85], [side * 1.24, 2.51, -2.2], k.paint, 0.03);
+        k.oval("bed", [0.04, 0.14, 0.18], [side * 1.29, 2.51, -2.2], brass);
+        k.lamp("bed", [side * 0.85, 0.32, -2.13], 0.1, k.red, -1);
+      }
+      // Rear wing spoiler over the headboard.
+      k.panel("bed", [2.5, 0.09, 0.75], [0, 2.48, -2.2], k.paint, 0.04);
+      k.panel("bed", [2.5, 0.04, 0.12], [0, 2.53, -2.0], woodDark, 0.015);
+      k.panel("bed", [2.3, 0.07, 0.35], [0, 2.68, -2.35], k.paint, 0.03);
+      for (const side of sides)
+        k.bar(
+          "bed",
+          [side * 0.7, 2.5, -2.32],
+          [side * 0.7, 2.66, -2.35],
+          0.035,
+          woodDark,
+        );
+      // Lower rear rail.
+      k.panel("bed", [2.3, 0.3, 0.15], [0, 0.3, -2.05], k.paint, 0.05);
+      // Nightstand with a brass bedside lamp on the rear deck.
+      for (const dx of [-0.18, 0.18])
+        for (const dz of [-0.18, 0.18])
+          k.bar(
+            "bed",
+            [0.72 + dx, 1.06, -1.3 + dz],
+            [0.72 + dx, 1.28, -1.3 + dz],
+            0.03,
+            k.paint,
+          );
+      k.panel("bed", [0.4, 0.2, 0.4], [0.72, 1.17, -1.3], k.paint, 0.03);
+      k.panel("bed", [0.34, 0.12, 0.02], [0.72, 1.17, -1.09], woodDark, 0.008);
+      k.mesh("bed", new T.SphereGeometry(0.025, 12, 10), [0.72, 1.17, -1.07], brass);
+      k.panel("bed", [0.5, 0.07, 0.5], [0.72, 1.31, -1.3], woodDark, 0.03);
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.1, 0.13, 0.06, 24),
+        [0.72, 1.38, -1.3],
+        brass,
+      );
+      k.bar("bed", [0.72, 1.4, -1.3], [0.72, 1.72, -1.3], 0.035, brass);
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.15, 0.23, 0.3, 32, 1, true),
+        [0.72, 1.82, -1.3],
+        shadeMat,
+      );
+      const shadeTop = k.mesh(
+        "bed",
+        new T.TorusGeometry(0.15, 0.018, 10, 40),
+        [0.72, 1.97, -1.3],
+        brass,
+      );
+      shadeTop.rotation.x = Math.PI / 2;
+      const shadeBottom = k.mesh(
+        "bed",
+        new T.TorusGeometry(0.23, 0.02, 10, 48),
+        [0.72, 1.67, -1.3],
+        brass,
+      );
+      shadeBottom.rotation.x = Math.PI / 2;
+      k.oval("bed", [0.07, 0.09, 0.07], [0.72, 1.76, -1.3], k.white);
+      k.bar("bed", [0.72, 1.97, -1.3], [0.72, 2.05, -1.3], 0.018, brass);
+      k.mesh("bed", new T.SphereGeometry(0.035, 12, 10), [0.72, 2.07, -1.3], brass);
+      k.bar("bed", [0.92, 1.68, -1.3], [0.92, 1.45, -1.3], 0.01, k.dark);
+      k.mesh("bed", new T.SphereGeometry(0.025, 12, 10), [0.92, 1.43, -1.3], brass);
+
+      // ---- Bumpers: wood beams with a pillow bolster up front ----
+      k.panel("bumper-front", [2.4, 0.26, 0.3], [0, -0.05, 2.6], k.paint, 0.08);
+      k.mesh(
+        "bumper-front",
+        new T.CylinderGeometry(0.14, 0.14, 2.2, 28).rotateZ(Math.PI / 2),
+        [0, 0.2, 2.55],
+        pillowMat,
+      );
+      for (const side of sides) {
+        k.mesh(
+          "bumper-front",
+          new T.SphereGeometry(0.14, 20, 14),
+          [side * 1.1, 0.2, 2.55],
+          pillowMat,
+        );
+        k.bar(
+          "bumper-front",
+          [side * 0.7, -0.12, 2.0],
+          [side * 0.7, -0.12, 2.5],
+          0.07,
+          k.dark,
+        );
+        k.oval("bumper-front", [0.1, 0.12, 0.1], [side * 1.2, -0.05, 2.6], brass);
+        k.lamp("bumper-front", [side * 0.45, 0.0, 2.76], 0.09);
+      }
+      k.panel("bumper-rear", [2.4, 0.26, 0.3], [0, -0.05, -2.62], k.paint, 0.08);
+      for (const side of sides) {
+        k.bar(
+          "bumper-rear",
+          [side * 0.7, -0.12, -2.0],
+          [side * 0.7, -0.12, -2.52],
+          0.07,
+          k.dark,
+        );
+        k.oval("bumper-rear", [0.1, 0.12, 0.1], [side * 1.2, -0.05, -2.62], brass);
+      }
+      k.tailLights(-2.79, -0.02);
+
+      // ---- Chassis dress: mattress, slats, shocks, storage, pipes ----
+      k.panel("chassis-front", [2.2, 0.35, 3.6], [0, 0.68, 0], sheetMat, 0.08);
+      for (const z of [0.5, 1.0, 1.5, 2.0])
+        k.bar("chassis-front", [-1.06, 0.45, z], [1.06, 0.45, z], 0.06, k.paint);
+      for (const side of sides) {
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          brass,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          brass,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 0.55, -0.45, -1.9],
+          [side * 0.55, -0.45, -2.7],
+          0.07,
+          k.steel,
+        );
+        k.panel(
+          "chassis-rear",
+          [0.34, 0.3, 0.06],
+          [side * 0.9, -0.35, -2.55],
+          k.dark,
+          0.02,
+        );
+      }
+      k.panel("chassis-front", [1.6, 0.08, 0.5], [0, -0.42, 2.3], k.steel, 0.03);
+      k.panel("chassis-front", [1.4, 0.35, 1.2], [0, 0.05, 1.0], woodDark, 0.05);
+      for (const side of sides)
+        k.mesh(
+          "chassis-front",
+          new T.SphereGeometry(0.04, 12, 10),
+          [side * 0.3, 0.05, 1.62],
+          brass,
+        );
+      k.panel("chassis-rear", [1.4, 0.35, 1.2], [0, 0.05, -1.0], woodDark, 0.05);
+      for (const side of sides)
+        k.mesh(
+          "chassis-rear",
+          new T.SphereGeometry(0.04, 12, 10),
+          [side * 0.3, 0.05, -0.38],
+          brass,
+        );
+      k.mesh(
+        "chassis-rear",
+        new T.CylinderGeometry(0.16, 0.16, 1.6, 24).rotateZ(Math.PI / 2),
+        [0, 0.0, -2.2],
+        k.accent,
+      );
+      for (const x of [-0.5, 0.5]) {
+        const strap = k.mesh(
+          "chassis-rear",
+          new T.TorusGeometry(0.16, 0.025, 10, 32),
+          [x, 0.0, -2.2],
+          k.dark,
+        );
+        strap.rotation.y = Math.PI / 2;
+      }
+
+      // Brass hub caps over the kit hubs.
+      const caps = [
+        ["wheel-fl", 2.08, 1.65],
+        ["wheel-fr", -2.08, 1.65],
+        ["wheel-rl", 2.08, -1.65],
+        ["wheel-rr", -2.08, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.06, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          brass,
+        );
+        k.mesh(
+          part,
+          new T.TorusGeometry(0.3, 0.03, 12, 48).rotateY(Math.PI / 2),
+          [x, -0.85, z],
+          brass,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "burger-bruiser",
+    "Burger Bruiser",
+    "Giant sesame-bun cheeseburger with lettuce trim and a fry-box spoiler.",
+    [14722136, 8176202, 7227951, 0.84, 5],
+    (k) => {
+      const cheese = finish(0xffc93c, 0.28, 0.05);
+      const tomato = finish(0xd63a2f, 0.35, 0.05);
+      const tomatoInner = finish(0xf2685a, 0.4, 0);
+      const ketchup = finish(0xc1271b, 0.35, 0);
+      const mustard = finish(0xffd21f, 0.35, 0);
+      const fryGold = finish(0xf2b73a, 0.5, 0);
+      const fryBox = finish(0xd62b20, 0.45, 0.05);
+      const sesame = finish(0xfff3d6, 0.4, 0);
+      const sausage = finish(0xc97b3d, 0.5, 0.05);
+
+      const drip = (
+        part: "hood" | "bed" | "door-left" | "door-right",
+        x: number,
+        z: number,
+        len: number,
+        r = 0.085,
+      ) => {
+        k.bar(part, [x, 0.8, z], [x, 0.8 - len, z], r, cheese);
+        k.mesh(
+          part,
+          new T.SphereGeometry(r * 1.15, 16, 12),
+          [x, 0.8 - len, z],
+          cheese,
+        );
+      };
+
+      // ---- Nose (hood): bottom-bun nose, patty, cheese, headlights ----
+      k.hull("hood", [
+        [-0.2, -0.1, 0.55, 1.12, 1.06],
+        [1.3, -0.12, 0.52, 1.12, 1.06],
+        [2.45, -0.18, 0.32, 0.95, 0.88],
+      ]);
+      k.oval("hood", [1.0, 0.32, 0.45], [0, 0.2, 2.15]);
+      k.panel("hood", [2.18, 0.18, 1.65], [0, 0.6, 1.425], k.rim, 0.05);
+      k.panel("hood", [2.15, 0.12, 1.65], [0, 0.78, 1.425], cheese, 0.04);
+      for (const side of sides)
+        k.lamp("hood", [side * 0.8, 0.25, 2.5], 0.13);
+      const frontDrips: [number, number][] = [
+        [-0.8, 0.35],
+        [-0.4, 0.5],
+        [0, 0.4],
+        [0.4, 0.55],
+        [0.8, 0.38],
+      ];
+      for (const [x, len] of frontDrips) drip("hood", x, 2.24, len);
+      for (let i = 0; i < 7; i++) {
+        const leaf = k.oval(
+          "hood",
+          [0.17, 0.07, 0.17],
+          [-0.9 + i * 0.3, 0.42 + (i % 2) * 0.05, 2.32],
+          k.accent,
+        );
+        leaf.rotation.z = (i % 2 === 0 ? 1 : -1) * 0.35;
+      }
+
+      // ---- Crown (roof): sesame bun dome over a patty/cheese middle ----
+      k.oval("roof", [1.45, 1.05, 1.9], [0, 1.8, 0.3]);
+      k.panel("roof", [2.22, 0.18, 1.3], [0, 0.6, -0.05], k.rim, 0.05);
+      k.panel("roof", [2.2, 0.12, 1.3], [0, 0.78, -0.05], cheese, 0.04);
+      for (let i = 0; i < 30; i++) {
+        const t = (i + 0.5) / 30;
+        const phi = Math.acos(1 - t * 0.72);
+        const theta = i * 2.39996;
+        const px = 1.45 * Math.sin(phi) * Math.cos(theta);
+        const py = 1.8 + 1.05 * Math.cos(phi);
+        const pz = 0.3 + 1.9 * Math.sin(phi) * Math.sin(theta);
+        const seed = k.oval("roof", [0.07, 0.035, 0.11], [px, py, pz], sesame);
+        const n = new T.Vector3(
+          px / (1.45 * 1.45),
+          (py - 1.8) / (1.05 * 1.05),
+          (pz - 0.3) / (1.9 * 1.9),
+        ).normalize();
+        seed.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), n);
+      }
+
+      // ---- Sides (doors): tomato slices, cheese drips, lettuce ruffle ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [-1.0, -0.08],
+            [0.6, -0.08],
+            [0.6, 0.5],
+            [-1.0, 0.55],
+          ],
+          0.12,
+          side * 1.13,
+          k.paint,
+          0.04,
+        );
+        k.mesh(
+          d,
+          new T.CylinderGeometry(0.62, 0.62, 0.14, 48).rotateZ(Math.PI / 2),
+          [side * 1.2, 0.15, -0.1],
+          tomato,
+        );
+        k.mesh(
+          d,
+          new T.CylinderGeometry(0.46, 0.46, 0.16, 48).rotateZ(Math.PI / 2),
+          [side * 1.2, 0.15, -0.1],
+          tomatoInner,
+        );
+        for (let s = 0; s < 6; s++) {
+          const a = (s / 6) * Math.PI * 2 + 0.3;
+          k.oval(
+            d,
+            [0.03, 0.045, 0.07],
+            [side * 1.3, 0.15 + Math.sin(a) * 0.28, -0.1 + Math.cos(a) * 0.28],
+            sesame,
+          );
+        }
+        const sideDrips: [number, number][] = [
+          [-0.55, 0.3],
+          [-0.15, 0.42],
+          [0.25, 0.24],
+          [0.5, 0.36],
+        ];
+        for (const [z, len] of sideDrips) drip(d, side * 1.09, z, len);
+        for (let i = 0; i < 6; i++) {
+          const leaf = k.oval(
+            d,
+            [0.17, 0.07, 0.17],
+            [side * 1.24, 0.42 + (i % 2) * 0.05, -0.85 + i * 0.28],
+            k.accent,
+          );
+          leaf.rotation.x = (i % 2 === 0 ? 1 : -1) * 0.35;
+        }
+        k.panel(d, [0.07, 0.06, 0.3], [side * 1.24, 0.32, 0.45], k.steel, 0.02);
+      }
+
+      // ---- Tail (bed): bottom bun, cheese, lettuce, fry-box spoiler ----
+      k.hull("bed", [
+        [-2.55, -0.12, 0.5, 1.05, 1.0],
+        [-1.2, -0.1, 0.55, 1.1, 1.05],
+        [0.35, -0.1, 0.55, 1.12, 1.06],
+      ]);
+      k.oval("bed", [1.0, 0.3, 0.4], [0, 0.2, -2.2]);
+      k.panel("bed", [2.18, 0.18, 1.45], [0, 0.6, -1.425], k.rim, 0.05);
+      k.panel("bed", [2.15, 0.12, 1.45], [0, 0.78, -1.425], cheese, 0.04);
+      const rearDrips: [number, number][] = [
+        [-0.7, 0.32],
+        [-0.25, 0.44],
+        [0.25, 0.28],
+        [0.7, 0.38],
+      ];
+      for (const [x, len] of rearDrips) drip("bed", x, -2.14, len);
+      for (let i = 0; i < 5; i++) {
+        const leaf = k.oval(
+          "bed",
+          [0.17, 0.07, 0.17],
+          [-0.8 + i * 0.4, 0.42 + (i % 2) * 0.05, -2.42],
+          k.accent,
+        );
+        leaf.rotation.z = (i % 2 === 0 ? 1 : -1) * 0.35;
+      }
+      for (const side of sides)
+        k.lamp("bed", [side * 0.85, 0.25, -2.56], 0.09, k.red, -1);
+      // Fry carton on the rear deck with two rows of golden fries.
+      k.panel("bed", [2.2, 0.08, 0.7], [0, 1.25, -2.15], fryBox, 0.02);
+      k.panel("bed", [2.2, 0.5, 0.08], [0, 1.5, -1.83], fryBox, 0.02);
+      k.panel("bed", [1.6, 0.45, 0.6], [0, 1.02, -2.15], fryBox, 0.04);
+      k.panel("bed", [2.2, 0.78, 0.08], [0, 1.62, -2.47], fryBox, 0.02);
+      for (const side of sides) {
+        k.panel("bed", [0.08, 0.72, 0.7], [side * 1.06, 1.6, -2.15], fryBox, 0.02);
+        k.bar("bed", [side * 0.6, 0.5, -2.15], [side * 0.6, 1.25, -2.15], 0.07, fryBox);
+      }
+      const fryHeights = [1.3, 1.45, 1.35, 1.5, 1.35, 1.45, 1.3];
+      for (let row = 0; row < 2; row++) {
+        for (let i = 0; i < 7; i++) {
+          const h = fryHeights[(i + row * 3) % 7];
+          const fry = k.panel(
+            "bed",
+            [0.15, h, 0.15],
+            [-0.9 + i * 0.3, 1.35 + h / 2 - 0.3, -2.02 - row * 0.26],
+            fryGold,
+            0.02,
+          );
+          fry.rotation.x = (row === 0 ? 1 : -1) * 0.12;
+          fry.rotation.z = (i - 3 + row * 0.5) * 0.09;
+        }
+      }
+
+      // ---- Bumpers: sausage bars with ketchup/mustard squiggles ----
+      const squiggle = (
+        part: "bumper-front" | "bumper-rear",
+        z: number,
+      ) => {
+        k.bar(part, [-1.05, -0.05, z], [1.05, -0.05, z], 0.19, sausage);
+        for (const side of sides)
+          k.oval(part, [0.19, 0.19, 0.19], [side * 1.05, -0.05, z], sausage);
+        for (const side of sides)
+          k.bar(
+            part,
+            [side * 0.6, -0.05, z > 0 ? 2.45 : -2.45],
+            [side * 0.6, -0.05, z],
+            0.05,
+            k.dark,
+          );
+        const zig = (phase: number): [number, number, number][] => {
+          const pts: [number, number, number][] = [];
+          for (let i = 0; i <= 12; i++) {
+            const x = -0.9 + (i / 12) * 1.8;
+            pts.push([x, 0.14, z + ((i + phase) % 2 === 0 ? 0.08 : -0.08)]);
+          }
+          return pts;
+        };
+        k.tube(part, zig(0), 0.045, ketchup, 64);
+        k.tube(part, zig(1), 0.04, mustard, 64);
+      };
+      squiggle("bumper-front", 2.88);
+      squiggle("bumper-rear", -2.88);
+      k.mesh(
+        "bumper-rear",
+        new T.TorusGeometry(0.09, 0.03, 12, 32),
+        [0, -0.3, -2.85],
+        k.dark,
+      );
+
+      // ---- Chassis dress: bun fenders, cheese shocks, steps, pipes ----
+      fenders(k, k.paint);
+      for (const side of sides) {
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          cheese,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          cheese,
+        );
+        k.panel(
+          "chassis-front",
+          [0.4, 0.08, 0.5],
+          [side * 1.15, -0.3, 0.15],
+          k.steel,
+          0.02,
+        );
+        k.tube(
+          "chassis-rear",
+          [
+            [side * 0.5, -0.45, -1.9],
+            [side * 0.5, -0.45, -2.5],
+            [side * 0.55, -0.42, -2.78],
+          ],
+          0.07,
+          k.steel,
+          24,
+        );
+      }
+      k.panel("chassis-front", [1.6, 0.1, 0.5], [0, -0.48, 2.25], k.steel, 0.03);
+
+      // Cheese hub caps over the kit hubs.
+      const caps = [
+        ["wheel-fl", 2.08, 1.65],
+        ["wheel-fr", -2.08, 1.65],
+        ["wheel-rl", 2.08, -1.65],
+        ["wheel-rr", -2.08, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps)
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.06, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          cheese,
+        );
+    },
+  ),
+  vehicle(
+    "lawn-mower",
+    "Lawn Mower",
+    "Ride-on mower with a cutting deck, grass catcher, and a sun canopy.",
+    [5086797, 15254842, 4474956, 0.82, 6],
+    (k) => {
+      const vinyl = finish(0x3a4048, 0.85, 0);
+      const vinylDark = finish(0x262b31, 0.9, 0);
+      const canvas = finish(0xcfc09a, 0.92, 0);
+      const canvasDark = finish(0x9a8f6e, 0.92, 0);
+      const mat = finish(0x232629, 0.95, 0);
+      const screen = finish(0x2e3336, 0.6, 0.4);
+
+      // ---- Hood: tractor nose, grille, round headlamps, vents ----
+      k.hull("hood", [
+        [0.95, -0.05, 0.72, 0.78, 0.72],
+        [2.05, -0.12, 0.58, 0.74, 0.68],
+        [2.5, -0.14, 0.42, 0.62, 0.64],
+      ]);
+      k.oval("hood", [0.68, 0.22, 0.62], [0, 0.68, 1.55]);
+      k.panel("hood", [0.95, 0.38, 0.1], [0, 0.02, 2.5], k.dark, 0.03);
+      for (let i = 0; i < 4; i++)
+        k.panel(
+          "hood",
+          [0.82, 0.03, 0.05],
+          [0, -0.1 + i * 0.09, 2.56],
+          k.steel,
+          0.008,
+        );
+      for (const side of sides) {
+        k.lamp("hood", [side * 0.66, 0.26, 2.44], 0.13);
+        k.lamp("hood", [side * 0.6, -0.04, 2.55], 0.05, k.amber);
+        for (let i = 0; i < 3; i++)
+          k.panel(
+            "hood",
+            [0.04, 0.04, 0.5],
+            [side * 0.76, 0.32 - i * 0.11, 1.55],
+            k.dark,
+            0.012,
+          );
+        k.panel("hood", [0.05, 0.1, 1.1], [side * 0.75, -0.04, 1.5], k.accent, 0.02);
+      }
+      for (let i = 0; i < 4; i++)
+        k.panel(
+          "hood",
+          [0.5, 0.03, 0.09],
+          [0, 0.86, 1.15 + i * 0.22],
+          k.dark,
+          0.01,
+        );
+      k.mesh(
+        "hood",
+        new T.CylinderGeometry(0.06, 0.06, 0.06, 20),
+        [0, 0.84, 1.05],
+        k.dark,
+      );
+      k.panel("hood", [0.5, 0.06, 0.3], [0, 0.62, 0.98], k.dark, 0.02);
+
+      // ---- Floor + tunnel (chassis-front) ----
+      k.panel("chassis-front", [1.9, 0.1, 2.4], [0, -0.18, 0.5], k.paint, 0.04);
+      k.panel("chassis-front", [0.72, 0.34, 1.7], [0, -0.02, 0.55], k.paint, 0.06);
+      k.panel("chassis-front", [0.6, 0.05, 1.5], [0, 0.17, 0.55], mat, 0.015);
+      for (let i = 0; i < 6; i++)
+        k.bar(
+          "chassis-front",
+          [-0.28, 0.2, -0.1 + i * 0.25],
+          [0.28, 0.2, -0.1 + i * 0.25],
+          0.015,
+          k.steel,
+        );
+
+      // ---- Dash tower + steering ----
+      k.panel("chassis-front", [0.86, 0.52, 0.34], [0, 0.55, 1.02], k.paint, 0.07);
+      k.panel("chassis-front", [0.7, 0.3, 0.06], [0, 0.62, 0.86], k.dark, 0.02);
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.09, 0.09, 0.03, 24).rotateX(Math.PI / 2),
+        [-0.18, 0.64, 0.83],
+        k.white,
+      );
+      k.bar("chassis-front", [-0.18, 0.64, 0.81], [-0.14, 0.68, 0.81], 0.012, k.red);
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.03, 0.03, 0.05, 12).rotateX(Math.PI / 2),
+        [0.15, 0.6, 0.83],
+        k.red,
+      );
+      k.panel("chassis-front", [0.86, 0.06, 0.36], [0, 0.83, 1.02], mat, 0.02);
+      for (const x of [-0.32, 0.32])
+        k.panel("chassis-front", [0.12, 0.05, 0.24], [x, 0.0, 1.15], mat, 0.01).rotation.x =
+          0.5;
+      k.bar("chassis-front", [0, 0.42, 1.0], [0, 0.92, 0.66], 0.045, k.steel);
+      k.bar("chassis-front", [0, 0.35, 1.04], [0, 0.55, 0.95], 0.07, k.dark);
+      k.mesh(
+        "chassis-front",
+        new T.TorusGeometry(0.21, 0.032, 12, 48),
+        [0, 0.95, 0.63],
+        k.dark,
+      ).rotation.x = -0.55;
+      k.bar("chassis-front", [-0.19, 0.95, 0.63], [0.19, 0.95, 0.63], 0.016, k.steel);
+      k.bar("chassis-front", [0, 0.95, 0.63], [0, 0.77, 0.73], 0.016, k.steel);
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.055, 0.055, 0.08, 20).rotateX(Math.PI / 2),
+        [0, 0.95, 0.63],
+        k.dark,
+      ).rotation.x = -0.55;
+
+      // ---- High-back seat ----
+      k.panel("chassis-front", [0.95, 0.3, 0.95], [0, 0.0, -0.4], k.paint, 0.06);
+      for (const side of sides)
+        k.bar(
+          "chassis-front",
+          [side * 0.3, -0.12, -0.75],
+          [side * 0.3, -0.12, -0.05],
+          0.03,
+          k.steel,
+        );
+      k.panel("chassis-front", [0.85, 0.22, 0.85], [0, 0.26, -0.4], vinyl, 0.08);
+      for (let i = 0; i < 3; i++)
+        k.bar(
+          "chassis-front",
+          [-0.38, 0.375, -0.68 + i * 0.28],
+          [0.38, 0.375, -0.68 + i * 0.28],
+          0.012,
+          vinylDark,
+        );
+      k.panel("chassis-front", [0.85, 0.95, 0.22], [0, 0.78, -0.85], vinyl, 0.09).rotation.x =
+        -0.12;
+      for (const [y, z] of [[0.6, -0.715], [0.85, -0.745], [1.1, -0.78]] as const)
+        k.bar("chassis-front", [-0.36, y, z], [0.36, y, z], 0.012, vinylDark);
+      for (const side of sides)
+        k.panel(
+          "chassis-front",
+          [0.12, 0.7, 0.2],
+          [side * 0.42, 0.7, -0.82],
+          vinyl,
+          0.05,
+        ).rotation.x = -0.12;
+      k.panel(
+        "chassis-front",
+        [0.7, 0.8, 0.08],
+        [0, 0.75, -1.0],
+        k.paint,
+        0.03,
+      ).rotation.x = -0.12;
+//---- Cutting deck, front half (yellow shell, housings, blades) ----
+      k.hull(
+        "chassis-front",
+        [
+          [-0.05, -0.7, -0.32, 1.2, 1.14],
+          [0.95, -0.7, -0.32, 1.2, 1.14],
+        ],
+        k.accent,
+      );
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.15, 0.15, 2.34, 24).rotateZ(Math.PI / 2),
+        [0, -0.54, 0.95],
+        k.accent,
+      );
+      for (const side of sides) {
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.42, 0.46, 0.3, 36),
+          [side * 0.55, -0.24, 0.4],
+          k.accent,
+        );
+        k.oval("chassis-front", [0.4, 0.1, 0.4], [side * 0.55, -0.08, 0.4], k.accent);
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.12, 0.12, 0.1, 20),
+          [side * 0.55, -0.02, 0.4],
+          k.dark,
+        );
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.14, 0.14, 0.06, 24),
+          [side * 0.55, 0.05, 0.4],
+          k.steel,
+        );
+        k.tube(
+          "chassis-front",
+          [
+            [side * 0.55, 0.02, 0.4],
+            [side * 0.5, -0.12, 0.68],
+            [side * 0.4, -0.16, 0.9],
+          ],
+          0.035,
+          mat,
+          16,
+        );
+        k.panel(
+          "chassis-front",
+          [0.72, 0.035, 0.13],
+          [side * 0.55, -0.72, 0.4],
+          k.steel,
+          0.01,
+        ).rotation.y = side * 0.5;
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.13, 0.13, 0.08, 20).rotateZ(Math.PI / 2),
+          [side * 1.28, -0.66, 0.45],
+          mat,
+        );
+        k.bar(
+          "chassis-front",
+          [side * 1.28, -0.6, 0.45],
+          [side * 1.05, -0.4, 0.45],
+          0.03,
+          k.dark,
+        );
+        k.bar(
+          "chassis-front",
+          [side * 0.7, -0.3, 0.45],
+          [side * 0.95, -0.42, 0.45],
+          0.035,
+          k.dark,
+        );
+      }
+      k.panel("chassis-front", [0.5, 0.16, 0.6], [0, -0.28, 0.4], k.accent, 0.05);
+      for (const side of sides)
+        k.panel(
+          "chassis-front",
+          [0.07, 0.22, 0.92],
+          [side * 1.19, -0.52, 0.45],
+          k.accent,
+          0.03,
+        );
+      for (const side of sides)
+        k.panel(
+          "chassis-front",
+          [0.24, 0.42, 0.5],
+          [side * 1.22, -0.5, 0.28],
+          k.accent,
+          0.06,
+        );
+      for (const side of sides)
+        k.panel(
+          "chassis-front",
+          [0.5, 0.3, 0.7],
+          [side * 0.57, 0.0, 0.4],
+          k.accent,
+          0.08,
+        );
+      for (let i = 0; i < 6; i++)
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.03, 0.03, 0.05, 10),
+          [-0.9 + i * 0.36, -0.31, 0.88],
+          k.dark,
+        );
+
+      // ---- Deck rear half + discharge chute (chassis-rear) ----
+      k.hull(
+        "chassis-rear",
+        [
+          [-0.95, -0.7, -0.32, 1.2, 1.14],
+          [-0.05, -0.7, -0.32, 1.2, 1.14],
+        ],
+        k.accent,
+      );
+      k.mesh(
+        "chassis-rear",
+        new T.CylinderGeometry(0.15, 0.15, 2.34, 24).rotateZ(Math.PI / 2),
+        [0, -0.54, -0.95],
+        k.accent,
+      );
+      k.panel("chassis-rear", [1.3, 0.18, 0.5], [0, -0.3, -0.5], k.accent, 0.05);
+      for (const side of sides)
+        k.panel(
+          "chassis-rear",
+          [0.07, 0.22, 0.92],
+          [side * 1.19, -0.52, -0.45],
+          k.accent,
+          0.03,
+        );
+      for (const side of sides)
+        k.panel(
+          "chassis-rear",
+          [0.24, 0.42, 0.5],
+          [side * 1.22, -0.5, -0.28],
+          k.accent,
+          0.06,
+        );
+      for (const side of sides) {
+        k.mesh(
+          "chassis-rear",
+          new T.CylinderGeometry(0.13, 0.13, 0.08, 20).rotateZ(Math.PI / 2),
+          [side * 1.28, -0.66, -0.45],
+          mat,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 1.28, -0.6, -0.45],
+          [side * 1.05, -0.4, -0.45],
+          0.03,
+          k.dark,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 0.7, -0.3, -0.5],
+          [side * 0.95, -0.42, -0.5],
+          0.035,
+          k.dark,
+        );
+      }
+      for (let i = 0; i < 6; i++)
+        k.mesh(
+          "chassis-rear",
+          new T.CylinderGeometry(0.03, 0.03, 0.05, 10),
+          [-0.9 + i * 0.36, -0.31, -0.88],
+          k.dark,
+        );
+      // Side discharge chute on the right flank.
+      k.panel("chassis-rear", [0.55, 0.26, 0.55], [1.32, -0.48, -0.08], k.accent, 0.05);
+      k.panel("chassis-rear", [0.4, 0.06, 0.55], [1.55, -0.6, -0.08], mat, 0.02).rotation.z =
+        -0.35;
+      k.bar("chassis-rear", [1.1, -0.38, -0.08], [1.42, -0.42, -0.08], 0.03, k.dark);
+
+      // ---- Fuel tank + exhaust + gearbox (chassis-rear) ----
+      k.oval("chassis-rear", [0.35, 0.16, 0.18], [0, -0.12, -0.95], mat);
+      k.mesh(
+        "chassis-rear",
+        new T.CylinderGeometry(0.05, 0.05, 0.06, 16),
+        [0.2, 0.03, -0.95],
+        k.dark,
+      );
+      k.tube(
+        "chassis-rear",
+        [
+          [0.2, -0.1, -0.95],
+          [0.25, -0.3, -0.7],
+          [0.3, -0.4, -0.3],
+        ],
+        0.022,
+        mat,
+        16,
+      );
+      k.mesh(
+        "chassis-rear",
+        new T.CylinderGeometry(0.12, 0.12, 0.5, 24),
+        [1.12, 0.55, -1.5],
+        k.steel,
+      );
+      k.mesh(
+        "chassis-rear",
+        new T.CylinderGeometry(0.07, 0.09, 0.18, 20),
+        [1.12, 0.88, -1.5],
+        k.dark,
+      );
+      k.bar("chassis-rear", [1.12, -0.1, -1.5], [1.12, 0.32, -1.5], 0.06, k.dark);
+      for (const y of [0.42, 0.68])
+        k.mesh(
+          "chassis-rear",
+          new T.TorusGeometry(0.125, 0.018, 10, 28).rotateX(Math.PI / 2),
+          [1.12, y, -1.5],
+          k.dark,
+        );
+      k.bar("chassis-rear", [1.0, 0.4, -1.5], [1.12, 0.4, -1.5], 0.025, k.dark);
+      k.bar("chassis-rear", [1.0, 0.7, -1.5], [1.12, 0.7, -1.5], 0.025, k.dark);
+      k.oval("chassis-rear", [0.28, 0.22, 0.24], [0, -0.55, -1.65], k.dark);
+      k.bar("chassis-rear", [0.25, -0.5, -1.4], [0.4, -0.42, -0.8], 0.045, k.steel);
+      for (const side of sides) {
+        k.mesh(
+          "chassis-rear",
+          new T.CylinderGeometry(0.18, 0.18, 0.08, 24).rotateZ(Math.PI / 2),
+          [side * 1.18, -0.8, -1.65],
+          k.steel,
+        );
+        k.panel(
+          "chassis-rear",
+          [0.1, 0.12, 0.14],
+          [side * 1.18, -0.62, -1.65],
+          k.dark,
+          0.02,
+        );
+      }
+//---- Sun canopy: black posts + tan canvas top (roof) ----
+      for (const side of sides) {
+        k.bar("roof", [side * 1.0, 0.2, 0.78], [side * 0.95, 2.2, 0.55], 0.055, k.dark);
+        k.bar("roof", [side * 1.0, 0.2, -0.95], [side * 0.9, 2.2, -1.05], 0.055, k.dark);
+        k.bar(
+          "roof",
+          [side * 0.95, 2.2, 0.55],
+          [side * 0.9, 2.2, -1.05],
+          0.05,
+          k.dark,
+        );
+        k.panel("roof", [0.16, 0.1, 0.16], [side * 1.0, 0.26, 0.78], k.dark, 0.03);
+        k.panel("roof", [0.16, 0.1, 0.16], [side * 1.0, 0.3, -0.95], k.dark, 0.03);
+      }
+      k.bar("roof", [-0.95, 2.2, 0.55], [0.95, 2.2, 0.55], 0.05, k.dark);
+      k.bar("roof", [-0.9, 2.2, -1.05], [0.9, 2.2, -1.05], 0.05, k.dark);
+      k.panel("roof", [2.2, 0.12, 2.0], [0, 2.3, -0.25], canvas, 0.06);
+      k.panel("roof", [1.9, 0.05, 1.7], [0, 2.23, -0.25], canvasDark, 0.02);
+      k.oval("roof", [1.0, 0.08, 0.9], [0, 2.38, -0.25], canvas);
+      for (const z of [0.2, -0.25, -0.7])
+        k.bar("roof", [-0.95, 2.24, z], [0.95, 2.24, z], 0.025, canvasDark);
+      k.panel("roof", [2.2, 0.14, 0.06], [0, 2.22, 0.73], canvasDark, 0.02);
+      k.panel("roof", [2.15, 0.1, 0.06], [0, 2.24, -1.23], canvasDark, 0.02);
+
+      // ---- Side body + footboards (doors) ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [-1.3, -0.2],
+            [1.2, -0.2],
+            [1.05, 0.25],
+            [-1.2, 0.3],
+          ],
+          0.16,
+          side * 1.0,
+          k.paint,
+          0.04,
+        );
+        k.panel(d, [0.5, 0.08, 1.3], [side * 0.95, -0.14, 0.55], k.paint, 0.02);
+        k.panel(d, [0.44, 0.04, 1.2], [side * 0.95, -0.09, 0.55], mat, 0.012);
+        k.panel(d, [0.52, 0.05, 0.08], [side * 0.95, -0.12, 1.18], k.steel, 0.015);
+        const grip = new T.CylinderGeometry(0.02, 0.02, 0.035, 10);
+        for (let ix = 0; ix < 3; ix++)
+          for (let iz = 0; iz < 4; iz++)
+            k.mesh(
+              d,
+              grip,
+              [side * (0.8 + ix * 0.15), -0.06, 0.15 + iz * 0.27],
+              k.steel,
+            );
+        k.panel(d, [0.05, 0.09, 2.1], [side * 1.1, 0.05, -0.05], k.accent, 0.02);
+        k.panel(d, [0.05, 0.07, 0.14], [side * 1.1, -0.02, 1.05], k.amber, 0.012);
+        k.panel(d, [0.05, 0.07, 0.14], [side * 1.1, -0.02, -1.15], k.red, 0.012);
+        k.bar(d, [side * 1.0, -0.2, 1.15], [side * 1.0, 0.1, 1.15], 0.03, k.dark);
+      }
+
+      // ---- Grass catcher box + mesh screen (bed) ----
+      k.hull("bed", [
+        [-2.55, -0.1, 1.15, 1.0, 0.95],
+        [-1.05, -0.1, 1.15, 1.05, 1.0],
+      ]);
+      k.panel("bed", [2.0, 0.1, 1.55], [0, 1.2, -1.8], k.paint, 0.04);
+      for (let i = 0; i < 3; i++)
+        k.panel("bed", [1.9, 0.05, 0.12], [0, 1.26, -1.35 - i * 0.45], k.paint, 0.015);
+      k.bar("bed", [-0.3, 1.32, -1.8], [0.3, 1.32, -1.8], 0.03, k.dark);
+      for (const side of sides)
+        k.bar("bed", [side * 0.3, 1.26, -1.8], [side * 0.3, 1.32, -1.8], 0.025, k.dark);
+      for (const z of [-1.15, -2.45])
+        k.panel("bed", [0.3, 0.06, 0.12], [0, 1.24, z], k.dark, 0.02);
+      k.panel("bed", [1.7, 0.85, 0.06], [0, 0.5, -2.57], screen, 0.02);
+      for (let i = 0; i < 8; i++)
+        k.bar(
+          "bed",
+          [-0.75 + i * 0.214, 0.1, -2.605],
+          [-0.75 + i * 0.214, 0.9, -2.605],
+          0.014,
+          k.steel,
+        );
+      for (let i = 0; i < 5; i++)
+        k.bar(
+          "bed",
+          [-0.8, 0.14 + i * 0.19, -2.605],
+          [0.8, 0.14 + i * 0.19, -2.605],
+          0.014,
+          k.steel,
+        );
+      k.bar("bed", [-0.88, 0.06, -2.6], [0.88, 0.06, -2.6], 0.035, k.paint);
+      k.bar("bed", [-0.88, 0.94, -2.6], [0.88, 0.94, -2.6], 0.035, k.paint);
+      for (const side of sides)
+        k.bar(
+          "bed",
+          [side * 0.88, 0.06, -2.6],
+          [side * 0.88, 0.94, -2.6],
+          0.035,
+          k.paint,
+        );
+      for (const side of sides) {
+        for (let i = 0; i < 3; i++)
+          k.panel("bed", [0.04, 0.06, 0.7], [side * 1.03, 0.75 - i * 0.18, -1.8], k.dark, 0.012);
+        k.panel("bed", [0.05, 0.09, 1.3], [side * 1.04, -0.02, -1.8], k.accent, 0.02);
+      }
+      k.bar("bed", [1.06, 0.9, -1.3], [1.06, 0.5, -1.3], 0.03, k.dark);
+      k.bar("bed", [1.06, 0.9, -1.3], [1.06, 0.9, -1.1], 0.025, k.dark);
+      k.panel("bed", [0.14, 0.1, 0.14], [1.06, 0.9, -1.05], k.dark, 0.03);
+      k.panel("bed", [1.6, 0.2, 0.08], [0, -0.02, -2.56], k.dark, 0.03);
+      k.panel("bed", [0.34, 0.12, 0.03], [0, -0.02, -2.61], k.white, 0.01);
+      for (const side of sides)
+        k.panel("bed", [0.12, 0.08, 0.03], [side * 0.68, -0.02, -2.6], k.red, 0.01);
+
+      // ---- Front bumper guard ----
+      k.tube(
+        "bumper-front",
+        [
+          [-0.85, -0.1, 2.62],
+          [0, -0.14, 2.8],
+          [0.85, -0.1, 2.62],
+        ],
+        0.06,
+        k.steel,
+        24,
+      );
+      k.bar("bumper-front", [-0.85, -0.3, 2.56], [0.85, -0.3, 2.56], 0.045, k.dark);
+      for (const side of sides) {
+        k.bar(
+          "bumper-front",
+          [side * 0.62, -0.3, 2.56],
+          [side * 0.64, -0.12, 2.73],
+          0.04,
+          k.dark,
+        );
+        k.bar(
+          "bumper-front",
+          [side * 0.55, -0.2, 2.35],
+          [side * 0.55, -0.2, 2.6],
+          0.045,
+          k.dark,
+        );
+        k.lamp("bumper-front", [side * 0.87, 0.1, 2.6], 0.07, k.amber);
+      }
+      k.panel("bumper-front", [1.4, 0.09, 0.09], [0, -0.12, 2.72], mat, 0.025);
+      k.mesh(
+        "bumper-front",
+        new T.TorusGeometry(0.08, 0.025, 10, 28),
+        [0, -0.3, 2.58],
+        k.dark,
+      );
+
+      // ---- Rear guard + lights + mud flaps ----
+      k.panel("bumper-rear", [2.0, 0.13, 0.3], [0, -0.28, -2.68], k.dark, 0.05);
+      for (const side of sides) {
+        k.panel(
+          "bumper-rear",
+          [0.3, 0.12, 0.08],
+          [side * 0.7, -0.28, -2.84],
+          k.dark,
+          0.02,
+        );
+        k.panel(
+          "bumper-rear",
+          [0.22, 0.08, 0.05],
+          [side * 0.7, -0.28, -2.89],
+          k.red,
+          0.012,
+        );
+        k.panel(
+          "bumper-rear",
+          [0.55, 0.6, 0.06],
+          [side * 1.65, -0.7, -2.75],
+          k.dark,
+          0.03,
+        );
+        k.panel(
+          "bumper-rear",
+          [0.4, 0.06, 0.02],
+          [side * 1.65, -0.55, -2.79],
+          k.white,
+          0.008,
+        );
+        k.bar(
+          "bumper-rear",
+          [side * 0.8, -0.3, -2.5],
+          [side * 0.8, -0.3, -2.68],
+          0.045,
+          k.dark,
+        );
+        k.bar(
+          "bumper-rear",
+          [side * 1.65, -0.42, -2.68],
+          [side * 1.65, -0.42, -2.75],
+          0.03,
+          k.dark,
+        );
+      }
+      k.bar("bumper-rear", [0, -0.28, -2.7], [0, -0.28, -2.9], 0.05, k.steel);
+      k.mesh("bumper-rear", new T.SphereGeometry(0.06, 16, 12), [0, -0.28, -2.92], k.steel);
+
+      // ---- Chassis dressing: fenders, shocks, skid plates ----
+      fenders(k, k.paint);
+      for (const side of sides) {
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          k.accent,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          k.accent,
+        );
+      }
+      k.panel("chassis-front", [1.4, 0.08, 0.5], [0, -0.5, 2.1], k.steel, 0.02);
+      k.panel("chassis-rear", [1.4, 0.08, 0.5], [0, -0.5, -2.2], k.steel, 0.02);
+
+      // Yellow hub caps over the kit hubs.
+      const caps = [
+        ["wheel-fl", 2.02, 1.65],
+        ["wheel-fr", -2.02, 1.65],
+        ["wheel-rl", 2.02, -1.65],
+        ["wheel-rr", -2.02, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.06, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.accent,
+        );
+        k.mesh(
+          part,
+          new T.SphereGeometry(0.05, 16, 12),
+          [x + Math.sign(x) * 0.04, -0.85, z],
+          k.dark,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "grand-piano",
+    "Grand Piano",
+    "Gloss grand piano with ivory keys, a propped lid, and a bench seat.",
+    [1316120, 16117725, 9405816, 0.76, 8],
+    (k) => {
+      const brass = gold();
+      const ebony = finish(0x0b0b0d, 0.32, 0.15);
+      const leather = finish(0x7e1f24, 0.62, 0.02);
+      const spruce = finish(0xc99a4e, 0.72, 0.05);
+      const copper = finish(0x8a5a2a, 0.45, 0.55);
+      const paper = finish(0xf5efdd, 0.9, 0);
+      const ink = finish(0x2a2d33, 0.8, 0);
+
+      // ---- Lower case: lacquered belly, wide at the keyboard, tapered tail ----
+      k.hull("chassis-front", [
+        [0.3, -0.12, 0.5, 1.12, 1.18],
+        [1.2, -0.12, 0.5, 1.16, 1.2],
+        [2.0, -0.12, 0.5, 1.1, 1.14],
+      ]);
+      k.panel("chassis-front", [2.1, 0.08, 1.9], [0, -0.14, 1.15], k.dark, 0.03);
+      k.hull("chassis-rear", [
+        [-2.45, -0.1, 0.5, 0.55, 0.62],
+        [-1.6, -0.12, 0.5, 0.95, 1.02],
+        [-0.6, -0.12, 0.5, 1.1, 1.17],
+        [0.35, -0.12, 0.5, 1.12, 1.18],
+      ]);
+      k.oval("chassis-rear", [0.6, 0.32, 0.3], [0, 0.18, -2.42]);
+
+      // ---- Case rims: tall lacquered sides, gold pinstripes, bent-side tubes ----
+      for (const side of sides) {
+        const part = side < 0 ? "door-right" : "door-left";
+        k.profile(
+          part,
+          [
+            [-2.42, 0.28],
+            [2.02, 0.28],
+            [2.02, 0.78],
+            [-2.3, 0.78],
+            [-2.5, 0.52],
+          ],
+          0.14,
+          side * 1.12,
+          k.paint,
+          0.04,
+        );
+        k.bar(part, [side * 1.21, 0.76, 2.0], [side * 1.21, 0.76, -2.28], 0.022, brass);
+        k.bar(part, [side * 1.21, 0.34, 2.0], [side * 1.21, 0.34, -2.28], 0.016, brass);
+        const out = side > 0 ? 1.52 : 1.3;
+        k.tube(
+          part,
+          [
+            [side * 1.2, 0.62, 2.0],
+            [side * out, 0.62, 0.3],
+            [side * (out - 0.15), 0.62, -1.2],
+            [side * 0.72, 0.62, -2.35],
+          ],
+          0.055,
+          k.paint,
+          48,
+        );
+      }
+
+      // ---- Keyboard across the nose: keyframe, 30 ivory keys, ebony sharps ----
+      k.panel("hood", [2.34, 0.16, 0.85], [0, 0.42, 2.12], k.paint, 0.04);
+      k.panel("hood", [2.34, 0.24, 0.14], [0, 0.32, 2.56], k.paint, 0.04);
+      for (const side of sides)
+        k.panel("hood", [0.16, 0.3, 0.9], [side * 1.2, 0.5, 2.12], k.paint, 0.05);
+      for (let i = 0; i < 30; i++)
+        k.panel("hood", [0.064, 0.055, 0.66], [-1.015 + i * 0.07, 0.53, 2.2], k.accent, 0.008);
+      for (let o = 0; o < 4; o++)
+        for (const s of [0, 1, 3, 4, 5]) {
+          const wi = o * 7 + s;
+          if (wi > 28) continue;
+          k.panel(
+            "hood",
+            [0.04, 0.1, 0.38],
+            [-1.015 + wi * 0.07 + 0.035, 0.575, 2.06],
+            ebony,
+            0.01,
+          );
+        }
+      k.panel("hood", [2.1, 0.44, 0.09], [0, 0.82, 1.78], k.paint, 0.04).rotation.x =
+        -0.42;
+      k.oval("hood", [0.2, 0.06, 0.02], [0, 0.32, 2.64], brass);
+
+      // ---- Music desk: brass rack with two staved pages behind the fallboard ----
+      for (const px of [-0.25, 0.25]) {
+        k.panel("hood", [0.46, 0.6, 0.03], [px, 1.02, 1.52], paper, 0.01).rotation.x =
+          -0.3;
+        for (const dy of [-0.2, -0.1, 0, 0.1, 0.2]) {
+          const y = 1.02 + dy * 0.955 + 0.006;
+          const z = 1.52 - dy * 0.296 + 0.019;
+          k.bar("hood", [px - 0.19, y, z], [px + 0.19, y, z], 0.008, ink);
+        }
+      }
+      k.bar("hood", [-0.55, 0.74, 1.64], [0.55, 0.74, 1.64], 0.025, brass);
+      k.bar("hood", [-0.5, 1.33, 1.42], [0.5, 1.33, 1.42], 0.02, brass);
+      for (const side of sides)
+        k.bar("hood", [side * 0.5, 0.5, 1.7], [side * 0.5, 0.78, 1.62], 0.02, brass);
+
+      // ---- Cage lamps on the front case corners ----
+      for (const side of sides) {
+        const x = side * 1.32;
+        k.bar("hood", [x, 0.5, 2.3], [x, 0.62, 2.3], 0.05, k.dark);
+        k.oval("hood", [0.09, 0.11, 0.09], [x, 0.74, 2.3], k.white);
+        k.mesh("hood", new T.TorusGeometry(0.12, 0.014, 10, 32), [x, 0.74, 2.3], k.dark);
+        k.mesh(
+          "hood",
+          new T.TorusGeometry(0.12, 0.014, 10, 32).rotateX(Math.PI / 2),
+          [x, 0.74, 2.3],
+          k.dark,
+        );
+        k.mesh("hood", new T.CylinderGeometry(0.1, 0.13, 0.06, 20), [x, 0.88, 2.3], k.dark);
+      }
+
+      // ---- Lid propped open on a brass stick, hinged along the left rim ----
+      const tilt = 0.45;
+      const ct = Math.cos(tilt);
+      const st = Math.sin(tilt);
+      const lidX = (u: number) => -1.05 + u * ct;
+      const lidY = (u: number) => 0.84 + u * st;
+      const lidSeg = (u0: number, u1: number, z0: number, z1: number) => {
+        const u = (u0 + u1) / 2;
+        k.panel(
+          "roof",
+          [u1 - u0, 0.08, z1 - z0],
+          [lidX(u), lidY(u), (z0 + z1) / 2],
+          k.paint,
+          0.03,
+        ).rotation.z = tilt;
+      };
+      lidSeg(0, 0.8, -2.2, 1.6);
+      lidSeg(0.8, 1.5, -1.9, 1.6);
+      lidSeg(1.5, 2.1, -1.4, 1.6);
+      k.oval("roof", [0.42, 0.05, 0.5], [lidX(0.4), lidY(0.4), -2.1], k.paint).rotation.z =
+        tilt;
+      for (const z of [0.6, -0.8])
+        k.bar(
+          "roof",
+          [lidX(0.05) + 0.03, lidY(0.05) - 0.06, z],
+          [lidX(2.05) + 0.03, lidY(2.05) - 0.06, z],
+          0.03,
+          brass,
+        );
+      k.bar("roof", [lidX(0), lidY(0), 1.62], [lidX(2.1), lidY(2.1), 1.62], 0.028, brass);
+      k.bar("roof", [1.0, 0.7, 0.55], [lidX(1.7) + 0.03, lidY(1.7) - 0.05, 0.55], 0.035, brass);
+      k.mesh("roof", new T.CylinderGeometry(0.06, 0.07, 0.05, 16), [1.0, 0.68, 0.55], brass);
+      for (const z of [0.9, -1.2])
+        k.panel("roof", [0.12, 0.06, 0.18], [-1.06, 0.8, z], brass, 0.02);
+
+      // ---- Soundboard, gold plate, strings, pins, dampers ----
+      k.panel("chassis-front", [2.0, 0.06, 1.5], [0, 0.5, 0.75], spruce, 0.02);
+      k.panel("chassis-front", [1.7, 0.06, 0.75], [0, 0.48, -0.35], spruce, 0.02);
+      k.panel("chassis-rear", [1.7, 0.06, 1.6], [0, 0.5, -1.5], spruce, 0.02);
+      k.panel("chassis-front", [1.9, 0.1, 0.35], [0, 0.56, 1.32], ebony, 0.02);
+      for (const [x0, x1] of [[-0.7, -0.35], [0, 0], [0.7, 0.35]] as const)
+        k.bar("chassis-front", [x0, 0.56, 1.1], [x1, 0.56, -0.6], 0.055, brass);
+      for (const [x0, x1] of [[-0.35, -0.15], [0, 0], [0.35, 0.15]] as const)
+        k.bar("chassis-rear", [x0, 0.56, -0.6], [x1, 0.56, -2.2], 0.05, brass);
+      for (let i = 0; i < 18; i++) {
+        const t = i / 17;
+        const x0 = -0.85 + t * 1.7;
+        const x1 = -0.3 + t * 0.6;
+        const xm = x0 + (x1 - x0) * 0.55;
+        k.bar("chassis-front", [x0, 0.6, 1.15], [xm, 0.6, -0.65], 0.011, k.steel);
+        k.bar("chassis-rear", [xm, 0.6, -0.65], [x1, 0.6, -2.25], 0.011, k.steel);
+      }
+      for (let i = 0; i < 6; i++)
+        k.bar(
+          "chassis-front",
+          [-0.85 + i * 0.09, 0.625, 1.15],
+          [-0.5 + i * 0.2, 0.625, -0.65],
+          0.014,
+          copper,
+        );
+      for (let i = 0; i < 12; i++) {
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.018, 0.018, 0.1, 10),
+          [-0.82 + i * 0.15, 0.64, 1.26],
+          k.dark,
+        );
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.018, 0.018, 0.1, 10),
+          [-0.745 + i * 0.15, 0.64, 1.4],
+          k.dark,
+        );
+      }
+      for (let i = 0; i < 10; i++)
+        k.panel("chassis-front", [0.09, 0.07, 0.12], [-0.72 + i * 0.16, 0.6, 0.95], ebony, 0.015);
+
+      // ---- Duet bench seat over the middle ----
+      k.panel("chassis-front", [1.3, 0.1, 0.6], [0, 0.72, -0.35], k.paint, 0.04);
+      for (const side of sides)
+        k.panel("chassis-front", [0.58, 0.16, 0.55], [side * 0.32, 0.84, -0.35], leather, 0.07);
+      for (const sx of [-0.46, -0.18, 0.18, 0.46])
+        for (const dz of [-0.47, -0.23])
+          k.mesh("chassis-front", new T.CylinderGeometry(0.025, 0.025, 0.03, 12), [sx, 0.92, dz], ebony);
+      for (const sx of [-0.55, 0.55])
+        for (const dz of [-0.58, -0.12]) {
+          k.mesh("chassis-front", new T.CylinderGeometry(0.05, 0.06, 0.22, 16), [sx, 0.62, dz], k.paint);
+          k.mesh("chassis-front", new T.SphereGeometry(0.05, 14, 10), [sx, 0.52, dz], brass);
+        }
+
+      // ---- Sheet-music wing on the rear deck ----
+      for (const side of sides)
+        k.panel("bed", [0.16, 0.45, 0.3], [side * 0.72, 0.95, -2.3], k.paint, 0.04);
+      k.panel("bed", [1.7, 0.06, 0.7], [0, 1.2, -2.3], paper, 0.02);
+      k.bar("bed", [0, 1.24, -2.62], [0, 1.24, -1.98], 0.015, brass);
+      for (const px of [-0.42, 0.42])
+        for (let i = 0; i < 5; i++) {
+          const z = -2.5 + i * 0.1;
+          k.bar("bed", [px - 0.32, 1.235, z], [px + 0.32, 1.235, z], 0.008, ink);
+        }
+      for (const side of sides) {
+        k.panel("bed", [0.05, 0.3, 0.7], [side * 0.88, 1.3, -2.3], k.paint, 0.02);
+        k.bar("bed", [side * 0.88, 1.46, -2.62], [side * 0.88, 1.46, -1.98], 0.015, brass);
+      }
+
+      // ---- Candelabra lamps flanking the rear deck ----
+      for (const side of sides) {
+        const x = side * 0.95;
+        k.mesh("bed", new T.CylinderGeometry(0.09, 0.12, 0.06, 20), [x, 0.81, -2.0], brass);
+        k.bar("bed", [x, 0.84, -2.0], [x, 1.15, -2.0], 0.03, brass);
+        for (const dx of [-0.12, 0, 0.12]) {
+          k.bar("bed", [x, 1.05, -2.0], [x + dx, 1.15, -2.0], 0.018, brass);
+          k.mesh("bed", new T.CylinderGeometry(0.035, 0.035, 0.22, 14), [x + dx, 1.26, -2.0], paper);
+          k.mesh("bed", new T.SphereGeometry(0.04, 12, 10), [x + dx, 1.42, -2.0], k.amber);
+        }
+      }
+      for (const side of sides) {
+        k.oval("bed", [0.1, 0.07, 0.04], [side * 0.45, 0.3, -2.68], k.red);
+        k.mesh(
+          "bed",
+          new T.TorusGeometry(0.09, 0.015, 10, 28),
+          [side * 0.45, 0.3, -2.68],
+          brass,
+        );
+      }
+
+      // ---- Front bumper with the three-brass-pedal lyre ----
+      k.panel("bumper-front", [2.5, 0.26, 0.3], [0, -0.08, 2.68], k.paint, 0.08);
+      k.panel("bumper-front", [2.5, 0.06, 0.32], [0, 0.07, 2.68], k.steel, 0.02);
+      for (const side of sides)
+        k.bar("bumper-front", [side * 0.5, -0.2, 2.72], [side * 0.5, -0.5, 2.78], 0.035, brass);
+      k.bar("bumper-front", [-0.5, -0.5, 2.78], [0.5, -0.5, 2.78], 0.03, brass);
+      for (const px of [-0.2, 0, 0.2]) {
+        k.bar("bumper-front", [px, -0.42, 2.72], [px, -0.52, 2.86], 0.028, brass);
+        k.panel("bumper-front", [0.09, 0.04, 0.16], [px, -0.53, 2.92], brass, 0.015);
+      }
+
+      // ---- Rear bumper with brass trim and tail lamps ----
+      k.panel("bumper-rear", [2.4, 0.24, 0.28], [0, -0.1, -2.66], k.paint, 0.08);
+      k.bar("bumper-rear", [-1.1, 0.03, -2.66], [1.1, 0.03, -2.66], 0.02, brass);
+      k.tailLights(-2.79, 0.1);
+
+      // ---- Arches with gold pinstripes, brass shocks, hub medallions ----
+      fenders(k, k.paint);
+      for (const side of sides)
+        for (const z of [1.65, -1.65]) {
+          const pts: Array<readonly [number, number, number]> = [];
+          for (let i = 0; i <= 6; i++) {
+            const a = 0.3 + (i / 6) * (Math.PI - 0.6);
+            pts.push([side * 1.93, -0.59 + Math.sin(a) * 1.22, z + Math.cos(a) * 1.22]);
+          }
+          k.tube(z > 0 ? "chassis-front" : "chassis-rear", pts, 0.02, brass, 24);
+        }
+      for (const side of sides) {
+        k.shock("chassis-front", [side * 1.18, 0.55, 1.65], [side * 1.45, -0.67, 1.65], brass);
+        k.shock("chassis-rear", [side * 1.18, 0.55, -1.65], [side * 1.45, -0.67, -1.65], brass);
+      }
+      const caps = [
+        ["wheel-fl", 2.06, 1.65],
+        ["wheel-fr", -2.06, 1.65],
+        ["wheel-rl", 2.06, -1.65],
+        ["wheel-rr", -2.06, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.14, 0.14, 0.07, 28).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          brass,
+        );
+        k.mesh(
+          part,
+          new T.SphereGeometry(0.055, 14, 10),
+          [x + Math.sign(x) * 0.04, -0.85, z],
+          k.paint,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "phone-booth",
+    "Phone Booth",
+    "Red British phone box with glazed panels, a rotary phone, and a domed roof.",
+    [12724768, 15920608, 3027510, 0.78, 6],
+    (k) => {
+      const cream = k.accent;
+      const F = 1.45;
+      const R = -1.45;
+      const HX = 1.12;
+      const rows = [0.52, 0.84, 1.16, 1.48];
+
+      // ---- Front glazed wall (hood) ----
+      k.panel("hood", [2.24, 0.5, 0.12], [0, -0.1, F], k.paint, 0.03);
+      for (const side of sides) {
+        k.panel(
+          "hood",
+          [0.2, 2.81, 0.2],
+          [side * 1.02, 1.055, F],
+          k.paint,
+          0.03,
+        );
+        k.panel(
+          "hood",
+          [0.26, 0.16, 0.26],
+          [side * 1.02, -0.27, F],
+          k.paint,
+          0.03,
+        );
+        k.panel(
+          "hood",
+          [0.24, 0.09, 0.24],
+          [side * 1.02, 1.9, F],
+          k.paint,
+          0.02,
+        );
+      }
+      k.panel("hood", [2.04, 0.1, 0.16], [0, 0.2, F], k.paint, 0.02);
+      k.panel("hood", [1.84, 1.6, 0.05], [0, 1.0, F], k.glass, 0.012);
+      for (const x of [-0.613, -0.307, 0, 0.307, 0.613])
+        k.panel("hood", [0.055, 1.6, 0.09], [x, 1.0, F], cream, 0.012);
+      for (const y of rows)
+        k.panel("hood", [1.84, 0.055, 0.09], [0, y, F], cream, 0.012);
+      k.panel("hood", [2.24, 0.17, 0.14], [0, 1.935, F], k.paint, 0.03);
+      k.panel("hood", [1.9, 0.32, 0.06], [0, 2.18, F + 0.02], cream, 0.015);
+      for (const y of [2.035, 2.325])
+        k.panel("hood", [2.0, 0.05, 0.08], [0, y, F + 0.02], k.paint, 0.012);
+      for (const side of sides)
+        k.panel(
+          "hood",
+          [0.05, 0.34, 0.08],
+          [side * 0.975, 2.18, F + 0.02],
+          k.paint,
+          0.012,
+        );
+      k.panel("hood", [2.26, 0.08, 0.14], [0, -0.28, F], k.dark, 0.02);
+      for (const y of [-0.14, -0.04, 0.06])
+        k.panel("hood", [0.6, 0.035, 0.03], [0, y, F + 0.055], k.dark, 0.008);
+
+      // ---- Rear glazed wall + interior phone shelf (bed) ----
+      k.panel("bed", [2.24, 0.5, 0.12], [0, -0.1, R], k.paint, 0.03);
+      for (const side of sides) {
+        k.panel(
+          "bed",
+          [0.2, 2.81, 0.2],
+          [side * 1.02, 1.055, R],
+          k.paint,
+          0.03,
+        );
+        k.panel(
+          "bed",
+          [0.26, 0.16, 0.26],
+          [side * 1.02, -0.27, R],
+          k.paint,
+          0.03,
+        );
+        k.panel(
+          "bed",
+          [0.24, 0.09, 0.24],
+          [side * 1.02, 1.9, R],
+          k.paint,
+          0.02,
+        );
+      }
+      k.panel("bed", [2.04, 0.1, 0.16], [0, 0.2, R], k.paint, 0.02);
+      k.panel("bed", [1.84, 1.6, 0.05], [0, 1.0, R], k.glass, 0.012);
+      for (const x of [-0.613, -0.307, 0, 0.307, 0.613])
+        k.panel("bed", [0.055, 1.6, 0.09], [x, 1.0, R], cream, 0.012);
+      for (const y of rows)
+        k.panel("bed", [1.84, 0.055, 0.09], [0, y, R], cream, 0.012);
+      k.panel("bed", [2.24, 0.17, 0.14], [0, 1.935, R], k.paint, 0.03);
+      k.panel("bed", [1.9, 0.32, 0.06], [0, 2.18, R - 0.02], cream, 0.015);
+      for (const y of [2.035, 2.325])
+        k.panel("bed", [2.0, 0.05, 0.08], [0, y, R - 0.02], k.paint, 0.012);
+      for (const side of sides)
+        k.panel(
+          "bed",
+          [0.05, 0.34, 0.08],
+          [side * 0.975, 2.18, R - 0.02],
+          k.paint,
+          0.012,
+        );
+      k.panel("bed", [2.26, 0.08, 0.14], [0, -0.28, R], k.dark, 0.02);
+      // Interior: backboard, shelf, and black rotary phone.
+      k.panel("bed", [1.3, 1.3, 0.07], [-0.4, 1.05, -1.3], k.dark, 0.02);
+      k.panel("bed", [1.2, 0.07, 0.5], [-0.35, 0.9, -1.0], k.steel, 0.015);
+      for (const bx of [-0.8, 0.1])
+        k.panel("bed", [0.07, 0.18, 0.4], [bx, 0.78, -1.05], k.dark, 0.015);
+      k.panel("bed", [0.44, 0.17, 0.38], [-0.45, 1.02, -1.0], k.dark, 0.03);
+      k.panel(
+        "bed",
+        [0.4, 0.16, 0.3],
+        [-0.45, 1.16, -0.98],
+        k.dark,
+        0.03,
+      ).rotation.x = -0.35;
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.11, 0.11, 0.03, 32).rotateX(Math.PI / 2),
+        [-0.45, 1.18, -0.82],
+        k.steel,
+      );
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.035, 0.035, 0.045, 20).rotateX(Math.PI / 2),
+        [-0.45, 1.18, -0.82],
+        k.dark,
+      );
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        k.mesh(
+          "bed",
+          new T.CylinderGeometry(0.016, 0.016, 0.05, 12).rotateX(Math.PI / 2),
+          [-0.45 + Math.cos(a) * 0.075, 1.18 + Math.sin(a) * 0.075, -0.82],
+          k.dark,
+        );
+      }
+      k.bar(
+        "bed",
+        [-0.33, 1.1, -0.8],
+        [-0.33, 1.2, -0.8],
+        0.018,
+        k.steel,
+      );
+      k.bar("bed", [-0.61, 1.3, -1.0], [-0.29, 1.3, -1.0], 0.03, k.dark);
+      for (const cx of [-0.61, -0.29])
+        k.oval("bed", [0.07, 0.09, 0.07], [cx, 1.3, -1.0], k.dark);
+      for (const cx of [-0.55, -0.35])
+        k.bar("bed", [cx, 1.1, -1.0], [cx, 1.26, -1.0], 0.025, k.dark);
+      const cord: Array<readonly [number, number, number]> = [];
+      for (let i = 0; i <= 44; i++) {
+        const t = i / 44;
+        const a = t * Math.PI * 10;
+        cord.push([
+          -0.29 + Math.cos(a) * 0.03,
+          1.28 - t * 0.33,
+          -0.95 + Math.sin(a) * 0.03,
+        ]);
+      }
+      k.tube("bed", cord, 0.012, k.dark, 88);
+      k.panel("bed", [0.2, 0.28, 0.12], [0.05, 1.08, -1.05], cream, 0.02);
+      k.panel("bed", [0.16, 0.22, 0.1], [0.05, 1.05, -0.88], k.paint, 0.02);
+
+      // ---- Door wall, +x side (door-left): folding door with handle ----
+      k.panel("door-left", [0.12, 0.5, 2.7], [HX, -0.1, 0], k.paint, 0.03);
+      k.panel("door-left", [0.14, 0.08, 2.72], [HX, -0.28, 0], k.dark, 0.02);
+      k.panel("door-left", [0.16, 0.1, 2.5], [HX, 0.2, 0], k.paint, 0.02);
+      for (const side of sides) {
+        k.panel(
+          "door-left",
+          [0.05, 1.6, 0.42],
+          [HX, 1.0, side * 1.04],
+          k.glass,
+          0.012,
+        );
+        k.panel(
+          "door-left",
+          [0.09, 1.6, 0.055],
+          [HX, 1.0, side * 1.04],
+          cream,
+          0.012,
+        );
+        k.panel(
+          "door-left",
+          [0.14, 1.75, 0.09],
+          [HX, 1.1, side * 0.775],
+          k.paint,
+          0.02,
+        );
+      }
+      for (const y of rows)
+        k.panel("door-left", [0.09, 0.055, 2.5], [HX, y, 0], cream, 0.012);
+      k.panel("door-left", [0.14, 0.09, 1.64], [HX, 1.975, 0], k.paint, 0.02);
+      k.panel("door-left", [0.2, 0.07, 1.6], [HX, 0.235, 0], k.steel, 0.015);
+      k.panel("door-left", [0.14, 0.17, 2.7], [HX, 1.935, 0], k.paint, 0.03);
+      k.panel("door-left", [0.06, 0.32, 1.9], [HX + 0.02, 2.18, 0], cream, 0.015);
+      for (const y of [2.035, 2.325])
+        k.panel("door-left", [0.08, 0.05, 2.0], [HX + 0.02, y, 0], k.paint, 0.012);
+      for (const side of sides)
+        k.panel(
+          "door-left",
+          [0.08, 0.34, 0.05],
+          [HX + 0.02, 2.18, side * 0.975],
+          k.paint,
+          0.012,
+        );
+      // Door leaf (closed): red frame, open derby window, handle, hinges.
+      for (const side of sides)
+        k.panel(
+          "door-left",
+          [0.07, 1.66, 0.08],
+          [1.17, 1.1, side * 0.71],
+          k.paint,
+          0.015,
+        );
+      k.panel("door-left", [0.07, 0.09, 1.5], [1.17, 1.885, 0], k.paint, 0.015);
+      k.panel("door-left", [0.07, 0.09, 1.5], [1.17, 1.1, 0], k.paint, 0.015);
+      k.panel("door-left", [0.07, 0.12, 1.5], [1.17, 0.335, 0], k.paint, 0.015);
+      k.panel("door-left", [0.05, 0.62, 1.34], [1.17, 0.72, 0], k.paint, 0.012);
+      k.panel("door-left", [0.02, 0.16, 1.3], [1.21, 0.44, 0], k.steel, 0.006);
+      for (const z of [-0.223, 0.223])
+        k.panel("door-left", [0.06, 0.72, 0.05], [1.17, 1.5, z], cream, 0.012);
+      k.panel("door-left", [0.06, 0.05, 1.34], [1.17, 1.5, 0], cream, 0.012);
+      k.bar(
+        "door-left",
+        [1.235, 0.85, 0.55],
+        [1.235, 1.25, 0.55],
+        0.028,
+        k.steel,
+      );
+      for (const y of [0.9, 1.2])
+        k.bar("door-left", [1.17, y, 0.55], [1.235, y, 0.55], 0.02, k.steel);
+      k.oval("door-left", [0.035, 0.035, 0.035], [1.235, 1.27, 0.55], k.dark);
+      for (const y of [0.6, 1.6])
+        k.panel("door-left", [0.06, 0.12, 0.06], [1.17, y, -0.73], k.dark, 0.012);
+      k.bar("door-left", [1.2, 0.3, 1.32], [1.2, 1.5, 1.32], 0.025, k.steel);
+
+      // ---- Fixed glazed wall, -x side (door-right) ----
+      k.panel("door-right", [0.12, 0.5, 2.7], [-HX, -0.1, 0], k.paint, 0.03);
+      k.panel("door-right", [0.14, 0.08, 2.72], [-HX, -0.28, 0], k.dark, 0.02);
+      k.panel("door-right", [0.16, 0.1, 2.5], [-HX, 0.2, 0], k.paint, 0.02);
+      k.panel("door-right", [0.05, 1.6, 2.5], [-HX, 1.0, 0], k.glass, 0.012);
+      for (const z of [-1.0, -0.6, -0.2, 0.2, 0.6, 1.0])
+        k.panel("door-right", [0.09, 1.6, 0.055], [-HX, 1.0, z], cream, 0.012);
+      for (const y of rows)
+        k.panel("door-right", [0.09, 0.055, 2.5], [-HX, y, 0], cream, 0.012);
+      k.panel("door-right", [0.14, 0.17, 2.7], [-HX, 1.935, 0], k.paint, 0.03);
+      k.panel("door-right", [0.06, 0.32, 1.9], [-HX - 0.02, 2.18, 0], cream, 0.015);
+      for (const y of [2.035, 2.325])
+        k.panel("door-right", [0.08, 0.05, 2.0], [-HX - 0.02, y, 0], k.paint, 0.012);
+      for (const side of sides)
+        k.panel(
+          "door-right",
+          [0.08, 0.34, 0.05],
+          [-HX - 0.02, 2.18, side * 0.975],
+          k.paint,
+          0.012,
+        );
+
+      // ---- Domed roof (roof) ----
+      k.panel("roof", [2.44, 0.12, 3.1], [0, 2.4, 0], k.paint, 0.03);
+      k.panel("roof", [2.56, 0.07, 3.16], [0, 2.49, 0], k.paint, 0.02);
+      const dome = k.mesh(
+        "roof",
+        new T.SphereGeometry(1, 64, 24, 0, Math.PI * 2, 0, 0.62),
+        [0, 0.44, 0],
+        k.paint,
+      );
+      dome.scale.set(2.2, 2.55, 2.72);
+      k.panel("roof", [2.0, 0.06, 2.7], [0, 1.99, 0], k.dark, 0.015);
+      k.oval("roof", [0.12, 0.08, 0.12], [0, 1.93, 0], k.white);
+      k.mesh(
+        "roof",
+        new T.TorusGeometry(0.13, 0.02, 12, 32),
+        [0, 1.94, 0],
+        k.dark,
+      ).rotation.x = Math.PI / 2;
+      k.bar("roof", [0, 2.95, 0], [0, 3.08, 0], 0.1, k.paint);
+      k.oval("roof", [0.08, 0.1, 0.08], [0, 3.16, 0], k.paint);
+      k.bar("roof", [0, 3.2, 0], [0, 3.32, 0], 0.025, k.steel);
+      for (const sx of sides)
+        for (const sz of sides)
+          k.oval("roof", [0.09, 0.09, 0.09], [sx * 1.22, 2.58, sz * 1.52], k.paint);
+
+      // ---- Bumpers: black bars with lamps tucked under the sills ----
+      k.panel("bumper-front", [2.3, 0.3, 0.32], [0, -0.32, 1.95], k.dark, 0.07);
+      k.panel("bumper-front", [2.1, 0.08, 0.26], [0, -0.14, 1.95], k.steel, 0.02);
+      for (const side of sides) {
+        k.lamp("bumper-front", [side * 0.78, -0.3, 2.02], 0.13);
+        k.mesh(
+          "bumper-front",
+          new T.TorusGeometry(0.09, 0.03, 12, 32),
+          [side * 0.5, -0.52, 1.95],
+          k.steel,
+        );
+        k.panel(
+          "bumper-front",
+          [0.06, 0.08, 0.12],
+          [side * 1.16, -0.32, 1.95],
+          k.amber,
+          0.012,
+        );
+      }
+      k.panel("bumper-front", [0.4, 0.12, 0.03], [0, -0.32, 2.115], k.white, 0.01);
+      k.panel("bumper-rear", [2.3, 0.3, 0.32], [0, -0.32, -1.95], k.dark, 0.07);
+      k.panel("bumper-rear", [2.1, 0.08, 0.26], [0, -0.14, -1.95], k.steel, 0.02);
+      k.tailLights(-2.07, -0.25);
+      for (const side of sides) {
+        k.mesh(
+          "bumper-rear",
+          new T.TorusGeometry(0.09, 0.03, 12, 32),
+          [side * 0.5, -0.52, -1.95],
+          k.steel,
+        );
+        k.panel(
+          "bumper-rear",
+          [0.06, 0.08, 0.12],
+          [side * 1.16, -0.32, -1.95],
+          k.amber,
+          0.012,
+        );
+      }
+
+      // ---- Chassis dressing: red arches, tank, shocks, steps ----
+      fenders(k, k.paint);
+      k.bar("chassis-front", [0.75, -0.55, 0.5], [0.75, -0.55, -0.3], 0.26, k.steel);
+      for (const z of [0.3, -0.1])
+        k.mesh(
+          "chassis-front",
+          new T.TorusGeometry(0.27, 0.03, 10, 40),
+          [0.75, -0.55, z],
+          k.dark,
+        );
+      k.panel("chassis-front", [0.5, 0.4, 0.7], [-0.75, -0.5, 0.1], k.dark, 0.06);
+      for (const side of sides) {
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          cream,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          cream,
+        );
+        k.panel(
+          "chassis-front",
+          [0.5, 0.07, 0.7],
+          [side * 1.3, -0.42, 0],
+          k.steel,
+          0.02,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 0.55, -0.45, -2.0],
+          [side * 0.55, -0.45, -2.9],
+          0.06,
+          k.steel,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 0.55, -0.45, -2.8],
+          [side * 0.55, -0.45, -2.92],
+          0.068,
+          k.dark,
+        );
+      }
+
+      // Dark hub caps over the gray kit hubs, per the concept's black centers.
+      const caps = [
+        ["wheel-fl", 2.06, 1.65],
+        ["wheel-fr", -2.06, 1.65],
+        ["wheel-rl", 2.06, -1.65],
+        ["wheel-rr", -2.06, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.07, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.dark,
+        );
+        k.mesh(
+          part,
+          new T.SphereGeometry(0.05, 16, 12),
+          [x + Math.sign(x) * 0.04, -0.85, z],
+          k.steel,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "fish-tank",
+    "Fish Tank",
+    "Glass aquarium on wheels with coral, treasure, and very confused fish.",
+    [3121090, 15900733, 3820114, 0.8, 8],
+    (k) => {
+      const glass = new T.MeshPhysicalMaterial({
+        color: 0xcfeef2,
+        transparent: true,
+        opacity: 0.16,
+        roughness: 0.06,
+        metalness: 0,
+        depthWrite: false,
+      });
+      const water = new T.MeshPhysicalMaterial({
+        color: 0x2e9fc4,
+        transparent: true,
+        opacity: 0.3,
+        roughness: 0.3,
+        metalness: 0,
+        depthWrite: false,
+      });
+      const surface = new T.MeshPhysicalMaterial({
+        color: 0x9fe0ee,
+        transparent: true,
+        opacity: 0.45,
+        roughness: 0.15,
+        metalness: 0,
+        depthWrite: false,
+      });
+      const bubbleMat = new T.MeshPhysicalMaterial({
+        color: 0xe8fbff,
+        transparent: true,
+        opacity: 0.55,
+        roughness: 0.1,
+        metalness: 0,
+        depthWrite: false,
+      });
+      const sand = finish(0xe6d29a, 0.9, 0);
+      const coralRed = finish(0xe14b3a, 0.6, 0);
+      const coralYellow = finish(0xf2c230, 0.6, 0);
+      const coralBlue = finish(0x2f7fd0, 0.6, 0);
+      const coralPink = finish(0xe57aa0, 0.6, 0);
+      const weed = finish(0x2e8b57, 0.7, 0);
+      const wood = finish(0x6b4a2a, 0.7, 0);
+      const brass = gold();
+      const finMat = finish(0xc25e1e, 0.6, 0);
+      const lampBar = glow(0xbfefff);
+
+      const bubble = (
+        part: PartId,
+        x: number,
+        y: number,
+        z: number,
+        r: number,
+      ) =>
+        k.mesh(part, new T.SphereGeometry(r, 18, 12), [x, y, z], bubbleMat);
+
+      // Branching coral: dark rock foot, stems fanning out, bulb tips.
+      const coral = (
+        part: PartId,
+        x: number,
+        z: number,
+        mat: T.Material,
+        seed: number,
+      ) => {
+        k.oval(part, [0.17, 0.1, 0.17], [x, 0.38, z], k.dark);
+        const tips: Array<readonly [number, number, number]> = [
+          [0, 0.78, 0],
+          [0.15, 0.62, 0.08],
+          [-0.14, 0.64, -0.06],
+          [0.09, 0.52, -0.15],
+          [-0.1, 0.54, 0.14],
+          [0.21, 0.44, -0.02],
+          [-0.2, 0.46, 0.04],
+        ];
+        for (const [tx, ty, tz] of tips) {
+          const c = Math.cos(seed);
+          const s = Math.sin(seed);
+          const px = x + tx * c - tz * s;
+          const pz = z + tx * s + tz * c;
+          k.bar(part, [x, 0.42, z], [px, 0.35 + ty, pz], 0.035, mat);
+          k.oval(part, [0.055, 0.07, 0.055], [px, 0.37 + ty, pz], mat);
+        }
+      };
+
+      // Goldfish with flattened tail, dorsal fin, and worried eyes.
+      const fish = (
+        part: PartId,
+        x: number,
+        y: number,
+        z: number,
+        yaw: number,
+      ) => {
+        const fx = Math.sin(yaw);
+        const fz = Math.cos(yaw);
+        const rx = Math.cos(yaw);
+        const rz = -Math.sin(yaw);
+        const body = k.oval(part, [0.15, 0.13, 0.23], [x, y, z], k.accent);
+        body.rotation.y = yaw;
+        const tail = k.mesh(
+          part,
+          new T.ConeGeometry(0.11, 0.2, 20).rotateX(Math.PI / 2),
+          [x - fx * 0.3, y, z - fz * 0.3],
+          finMat,
+        );
+        tail.rotation.y = yaw;
+        tail.scale.x = 0.35;
+        const dorsal = k.mesh(
+          part,
+          new T.ConeGeometry(0.05, 0.12, 12),
+          [x - fx * 0.02, y + 0.15, z - fz * 0.02],
+          finMat,
+        );
+        dorsal.rotation.y = yaw;
+        dorsal.scale.x = 0.45;
+        for (const s of [-1, 1]) {
+          k.mesh(
+            part,
+            new T.SphereGeometry(0.035, 12, 10),
+            [
+              x + fx * 0.15 + rx * s * 0.09,
+              y + 0.04,
+              z + fz * 0.15 + rz * s * 0.09,
+            ],
+            k.white,
+          );
+          k.mesh(
+            part,
+            new T.SphereGeometry(0.018, 10, 8),
+            [
+              x + fx * 0.175 + rx * s * 0.105,
+              y + 0.04,
+              z + fz * 0.175 + rz * s * 0.105,
+            ],
+            k.dark,
+          );
+        }
+      };
+
+      const porthole = (part: PartId, side: number, z: number) => {
+        const x = side * 1.06;
+        k.mesh(
+          part,
+          new T.TorusGeometry(0.28, 0.05, 14, 48).rotateY(Math.PI / 2),
+          [x, 1.15, z],
+          k.steel,
+        );
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.26, 0.26, 0.05, 40).rotateZ(Math.PI / 2),
+          [x, 1.15, z],
+          glass,
+        );
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          k.mesh(
+            part,
+            new T.SphereGeometry(0.028, 10, 8),
+            [x + side * 0.05, 1.15 + Math.cos(a) * 0.28, z + Math.sin(a) * 0.28],
+            k.dark,
+          );
+        }
+      };
+
+      // ---- Front glass wall (hood): filter box, vent wand, lamps ----
+      k.panel("hood", [1.98, 1.66, 0.06], [0, 1.06, 2.3], glass, 0.012);
+      for (const side of sides)
+        k.panel("hood", [0.14, 1.9, 0.14], [side * 1.02, 1.05, 2.3], k.paint, 0.03);
+      k.panel("hood", [2.18, 0.12, 0.12], [0, 1.95, 2.3], k.paint, 0.03);
+      k.panel("hood", [2.18, 0.12, 0.12], [0, 0.17, 2.3], k.paint, 0.03);
+      // Chrome filter box hanging on the nose with grille and plumbing.
+      k.panel("hood", [0.62, 0.5, 0.3], [-0.62, 0.55, 2.48], k.steel, 0.03);
+      k.panel("hood", [0.66, 0.08, 0.34], [-0.62, 0.82, 2.48], k.dark, 0.02);
+      for (let i = 0; i < 4; i++)
+        k.panel(
+          "hood",
+          [0.5, 0.04, 0.04],
+          [-0.62, 0.42 + i * 0.09, 2.64],
+          k.dark,
+          0.01,
+        );
+      k.bar("hood", [-0.62, 0.3, 2.48], [-0.62, 0.05, 2.48], 0.06, k.steel);
+      k.tube(
+        "hood",
+        [
+          [-0.62, 0.8, 2.48],
+          [-0.62, 1.35, 2.42],
+          [-0.62, 1.7, 2.3],
+          [-0.62, 1.78, 2.1],
+        ],
+        0.05,
+        k.steel,
+      );
+      k.panel("hood", [0.1, 0.06, 0.04], [-0.42, 0.72, 2.64], lampBar, 0.01);
+      for (const side of sides) {
+        k.lamp("hood", [side * 0.78, -0.05, 2.49], 0.13);
+        k.panel("hood", [0.3, 0.05, 0.04], [side * 0.78, 0.14, 2.5], lampBar, 0.01);
+      }
+      // Aerator vent wand on the front lid corner with rising bubbles.
+      k.bar("hood", [-0.88, 1.9, 2.15], [-0.88, 2.5, 2.15], 0.05, k.steel);
+      k.bar("hood", [-0.88, 2.5, 2.15], [-0.88, 2.5, 1.95], 0.05, k.steel);
+      k.oval("hood", [0.07, 0.05, 0.07], [-0.88, 2.52, 1.95], k.dark);
+      const wandBubbles: Array<[number, number]> = [
+        [0.05, 2.62],
+        [-0.03, 2.74],
+        [0.06, 2.86],
+        [-0.02, 2.98],
+        [0.04, 3.1],
+      ];
+      for (const [dx, y] of wandBubbles) bubble("hood", -0.88 + dx, y, 1.95, 0.045);
+
+      // ---- Glass lid (roof): water surface, light bar, handle ----
+      k.panel("roof", [2.04, 0.06, 4.54], [0, 2.02, 0], glass, 0.012);
+      for (const sz of [-1, 1])
+        k.panel("roof", [2.28, 0.1, 0.14], [0, 2.02, sz * 2.3], k.paint, 0.03);
+      for (const side of sides)
+        k.panel("roof", [0.14, 0.1, 4.6], [side * 1.08, 2.02, 0], k.paint, 0.03);
+      k.panel("roof", [1.9, 0.03, 4.38], [0, 1.78, 0], surface, 0.008);
+      k.panel("roof", [1.2, 0.1, 0.18], [0, 2.16, 1.6], k.steel, 0.02);
+      k.panel("roof", [1.1, 0.05, 0.12], [0, 2.1, 1.6], lampBar, 0.01);
+      for (const side of sides)
+        k.panel("roof", [0.08, 0.12, 0.16], [side * 0.55, 2.08, 1.6], k.dark, 0.02);
+      k.bar("roof", [-0.4, 2.2, -1.7], [0.4, 2.2, -1.7], 0.04, k.steel);
+      for (const side of sides)
+        k.bar("roof", [side * 0.4, 2.07, -1.7], [side * 0.4, 2.2, -1.7], 0.035, k.steel);
+      for (const side of sides)
+        k.panel("roof", [0.16, 0.08, 0.12], [side * 0.7, 2.05, -2.3], k.steel, 0.02);
+
+      // ---- Side glass walls (doors): portholes, steps, markers ----
+      for (const side of sides) {
+        const d = door(side);
+        k.panel(d, [0.06, 1.66, 4.42], [side * 1.02, 1.06, 0], glass, 0.012);
+        k.panel(d, [0.12, 0.12, 4.6], [side * 1.02, 1.95, 0], k.paint, 0.03);
+        k.panel(d, [0.12, 0.12, 4.6], [side * 1.02, 0.17, 0], k.paint, 0.03);
+        k.panel(d, [0.1, 1.7, 0.12], [side * 1.02, 1.05, 0], k.paint, 0.02);
+        porthole(d, side, 1.15);
+        porthole(d, side, -1.15);
+        k.bar(d, [side * 1.3, -0.28, -0.7], [side * 1.3, -0.28, 0.7], 0.05, k.steel);
+        for (const z of [-0.5, 0, 0.5])
+          k.panel(d, [0.3, 0.05, 0.18], [side * 1.3, -0.28, z], k.steel, 0.012);
+        for (const z of [-0.6, 0.6])
+          k.bar(d, [side * 1.15, -0.2, z], [side * 1.3, -0.28, z], 0.03, k.dark);
+        k.panel(d, [0.05, 0.07, 0.14], [side * 1.09, 0.35, 2.1], k.amber, 0.012);
+        k.panel(d, [0.05, 0.07, 0.14], [side * 1.09, 0.35, -2.1], k.red, 0.012);
+      }
+
+      // ---- Rear glass wall (bed): treasure chest, life ring ----
+      k.panel("bed", [1.98, 1.66, 0.06], [0, 1.06, -2.3], glass, 0.012);
+      for (const side of sides)
+        k.panel("bed", [0.14, 1.9, 0.14], [side * 1.02, 1.05, -2.3], k.paint, 0.03);
+      k.panel("bed", [2.18, 0.12, 0.12], [0, 1.95, -2.3], k.paint, 0.03);
+      k.panel("bed", [2.18, 0.12, 0.12], [0, 0.17, -2.3], k.paint, 0.03);
+      k.panel("bed", [1.6, 0.06, 0.05], [0, 1.83, -2.37], lampBar, 0.012);
+      // Treasure chest with gold bands and spilled coins.
+      k.panel("bed", [0.7, 0.36, 0.45], [0.35, 0.53, -1.7], wood, 0.03);
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.225, 0.225, 0.7, 28).rotateZ(Math.PI / 2),
+        [0.35, 0.71, -1.7],
+        wood,
+      );
+      for (const dx of [-0.22, 0.22])
+        k.panel("bed", [0.07, 0.4, 0.49], [0.35 + dx, 0.53, -1.7], brass, 0.01);
+      k.panel("bed", [0.12, 0.16, 0.04], [0.35, 0.55, -1.46], brass, 0.01);
+      const coins: Array<readonly [number, number, number]> = [
+        [-0.1, 0.36, -1.45],
+        [-0.02, 0.36, -1.55],
+        [0.05, 0.36, -1.4],
+        [0.75, 0.36, -1.5],
+        [0.82, 0.36, -1.62],
+        [-0.06, 0.375, -1.5],
+        [0.78, 0.375, -1.56],
+        [0.0, 0.39, -1.47],
+      ];
+      for (const [cx, cy, cz] of coins)
+        k.mesh("bed", new T.CylinderGeometry(0.05, 0.05, 0.018, 20), [cx, cy, cz], brass);
+      // Life ring mounted on the rear face.
+      k.mesh(
+        "bed",
+        new T.TorusGeometry(0.3, 0.09, 14, 48),
+        [-0.65, 1.25, -2.42],
+        k.red,
+      );
+      for (let i = 0; i < 4; i++) {
+        const arc = k.mesh(
+          "bed",
+          new T.TorusGeometry(0.3, 0.095, 14, 10, 0.7),
+          [-0.65, 1.25, -2.42],
+          k.white,
+        );
+        arc.rotation.z = (i * Math.PI) / 2;
+      }
+      k.panel("bed", [0.1, 0.3, 0.06], [-0.65, 1.72, -2.38], k.dark, 0.015);
+
+      // ---- Tank base + seabed, front half (chassis-front) ----
+      k.panel("chassis-front", [2.3, 0.5, 2.55], [0, -0.08, 1.2], k.paint, 0.06);
+      k.panel("chassis-front", [2.36, 0.08, 2.6], [0, 0.13, 1.2], k.steel, 0.02);
+      k.panel("chassis-front", [2.0, 0.15, 2.3], [0, -0.38, 1.2], k.dark, 0.03);
+      k.panel("chassis-front", [1.9, 0.18, 2.19], [0, 0.26, 1.095], sand, 0.02);
+      k.panel("chassis-front", [1.9, 1.45, 2.19], [0, 1.06, 1.095], water, 0.02);
+      coral("chassis-front", -0.5, 1.5, coralRed, 0.3);
+      coral("chassis-front", 0.45, 1.1, coralYellow, 1.7);
+      coral("chassis-front", 0.1, 0.45, coralBlue, 3.1);
+      fish("chassis-front", 0.2, 1.1, 0.8, 0.5);
+      fish("chassis-front", -0.45, 0.9, 1.6, -2.2);
+      k.panel("chassis-front", [0.18, 0.08, 0.18], [-0.7, 0.38, 1.9], k.dark, 0.02);
+      const frontRise: Array<[number, number]> = [
+        [0.0, 0.55],
+        [0.03, 0.75],
+        [-0.03, 0.95],
+        [0.02, 1.15],
+        [-0.02, 1.35],
+        [0.0, 1.55],
+      ];
+      for (const [dx, y] of frontRise) bubble("chassis-front", -0.7 + dx, y, 1.9, 0.04);
+      for (const [wx, wz, h] of [
+        [0.75, 0.35, 0.55],
+        [-0.75, 0.6, 0.7],
+        [0.7, 1.85, 0.45],
+      ] as const) {
+        const blade = k.mesh(
+          "chassis-front",
+          new T.ConeGeometry(0.06, h, 10),
+          [wx, 0.35 + h / 2, wz],
+          weed,
+        );
+        blade.scale.x = 0.4;
+      }
+      k.bar("chassis-front", [0.75, -0.55, 0.5], [0.75, -0.55, -0.3], 0.26, k.steel);
+      for (const z of [0.3, -0.1])
+        k.mesh(
+          "chassis-front",
+          new T.TorusGeometry(0.27, 0.03, 10, 40),
+          [0.75, -0.55, z],
+          k.dark,
+        );
+      k.panel("chassis-front", [0.5, 0.4, 0.7], [-0.75, -0.5, 0.1], k.dark, 0.06);
+
+      // ---- Tank base + seabed, rear half (chassis-rear) ----
+      k.panel("chassis-rear", [2.3, 0.5, 2.55], [0, -0.08, -1.2], k.paint, 0.06);
+      k.panel("chassis-rear", [2.36, 0.08, 2.6], [0, 0.13, -1.2], k.steel, 0.02);
+      k.panel("chassis-rear", [2.0, 0.15, 2.3], [0, -0.38, -1.2], k.dark, 0.03);
+      k.panel("chassis-rear", [1.9, 0.18, 2.19], [0, 0.26, -1.095], sand, 0.02);
+      k.panel("chassis-rear", [1.9, 1.45, 2.19], [0, 1.06, -1.095], water, 0.02);
+      coral("chassis-rear", -0.5, -1.3, coralPink, 2.2);
+      coral("chassis-rear", -0.05, -0.6, coralYellow, 4.4);
+      coral("chassis-rear", 0.62, -0.5, coralBlue, 5.6);
+      fish("chassis-rear", 0.3, 1.2, -0.9, 2.6);
+      fish("chassis-rear", -0.2, 0.8, -1.95, -0.6);
+      k.panel("chassis-rear", [0.18, 0.08, 0.18], [0.65, 0.38, -2.0], k.dark, 0.02);
+      const rearRise: Array<[number, number]> = [
+        [0.0, 0.55],
+        [-0.03, 0.75],
+        [0.03, 0.95],
+        [-0.02, 1.15],
+        [0.02, 1.35],
+        [0.0, 1.55],
+      ];
+      for (const [dx, y] of rearRise) bubble("chassis-rear", 0.65 + dx, y, -2.0, 0.04);
+      for (const [wx, wz, h] of [
+        [-0.75, -0.5, 0.6],
+        [0.2, -2.0, 0.5],
+        [-0.7, -2.05, 0.65],
+      ] as const) {
+        const blade = k.mesh(
+          "chassis-rear",
+          new T.ConeGeometry(0.06, h, 10),
+          [wx, 0.35 + h / 2, wz],
+          weed,
+        );
+        blade.scale.x = 0.4;
+      }
+      for (const side of sides)
+        k.bar(
+          "chassis-rear",
+          [side * 0.55, -0.45, -2.0],
+          [side * 0.55, -0.45, -2.9],
+          0.06,
+          k.steel,
+        );
+
+      // ---- Running gear: painted fenders, shocks ----
+      fenders(k, k.paint);
+      for (const side of sides) {
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          k.accent,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          k.accent,
+        );
+      }
+
+      // ---- Front bumper: chrome bullbar, hooks, plate ----
+      k.panel("bumper-front", [2.3, 0.26, 0.3], [0, -0.15, 2.62], k.steel, 0.07);
+      for (const side of sides)
+        k.bar(
+          "bumper-front",
+          [side * 0.72, -0.24, 2.8],
+          [side * 0.72, 0.6, 2.8],
+          0.06,
+          k.steel,
+        );
+      for (const y of [0.55, 0.05])
+        k.bar("bumper-front", [-0.72, y, 2.8], [0.72, y, 2.8], 0.055, k.steel);
+      for (const side of sides) {
+        k.mesh(
+          "bumper-front",
+          new T.TorusGeometry(0.09, 0.03, 12, 32),
+          [side * 0.95, -0.32, 2.62],
+          k.dark,
+        );
+        k.lamp("bumper-front", [side * 0.45, -0.15, 2.78], 0.08);
+      }
+      k.panel("bumper-front", [0.4, 0.12, 0.03], [0, -0.15, 2.78], k.white, 0.01);
+
+      // ---- Rear bumper: anchor, lights, flaps ----
+      k.panel("bumper-rear", [2.3, 0.24, 0.3], [0, -0.16, -2.62], k.dark, 0.07);
+      k.tailLights(-2.79, 0.1);
+      k.bar("bumper-rear", [0.7, -0.15, -2.82], [0.7, 0.85, -2.82], 0.055, k.dark);
+      k.bar("bumper-rear", [0.35, 0.62, -2.82], [1.05, 0.62, -2.82], 0.045, k.dark);
+      for (const sx of [0.35, 1.05])
+        k.oval("bumper-rear", [0.06, 0.06, 0.06], [sx, 0.62, -2.82], k.steel);
+      k.mesh(
+        "bumper-rear",
+        new T.TorusGeometry(0.09, 0.028, 10, 28),
+        [0.7, 0.98, -2.82],
+        k.steel,
+      );
+      for (const s of [-1, 1]) {
+        k.bar(
+          "bumper-rear",
+          [0.7, -0.15, -2.82],
+          [0.7 + s * 0.35, 0.05, -2.82],
+          0.045,
+          k.dark,
+        );
+        const fluke = k.mesh(
+          "bumper-rear",
+          new T.ConeGeometry(0.1, 0.24, 16),
+          [0.7 + s * 0.35, 0.2, -2.82],
+          k.dark,
+        );
+        fluke.rotation.z = -s * 0.5;
+      }
+      for (const side of sides) {
+        k.bar(
+          "bumper-rear",
+          [side * 1.2, -0.2, -2.62],
+          [side * 1.65, -0.25, -2.72],
+          0.04,
+          k.dark,
+        );
+        k.panel("bumper-rear", [0.55, 0.45, 0.06], [side * 1.65, -0.5, -2.74], k.dark, 0.03);
+      }
+
+      // Dark hub caps over the kit hubs.
+      const caps = [
+        ["wheel-fl", 2.06, 1.65],
+        ["wheel-fr", -2.06, 1.65],
+        ["wheel-rl", 2.06, -1.65],
+        ["wheel-rr", -2.06, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.07, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.dark,
+        );
+        k.mesh(
+          part,
+          new T.SphereGeometry(0.05, 16, 12),
+          [x + Math.sign(x) * 0.04, -0.85, z],
+          k.steel,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "comet-sled",
+    "Comet Sled",
+    "Jet-rail sled with a turbine pod, tail fin, and a parachute pack.",
+    [8161957, 14698538, 2303788, 1, 5],
+    (k) => {
+      const canvas = finish(0x9a8f66, 0.9, 0);
+      const canvasDark = finish(0x6b6244, 0.92, 0);
+      const stripe = finish(0x8f1f14, 0.5, 0.1);
+      const exhaustGlow = glow(0xaee2ff);
+      const hotGlow = glow(0xff8c2e);
+
+      // ---- Nose spike (bumper-front): spike cone, collar, crossbar ----
+      k.mesh(
+        "bumper-front",
+        new T.ConeGeometry(0.22, 1.0, 40).rotateX(Math.PI / 2),
+        [0, -0.05, 2.95],
+        k.steel,
+      );
+      k.mesh(
+        "bumper-front",
+        new T.CylinderGeometry(0.26, 0.3, 0.3, 40).rotateX(Math.PI / 2),
+        [0, -0.05, 2.5],
+        k.steel,
+      );
+      k.mesh(
+        "bumper-front",
+        new T.TorusGeometry(0.28, 0.045, 12, 48),
+        [0, -0.05, 2.42],
+        k.dark,
+      );
+      k.bar("bumper-front", [-0.85, -0.12, 2.5], [0.85, -0.12, 2.5], 0.07, k.steel);
+      k.panel("bumper-front", [1.5, 0.1, 0.5], [0, -0.32, 2.45], k.dark, 0.04);
+      for (const side of sides) {
+        k.bar(
+          "bumper-front",
+          [side * 0.3, -0.27, 2.45],
+          [side * 0.28, -0.14, 2.45],
+          0.04,
+          k.steel,
+        );
+        k.mesh(
+          "bumper-front",
+          new T.TorusGeometry(0.09, 0.032, 10, 32),
+          [side * 0.55, -0.3, 2.52],
+          k.dark,
+        );
+        k.lamp("bumper-front", [side * 0.62, -0.12, 2.58], 0.07, k.amber);
+      }
+
+      // ---- Nose frame (hood): converging rails, cross braces ----
+      k.bar("hood", [-0.8, 0.35, 1.2], [-0.16, -0.02, 2.5], 0.07, k.paint);
+      k.bar("hood", [0.8, 0.35, 1.2], [0.16, -0.02, 2.5], 0.07, k.paint);
+      k.bar("hood", [-0.8, -0.35, 1.2], [-0.16, -0.12, 2.5], 0.07, k.paint);
+      k.bar("hood", [0.8, -0.35, 1.2], [0.16, -0.12, 2.5], 0.07, k.paint);
+      for (const t of [0.25, 0.5, 0.75]) {
+        const x = 0.8 + (0.16 - 0.8) * t;
+        const z = 1.2 + (2.5 - 1.2) * t;
+        const top = 0.35 + (-0.02 - 0.35) * t;
+        const bot = -0.35 + (-0.12 + 0.35) * t;
+        k.bar("hood", [-x, top, z], [x, top, z], 0.05, k.paint);
+        k.bar("hood", [-x, bot, z], [x, bot, z], 0.05, k.paint);
+        k.bar("hood", [-x, bot, z], [-x, top, z], 0.045, k.paint);
+        k.bar("hood", [x, bot, z], [x, top, z], 0.045, k.paint);
+        k.bar("hood", [-x, bot, z], [x, top, z], 0.035, k.steel);
+      }
+      k.bar("hood", [-0.8, -0.35, 1.2], [-0.8, 0.35, 1.2], 0.06, k.paint);
+      k.bar("hood", [0.8, -0.35, 1.2], [0.8, 0.35, 1.2], 0.06, k.paint);
+      for (const side of sides) {
+        k.bar("hood", [side * 0.8, 0.35, 1.2], [side * 0.85, 0.42, 1.2], 0.06, k.paint);
+        k.bar("hood", [side * 0.8, -0.35, 1.2], [side * 0.85, -0.38, 1.2], 0.06, k.paint);
+      }
+      k.panel("hood", [0.5, 0.08, 0.3], [0, 0.32, 2.0], k.dark, 0.03);
+      for (const side of sides)
+        k.panel("hood", [0.06, 0.2, 0.5], [side * 0.5, 0.1, 2.1], k.steel, 0.02);
+
+      // ---- Front chassis: tank, shocks, plumbing, seat ----
+      k.bar("chassis-front", [-0.8, -0.38, 2.3], [-0.8, -0.38, 0.4], 0.07, k.paint);
+      k.bar("chassis-front", [0.8, -0.38, 2.3], [0.8, -0.38, 0.4], 0.07, k.paint);
+      k.bar("chassis-front", [-0.8, -0.38, 1.4], [0.8, -0.38, 1.4], 0.06, k.paint);
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.26, 0.26, 1.3, 40).rotateX(Math.PI / 2),
+        [-0.48, -0.28, 0.95],
+        k.steel,
+      );
+      k.oval("chassis-front", [0.26, 0.26, 0.14], [-0.48, -0.28, 1.6], k.steel);
+      k.oval("chassis-front", [0.26, 0.26, 0.14], [-0.48, -0.28, 0.3], k.steel);
+      for (const z of [0.62, 1.28])
+        k.mesh(
+          "chassis-front",
+          new T.TorusGeometry(0.27, 0.03, 10, 40),
+          [-0.48, -0.28, z],
+          k.dark,
+        );
+      k.bar("chassis-front", [-0.48, -0.02, 0.95], [-0.48, 0.18, 0.95], 0.05, k.steel);
+      k.tube(
+        "chassis-front",
+        [
+          [-0.48, 0.18, 0.95],
+          [-0.3, 0.3, 0.4],
+          [-0.2, 0.5, 0.0],
+          [-0.15, 0.66, -0.35],
+        ],
+        0.045,
+        k.steel,
+      );
+      k.tube(
+        "chassis-front",
+        [
+          [0.6, -0.3, 2.0],
+          [0.66, -0.1, 1.2],
+          [0.66, 0.1, 0.4],
+          [0.5, 0.4, -0.2],
+        ],
+        0.05,
+        k.dark,
+      );
+      k.panel("chassis-front", [1.5, 0.08, 2.0], [0, -0.5, 1.3], k.dark, 0.03);
+      for (const side of sides)
+        k.shock(
+          "chassis-front",
+          [side * 1.13, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          k.accent,
+        );
+      openSeat(k, 0, 1.0);
+      k.panel("chassis-front", [0.4, 0.6, 0.5], [0.05, -0.08, 1.0], k.dark, 0.06);
+      k.panel("chassis-front", [0.7, 0.22, 0.3], [0, 0.5, 1.62], k.dark, 0.05);
+      for (const dx of [-0.18, 0, 0.18])
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.055, 0.055, 0.06, 20).rotateX(Math.PI / 2),
+          [dx, 0.56, 1.45],
+          k.steel,
+        );
+
+      // ---- Side trusses (doors): rails, verticals, diagonals, plumbing ----
+      for (const side of sides) {
+        const d = door(side);
+        const x = side * 0.85;
+        k.bar(d, [x, 0.42, 2.5], [x, 0.42, -2.3], 0.075, k.paint);
+        k.bar(d, [x, -0.38, 2.5], [x, -0.38, -2.3], 0.075, k.paint);
+        const posts = [2.3, 2.0, 1.2, 0.4, -0.4, -1.2, -2.0, -2.3];
+        posts.forEach((z, i) => {
+          k.bar(d, [x, -0.38, z], [x, 0.42, z], 0.05, k.paint);
+          if (i < posts.length - 1)
+            k.bar(
+              d,
+              [x, i % 2 ? 0.42 : -0.38, z],
+              [x, i % 2 ? -0.38 : 0.42, posts[i + 1]],
+              0.042,
+              k.steel,
+            );
+        });
+        k.tube(
+          d,
+          [
+            [side * 1.0, 0.1, 2.2],
+            [side * 1.02, 0.12, 1.0],
+            [side * 1.02, 0.12, -1.0],
+            [side * 1.0, 0.3, -2.2],
+          ],
+          0.048,
+          k.steel,
+        );
+        k.tube(
+          d,
+          [
+            [side * 1.0, -0.2, 2.2],
+            [side * 1.02, -0.22, 0.0],
+            [side * 1.0, -0.05, -2.2],
+          ],
+          0.038,
+          k.dark,
+        );
+        k.panel(d, [0.2, 0.06, 0.5], [side * 0.95, 0.0, 1.0], k.steel, 0.02);
+        k.panel(d, [0.05, 0.1, 1.2], [side * 1.06, 0.3, 0.2], k.accent, 0.02);
+      }
+
+      // ---- Cockpit (roof): windscreen, coaming, roll hoop ----
+      k.panel("roof", [1.5, 0.12, 1.6], [0, 0.48, 1.25], k.paint, 0.05);
+      k.panel("roof", [0.86, 0.5, 0.06], [0, 1.02, 1.95], k.glass, 0.025).rotation.x =
+        -0.18;
+      for (const side of sides) {
+        k.bar("roof", [side * 0.45, 0.54, 2.0], [side * 0.45, 1.3, 1.87], 0.045, k.steel);
+        k.panel("roof", [0.3, 0.18, 1.1], [side * 0.68, 0.56, 1.05], k.dark, 0.06);
+        k.bar("roof", [side * 0.8, 0.42, 0.4], [side * 0.8, 1.3, 0.3], 0.05, k.paint);
+        k.bar("roof", [side * 0.8, 1.3, 0.3], [side * 0.8, 0.42, -0.3], 0.05, k.paint);
+        k.bar("roof", [side * 0.75, 0.48, 1.95], [side * 0.85, 0.42, 1.95], 0.04, k.paint);
+      }
+      k.bar("roof", [-0.45, 1.3, 1.87], [0.45, 1.3, 1.87], 0.045, k.steel);
+      k.bar("roof", [-0.8, 1.3, 0.3], [0.8, 1.3, 0.3], 0.05, k.paint);
+      k.panel("roof", [0.12, 0.2, 0.06], [0.5, 1.22, 1.89], k.dark, 0.02);
+      k.panel("roof", [0.08, 0.14, 0.02], [0.5, 1.22, 1.93], k.steel, 0.008);
+
+      // ---- Turbine pod, fin, chute pack (bed) ----
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.42, 0.38, 1.7, 56).rotateX(Math.PI / 2),
+        [0, 0.8, -0.35],
+        k.steel,
+      );
+      k.mesh("bed", new T.TorusGeometry(0.42, 0.075, 18, 72), [0, 0.8, 0.5], k.steel);
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.37, 0.37, 0.3, 48).rotateX(Math.PI / 2),
+        [0, 0.8, 0.38],
+        k.dark,
+      );
+      k.mesh(
+        "bed",
+        new T.ConeGeometry(0.12, 0.32, 32).rotateX(Math.PI / 2),
+        [0, 0.8, 0.5],
+        k.steel,
+      );
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        const blade = k.panel("bed", [0.03, 0.3, 0.1], [0, 0.8, 0.38], k.steel, 0.01);
+        blade.position.x = Math.cos(a) * 0.19;
+        blade.position.y = 0.8 - 0.65 + Math.sin(a) * 0.19;
+        blade.rotation.z = a;
+      }
+      for (const z of [0.1, -0.35, -0.8])
+        k.mesh("bed", new T.TorusGeometry(0.41, 0.035, 12, 64), [0, 0.8, z], k.dark);
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.3, 0.36, 0.55, 48).rotateX(-Math.PI / 2),
+        [0, 0.8, -1.35],
+        k.dark,
+      );
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.27, 0.27, 0.08, 40).rotateX(Math.PI / 2),
+        [0, 0.8, -1.65],
+        exhaustGlow,
+      );
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.14, 0.14, 0.1, 32).rotateX(Math.PI / 2),
+        [0, 0.8, -1.66],
+        hotGlow,
+      );
+      for (const z of [0.1, -0.8]) {
+        k.bar("bed", [-0.85, 0.1, z], [0.85, 0.1, z], 0.05, k.paint);
+        for (const side of sides)
+          k.bar("bed", [side * 0.8, 0.1, z], [side * 0.3, 0.55, z], 0.07, k.paint);
+      }
+      k.panel("bed", [0.7, 0.12, 1.3], [0, 0.42, -0.35], k.dark, 0.04);
+      // Tail fin with stripes.
+      k.profile(
+        "bed",
+        [
+          [-2.62, 0.3],
+          [-1.68, 0.3],
+          [-1.9, 2.55],
+          [-2.5, 2.55],
+        ],
+        0.12,
+        0,
+        k.accent,
+        0.04,
+      );
+      for (const side of sides)
+        for (const [y, z, len] of [
+          [1.85, -2.18, 0.6],
+          [2.1, -2.19, 0.56],
+        ] as const) {
+          const s = k.panel("bed", [0.02, 0.12, len], [side * 0.1, y, z], stripe, 0.008);
+          s.rotation.x = 0.06;
+        }
+      k.bar("bed", [0, 0.3, -1.68], [0, 2.55, -1.9], 0.04, k.dark);
+      k.panel("bed", [0.2, 0.08, 0.5], [0, 2.58, -2.2], k.dark, 0.03);
+      // Parachute pack on the fin leading edge.
+      k.panel("bed", [0.72, 0.55, 0.36], [0, 1.4, -1.75], canvas, 0.09);
+      k.panel("bed", [0.76, 0.12, 0.4], [0, 1.4, -1.75], canvasDark, 0.04);
+      k.panel("bed", [0.12, 0.59, 0.4], [0, 1.4, -1.75], canvasDark, 0.04);
+      for (const dx of [-0.2, 0.2])
+        k.panel("bed", [0.1, 0.1, 0.05], [dx, 1.4, -1.55], k.steel, 0.02);
+      k.mesh("bed", new T.TorusGeometry(0.07, 0.022, 10, 32), [0.42, 1.5, -1.75], k.red);
+      k.tube(
+        "bed",
+        [
+          [0.42, 1.5, -1.75],
+          [0.6, 0.8, -0.8],
+          [0.5, 0.6, 0.2],
+        ],
+        0.022,
+        k.dark,
+      );
+      k.panel("bed", [1.5, 0.1, 1.0], [0, 0.32, -1.9], k.paint, 0.04);
+      for (const side of sides)
+        k.bar("bed", [side * 0.75, 0.32, -1.9], [side * 0.85, 0.42, -1.9], 0.04, k.paint);
+
+      // ---- Rear chassis: rails, shocks, fuel cell, pipes ----
+      k.bar("chassis-rear", [-0.8, -0.38, 0.4], [-0.8, -0.38, -2.3], 0.07, k.paint);
+      k.bar("chassis-rear", [0.8, -0.38, 0.4], [0.8, -0.38, -2.3], 0.07, k.paint);
+      k.bar("chassis-rear", [-0.8, -0.38, -1.4], [0.8, -0.38, -1.4], 0.06, k.paint);
+      k.panel("chassis-rear", [1.2, 0.5, 0.9], [0, -0.1, -1.9], k.dark, 0.06);
+      k.panel("chassis-rear", [1.24, 0.08, 0.94], [0, -0.1, -1.9], k.steel, 0.02);
+      for (const side of sides) {
+        k.shock(
+          "chassis-rear",
+          [side * 1.13, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          k.accent,
+        );
+        k.tube(
+          "chassis-rear",
+          [
+            [side * 0.3, 0.65, -1.2],
+            [side * 0.5, 0.2, -1.6],
+            [side * 0.6, -0.2, -2.2],
+          ],
+          0.055,
+          k.steel,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 0.6, -0.2, -2.2],
+          [side * 0.6, -0.2, -2.55],
+          0.07,
+          k.dark,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 0.85, -0.38, -2.3],
+          [side * 0.85, -0.38, -2.5],
+          0.06,
+          k.paint,
+        );
+      }
+
+      // ---- Rear bumper: bar, lights, flaps, hitch ----
+      k.panel("bumper-rear", [1.9, 0.22, 0.3], [0, -0.15, -2.6], k.dark, 0.07);
+      k.bar("bumper-rear", [-0.95, -0.15, -2.6], [0.95, -0.15, -2.6], 0.06, k.steel);
+      k.tailLights(-2.77, 0.05);
+      for (const side of sides)
+        k.panel("bumper-rear", [0.5, 0.4, 0.06], [side * 1.55, -0.55, -2.78], k.dark, 0.03);
+      k.bar("bumper-rear", [0, -0.3, -2.65], [0, -0.3, -2.95], 0.055, k.steel);
+
+      // Dark hub caps over the kit hubs.
+      const caps = [
+        ["wheel-fl", 2.14, 1.65],
+        ["wheel-fr", -2.14, 1.65],
+        ["wheel-rl", 2.14, -1.65],
+        ["wheel-rr", -2.14, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.07, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.dark,
+        );
+        k.mesh(
+          part,
+          new T.SphereGeometry(0.05, 16, 12),
+          [x + Math.sign(x) * 0.04, -0.85, z],
+          k.steel,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "battle-tank",
+    "Battle Tank",
+    "Army battle tank with a rotating turret, cannon, and reactive armor.",
+    [5923126, 3025444, 3882808, 0.95, 6],
+    (k) => {
+      const era = finish(0x535b33, 0.55, 0.3);
+      const eraDark = finish(0x424a28, 0.6, 0.25);
+      const deckGreen = finish(0x4a5230, 0.7, 0.2);
+      const cable = finish(0x3a3f42, 0.5, 0.7);
+      const canvas = finish(0x6b6a4d, 0.9, 0);
+
+      // ---- Front glacis (hood): sloped nose, ERA grid, lights, hatches ----
+      k.hull("hood", [
+        [0.42, -0.2, 0.72, 1.18, 1.12],
+        [1.5, -0.22, 0.5, 1.12, 1.02],
+        [2.5, -0.25, 0.12, 1.02, 0.88],
+      ]);
+      const glacisTilt = 0.28;
+      k.panel("hood", [1.95, 0.09, 2.25], [0, 0.46, 1.45], k.paint, 0.04).rotation.x =
+        glacisTilt;
+      // Reactive-armor block grid laid on the glacis slope.
+      for (let row = 0; row < 4; row++)
+        for (let col = 0; col < 5; col++) {
+          const z = 0.85 + row * 0.42;
+          const y = 0.555 - (z - 1.45) * 0.288;
+          k.panel(
+            "hood",
+            [0.3, 0.1, 0.34],
+            [(col - 2) * 0.35, y, z],
+            (row + col) % 2 ? era : eraDark,
+            0.02,
+          ).rotation.x = glacisTilt;
+        }
+      // Driver hatch and periscope slits on the glacis crown.
+      k.panel("hood", [0.5, 0.07, 0.55], [-0.55, 0.74, 0.6], deckGreen, 0.02).rotation.x =
+        glacisTilt;
+      for (let i = 0; i < 3; i++)
+        k.panel(
+          "hood",
+          [0.09, 0.06, 0.05],
+          [-0.67 + i * 0.12, 0.79, 0.44],
+          k.glass,
+          0.012,
+        );
+      // Glacis bolt row along the nose.
+      for (let i = 0; i < 9; i++)
+        k.mesh(
+          "hood",
+          new T.CylinderGeometry(0.035, 0.035, 0.05, 12).rotateX(Math.PI / 2),
+          [-0.8 + i * 0.2, -0.05, 2.52],
+          k.dark,
+        );
+      // Front fender decks with headlights, brush guards, tow eyes.
+      for (const side of sides) {
+        k.panel("hood", [1.0, 0.09, 0.95], [side * 1.45, 0.32, 2.07], k.paint, 0.03);
+        for (let i = 0; i < 5; i++)
+          k.panel(
+            "hood",
+            [0.6, 0.03, 0.08],
+            [side * 1.5, 0.38, 1.7 + i * 0.18],
+            k.dark,
+            0.01,
+          );
+        k.lamp("hood", [side * 1.5, 0.44, 2.42], 0.09);
+        k.mesh(
+          "hood",
+          new T.TorusGeometry(0.12, 0.022, 10, 32),
+          [side * 1.5, 0.44, 2.5],
+          k.dark,
+        );
+        for (const dz of [-0.05, 0.05])
+          k.bar(
+            "hood",
+            [side * 1.5 - 0.12, 0.32, 2.5 + dz],
+            [side * 1.5 + 0.12, 0.56, 2.5 + dz],
+            0.018,
+            k.dark,
+          );
+        k.mesh(
+          "hood",
+          new T.TorusGeometry(0.08, 0.03, 10, 28),
+          [side * 0.55, 0.02, 2.53],
+          k.dark,
+        );
+      }
+
+      // ---- Turret (roof): faceted turret, cannon, hatches, sights ----
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(1.02, 1.1, 0.2, 56),
+        [0, 0.6, -0.3],
+        k.dark,
+      );
+      k.hull("roof", [
+        [0.78, 0.62, 1.22, 0.6, 0.75],
+        [-0.3, 0.62, 1.48, 1.02, 0.86],
+        [-1.55, 0.68, 1.32, 0.88, 0.72],
+      ]);
+      k.panel("roof", [1.62, 0.1, 2.15], [0, 1.5, -0.38], k.paint, 0.04);
+      // Turret ERA: angled cheek blocks plus flank rows fitted to the taper.
+      for (const side of sides) {
+        for (let r = 0; r < 2; r++)
+          for (let c = 0; c < 2; c++)
+            k.panel(
+              "roof",
+              [0.24, 0.24, 0.12],
+              [side * (0.48 + c * 0.28), 0.92 + r * 0.28, 0.74 - c * 0.16],
+              (r + c) % 2 ? era : eraDark,
+              0.02,
+            );
+        for (let r = 0; r < 2; r++)
+          for (let c = 0; c < 4; c++) {
+            const z = -0.5 - c * 0.27;
+            const t = (Math.abs(z) - 0.3) / 1.25;
+            const x = 1.02 - t * 0.14 + 0.05;
+            k.panel(
+              "roof",
+              [0.12, 0.24, 0.26],
+              [side * x, 0.92 + r * 0.28, z],
+              (r + c) % 2 ? era : eraDark,
+              0.02,
+            );
+          }
+        // Smoke-grenade launcher cluster on each cheek.
+        for (let i = 0; i < 4; i++) {
+          const tube = k.mesh(
+            "roof",
+            new T.CylinderGeometry(0.045, 0.05, 0.3, 16),
+            [side * 0.72, 1.32, 0.28 + i * 0.1],
+            k.dark,
+          );
+          tube.rotation.set(0.5, 0, side * -0.35);
+        }
+      }
+      // Mantlet and long cannon with fume extractor and muzzle brake.
+      k.panel("roof", [0.72, 0.5, 0.42], [0, 1.04, 0.82], k.accent, 0.06);
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.2, 0.24, 0.35, 32).rotateX(Math.PI / 2),
+        [0, 1.06, 0.95],
+        k.dark,
+      );
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.085, 0.115, 2.5, 40).rotateX(Math.PI / 2),
+        [0, 1.06, 2.2],
+        k.paint,
+      );
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.13, 0.13, 0.4, 32).rotateX(Math.PI / 2),
+        [0, 1.06, 1.9],
+        k.accent,
+      );
+      for (const z of [1.55, 2.35, 2.8])
+        k.mesh("roof", new T.TorusGeometry(0.105, 0.022, 12, 48), [0, 1.06, z], k.dark);
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.15, 0.15, 0.55, 32).rotateX(Math.PI / 2),
+        [0, 1.06, 3.15],
+        k.accent,
+      );
+      for (const side of sides)
+        k.panel(
+          "roof",
+          [0.06, 0.18, 0.3],
+          [side * 0.15, 1.06, 3.15],
+          k.dark,
+          0.015,
+        );
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.1, 0.1, 0.06, 24).rotateX(Math.PI / 2),
+        [0, 1.06, 3.44],
+        k.dark,
+      );
+      // Commander + loader hatches, periscope ring, boxy sights.
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.3, 0.32, 0.12, 40),
+        [0.42, 1.58, -0.85],
+        k.accent,
+      );
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.26, 0.26, 0.06, 40),
+        [0.42, 1.66, -0.85],
+        k.paint,
+      );
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        k.panel(
+          "roof",
+          [0.08, 0.08, 0.08],
+          [0.42 + Math.cos(a) * 0.36, 1.6, -0.85 + Math.sin(a) * 0.36],
+          k.glass,
+          0.015,
+        );
+      }
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.28, 0.3, 0.1, 40),
+        [-0.45, 1.57, -0.7],
+        k.accent,
+      );
+      for (const [x, z] of [
+        [0.42, -0.15],
+        [-0.35, 0.1],
+      ] as const) {
+        k.panel("roof", [0.2, 0.24, 0.18], [x, 1.66, z], k.accent, 0.02);
+        k.panel("roof", [0.14, 0.12, 0.04], [x, 1.66, z + 0.1], k.glass, 0.01);
+      }
+      // Bustle rack with tarp roll and crates.
+      for (const side of sides) {
+        k.bar("roof", [side * 0.7, 1.15, -1.55], [side * 0.7, 1.15, -2.0], 0.035, k.dark);
+        k.bar("roof", [side * 0.7, 1.15, -2.0], [side * 0.7, 1.45, -2.0], 0.03, k.dark);
+      }
+      k.bar("roof", [-0.7, 1.15, -2.0], [0.7, 1.15, -2.0], 0.035, k.dark);
+      k.bar("roof", [-0.7, 1.45, -2.0], [0.7, 1.45, -2.0], 0.03, k.dark);
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.14, 0.14, 1.3, 24).rotateZ(Math.PI / 2),
+        [0, 1.32, -1.85],
+        canvas,
+      );
+      k.panel("roof", [0.5, 0.3, 0.4], [-0.35, 1.3, -1.78], deckGreen, 0.03);
+      // Antenna and turret-ring bolts.
+      k.bar("roof", [-0.6, 1.55, -1.4], [-0.65, 2.6, -1.5], 0.015, k.dark);
+      k.mesh("roof", new T.SphereGeometry(0.03, 12, 8), [-0.65, 2.6, -1.5], k.red);
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        k.mesh(
+          "roof",
+          new T.SphereGeometry(0.04, 12, 8),
+          [Math.cos(a) * 1.06, 0.62, -0.3 + Math.sin(a) * 1.06],
+          k.dark,
+        );
+      }
+
+      // ---- Hull flanks (doors): plates, skirts, ERA, cables, cans, tools ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [-1.7, -0.08],
+            [1.3, -0.08],
+            [1.1, 0.6],
+            [-1.55, 0.66],
+          ],
+          0.12,
+          side * 1.14,
+          k.paint,
+          0.035,
+        );
+        k.panel(d, [0.8, 0.1, 2.4], [side * 1.55, 0.32, 0.4], k.paint, 0.03);
+        for (const z of [1.15, -0.25, -1.6])
+          k.panel(d, [0.08, 0.34, 1.0], [side * 1.92, 0.45, z], k.dark, 0.02);
+        for (let r = 0; r < 2; r++)
+          for (let c = 0; c < 6; c++)
+            k.panel(
+              d,
+              [0.12, 0.22, 0.3],
+              [side * 1.24, 0.12 + r * 0.25, 0.95 - c * 0.44],
+              (r + c) % 2 ? era : eraDark,
+              0.02,
+            );
+        // Tow cable run with coiled loops on the fender deck.
+        k.tube(
+          d,
+          [
+            [side * 1.3, 0.55, 1.0],
+            [side * 1.32, 0.5, 0.2],
+            [side * 1.3, 0.55, -0.6],
+            [side * 1.32, 0.5, -1.3],
+          ],
+          0.035,
+          cable,
+          48,
+        );
+        for (const z of [0.75, 0.35])
+          k.mesh(
+            d,
+            new T.TorusGeometry(0.22, 0.04, 12, 40),
+            [side * 1.55, 0.4, z],
+            cable,
+          ).rotation.x = Math.PI / 2;
+        // Jerry cans, pioneer tools, extinguisher, markers.
+        for (let i = 0; i < 2; i++) {
+          const z = -0.55 + i * 0.42;
+          k.panel(d, [0.34, 0.44, 0.2], [side * 1.55, 0.6, z], deckGreen, 0.02);
+          k.bar(d, [side * 1.44, 0.83, z], [side * 1.66, 0.83, z], 0.02, k.dark);
+          k.mesh(
+            d,
+            new T.CylinderGeometry(0.04, 0.04, 0.05, 12),
+            [side * 1.55, 0.84, z],
+            k.dark,
+          );
+          k.panel(d, [0.36, 0.06, 0.22], [side * 1.55, 0.6, z], k.dark, 0.01);
+        }
+        k.bar(d, [side * 1.62, 0.4, 1.0], [side * 1.62, 0.4, 1.5], 0.022, k.steel);
+        k.bar(d, [side * 1.42, 0.4, 1.0], [side * 1.42, 0.4, 1.45], 0.025, deckGreen);
+        k.panel(d, [0.02, 0.06, 0.22], [side * 1.42, 0.42, 1.5], k.steel, 0.008);
+        k.mesh(
+          d,
+          new T.CylinderGeometry(0.06, 0.06, 0.3, 16),
+          [side * 1.75, 0.55, -0.5],
+          k.red,
+        );
+        k.bar(d, [side * 1.92, 0.55, -0.5], [side * 1.75, 0.55, -0.5], 0.02, k.dark);
+        k.panel(d, [0.05, 0.06, 0.14], [side * 1.97, 0.5, 0.4], k.amber, 0.012);
+        k.panel(d, [0.05, 0.06, 0.14], [side * 1.97, 0.5, -1.0], k.red, 0.012);
+      }
+
+      // ---- Rear deck (bed): engine grilles, cans, cable coil, stowage ----
+      k.hull("bed", [
+        [-2.6, -0.2, 0.45, 1.05, 1.1],
+        [0.3, -0.2, 0.6, 1.15, 1.1],
+      ]);
+      k.panel("bed", [2.0, 0.09, 1.7], [0, 0.66, -1.45], deckGreen, 0.03);
+      for (const side of sides) {
+        k.panel("bed", [0.8, 0.06, 1.2], [side * 0.5, 0.72, -1.45], k.dark, 0.02);
+        for (let i = 0; i < 8; i++)
+          k.panel(
+            "bed",
+            [0.7, 0.05, 0.08],
+            [side * 0.5, 0.75, -1.9 + i * 0.13],
+            k.steel,
+            0.012,
+          );
+        k.panel("bed", [0.8, 0.1, 1.7], [side * 1.55, 0.32, -1.7], k.paint, 0.03);
+        for (let i = 0; i < 4; i++)
+          k.panel(
+            "bed",
+            [0.6, 0.03, 0.08],
+            [side * 1.55, 0.38, -2.3 + i * 0.3],
+            k.dark,
+            0.01,
+          );
+      }
+      for (let i = 0; i < 4; i++) {
+        const x = -0.6 + i * 0.4;
+        k.panel("bed", [0.3, 0.42, 0.18], [x, 0.9, -2.25], deckGreen, 0.02);
+        k.bar("bed", [x - 0.1, 1.13, -2.25], [x + 0.1, 1.13, -2.25], 0.018, k.dark);
+      }
+      k.bar("bed", [-0.85, 0.85, -2.25], [0.85, 0.85, -2.25], 0.025, k.dark);
+      k.mesh(
+        "bed",
+        new T.TorusGeometry(0.28, 0.045, 12, 48),
+        [0.6, 0.74, -0.7],
+        cable,
+      ).rotation.x = Math.PI / 2;
+      k.mesh(
+        "bed",
+        new T.TorusGeometry(0.28, 0.045, 12, 48),
+        [0.6, 0.82, -0.7],
+        cable,
+      ).rotation.x = Math.PI / 2;
+      k.tube(
+        "bed",
+        [
+          [0.6, 0.8, -0.7],
+          [0.2, 0.78, -0.5],
+          [-0.3, 0.76, -0.6],
+        ],
+        0.04,
+        cable,
+        32,
+      );
+      k.panel("bed", [0.7, 0.35, 0.5], [-0.55, 0.88, -0.75], k.accent, 0.03);
+      k.panel("bed", [0.74, 0.08, 0.54], [-0.55, 1.07, -0.75], k.dark, 0.02);
+
+      // ---- Front bumper: armored beam, tow eyes, spare track links ----
+      k.panel("bumper-front", [2.1, 0.42, 0.3], [0, -0.2, 2.62], k.accent, 0.07);
+      k.panel("bumper-front", [1.9, 0.1, 0.32], [0, -0.02, 2.62], k.dark, 0.03);
+      for (const side of sides)
+        k.mesh(
+          "bumper-front",
+          new T.TorusGeometry(0.1, 0.035, 12, 32),
+          [side * 0.6, -0.22, 2.78],
+          k.dark,
+        );
+      for (let i = 0; i < 5; i++)
+        k.panel(
+          "bumper-front",
+          [0.24, 0.16, 0.1],
+          [-0.5 + i * 0.25, -0.2, 2.79],
+          k.dark,
+          0.02,
+        );
+      k.bar("bumper-front", [0, -0.35, 2.6], [0, -0.35, 2.85], 0.05, k.steel);
+
+      // ---- Rear bumper: plate, exhaust louvers, lights, hitch ----
+      k.panel("bumper-rear", [2.15, 0.6, 0.24], [0, -0.05, -2.68], k.accent, 0.07);
+      for (const side of sides) {
+        k.panel("bumper-rear", [0.7, 0.4, 0.08], [side * 0.55, 0.05, -2.8], k.dark, 0.02);
+        for (let i = 0; i < 5; i++)
+          k.panel(
+            "bumper-rear",
+            [0.6, 0.045, 0.05],
+            [side * 0.55, -0.08 + i * 0.09, -2.85],
+            k.steel,
+            0.01,
+          );
+        k.lamp("bumper-rear", [side * 1.0, -0.15, -2.8], 0.07, k.red, -1);
+      }
+      k.bar("bumper-rear", [0, -0.3, -2.7], [0, -0.3, -3.0], 0.06, k.dark);
+
+      // ---- Chassis dressing: arches, shocks, drives, belly, bolts ----
+      fenders(k, k.dark);
+      for (const side of sides) {
+        k.shock(
+          "chassis-front",
+          [side * 1.13, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          k.accent,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.13, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          k.accent,
+        );
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.3, 0.3, 0.3, 24).rotateZ(Math.PI / 2),
+          [side * 1.1, -0.8, 1.65],
+          k.accent,
+        );
+        k.mesh(
+          "chassis-rear",
+          new T.CylinderGeometry(0.3, 0.3, 0.3, 24).rotateZ(Math.PI / 2),
+          [side * 1.1, -0.8, -1.65],
+          k.accent,
+        );
+        k.bar(
+          "chassis-front",
+          [side * 0.8, -0.4, 1.65],
+          [side * 1.4, -0.75, 1.65],
+          0.07,
+          k.dark,
+        );
+        k.bar(
+          "chassis-rear",
+          [side * 0.8, -0.4, -1.65],
+          [side * 1.4, -0.75, -1.65],
+          0.07,
+          k.dark,
+        );
+      }
+      k.panel("chassis-front", [1.6, 0.25, 1.6], [0, -0.5, 0.9], k.dark, 0.05);
+      k.panel("chassis-rear", [1.6, 0.25, 1.4], [0, -0.5, -1.5], k.dark, 0.05);
+      for (const side of sides)
+        for (let i = 0; i < 6; i++) {
+          k.mesh(
+            "chassis-front",
+            new T.SphereGeometry(0.035, 10, 8),
+            [side * 0.82, -0.42, 0.3 + i * 0.25],
+            k.steel,
+          );
+          k.mesh(
+            "chassis-rear",
+            new T.SphereGeometry(0.035, 10, 8),
+            [side * 0.82, -0.42, -2.2 + i * 0.25],
+            k.steel,
+          );
+        }
+
+      // Dark hub caps with bolt circles over the kit hubs.
+      const caps = [
+        ["wheel-fl", 2.14, 1.65],
+        ["wheel-fr", -2.14, 1.65],
+        ["wheel-rl", 2.14, -1.65],
+        ["wheel-rr", -2.14, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.16, 0.16, 0.08, 24).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.dark,
+        );
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          k.mesh(
+            part,
+            new T.SphereGeometry(0.03, 10, 8),
+            [
+              x + Math.sign(x) * 0.05,
+              -0.85 + Math.cos(a) * 0.22,
+              z + Math.sin(a) * 0.22,
+            ],
+            k.steel,
+          );
+        }
+      }
+    },
+  ),
+  vehicle(
+    "bullet-train",
+    "Bullet Train",
+    "Shinkansen-nose speed train with a pantograph and stripe windows.",
+    [15265010, 2381506, 5001816, 0.78, 8],
+    (k) => {
+      const skirt = finish(0x878d93, 0.48, 0.55);
+      const skirtDark = finish(0x3a4046, 0.62, 0.4);
+      const ceramic = finish(0xe9e4d8, 0.35, 0.05);
+      const headGlow = glow(0xfff3da);
+      const stripe = k.accent;
+
+      // ---- Nose (hood): long shinkansen duck-bill, cab glass, light band ----
+      k.hull("hood", [
+        [0.45, -0.05, 1.92, 1.16, 1.06],
+        [1.3, -0.12, 1.62, 1.13, 0.98],
+        [2.0, -0.18, 1.05, 1.05, 0.82],
+        [2.55, -0.28, 0.52, 0.88, 0.6],
+        [2.78, -0.3, 0.3, 0.72, 0.5],
+      ]);
+      k.oval("hood", [0.72, 0.3, 0.3], [0, 0.02, 2.72], k.paint);
+      k.oval("hood", [0.6, 0.16, 0.22], [0, -0.2, 2.66], skirt);
+      // Wraparound windshield: sloped glass band fitted to the nose crown.
+      const shieldTilt = -Math.atan2(0.85, 0.3);
+      k.panel("hood", [1.56, 0.8, 0.07], [0, 1.78, 0.88], k.dark, 0.03).rotation.x =
+        shieldTilt;
+      k.panel("hood", [1.44, 0.7, 0.06], [0, 1.81, 0.89], k.glass, 0.025).rotation.x =
+        shieldTilt;
+      k.bar("hood", [0, 1.97, 0.57], [0, 1.73, 1.25], 0.035, k.dark);
+      // Cab roof brow bridging the windshield top into the coach roof.
+      k.panel("hood", [1.9, 0.1, 1.0], [0, 1.83, 0.75], k.paint, 0.04).rotation.x =
+        0.27;
+      for (const side of sides) {
+        k.bar(
+          "hood",
+          [side * 0.72, 1.97, 0.57],
+          [side * 0.72, 1.73, 1.25],
+          0.025,
+          k.dark,
+        );
+        k.bar(
+          "hood",
+          [side * 0.78, 1.68, 1.28],
+          [side * 0.95, 1.95, 0.5],
+          0.055,
+          k.paint,
+        );
+        // Wiper blades parked on the glass.
+        k.bar(
+          "hood",
+          [side * 0.3, 1.71, 1.21],
+          [side * 0.52, 1.78, 1.0],
+          0.014,
+          k.dark,
+        );
+        // Cab side windows with frames, tilted to the nose taper.
+        k.panel(
+          "hood",
+          [0.07, 0.52, 0.72],
+          [side * 1.06, 1.45, 0.78],
+          k.dark,
+          0.02,
+        ).rotation.z = side * 0.07;
+        const cabGlass = k.panel(
+          "hood",
+          [0.06, 0.42, 0.6],
+          [side * 1.09, 1.45, 0.78],
+          k.glass,
+          0.02,
+        );
+        cabGlass.rotation.z = side * 0.07;
+        cabGlass.rotation.y = -side * 0.09;
+        k.bar(
+          "hood",
+          [side * 1.12, 1.24, 0.78],
+          [side * 1.09, 1.66, 0.78],
+          0.02,
+          k.steel,
+        );
+        // Blue cheatline sweeping into the nose.
+        k.panel(
+          "hood",
+          [0.05, 0.2, 1.2],
+          [side * 1.025, 0.98, 1.2],
+          stripe,
+          0.018,
+        ).rotation.y = -side * 0.165;
+        k.panel(
+          "hood",
+          [0.05, 0.05, 1.2],
+          [side * 1.025, 1.13, 1.2],
+          k.steel,
+          0.015,
+        ).rotation.y = -side * 0.165;
+        // Lower nose rub strips following the taper.
+        k.bar(
+          "hood",
+          [side * 0.97, -0.15, 2.2],
+          [side * 0.77, -0.22, 2.68],
+          0.012,
+          skirtDark,
+        );
+      }
+      // Headlight band across the nose + crown lamps + number board.
+      k.panel("hood", [1.0, 0.1, 0.1], [0, 0.42, 2.63], headGlow, 0.03);
+      for (const side of sides) {
+        k.lamp("hood", [side * 0.7, 0.18, 2.62], 0.11);
+        k.lamp("hood", [side * 0.5, 0.62, 2.44], 0.06, k.amber);
+        k.mesh(
+          "hood",
+          new T.SphereGeometry(0.045, 16, 12),
+          [side * 0.28, 1.06, 2.02],
+          k.steel,
+        );
+      }
+      k.panel("hood", [0.5, 0.12, 0.08], [0, 0.82, 2.3], k.dark, 0.025).rotation.x =
+        -0.8;
+      k.panel("hood", [0.4, 0.07, 0.06], [0, 0.856, 2.335], headGlow, 0.02).rotation.x =
+        -0.8;
+      k.panel("hood", [0.44, 0.3, 0.1], [0, -0.12, 2.79], skirtDark, 0.03);
+
+      // ---- Carbody + roof gear: long coach, pantograph, insulators, AC ----
+      k.hull("roof", [
+        [0.5, 0.15, 1.95, 1.16, 1.06],
+        [0.0, 0.15, 1.98, 1.16, 1.06],
+        [-1.3, 0.15, 1.95, 1.16, 1.06],
+      ]);
+      k.panel("roof", [2.0, 0.14, 2.7], [0, 2.0, -0.85], k.paint, 0.06);
+      for (const x of [-0.7, 0, 0.7])
+        k.bar("roof", [x, 2.08, 0.4], [x, 2.08, -2.15], 0.014, skirt);
+      for (const side of sides)
+        k.bar(
+          "roof",
+          [side * 1.04, 1.985, 0.45],
+          [side * 1.04, 1.985, -2.15],
+          0.02,
+          skirt,
+        );
+      // Pantograph: base rails, insulator stacks, diamond arms, contact strip.
+      const pantZ = -0.9;
+      for (const side of sides)
+        k.panel(
+          "roof",
+          [0.12, 0.07, 1.0],
+          [side * 0.55, 2.1, pantZ],
+          skirtDark,
+          0.02,
+        );
+      const insulator = (x: number, z: number) => {
+        k.mesh(
+          "roof",
+          new T.CylinderGeometry(0.075, 0.09, 0.05, 20),
+          [x, 2.15, z],
+          skirtDark,
+        );
+        for (let i = 0; i < 3; i++)
+          k.mesh(
+            "roof",
+            new T.CylinderGeometry(0.052, 0.052, 0.06, 20),
+            [x, 2.21 + i * 0.075, z],
+            ceramic,
+          );
+        k.mesh(
+          "roof",
+          new T.CylinderGeometry(0.06, 0.045, 0.05, 20),
+          [x, 2.42, z],
+          skirtDark,
+        );
+      };
+      for (const side of sides)
+        for (const dz of [-0.38, 0.38]) insulator(side * 0.55, pantZ + dz);
+      for (const side of sides) {
+        k.bar(
+          "roof",
+          [side * 0.55, 2.44, pantZ - 0.38],
+          [side * 0.16, 2.66, pantZ],
+          0.028,
+          skirtDark,
+        );
+        k.bar(
+          "roof",
+          [side * 0.55, 2.44, pantZ + 0.38],
+          [side * 0.16, 2.66, pantZ],
+          0.028,
+          skirtDark,
+        );
+        k.bar(
+          "roof",
+          [side * 0.16, 2.66, pantZ],
+          [side * 0.42, 2.78, pantZ],
+          0.022,
+          skirtDark,
+        );
+      }
+      k.bar("roof", [-0.16, 2.66, pantZ], [0.16, 2.66, pantZ], 0.024, skirtDark);
+      k.panel("roof", [1.5, 0.05, 0.16], [0, 2.8, pantZ], skirtDark, 0.018);
+      k.panel("roof", [1.56, 0.025, 0.06], [0, 2.83, pantZ], k.steel, 0.01);
+      for (const side of sides)
+        k.bar(
+          "roof",
+          [side * 0.75, 2.8, pantZ],
+          [side * 0.9, 2.7, pantZ],
+          0.018,
+          skirtDark,
+        );
+      // Extra white insulator stacks aft of the pantograph.
+      for (const x of [-0.32, 0, 0.32]) insulator(x, -1.62);
+      // Roof AC pods with grille slats.
+      for (const z of [0.1, -1.95]) {
+        k.panel("roof", [1.1, 0.15, 0.68], [0, 2.12, z], skirt, 0.05);
+        for (let i = 0; i < 5; i++)
+          k.panel(
+            "roof",
+            [0.9, 0.03, 0.07],
+            [0, 2.2, z - 0.24 + i * 0.12],
+            skirtDark,
+            0.01,
+          );
+        for (const side of sides)
+          k.panel("roof", [0.04, 0.08, 0.5], [side * 0.58, 2.1, z], skirtDark, 0.012);
+      }
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.02, 0.03, 0.4, 12),
+        [0.4, 2.28, 0.3],
+        skirtDark,
+      );
+      k.oval("roof", [0.09, 0.06, 0.09], [-0.45, 2.1, 0.25], k.glass);
+
+      // ---- Coach sides: window band, blue stripe, plug doors ----
+      for (const side of sides) {
+        const part = door(side);
+        k.panel(part, [0.1, 1.35, 3.3], [side * 1.16, 0.55, -0.6], k.paint, 0.04);
+        k.panel(part, [0.14, 0.56, 2.8], [side * 1.16, 1.48, -0.6], k.dark, 0.02);
+        for (let i = 0; i < 6; i++) {
+          const z = 0.68 - i * 0.51;
+          k.panel(part, [0.06, 0.42, 0.38], [side * 1.235, 1.48, z], k.glass, 0.02);
+          k.panel(
+            part,
+            [0.065, 0.46, 0.045],
+            [side * 1.23, 1.48, z - 0.255],
+            k.steel,
+            0.012,
+          );
+        }
+        k.panel(part, [0.065, 0.05, 2.8], [side * 1.23, 1.78, -0.6], k.steel, 0.012);
+        k.panel(part, [0.06, 0.22, 3.1], [side * 1.21, 1.02, -0.6], stripe, 0.018);
+        k.panel(part, [0.06, 0.05, 3.1], [side * 1.21, 1.17, -0.6], k.steel, 0.012);
+        // Plug doors with porthole windows.
+        for (const z of [0.32, -1.32]) {
+          k.panel(part, [0.05, 1.15, 0.62], [side * 1.2, 0.62, z], k.dark, 0.015);
+          k.panel(part, [0.05, 1.07, 0.54], [side * 1.21, 0.62, z], k.paint, 0.015);
+          k.panel(part, [0.05, 0.4, 0.34], [side * 1.22, 1.32, z], k.glass, 0.015);
+          k.panel(
+            part,
+            [0.05, 0.05, 0.2],
+            [side * 1.23, 0.5, z - 0.12],
+            k.steel,
+            0.012,
+          );
+          const stepW = z > -0.5 ? 0.16 : 0.14;
+          const stepX = z > -0.5 ? 1.2 : 1.18;
+          k.panel(
+            part,
+            [stepW, 0.05, 0.5],
+            [side * stepX, -0.02, z],
+            skirtDark,
+            0.015,
+          );
+        }
+        // Lower vent louvers + rub rail + emblem.
+        for (let i = 0; i < 4; i++)
+          k.panel(
+            part,
+            [0.05, 0.05, 0.3],
+            [side * 1.22, 0.12, -0.15 - i * 0.22],
+            skirtDark,
+            0.01,
+          );
+        k.bar(
+          part,
+          [side * 1.23, -0.08, 1.0],
+          [side * 1.23, -0.08, -2.2],
+          0.025,
+          skirt,
+        );
+        k.panel(
+          part,
+          [0.06, 0.18, 0.18],
+          [side * 1.22, 0.62, -0.5],
+          stripe,
+          0.015,
+        ).rotation.x = Math.PI / 4;
+      }
+
+      // ---- Tail (bed): blunt cap, rear glass, light clusters ----
+      k.hull("bed", [
+        [-1.2, 0.15, 1.9, 1.13, 1.03],
+        [-2.5, 0.12, 1.82, 1.1, 1.0],
+        [-2.62, 0.1, 1.7, 1.05, 0.95],
+      ]);
+      k.panel("bed", [2.0, 1.5, 0.14], [0, 0.95, -2.58], k.paint, 0.05);
+      k.panel("bed", [1.9, 0.12, 0.9], [0, 1.9, -2.1], k.paint, 0.05).rotation.x =
+        -0.1;
+      k.panel("bed", [1.34, 0.62, 0.08], [0, 1.38, -2.64], k.dark, 0.03);
+      k.panel("bed", [1.2, 0.5, 0.07], [0, 1.38, -2.67], k.glass, 0.025);
+      k.bar("bed", [0, 1.14, -2.7], [0.3, 1.5, -2.7], 0.014, k.dark);
+      k.panel("bed", [2.02, 0.22, 0.1], [0, 1.0, -2.62], stripe, 0.03);
+      k.panel("bed", [2.02, 0.05, 0.1], [0, 1.15, -2.62], k.steel, 0.015);
+      for (const side of sides) {
+        k.lamp("bed", [side * 0.82, 0.68, -2.64], 0.11, k.red, -1);
+        k.lamp("bed", [side * 0.82, 0.42, -2.64], 0.07, k.red, -1);
+        k.panel("bed", [0.3, 0.5, 0.06], [side * 0.82, 0.55, -2.64], k.dark, 0.02);
+        k.panel(
+          "bed",
+          [0.34, 0.42, 0.12],
+          [side * 1.0, -0.05, -2.55],
+          skirtDark,
+          0.03,
+        );
+      }
+      k.panel("bed", [0.5, 0.14, 0.08], [0, 0.55, -2.66], k.dark, 0.025);
+      k.panel("bed", [0.4, 0.08, 0.06], [0, 0.55, -2.69], headGlow, 0.02);
+      k.panel("bed", [0.44, 0.3, 0.1], [0, 0.05, -2.66], skirtDark, 0.03);
+      for (const x of [-0.9, -0.45, 0, 0.45, 0.9])
+        k.panel("bed", [0.08, 0.5, 0.16], [x, -0.05, -2.5], skirt, 0.02);
+
+      // ---- Bumpers: pilots, couplers, lamps ----
+      k.panel("bumper-front", [2.0, 0.28, 0.3], [0, -0.32, 2.72], skirt, 0.08);
+      for (let i = 0; i < 5; i++)
+        k.bar(
+          "bumper-front",
+          [-0.8 + i * 0.4, -0.5, 2.86],
+          [-0.8 + i * 0.4, -0.18, 2.66],
+          0.035,
+          skirtDark,
+        );
+      k.bar("bumper-front", [-0.9, -0.52, 2.86], [0.9, -0.52, 2.86], 0.03, skirtDark);
+      k.mesh(
+        "bumper-front",
+        new T.CylinderGeometry(0.07, 0.07, 0.3, 20).rotateX(Math.PI / 2),
+        [0, -0.32, 2.9],
+        skirtDark,
+      );
+      k.mesh("bumper-front", new T.TorusGeometry(0.09, 0.028, 12, 32), [0, -0.32, 3.02], k.steel);
+      for (const side of sides)
+        k.lamp("bumper-front", [side * 0.7, -0.3, 2.86], 0.07, k.amber);
+      k.panel("bumper-front", [1.2, 0.06, 0.4], [0, -0.5, 2.7], k.steel, 0.02);
+
+      k.panel("bumper-rear", [2.1, 0.26, 0.28], [0, -0.3, -2.68], skirt, 0.075);
+      k.tailLights(-2.79, 0.16);
+      for (let i = 0; i < 5; i++)
+        k.bar(
+          "bumper-rear",
+          [-0.8 + i * 0.4, -0.48, -2.82],
+          [-0.8 + i * 0.4, -0.16, -2.62],
+          0.035,
+          skirtDark,
+        );
+      k.mesh(
+        "bumper-rear",
+        new T.CylinderGeometry(0.07, 0.07, 0.3, 20).rotateX(Math.PI / 2),
+        [0, -0.3, -2.86],
+        skirtDark,
+      );
+      k.mesh("bumper-rear", new T.TorusGeometry(0.09, 0.028, 12, 32), [0, -0.3, -2.98], k.steel);
+      for (const side of sides)
+        k.panel("bumper-rear", [0.5, 0.4, 0.05], [side * 0.9, -0.45, -2.5], k.rubber, 0.015);
+
+      // ---- Skirted underbody: arches, vent skirts, tanks, shocks ----
+      fenders(k, skirt);
+      for (const side of sides) {
+        k.panel("chassis-front", [0.1, 0.72, 1.0], [side * 1.12, -0.18, 0.3], skirt, 0.03);
+        k.panel("chassis-rear", [0.1, 0.72, 1.3], [side * 1.12, -0.18, -0.85], skirt, 0.03);
+        for (let r = 0; r < 2; r++)
+          for (let c = 0; c < 4; c++) {
+            k.panel(
+              "chassis-front",
+              [0.05, 0.09, 0.16],
+              [side * 1.18, -0.1 + r * 0.2, -0.05 + c * 0.22],
+              skirtDark,
+              0.012,
+            );
+            k.panel(
+              "chassis-rear",
+              [0.05, 0.09, 0.16],
+              [side * 1.18, -0.1 + r * 0.2, -1.0 + c * 0.22],
+              skirtDark,
+              0.012,
+            );
+          }
+        // Access steps below the plug doors (rear pair tucked inboard of the tire).
+        k.panel("chassis-front", [0.34, 0.06, 0.44], [side * 1.28, -0.52, 0.32], skirtDark, 0.015);
+        k.panel("chassis-front", [0.3, 0.04, 0.36], [side * 1.28, -0.32, 0.32], skirt, 0.012);
+        k.panel("chassis-rear", [0.2, 0.06, 0.44], [side * 1.14, -0.52, -1.32], skirtDark, 0.015);
+        k.panel("chassis-rear", [0.18, 0.04, 0.36], [side * 1.14, -0.32, -1.32], skirt, 0.012);
+        // Brake discs tucked inside the wheels.
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.3, 0.3, 0.08, 32).rotateZ(Math.PI / 2),
+          [side * 1.18, -0.85, 1.65],
+          k.steel,
+        );
+        k.mesh(
+          "chassis-rear",
+          new T.CylinderGeometry(0.3, 0.3, 0.08, 32).rotateZ(Math.PI / 2),
+          [side * 1.18, -0.85, -1.65],
+          k.steel,
+        );
+        k.shock("chassis-front", [side * 0.8, -0.3, 1.65], [side * 1.35, -0.8, 1.65], stripe);
+        k.shock("chassis-rear", [side * 0.8, -0.3, -1.65], [side * 1.35, -0.8, -1.65], stripe);
+      }
+      // Center equipment boxes with flank vents, air tanks, cable runs.
+      k.panel("chassis-front", [1.5, 0.42, 0.9], [0, -0.42, 0.35], skirtDark, 0.05);
+      k.panel("chassis-rear", [1.5, 0.42, 0.9], [0, -0.42, -0.55], skirtDark, 0.05);
+      for (const side of sides)
+        for (let i = 0; i < 3; i++) {
+          k.panel(
+            "chassis-front",
+            [0.05, 0.05, 0.6],
+            [side * 0.76, -0.32 - i * 0.1, 0.35],
+            k.dark,
+            0.012,
+          );
+          k.panel(
+            "chassis-rear",
+            [0.05, 0.05, 0.6],
+            [side * 0.76, -0.32 - i * 0.1, -0.55],
+            k.dark,
+            0.012,
+          );
+        }
+      for (const side of sides) {
+        k.mesh(
+          "chassis-front",
+          new T.CylinderGeometry(0.16, 0.16, 0.85, 28).rotateX(Math.PI / 2),
+          [side * 0.45, -0.42, 0.7],
+          skirt,
+        );
+        k.mesh(
+          "chassis-rear",
+          new T.CylinderGeometry(0.16, 0.16, 0.85, 28).rotateX(Math.PI / 2),
+          [side * 0.45, -0.42, -1.0],
+          skirt,
+        );
+      }
+      k.tube(
+        "chassis-front",
+        [
+          [-0.6, -0.66, 0.2],
+          [0.0, -0.7, 0.6],
+          [0.6, -0.66, 0.2],
+        ],
+        0.035,
+        k.dark,
+      );
+      k.tube(
+        "chassis-rear",
+        [
+          [-0.6, -0.66, -0.4],
+          [0.0, -0.7, -0.9],
+          [0.6, -0.66, -0.4],
+        ],
+        0.035,
+        k.dark,
+      );
+
+      // ---- Wheel dress: hub caps + accent rings over the kit hubs ----
+      const caps = [
+        ["wheel-fl", 2.06, 1.65],
+        ["wheel-fr", -2.06, 1.65],
+        ["wheel-rl", 2.06, -1.65],
+        ["wheel-rr", -2.06, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        const ring = new T.TorusGeometry(0.44, 0.025, 12, 64);
+        ring.rotateY(Math.PI / 2);
+        k.mesh(part, ring, [x, -0.85, z], stripe);
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.07, 28).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.dark,
+        );
+        k.mesh(
+          part,
+          new T.SphereGeometry(0.05, 16, 12),
+          [x + Math.sign(x) * 0.05, -0.85, z],
+          k.steel,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "land-yacht",
+    "Land Yacht",
+    "Wind-driven land yacht with a tall mast, sail, and outrigger cockpit.",
+    [15788758, 2060171, 6116938, 0.82, 8],
+    (k) => {
+      const pod = finish(0xdd7327, 0.42, 0.18);
+      const podDark = finish(0xa8541f, 0.52, 0.12);
+      const rope = finish(0xd8c9a3, 0.85, 0);
+      const wood = finish(0x7a4e2a, 0.7, 0.05);
+      const brass = gold();
+      const mastLight = glow(0xfff3da);
+      const starboard = glow(0x3aff7a);
+      const sailCream = k.paint;
+      const sailBlue = k.accent;
+
+      // ---- Bow (hood): pointed pod nose, foredeck, windscreen ----
+      k.hull(
+        "hood",
+        [
+          [0.7, -0.3, 0.62, 0.92, 0.98],
+          [1.8, -0.28, 0.55, 0.72, 0.8],
+          [2.62, -0.18, 0.42, 0.16, 0.24],
+        ],
+        pod,
+      );
+      k.oval("hood", [0.16, 0.3, 0.22], [0, 0.12, 2.6], podDark);
+      k.panel("hood", [0.7, 0.08, 0.9], [0, 0.6, 1.55], podDark, 0.03);
+      k.bar("hood", [-0.2, 0.65, 1.55], [0.2, 0.65, 1.55], 0.025, k.steel);
+      for (const side of sides) {
+        k.bar(
+          "hood",
+          [side * 0.28, 0.52, 2.12],
+          [side * 0.42, 0.52, 2.12],
+          0.03,
+          k.steel,
+        );
+        k.bar(
+          "hood",
+          [side * 0.35, 0.52, 2.12],
+          [side * 0.35, 0.6, 2.12],
+          0.025,
+          k.steel,
+        );
+        k.bar(
+          "hood",
+          [side * 0.5, 0.58, 1.3],
+          [side * 0.5, 0.78, 1.3],
+          0.028,
+          k.steel,
+        );
+        k.bar(
+          "hood",
+          [side * 0.36, 0.55, 2.0],
+          [side * 0.36, 0.75, 2.0],
+          0.028,
+          k.steel,
+        );
+        k.tube(
+          "hood",
+          [
+            [side * 0.62, 0.66, 0.95],
+            [side * 0.5, 0.78, 1.3],
+            [side * 0.36, 0.75, 2.0],
+            [side * 0.05, 0.52, 2.58],
+          ],
+          0.032,
+          k.steel,
+        );
+        k.panel("hood", [0.3, 0.03, 0.12], [side * 0.45, 0.54, 1.9], k.dark, 0.01);
+        k.panel("hood", [0.3, 0.03, 0.12], [side * 0.52, 0.6, 1.15], k.dark, 0.01);
+        k.panel("hood", [0.1, 0.12, 0.16], [side * 0.66, 0.42, 2.0], k.dark, 0.02);
+        k.mesh(
+          "hood",
+          new T.SphereGeometry(0.055, 14, 12),
+          [side * 0.72, 0.42, 2.0],
+          side > 0 ? k.red : starboard,
+        );
+      }
+      // Bow roller + forestay chainplate.
+      k.panel("hood", [0.2, 0.3, 0.12], [0, 0.32, 2.56], k.steel, 0.03);
+      k.mesh(
+        "hood",
+        new T.CylinderGeometry(0.07, 0.07, 0.22, 24).rotateZ(Math.PI / 2),
+        [0, 0.45, 2.62],
+        k.dark,
+      );
+      k.panel("hood", [0.1, 0.28, 0.06], [0, 0.18, 2.52], k.dark, 0.02);
+      k.bar("hood", [0, 0.52, 2.58], [0, 0.75, 2.45], 0.024, rope);
+      // Rope coil on the foredeck (port).
+      for (let i = 0; i < 3; i++)
+        k.mesh(
+          "hood",
+          new T.TorusGeometry(0.16 - i * 0.012, 0.042, 12, 40).rotateX(
+            Math.PI / 2,
+          ),
+          [-0.42, 0.63 + i * 0.06, 1.15],
+          rope,
+        );
+      // Windscreen: dark frame + glass + posts + top rail.
+      k.panel("hood", [1.14, 0.52, 0.06], [0, 0.88, 0.92], k.dark, 0.025).rotation.x =
+        -0.28;
+      k.panel("hood", [1.0, 0.4, 0.05], [0, 0.9, 0.965], k.glass, 0.02).rotation.x =
+        -0.28;
+      for (const side of sides)
+        k.bar(
+          "hood",
+          [side * 0.55, 0.58, 1.06],
+          [side * 0.55, 1.16, 0.83],
+          0.03,
+          k.steel,
+        );
+      k.bar("hood", [-0.55, 1.16, 0.83], [0.55, 1.16, 0.83], 0.03, k.steel);
+
+      // ---- Front bumper: steel bow bumper, pulpit rails, tow eyes ----
+      k.panel("bumper-front", [1.9, 0.22, 0.3], [0, -0.11, 2.66], k.steel, 0.08);
+      k.panel("bumper-front", [1.7, 0.1, 0.32], [0, -0.05, 2.66], pod, 0.04);
+      for (const side of sides) {
+        k.bar(
+          "bumper-front",
+          [side * 0.7, -0.05, 2.72],
+          [side * 0.7, 0.55, 2.6],
+          0.045,
+          k.steel,
+        );
+        k.mesh(
+          "bumper-front",
+          new T.TorusGeometry(0.09, 0.03, 10, 32),
+          [side * 0.55, -0.26, 2.7],
+          k.dark,
+        );
+      }
+      k.tube(
+        "bumper-front",
+        [
+          [-0.7, 0.55, 2.6],
+          [0, 0.62, 2.78],
+          [0.7, 0.55, 2.6],
+        ],
+        0.04,
+        k.steel,
+      );
+
+      // ---- Front chassis: arches, shocks, mast step, cockpit ----
+      fenders(k, pod);
+      for (const side of sides)
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          k.accent,
+        );
+      k.panel("chassis-front", [1.5, 0.1, 1.8], [0, -0.02, 0.1], k.dark, 0.03);
+      for (const x of [-0.4, 0.4])
+        k.panel("chassis-front", [0.08, 0.03, 1.6], [x, 0.04, 0.1], k.steel, 0.01);
+      k.panel("chassis-front", [0.5, 0.18, 0.5], [0, 0.05, 0.3], k.dark, 0.05);
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.14, 0.16, 0.25, 32),
+        [0, 0.2, 0.3],
+        k.steel,
+      );
+      k.mesh(
+        "chassis-front",
+        new T.TorusGeometry(0.15, 0.03, 10, 40).rotateX(Math.PI / 2),
+        [0, 0.32, 0.3],
+        k.dark,
+      );
+      k.panel("chassis-front", [1.2, 0.35, 0.1], [0, 0.15, 0.95], podDark, 0.04);
+      for (const side of sides)
+        k.panel(
+          "chassis-front",
+          [0.18, 0.24, 0.44],
+          [side * 0.85, 0.3, 0.05],
+          k.steel,
+          0.04,
+        );
+      // Bilge pump: brass barrel + wooden T-handle.
+      k.mesh(
+        "chassis-front",
+        new T.CylinderGeometry(0.07, 0.07, 0.3, 24),
+        [0.55, 0.15, -0.35],
+        brass,
+      );
+      k.bar("chassis-front", [0.45, 0.32, -0.35], [0.65, 0.32, -0.35], 0.022, wood);
+      k.bar("chassis-front", [0.55, 0.32, -0.35], [0.55, 0.22, -0.35], 0.022, k.steel);
+      openSeat(k, 0, -0.42);
+
+      // ---- Cockpit sides (doors): coaming, stripes, outrigger beams ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [0.95, 0.6],
+            [0.95, -0.1],
+            [-1.35, -0.1],
+            [-1.35, 0.6],
+          ],
+          0.14,
+          side * 0.98,
+          pod,
+          0.04,
+        );
+        k.panel(d, [0.06, 0.09, 2.2], [side * 1.1, 0.52, -0.2], sailBlue, 0.02);
+        k.panel(d, [0.06, 0.04, 2.2], [side * 1.1, 0.4, -0.2], k.steel, 0.01);
+        k.bar(d, [side * 1.02, 0.68, 0.95], [side * 1.02, 0.68, -1.35], 0.035, k.steel);
+        for (const z of [0.8, -0.2, -1.2])
+          k.bar(d, [side * 1.02, 0.6, z], [side * 1.02, 0.68, z], 0.025, k.steel);
+        // Outrigger beam with upturned skid tip + support strut.
+        k.panel(d, [1.5, 0.14, 0.34], [side * 1.65, 0.3, 0.05], pod, 0.05);
+        k.panel(d, [0.5, 0.03, 0.2], [side * 1.9, 0.385, 0.05], k.white, 0.01);
+        k.tube(
+          d,
+          [
+            [side * 2.35, 0.3, 0.05],
+            [side * 2.55, 0.34, 0.05],
+            [side * 2.62, 0.52, 0.05],
+          ],
+          0.075,
+          pod,
+        );
+        k.oval(d, [0.08, 0.08, 0.1], [side * 2.62, 0.54, 0.05], podDark);
+        k.bar(d, [side * 2.1, 0.24, 0.05], [side * 0.95, -0.25, 0.05], 0.05, k.steel);
+        k.panel(d, [0.1, 0.2, 0.4], [side * 1.12, 0.3, 0.05], k.steel, 0.03);
+        // Shroud chainplate + turnbuckle at the beam tip.
+        k.panel(d, [0.08, 0.22, 0.12], [side * 2.3, 0.42, 0.05], k.steel, 0.02);
+        k.mesh(
+          d,
+          new T.CylinderGeometry(0.035, 0.035, 0.18, 16),
+          [side * 2.3, 0.56, 0.05],
+          k.dark,
+        );
+        for (const z of [0.45, -0.85])
+          k.bar(
+            d,
+            [side * 1.11, 0.62, z - 0.12],
+            [side * 1.11, 0.62, z + 0.12],
+            0.022,
+            k.steel,
+          );
+        // Jib-sheet winch on the coaming.
+        k.mesh(
+          d,
+          new T.CylinderGeometry(0.05, 0.06, 0.1, 20),
+          [side * 0.9, 0.66, -0.6],
+          brass,
+        );
+      }
+
+      // ---- Rig (roof): aluminum mast, boom, sails, standing rigging ----
+      k.bar("roof", [0, 0.3, 0.3], [0, 5.85, 0.3], 0.09, k.steel);
+      for (const y of [1.2, 2.4, 4.0])
+        k.mesh(
+          "roof",
+          new T.TorusGeometry(0.105, 0.025, 12, 32).rotateX(Math.PI / 2),
+          [0, y, 0.3],
+          k.dark,
+        );
+      k.oval("roof", [0.12, 0.1, 0.12], [0, 5.9, 0.3], k.dark);
+      k.panel("roof", [0.14, 0.3, 0.2], [0, 5.72, 0.3], k.dark, 0.03);
+      for (const x of [-0.075, 0.075])
+        k.mesh(
+          "roof",
+          new T.CylinderGeometry(0.05, 0.05, 0.03, 20).rotateZ(Math.PI / 2),
+          [x, 5.72, 0.3],
+          brass,
+        );
+      k.bar("roof", [0, 5.95, 0.3], [0, 6.05, 0.3], 0.02, k.steel);
+      k.mesh("roof", new T.SphereGeometry(0.05, 16, 12), [0, 6.08, 0.3], mastLight);
+      // Wind vane arrow at the masthead.
+      k.bar("roof", [0, 5.95, 0.28], [0, 5.95, -0.35], 0.015, k.steel);
+      k.panel("roof", [0.02, 0.12, 0.25], [0, 5.95, -0.42], k.red, 0.008);
+      k.mesh(
+        "roof",
+        new T.ConeGeometry(0.04, 0.15, 20).rotateX(Math.PI / 2),
+        [0, 5.95, 0.45],
+        k.red,
+      );
+      // Masthead burgee (orange pennant flying aft).
+      k.profile("roof", [[-0.75, 5.95], [-0.1, 6.06], [-0.1, 5.84]], 0.02, 0, pod, 0.008);
+      // Boom + gooseneck + end fittings.
+      k.bar("roof", [0, 2.28, 0.32], [0, 2.38, -2.4], 0.07, k.steel);
+      k.mesh("roof", new T.TorusGeometry(0.1, 0.03, 10, 32), [0, 2.28, 0.32], k.dark);
+      k.oval("roof", [0.08, 0.08, 0.1], [0, 2.38, -2.42], k.dark);
+      k.bar("roof", [-0.06, 2.3, -2.35], [-0.06, 2.46, -2.35], 0.02, k.steel);
+      k.bar("roof", [0.06, 2.3, -2.35], [0.06, 2.46, -2.35], 0.02, k.steel);
+      // Mainsail: cream base + blue foot, diagonal stripe, head.
+      k.profile(
+        "roof",
+        [
+          [0.25, 2.4],
+          [-2.25, 2.45],
+          [0.15, 5.6],
+        ],
+        0.06,
+        0,
+        sailCream,
+        0.012,
+      );
+      k.profile(
+        "roof",
+        [
+          [0.26, 2.38],
+          [-2.26, 2.43],
+          [-1.87, 2.95],
+          [0.23, 2.95],
+        ],
+        0.085,
+        0,
+        sailBlue,
+        0.012,
+      );
+      k.profile(
+        "roof",
+        [
+          [0.202, 3.95],
+          [-1.336, 3.65],
+          [-0.993, 4.1],
+          [0.186, 4.45],
+        ],
+        0.085,
+        0,
+        sailBlue,
+        0.012,
+      );
+      k.profile(
+        "roof",
+        [
+          [0.173, 4.85],
+          [-0.612, 4.6],
+          [-0.117, 5.25],
+          [0.15, 5.62],
+        ],
+        0.085,
+        0,
+        sailBlue,
+        0.012,
+      );
+      // Jib: cream base + blue foot and head.
+      k.profile(
+        "roof",
+        [
+          [2.35, 0.8],
+          [0.4, 5.4],
+          [0.4, 1.5],
+        ],
+        0.06,
+        0,
+        sailCream,
+        0.012,
+      );
+      k.profile(
+        "roof",
+        [
+          [2.35, 0.78],
+          [0.4, 1.48],
+          [0.4, 1.95],
+          [1.884, 1.9],
+        ],
+        0.085,
+        0,
+        sailBlue,
+        0.012,
+      );
+      k.profile(
+        "roof",
+        [
+          [0.866, 4.3],
+          [0.4, 5.42],
+          [0.4, 4.3],
+        ],
+        0.085,
+        0,
+        sailBlue,
+        0.012,
+      );
+      // Mast track + sail slides.
+      k.bar("roof", [0, 2.5, 0.2], [0, 5.5, 0.2], 0.02, k.dark);
+      for (let i = 0; i < 6; i++)
+        k.panel("roof", [0.06, 0.07, 0.05], [0, 2.7 + i * 0.55, 0.2], k.steel, 0.01);
+      // Jib hanks along the forestay.
+      for (let i = 0; i < 5; i++) {
+        const t = 0.12 + i * 0.19;
+        const y = 0.75 + t * (5.55 - 0.75);
+        const z = 2.45 + t * (0.35 - 2.45);
+        k.mesh("roof", new T.SphereGeometry(0.04, 12, 10), [0.055, y, z], k.steel);
+      }
+      // Sail battens + edge ropes.
+      for (const [y, leech] of [
+        [3.2, -1.679],
+        [4.0, -1.069],
+        [4.8, -0.46],
+      ] as const)
+        k.bar("roof", [0, y, leech - 0.08], [0, y, leech + 0.55], 0.018, wood);
+      k.tube(
+        "roof",
+        [
+          [0, 2.45, -2.25],
+          [0, 3.8, -1.22],
+          [0, 4.8, -0.46],
+          [0, 5.6, 0.15],
+        ],
+        0.018,
+        rope,
+      );
+      k.tube(
+        "roof",
+        [
+          [0, 2.42, 0.25],
+          [0, 2.38, -1.0],
+          [0, 2.45, -2.25],
+        ],
+        0.018,
+        rope,
+      );
+      k.tube(
+        "roof",
+        [
+          [0, 0.82, 2.35],
+          [0, 3.1, 1.375],
+          [0, 5.4, 0.4],
+        ],
+        0.018,
+        rope,
+      );
+      // Standing + running rigging with turnbuckles.
+      k.bar("roof", [0, 0.75, 2.45], [0, 5.55, 0.35], 0.024, rope);
+      k.bar("roof", [0, 0.66, -2.57], [0, 5.7, 0.28], 0.024, rope);
+      for (const side of sides) {
+        k.bar("roof", [side * 2.3, 0.6, 0.05], [0, 5.45, 0.3], 0.024, rope);
+        k.bar("roof", [0, 1.5, 0.45], [side * 1.0, 0.68, -0.6], 0.02, rope);
+      }
+      k.bar("roof", [0, 2.36, -2.35], [0, 0.8, -1.9], 0.022, rope);
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.035, 0.035, 0.18, 16),
+        [0, 0.93, 2.37],
+        k.dark,
+      );
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.035, 0.035, 0.18, 16),
+        [0, 0.97, -2.45],
+        k.dark,
+      );
+      // Sail insignia + telltales.
+      for (const side of sides) {
+        k.mesh(
+          "roof",
+          new T.CylinderGeometry(0.16, 0.16, 0.02, 32).rotateZ(Math.PI / 2),
+          [side * 0.05, 4.55, -0.2],
+          sailCream,
+        );
+        k.mesh(
+          "roof",
+          new T.CylinderGeometry(0.065, 0.065, 0.025, 24).rotateZ(Math.PI / 2),
+          [side * 0.055, 4.55, -0.2],
+          pod,
+        );
+      }
+      for (const [y, z] of [
+        [2.5, 1.0],
+        [3.2, 0.85],
+        [3.9, 0.7],
+      ] as const)
+        k.panel("roof", [0.02, 0.03, 0.18], [0.055, y, z], k.red, 0.006);
+
+      // ---- Stern (bed): aft deck, compass, tiller, pushpit ----
+      k.hull(
+        "bed",
+        [
+          [-2.62, -0.3, 0.55, 0.62, 0.72],
+          [-1.6, -0.3, 0.6, 0.85, 0.92],
+          [-0.8, -0.3, 0.62, 0.92, 0.98],
+        ],
+        pod,
+      );
+      for (const side of sides)
+        for (const [z, y] of [
+          [-1.2, 0.615],
+          [-1.55, 0.605],
+          [-1.9, 0.59],
+          [-2.25, 0.575],
+        ] as const)
+          k.panel("bed", [0.5, 0.025, 0.09], [side * 0.5, y, z], k.dark, 0.008);
+      // Compass binnacle with card + needle.
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.12, 0.15, 0.35, 24),
+        [0, 0.78, -1.15],
+        k.dark,
+      );
+      k.mesh("bed", new T.SphereGeometry(0.13, 24, 16), [0, 1.0, -1.15], brass);
+      k.mesh("bed", new T.SphereGeometry(0.105, 24, 16), [0, 1.03, -1.15], k.glass);
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.085, 0.085, 0.02, 24),
+        [0, 1.06, -1.15],
+        sailCream,
+      );
+      k.panel("bed", [0.03, 0.012, 0.07], [0, 1.075, -1.115], k.red, 0.004);
+      k.panel("bed", [0.03, 0.012, 0.07], [0, 1.075, -1.185], k.white, 0.004);
+      k.mesh(
+        "bed",
+        new T.TorusGeometry(0.11, 0.02, 10, 40).rotateX(Math.PI / 2),
+        [0, 1.06, -1.15],
+        k.steel,
+      );
+      // Tiller + rudder head.
+      k.panel("bed", [0.16, 0.22, 0.3], [0, 0.72, -2.45], k.steel, 0.04);
+      k.bar("bed", [0, 0.85, -2.45], [0, 1.0, -1.3], 0.045, wood);
+      k.bar("bed", [0, 0.985, -1.6], [0, 1.0, -1.3], 0.056, k.rubber);
+      k.mesh("bed", new T.SphereGeometry(0.055, 14, 12), [0, 1.0, -1.3], k.rubber);
+      // Traveler track + car + mainsheet block.
+      k.bar("bed", [-0.7, 0.64, -1.9], [0.7, 0.64, -1.9], 0.035, k.steel);
+      for (const side of sides)
+        k.panel("bed", [0.1, 0.1, 0.12], [side * 0.72, 0.6, -1.9], k.dark, 0.02);
+      k.panel("bed", [0.16, 0.12, 0.14], [0, 0.7, -1.9], k.dark, 0.02);
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.05, 0.05, 0.04, 20).rotateX(Math.PI / 2),
+        [0, 0.78, -1.9],
+        brass,
+      );
+      k.mesh("bed", new T.TorusGeometry(0.05, 0.014, 8, 24), [0, 0.86, -1.9], k.steel);
+      // Pushpit rails + stern light.
+      k.tube(
+        "bed",
+        [
+          [-0.7, 0.54, -2.5],
+          [-0.7, 1.15, -2.5],
+          [0.7, 1.15, -2.5],
+          [0.7, 0.54, -2.5],
+        ],
+        0.035,
+        k.steel,
+      );
+      k.bar("bed", [0, 1.15, -2.5], [0, 1.5, -2.5], 0.025, k.steel);
+      k.mesh("bed", new T.SphereGeometry(0.05, 14, 12), [0, 1.53, -2.5], mastLight);
+      k.panel("bed", [0.1, 0.28, 0.06], [0, 0.5, -2.58], k.steel, 0.02);
+      for (const side of sides) {
+        k.bar(
+          "bed",
+          [side * 0.5, 0.57, -2.35],
+          [side * 0.64, 0.57, -2.35],
+          0.028,
+          k.steel,
+        );
+        k.bar(
+          "bed",
+          [side * 0.57, 0.57, -2.35],
+          [side * 0.57, 0.64, -2.35],
+          0.022,
+          k.steel,
+        );
+        for (let i = 0; i < 2; i++)
+          k.mesh(
+            "bed",
+            new T.TorusGeometry(0.13 - i * 0.01, 0.04, 10, 32).rotateX(
+              Math.PI / 2,
+            ),
+            [side * 0.45, 0.65 + i * 0.055, -1.55],
+            rope,
+          );
+      }
+      // Ensign staff + flag.
+      k.bar("bed", [0, 0.6, -2.6], [0, 1.4, -2.78], 0.022, wood);
+      k.panel("bed", [0.02, 0.18, 0.34], [0, 1.28, -2.92], sailBlue, 0.006);
+
+      // ---- Rear bumper: rub strake, lights, rudder, tow eyes ----
+      k.panel("bumper-rear", [2.0, 0.22, 0.3], [0, -0.11, -2.68], k.steel, 0.08);
+      k.panel("bumper-rear", [1.8, 0.1, 0.32], [0, -0.05, -2.68], pod, 0.04);
+      k.tailLights(-2.85, 0.12);
+      k.panel("bumper-rear", [0.08, 0.5, 0.35], [0, -0.35, -2.82], podDark, 0.03);
+      for (const y of [-0.2, -0.45])
+        k.bar("bumper-rear", [0, y, -2.72], [0, y, -2.9], 0.03, k.steel);
+      for (const side of sides) {
+        k.mesh(
+          "bumper-rear",
+          new T.TorusGeometry(0.09, 0.03, 10, 32),
+          [side * 0.6, -0.26, -2.72],
+          k.dark,
+        );
+        k.panel(
+          "bumper-rear",
+          [0.4, 0.05, 0.3],
+          [side * 0.7, -0.24, -2.7],
+          k.dark,
+          0.015,
+        );
+      }
+
+      // ---- Rear chassis: shocks, ballast, backbone, stores ----
+      for (const side of sides)
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          k.accent,
+        );
+      k.mesh(
+        "chassis-rear",
+        new T.CylinderGeometry(0.3, 0.3, 1.4, 32).rotateX(Math.PI / 2),
+        [0, -0.35, -1.5],
+        k.steel,
+      );
+      k.oval("chassis-rear", [0.3, 0.3, 0.15], [0, -0.35, -0.8], k.steel);
+      k.oval("chassis-rear", [0.3, 0.3, 0.15], [0, -0.35, -2.2], k.steel);
+      for (const z of [-1.1, -1.9])
+        k.mesh(
+          "chassis-rear",
+          new T.TorusGeometry(0.31, 0.028, 10, 40),
+          [0, -0.35, z],
+          k.dark,
+        );
+      k.panel("chassis-rear", [0.7, 0.4, 0.5], [-0.55, -0.25, -0.7], k.dark, 0.06);
+      k.panel("chassis-rear", [0.74, 0.08, 0.54], [-0.55, -0.03, -0.7], k.steel, 0.02);
+      k.tube(
+        "chassis-rear",
+        [
+          [0, -0.45, 2.2],
+          [0, -0.5, 0.0],
+          [0, -0.45, -2.2],
+        ],
+        0.06,
+        k.steel,
+      );
+      k.panel("chassis-rear", [1.1, 0.12, 1.2], [0, -0.52, -1.5], podDark, 0.04);
+
+      // ---- Wheel dress: pod-orange rings + dark caps over the kit hubs ----
+      const caps = [
+        ["wheel-fl", 2.06, 1.65],
+        ["wheel-fr", -2.06, 1.65],
+        ["wheel-rl", 2.06, -1.65],
+        ["wheel-rr", -2.06, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        const ring = new T.TorusGeometry(0.44, 0.025, 12, 64);
+        ring.rotateY(Math.PI / 2);
+        k.mesh(part, ring, [x, -0.85, z], pod);
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.07, 28).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.dark,
+        );
+        k.mesh(
+          part,
+          new T.SphereGeometry(0.05, 16, 12),
+          [x + Math.sign(x) * 0.05, -0.85, z],
+          k.steel,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "bumper-car",
+    "Bumper Car",
+    "Pavilion bumper car with a rubber ring, trolley pole, and a round pod.",
+    [13777774, 2867926, 3356475, 0.84, 5],
+    (k) => {
+      const rubber = finish(0x1b1e21, 0.94, 0);
+      const cream = finish(0xf2e7c8, 0.5, 0.05);
+      const checkerDark = finish(0x3a3f45, 0.6, 0.1);
+      // Points on the horizontal rubber-ring ellipse (theta 0 = nose).
+      const arc = (a0: number, a1: number, n: number): XYZ[] => {
+        const pts: XYZ[] = [];
+        for (let i = 0; i <= n; i++) {
+          const t = ((a0 + ((a1 - a0) * i) / n) * Math.PI) / 180;
+          pts.push([1.3 * Math.sin(t), 0.12, 0.1 + 1.85 * Math.cos(t)]);
+        }
+        return pts;
+      };
+
+      // ---- Nose (hood): round pink pod nose, grille, headlamps ----
+      k.hull("hood", [
+        [0.42, -0.15, 0.42, 1.08, 1.02],
+        [1.6, -0.18, 0.5, 1.06, 1.0],
+        [2.42, -0.2, 0.28, 0.9, 0.86],
+      ]);
+      k.oval("hood", [1.0, 0.52, 0.95], [0, 0.32, 1.5]);
+      // Chrome grille: surround, dark inset, vertical slats.
+      k.panel("hood", [0.72, 0.42, 0.1], [0, 0.04, 2.4], k.steel, 0.04);
+      k.panel("hood", [0.56, 0.3, 0.08], [0, 0.04, 2.44], k.dark, 0.03);
+      for (const x of [-0.19, 0, 0.19])
+        k.bar("hood", [x, -0.08, 2.48], [x, 0.16, 2.48], 0.028, k.steel);
+      k.bar("hood", [-0.28, 0.04, 2.485], [0.28, 0.04, 2.485], 0.02, k.steel);
+      for (const side of sides) {
+        k.oval("hood", [0.2, 0.16, 0.35], [side * 0.62, 0.4, 2.05]);
+        k.lamp("hood", [side * 0.62, 0.35, 2.32], 0.13);
+        k.lamp("hood", [side * 0.62, 0.1, 2.42], 0.055, k.amber);
+      }
+      // Chrome hood spear riding the nose crown + round badge.
+      k.bar("hood", [0, 0.7, 2.15], [0, 0.82, 1.15], 0.035, k.steel);
+      k.oval("hood", [0.07, 0.05, 0.07], [0, 0.72, 2.08], k.steel);
+
+      // ---- Cockpit + pole (roof): tub, checkered seat, wheel, trolley ----
+      k.oval("roof", [1.0, 0.28, 1.2], [0, 0.3, -0.15], k.dark);
+      // Pink cockpit rim loop (joint hides under the dash cowl).
+      k.tube(
+        "roof",
+        [
+          [0, 0.62, 0.85],
+          [0.6, 0.61, 0.8],
+          [0.92, 0.6, 0.3],
+          [0.92, 0.6, -0.5],
+          [0.6, 0.6, -1.02],
+          [0, 0.6, -1.1],
+          [-0.6, 0.6, -1.02],
+          [-0.92, 0.6, -0.5],
+          [-0.92, 0.6, 0.3],
+          [-0.6, 0.61, 0.8],
+          [0, 0.62, 0.85],
+        ],
+        0.1,
+        k.paint,
+        64,
+      );
+      // Dash cowl with gauges and chrome trim.
+      k.panel("roof", [1.2, 0.2, 0.3], [0, 0.6, 0.95], k.paint, 0.06);
+      for (const x of [-0.25, 0.25])
+        k.mesh(
+          "roof",
+          new T.CylinderGeometry(0.06, 0.06, 0.04, 24).rotateX(Math.PI / 2),
+          [x, 0.66, 0.79],
+          k.dark,
+        );
+      k.bar("roof", [-0.55, 0.68, 0.82], [0.55, 0.68, 0.82], 0.02, k.steel);
+      // Steering column + tilted wheel with spokes and hub.
+      k.bar("roof", [0, 0.55, 0.85], [0, 0.85, 0.45], 0.045, k.steel);
+      k.mesh(
+        "roof",
+        new T.TorusGeometry(0.2, 0.03, 12, 48),
+        [0, 0.88, 0.42],
+        k.dark,
+      ).rotation.x = -0.9;
+      for (const tip of [
+        [-0.19, 0.88, 0.42],
+        [0.19, 0.88, 0.42],
+        [0, 0.762, 0.569],
+      ] as const)
+        k.bar("roof", [0, 0.88, 0.42], [tip[0], tip[1], tip[2]], 0.018, k.steel);
+      k.bar("roof", [0, 0.857, 0.389], [0, 0.919, 0.464], 0.05, k.dark);
+      k.oval("roof", [0.035, 0.035, 0.035], [0, 0.925, 0.47], k.paint);
+      // Checkered seat base + backrest (alternating cream/dark squares).
+      k.panel("roof", [0.95, 0.14, 0.75], [0, 0.62, -0.4], k.dark, 0.05);
+      for (let row = 0; row < 4; row++)
+        for (let col = 0; col < 5; col++)
+          k.panel(
+            "roof",
+            [0.17, 0.04, 0.16],
+            [-0.36 + col * 0.18, 0.7, -0.65 + row * 0.17],
+            (row + col) % 2 === 0 ? cream : checkerDark,
+            0.012,
+          );
+      k.panel("roof", [0.95, 0.7, 0.12], [0, 0.95, -0.88], k.dark, 0.05).rotation.x =
+        -0.12;
+      for (let row = 0; row < 4; row++)
+        for (let col = 0; col < 5; col++) {
+          const dy = 0.72 + row * 0.16 - 0.95;
+          k.panel(
+            "roof",
+            [0.17, 0.15, 0.03],
+            [-0.36 + col * 0.18, 0.958 + dy * 0.993, -0.815 - dy * 0.12],
+            (row + col) % 2 === 0 ? cream : checkerDark,
+            0.01,
+          ).rotation.x = -0.12;
+        }
+      // Trolley pole: socket, spring housing, chrome mast, spark shoe.
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.14, 0.17, 0.18, 32),
+        [0.55, 0.72, -1.35],
+        k.dark,
+      );
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.1, 0.1, 0.25, 24),
+        [0.55, 0.9, -1.36],
+        k.steel,
+      );
+      k.bar("roof", [0.55, 0.95, -1.36], [0.55, 3.2, -1.52], 0.055, k.steel);
+      for (const y of [1.8, 2.6])
+        k.bar(
+          "roof",
+          [0.55, y - 0.05, -1.36 - (y - 0.95) * 0.071],
+          [0.55, y + 0.05, -1.36 - (y - 0.95) * 0.071],
+          0.075,
+          k.dark,
+        );
+      k.panel("roof", [0.3, 0.12, 0.14], [0.55, 3.25, -1.53], k.dark, 0.04);
+      for (const x of [0.45, 0.65])
+        k.mesh(
+          "roof",
+          new T.CylinderGeometry(0.05, 0.05, 0.12, 20).rotateZ(Math.PI / 2),
+          [x, 3.36, -1.53],
+          k.steel,
+        );
+      k.bar("roof", [0.55, 3.28, -1.53], [0.55, 3.36, -1.53], 0.022, k.steel);
+      k.oval("roof", [0.05, 0.07, 0.05], [0.55, 3.4, -1.53], k.amber);
+
+      // ---- Pod flanks (doors): pink walls + rubber ring side arcs ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [1.35, -0.12],
+            [1.35, 0.42],
+            [0.9, 0.55],
+            [-0.9, 0.55],
+            [-1.35, 0.42],
+            [-1.35, -0.12],
+          ],
+          0.12,
+          side * 1.08,
+          k.paint,
+          0.04,
+        );
+        k.tube(d, side > 0 ? arc(55, 125, 10) : arc(-125, -55, 10), 0.23, rubber, 40);
+        k.bar(d, [side * 1.16, 0.5, 1.2], [side * 1.16, 0.5, -1.2], 0.03, k.steel);
+        k.oval(d, [0.04, 0.06, 0.09], [side * 1.15, 0.32, 1.0], k.amber);
+        k.oval(d, [0.04, 0.06, 0.09], [side * 1.15, 0.32, -1.0], k.red);
+        for (const z of [-0.9, -0.3, 0.3, 0.9])
+          k.oval(d, [0.03, 0.03, 0.03], [side * 1.15, -0.05, z], k.dark);
+      }
+
+      // ---- Tail (bed): rear deck, tail pods, lamps, tie loops ----
+      k.hull("bed", [
+        [-2.45, -0.2, 0.3, 0.9, 0.86],
+        [-1.2, -0.15, 0.45, 1.06, 1.0],
+      ]);
+      k.oval("bed", [1.0, 0.5, 0.85], [0, 0.3, -1.35]);
+      k.panel("bed", [0.8, 0.24, 0.08], [0, 0.05, -2.4], k.steel, 0.03);
+      for (const side of sides) {
+        k.oval("bed", [0.16, 0.14, 0.25], [side * 0.55, 0.15, -2.15]);
+        k.lamp("bed", [side * 0.55, 0.15, -2.38], 0.1, k.red, -1);
+        k.mesh(
+          "bed",
+          new T.TorusGeometry(0.07, 0.02, 10, 32).rotateX(Math.PI / 2),
+          [side * 0.35, 0.77, -1.5],
+          k.steel,
+        );
+      }
+      k.panel("bed", [1.0, 0.08, 0.5], [-0.3, 0.72, -1.55], k.dark, 0.03);
+      for (const x of [-0.5, -0.3, -0.1])
+        k.bar("bed", [x, 0.77, -1.75], [x, 0.77, -1.35], 0.018, k.steel);
+
+      // ---- Front bumper: rubber ring nose arc + chrome chin ----
+      k.tube("bumper-front", arc(-75, 75, 12), 0.24, rubber, 48);
+      k.panel("bumper-front", [1.2, 0.16, 0.18], [0, -0.22, 2.35], k.steel, 0.05);
+      for (const side of sides)
+        k.bar(
+          "bumper-front",
+          [side * 0.45, -0.3, 2.45],
+          [side * 0.45, 0.0, 2.45],
+          0.045,
+          k.steel,
+        );
+      k.mesh(
+        "bumper-front",
+        new T.TorusGeometry(0.09, 0.03, 12, 32),
+        [0, -0.32, 2.44],
+        k.dark,
+      );
+
+      // ---- Rear bumper: rubber ring tail arc + step + tow eye ----
+      k.tube("bumper-rear", arc(105, 255, 12), 0.24, rubber, 48);
+      k.panel("bumper-rear", [1.6, 0.12, 0.3], [0, -0.25, -2.3], k.steel, 0.05);
+      for (const side of sides)
+        k.oval("bumper-rear", [0.08, 0.06, 0.05], [side * 0.9, 0.12, -1.98], k.red);
+      k.bar("bumper-rear", [0, -0.3, -2.45], [0, -0.3, -2.56], 0.035, k.dark);
+      k.mesh(
+        "bumper-rear",
+        new T.TorusGeometry(0.09, 0.03, 12, 32),
+        [0, -0.3, -2.58],
+        k.dark,
+      );
+
+      // ---- Chassis dress: shocks, spark plates, steps, motor ----
+      for (const side of sides) {
+        k.shock(
+          "chassis-front",
+          [side * 1.18, 0.55, 1.65],
+          [side * 1.45, -0.67, 1.65],
+          k.accent,
+        );
+        k.shock(
+          "chassis-rear",
+          [side * 1.18, 0.55, -1.65],
+          [side * 1.45, -0.67, -1.65],
+          k.accent,
+        );
+        k.panel(
+          "chassis-front",
+          [0.35, 0.07, 0.5],
+          [side * 1.15, -0.25, 0.1],
+          k.steel,
+          0.02,
+        );
+        k.bar(
+          "chassis-front",
+          [side * 0.8, -0.35, 0.1],
+          [side * 1.15, -0.27, 0.1],
+          0.03,
+          k.dark,
+        );
+      }
+      k.panel("chassis-front", [1.7, 0.07, 1.4], [0, -0.52, 1.1], k.steel, 0.03);
+      k.panel("chassis-front", [1.7, 0.5, 0.07], [0, -0.35, 1.95], k.steel, 0.03)
+        .rotation.x = 0.5;
+      k.panel("chassis-rear", [1.7, 0.07, 1.4], [0, -0.52, -1.2], k.steel, 0.03);
+      for (const [part, z] of [
+        ["chassis-front", 1.1],
+        ["chassis-rear", -1.2],
+      ] as const)
+        for (const x of [-0.7, 0, 0.7])
+          for (const dz of [-0.55, 0.55])
+            k.mesh(
+              part,
+              new T.CylinderGeometry(0.03, 0.03, 0.04, 12),
+              [x, -0.48, z + dz],
+              k.dark,
+            );
+      k.mesh(
+        "chassis-rear",
+        new T.CylinderGeometry(0.3, 0.3, 1.2, 32).rotateZ(Math.PI / 2),
+        [0, -0.35, -1.3],
+        k.dark,
+      );
+      for (const side of sides)
+        k.mesh(
+          "chassis-rear",
+          new T.CylinderGeometry(0.31, 0.31, 0.06, 32).rotateZ(Math.PI / 2),
+          [side * 0.62, -0.35, -1.3],
+          k.steel,
+        );
+      for (const x of [-0.2, 0, 0.2])
+        k.panel("chassis-rear", [0.04, 0.5, 0.5], [x, -0.35, -1.3], k.steel, 0.015);
+      k.tube(
+        "chassis-rear",
+        [
+          [0.3, -0.3, -1.3],
+          [0.5, -0.1, -1.4],
+          [0.55, 0.3, -1.38],
+          [0.55, 0.68, -1.35],
+        ],
+        0.045,
+        k.dark,
+        24,
+      );
+
+      // Pink trim rings + dark caps over the kit hubs.
+      const caps = [
+        ["wheel-fl", 2.07, 1.65],
+        ["wheel-fr", -2.07, 1.65],
+        ["wheel-rl", 2.07, -1.65],
+        ["wheel-rr", -2.07, -1.65],
+      ] as const;
+      for (const [part, x, z] of caps) {
+        const ring = new T.TorusGeometry(0.44, 0.03, 12, 64);
+        ring.rotateY(Math.PI / 2);
+        k.mesh(part, ring, [x, -0.85, z], k.paint);
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.13, 0.13, 0.06, 32).rotateZ(Math.PI / 2),
+          [x, -0.85, z],
+          k.dark,
+        );
+        k.mesh(
+          part,
+          new T.SphereGeometry(0.05, 16, 12),
+          [x + Math.sign(x) * 0.04, -0.85, z],
+          k.steel,
+        );
+      }
+    },
+  ),
+  vehicle(
+    "soapbox-racer",
+    "Soapbox Racer",
+    "Plywood gravity racer with an open cockpit and a number roundel.",
+    [13210711, 12729134, 4867132, 0.72, 5],
+    (k) => {
+      const red = k.accent;
+      const ply = k.paint;
+      const plank = finish(0xd9b983, 0.85, 0);
+      const darkwood = finish(0x6e4a2a, 0.85, 0);
+      const cushion = finish(0xc4a484, 0.9, 0);
+      const rope = finish(0xa98f5f, 0.95, 0);
+      const roundel = finish(0xf4f1e8, 0.55, 0);
+      const screwX = new T.CylinderGeometry(0.024, 0.024, 0.03, 12).rotateZ(
+        Math.PI / 2,
+      );
+      const screwY = new T.CylinderGeometry(0.024, 0.024, 0.025, 12);
+      const screwZ = new T.CylinderGeometry(0.024, 0.024, 0.03, 12).rotateX(
+        Math.PI / 2,
+      );
+      const deckY = (z: number) => 0.92 - 0.282 * (z - 0.35);
+      const deckX = (z: number) => 0.93 - 0.46 * ((z - 0.45) / 2.07);
+
+      // ---- Nose (hood): tapered plywood wedge, veneer deck, roundel ----
+      k.hull("hood", [
+        [2.62, -0.05, 0.28, 0.55, 0.42],
+        [1.9, -0.12, 0.55, 0.78, 0.68],
+        [1.1, -0.15, 0.78, 0.95, 0.88],
+        [0.35, -0.15, 0.92, 1.02, 0.98],
+      ]);
+      k.hull(
+        "hood",
+        [
+          [2.52, 0.28, 0.34, 0.52, 0.46],
+          [1.5, 0.63, 0.69, 0.74, 0.68],
+          [0.42, 0.89, 0.95, 0.97, 0.93],
+        ],
+        darkwood,
+      );
+      k.mesh(
+        "hood",
+        new T.CylinderGeometry(0.34, 0.34, 0.03, 48),
+        [0, 0.575, 1.7],
+        roundel,
+      ).rotation.x = 0.28;
+      k.mesh(
+        "hood",
+        new T.TorusGeometry(0.34, 0.025, 12, 64),
+        [0, 0.585, 1.7],
+        red,
+      ).rotation.x = -Math.PI / 2 + 0.28;
+      k.panel("hood", [0.86, 0.3, 0.08], [0, 0.12, 2.6], ply, 0.02);
+      k.bar("hood", [-0.42, 0.3, 2.65], [0.42, 0.3, 2.65], 0.045, red);
+      k.bar("hood", [-0.5, -0.03, 2.65], [0.5, -0.03, 2.65], 0.045, red);
+      for (const side of sides) {
+        k.bar(
+          "hood",
+          [side * 0.93, 0.95, 0.45],
+          [side * 0.47, 0.33, 2.52],
+          0.045,
+          red,
+        );
+        k.bar(
+          "hood",
+          [side * 0.99, -0.12, 0.4],
+          [side * 0.57, -0.04, 2.55],
+          0.04,
+          red,
+        );
+        k.bar(
+          "hood",
+          [side * 0.5, -0.03, 2.65],
+          [side * 0.42, 0.3, 2.65],
+          0.045,
+          red,
+        );
+        for (let i = 0; i < 6; i++) {
+          const z = 0.6 + i * 0.38;
+          k.mesh(
+            "hood",
+            screwY,
+            [side * deckX(z), deckY(z) + 0.05, z],
+            k.steel,
+          ).rotation.x = 0.28;
+        }
+      }
+      for (const sx of [-0.3, 0.3])
+        for (const sy of [0.05, 0.2])
+          k.mesh("hood", screwZ, [sx, sy, 2.65], k.steel);
+
+      // ---- Flanks: plywood side panels, red rails, planks, screws ----
+      for (const side of sides) {
+        const d = door(side);
+        k.profile(
+          d,
+          [
+            [-1.55, -0.15],
+            [0.55, -0.15],
+            [0.5, 0.9],
+            [-1.45, 0.85],
+          ],
+          0.12,
+          side * 1.0,
+          ply,
+          0.03,
+        );
+        k.bar(
+          d,
+          [side * 1.07, 0.87, -1.45],
+          [side * 1.07, 0.92, 0.5],
+          0.045,
+          red,
+        );
+        k.bar(
+          d,
+          [side * 1.07, -0.13, -1.5],
+          [side * 1.07, -0.13, 0.5],
+          0.04,
+          red,
+        );
+        for (const y of [0.2, 0.5])
+          k.panel(
+            d,
+            [0.02, 0.03, 1.95],
+            [side * 1.085, y, -0.5],
+            darkwood,
+            0.008,
+          );
+        k.panel(d, [0.1, 0.16, 1.7], [side * 1.12, 0.32, -0.5], ply, 0.02);
+        for (let i = 0; i < 6; i++) {
+          const z = -1.3 + i * 0.33;
+          const topY = 0.85 + (z + 1.45) * (0.05 / 1.95);
+          k.mesh(d, screwX, [side * 1.095, topY + 0.02, z], k.steel);
+          k.mesh(d, screwX, [side * 1.095, -0.13, z], k.steel);
+        }
+        for (let i = 0; i < 4; i++)
+          k.mesh(
+            d,
+            screwX,
+            [side * 1.175, 0.32, -1.1 + i * 0.4],
+            k.steel,
+          );
+      }
+
+      // ---- Tail (bed): tapered stern, deck, tail frame, roundel ----
+      k.hull("bed", [
+        [-2.55, -0.05, 0.55, 0.62, 0.55],
+        [-1.9, -0.12, 0.75, 0.85, 0.8],
+        [-1.2, -0.15, 0.86, 0.97, 0.93],
+        [-0.85, -0.15, 0.9, 1.0, 0.97],
+      ]);
+      k.hull(
+        "bed",
+        [
+          [-2.5, 0.5, 0.57, 0.6, 0.54],
+          [-1.5, 0.78, 0.85, 0.9, 0.86],
+          [-0.9, 0.86, 0.93, 0.98, 0.95],
+        ],
+        darkwood,
+      );
+      k.mesh(
+        "bed",
+        new T.CylinderGeometry(0.16, 0.16, 0.03, 32).rotateX(Math.PI / 2),
+        [0, 0.28, -2.555],
+        roundel,
+      );
+      k.mesh(
+        "bed",
+        new T.TorusGeometry(0.16, 0.02, 12, 48),
+        [0, 0.28, -2.56],
+        red,
+      );
+      k.bar("bed", [-0.55, 0.57, -2.57], [0.55, 0.57, -2.57], 0.045, red);
+      k.bar("bed", [-0.6, 0.0, -2.57], [0.6, 0.0, -2.57], 0.045, red);
+      for (const side of sides) {
+        k.bar(
+          "bed",
+          [side * 0.95, 0.92, -0.9],
+          [side * 0.56, 0.56, -2.5],
+          0.045,
+          red,
+        );
+        k.bar(
+          "bed",
+          [side * 0.6, 0.0, -2.57],
+          [side * 0.55, 0.57, -2.57],
+          0.045,
+          red,
+        );
+        for (let i = 0; i < 5; i++) {
+          const t = i / 4;
+          k.mesh(
+            "bed",
+            screwY,
+            [
+              side * (0.93 - t * 0.38),
+              0.94 - t * 0.36,
+              -0.95 - t * 1.5,
+            ],
+            k.steel,
+          );
+        }
+        k.mesh("bed", screwZ, [side * 0.35, 0.28, -2.58], k.steel);
+        k.mesh("bed", screwZ, [side * 0.35, 0.05, -2.58], k.steel);
+      }
+
+      // ---- Cockpit (roof group): floor, seat, headrest, rope steering ----
+      k.panel("roof", [1.5, 0.1, 1.5], [0, 0.02, -0.25], ply, 0.03);
+      for (const side of sides) {
+        k.panel(
+          "roof",
+          [0.08, 0.5, 1.5],
+          [side * 0.78, 0.45, -0.25],
+          ply,
+          0.02,
+        );
+        k.panel(
+          "roof",
+          [0.2, 0.06, 1.5],
+          [side * 0.88, 0.9, -0.25],
+          ply,
+          0.02,
+        );
+        k.bar(
+          "roof",
+          [side * 0.88, 0.95, -0.95],
+          [side * 0.88, 0.95, 0.42],
+          0.05,
+          red,
+        );
+        for (let i = 0; i < 5; i++)
+          k.mesh(
+            "roof",
+            screwY,
+            [side * 0.88, 1.0, -0.85 + i * 0.32],
+            k.steel,
+          );
+      }
+      k.bar("roof", [-0.88, 0.95, 0.42], [0.88, 0.95, 0.42], 0.05, red);
+      k.bar("roof", [-0.88, 0.95, -0.95], [0.88, 0.95, -0.95], 0.05, red);
+      for (let i = 0; i < 5; i++) {
+        k.mesh("roof", screwY, [-0.7 + i * 0.35, 1.0, 0.42], k.steel);
+        k.mesh("roof", screwY, [-0.7 + i * 0.35, 1.0, -0.95], k.steel);
+      }
+      k.panel("roof", [0.72, 0.2, 0.62], [0, 0.17, -0.5], cushion, 0.08);
+      k.panel("roof", [0.7, 0.6, 0.18], [0, 0.5, -0.83], cushion, 0.07).rotation
+        .x = -0.15;
+      k.panel("roof", [0.46, 0.26, 0.16], [0, 0.98, -0.9], cushion, 0.07);
+      for (const side of sides)
+        k.bar(
+          "roof",
+          [side * 0.15, 0.72, -0.9],
+          [side * 0.15, 0.9, -0.9],
+          0.03,
+          k.steel,
+        );
+      k.bar("roof", [0, 0.08, 0.32], [0, 0.62, -0.02], 0.045, k.steel);
+      k.mesh(
+        "roof",
+        new T.TorusGeometry(0.21, 0.034, 16, 64),
+        [0, 0.66, -0.05],
+        rope,
+      ).rotation.x = -0.5;
+      // Rope wrap spiraling around the wheel rim.
+      const wrap: XYZ[] = [];
+      for (let i = 0; i < 97; i++) {
+        const a = (i / 96) * Math.PI * 2;
+        const ca = Math.cos(a);
+        const sa = Math.sin(a);
+        const rx = ca;
+        const ry = sa * 0.878;
+        const rz = sa * -0.479;
+        const wob = Math.cos(a * 8) * 0.036;
+        const wob2 = Math.sin(a * 8) * 0.036;
+        wrap.push([
+          rx * 0.21 + rx * wob2,
+          0.66 + ry * 0.21 + 0.479 * wob + ry * wob2,
+          -0.05 + rz * 0.21 + 0.878 * wob + rz * wob2,
+        ]);
+      }
+      k.tube("roof", wrap, 0.012, rope, 128);
+      for (const a of [0, Math.PI / 3, (2 * Math.PI) / 3]) {
+        const dx = Math.cos(a);
+        const dy = Math.sin(a) * 0.878;
+        const dz = Math.sin(a) * -0.479;
+        k.bar(
+          "roof",
+          [-dx * 0.19, 0.66 - dy * 0.19, -0.05 - dz * 0.19],
+          [dx * 0.19, 0.66 + dy * 0.19, -0.05 + dz * 0.19],
+          0.022,
+          darkwood,
+        );
+      }
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.05, 0.05, 0.09, 24),
+        [0, 0.66, -0.05],
+        darkwood,
+      ).quaternion.setFromUnitVectors(
+        new T.Vector3(0, 1, 0),
+        new T.Vector3(0, 0.479, 0.878).normalize(),
+      );
+      k.panel("roof", [1.3, 0.1, 0.25], [0, 0.8, 0.3], plank, 0.02);
+      for (const side of sides) {
+        k.mesh(
+          "roof",
+          new T.CylinderGeometry(0.05, 0.05, 0.02, 24),
+          [side * 0.25, 0.82, 0.17],
+          roundel,
+        ).rotation.x = -0.9;
+        k.mesh(
+          "roof",
+          new T.TorusGeometry(0.055, 0.012, 10, 32),
+          [side * 0.25, 0.82, 0.165],
+          k.steel,
+        ).rotation.x = -0.9;
+        k.panel(
+          "roof",
+          [0.12, 0.02, 0.6],
+          [side * 0.18, 0.28, -0.5],
+          k.dark,
+          0.008,
+        );
+      }
+      k.panel("roof", [0.12, 0.05, 0.1], [0, 0.28, -0.35], k.steel, 0.015);
+
+      // ---- Plank bumpers with brackets and bolts ----
+      k.panel("bumper-front", [2.2, 0.24, 0.2], [0, -0.32, 2.78], plank, 0.03);
+      k.panel("bumper-rear", [2.2, 0.24, 0.2], [0, -0.3, -2.72], plank, 0.03);
+      for (const side of sides) {
+        k.panel(
+          "bumper-front",
+          [0.14, 0.18, 0.35],
+          [side * 0.5, -0.32, 2.62],
+          k.dark,
+          0.03,
+        );
+        k.panel(
+          "bumper-rear",
+          [0.14, 0.18, 0.35],
+          [side * 0.5, -0.3, -2.6],
+          k.dark,
+          0.03,
+        );
+      }
+      for (const bx of [-0.85, -0.35, 0.35, 0.85]) {
+        k.mesh("bumper-front", screwZ, [bx, -0.32, 2.885], k.steel);
+        k.mesh("bumper-rear", screwZ, [bx, -0.3, -2.825], k.steel);
+      }
+
+      // ---- Chassis dressing: apron, leaf springs, axle fairing ----
+      k.panel("chassis-front", [1.1, 0.35, 0.08], [0, -0.25, 2.6], ply, 0.02);
+      for (const sx of [-0.35, 0.35])
+        for (const sy of [-0.32, -0.18])
+          k.mesh("chassis-front", screwZ, [sx, sy, 2.645], k.steel);
+      for (const side of sides) {
+        for (const [part, z] of [
+          ["chassis-front", 1.65],
+          ["chassis-rear", -1.65],
+        ] as const) {
+          k.panel(part, [0.12, 0.035, 0.95], [side * 1.0, -0.66, z], k.dark, 0.01);
+          k.panel(part, [0.12, 0.035, 0.75], [side * 1.0, -0.62, z], k.dark, 0.01);
+          k.panel(part, [0.12, 0.035, 0.55], [side * 1.0, -0.58, z], k.dark, 0.01);
+          k.bar(
+            part,
+            [side * 1.0, -0.8, z - 0.15],
+            [side * 1.0, -0.62, z - 0.15],
+            0.03,
+            k.steel,
+          );
+          k.bar(
+            part,
+            [side * 1.0, -0.8, z + 0.15],
+            [side * 1.0, -0.62, z + 0.15],
+            0.03,
+            k.steel,
+          );
+        }
+        k.bar(
+          "chassis-rear",
+          [side * 0.8, -0.36, -1.65],
+          [side * 0.8, -0.14, -1.65],
+          0.035,
+          k.dark,
+        );
+      }
+      k.panel("chassis-rear", [2.3, 0.34, 0.55], [0, -0.53, -1.65], plank, 0.04);
+      for (const side of sides)
+        k.panel(
+          "chassis-rear",
+          [0.1, 0.4, 0.6],
+          [side * 1.16, -0.5, -1.65],
+          plank,
+          0.03,
+        ).rotation.z = -side * 0.18;
+      k.bar(
+        "chassis-rear",
+        [-1.1, -0.45, -1.36],
+        [1.1, -0.45, -1.36],
+        0.025,
+        red,
+      );
+      for (const sx of [-0.5, 0.5])
+        for (const sy of [-0.42, -0.6])
+          k.mesh("chassis-rear", screwZ, [sx, sy, -1.36], k.steel);
+      k.mesh(
+        "chassis-rear",
+        new T.TorusGeometry(0.08, 0.025, 12, 32),
+        [0, -0.5, -2.5],
+        k.steel,
+      );
+
+      // Red trim rings and dark caps over the kit hubs.
+      const caps = [
+        ["wheel-fl", 1, 1.65],
+        ["wheel-fr", -1, 1.65],
+        ["wheel-rl", 1, -1.65],
+        ["wheel-rr", -1, -1.65],
+      ] as const;
+      for (const [part, s, z] of caps) {
+        k.mesh(
+          part,
+          new T.TorusGeometry(0.44, 0.028, 12, 64).rotateY(Math.PI / 2),
+          [s * 1.96, -0.85, z],
+          red,
+        );
+        k.mesh(
+          part,
+          new T.CylinderGeometry(0.14, 0.14, 0.1, 32).rotateZ(Math.PI / 2),
+          [s * 1.98, -0.85, z],
+          k.dark,
+        );
+        k.mesh(
+          part,
+          new T.SphereGeometry(0.055, 24, 16),
+          [s * 2.05, -0.85, z],
           k.steel,
         );
       }
