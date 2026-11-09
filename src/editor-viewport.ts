@@ -146,6 +146,7 @@ const PREFAB_COLORS: Record<string, number> = {
   robot: 0xc23b2e,
   flagpole: 0xb03a2e,
   "loose-blocks": 0xe0a458,
+  "glass-pane": 0xe8d44d,
   "burning-coals": 0xff5a1f,
   cage: 0x5a636b,
   "jail-cell": 0x7a8494,

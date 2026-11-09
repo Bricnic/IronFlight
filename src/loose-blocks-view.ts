@@ -1,5 +1,5 @@
 import * as T from "three";
-import { LOOSE_BLOCK_SIZE, type LooseBlock, type LooseBlocks } from "./loose-blocks";
+import { GLASS_PANE_SIZE, LOOSE_BLOCK_SIZE, type LooseBlock, type LooseBlocks } from "./loose-blocks";
 
 /** Pastel cube faces with a dark letter, like the toy blocks. */
 const FACE_COLORS = ["#f2ede4", "#dcefe8", "#e4e9f7", "#f7e8e4", "#eef3da"];
@@ -37,13 +37,19 @@ function letterTexture(id: string) {
   return tex;
 }
 
+const PANE_COLORS = [0xf2d24b, 0xf06a9e, 0x7fd67f, 0x6ab8f0];
+
 export function buildLooseBlockModel(h: LooseBlock) {
   const root = new T.Group();
   root.name = h.id;
-  const mesh = new T.Mesh(
-    new T.BoxGeometry(LOOSE_BLOCK_SIZE, LOOSE_BLOCK_SIZE, LOOSE_BLOCK_SIZE),
-    new T.MeshStandardMaterial({ map: letterTexture(h.id), roughness: 0.9 }),
-  );
+  const glass = h.kind === "glass-pane";
+  const geo = glass
+    ? new T.BoxGeometry(GLASS_PANE_SIZE.w, GLASS_PANE_SIZE.h, GLASS_PANE_SIZE.d)
+    : new T.BoxGeometry(LOOSE_BLOCK_SIZE, LOOSE_BLOCK_SIZE, LOOSE_BLOCK_SIZE);
+  const mat = glass
+    ? new T.MeshStandardMaterial({ color: PANE_COLORS[hashId(h.id) % PANE_COLORS.length], transparent: true, opacity: 0.55, roughness: 0.15, metalness: 0.1 })
+    : new T.MeshStandardMaterial({ map: letterTexture(h.id), roughness: 0.9 });
+  const mesh = new T.Mesh(geo, mat);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   root.add(mesh);

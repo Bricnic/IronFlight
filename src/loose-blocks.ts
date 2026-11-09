@@ -13,8 +13,14 @@ export const LOOSE_BLOCK_DAMAGE = 0.1;
 export const LOOSE_BLOCK_FALL_SPEED = 2;
 /** Per-block damage cooldown in seconds. */
 export const LOOSE_BLOCK_COOLDOWN = 1;
+/** Glass tower pane dimensions in world units. */
+export const GLASS_PANE_SIZE = { w: 4, h: 0.5, d: 4 } as const;
+export const GLASS_PANE_MASS = 3;
+/** Fraction of a part's max HP dealt when a pane falls onto the truck. */
+export const GLASS_PANE_DAMAGE = 0.05;
 
 export type LooseBlock = {
+  kind: string;
   id: string;
   x: number;
   z: number;
@@ -25,9 +31,10 @@ export type LooseBlock = {
 export function looseBlockHazards(track?: Track): LooseBlock[] {
   if (!track?.custom) return [];
   return track.custom.prefabs
-    .filter((p) => p.kind === "loose-blocks")
+    .filter((p) => p.kind === "loose-blocks" || p.kind === "glass-pane")
     .map((p) => ({
       id: p.id,
+      kind: p.kind,
       x: p.x,
       z: p.z,
       ...(p.y === undefined ? {} : { y: p.y }),
@@ -55,17 +62,20 @@ export class LooseBlocks {
   /** Live placement: add one block without resetting the run. */
   addBlock(h: LooseBlock) {
     const world = this.sim.world;
-    const half = LOOSE_BLOCK_SIZE / 2;
+    const glass = h.kind === "glass-pane";
+    const hx = glass ? GLASS_PANE_SIZE.w / 2 : LOOSE_BLOCK_SIZE / 2;
+    const hy = glass ? GLASS_PANE_SIZE.h / 2 : LOOSE_BLOCK_SIZE / 2;
+    const hz = glass ? GLASS_PANE_SIZE.d / 2 : LOOSE_BLOCK_SIZE / 2;
     const body = world.createRigidBody(
       R.RigidBodyDesc.dynamic()
-        .setTranslation(h.x, (h.y ?? 0) + half, h.z)
+        .setTranslation(h.x, (h.y ?? 0) + hy, h.z)
         .setLinearDamping(0.15)
         .setAngularDamping(0.4)
         .setCcdEnabled(true),
     );
     const collider = world.createCollider(
-      R.ColliderDesc.cuboid(half, half, half)
-        .setMass(LOOSE_BLOCK_MASS)
+      R.ColliderDesc.cuboid(hx, hy, hz)
+        .setMass(glass ? GLASS_PANE_MASS : LOOSE_BLOCK_MASS)
         .setFriction(0.55)
         .setRestitution(0.15),
       body,
@@ -80,7 +90,7 @@ export class LooseBlocks {
     b.h.y = y;
     b.h.z = z;
     b.body.setTranslation(
-      { x, y: y + LOOSE_BLOCK_SIZE / 2, z },
+      { x, y: y + (b.h.kind === "glass-pane" ? GLASS_PANE_SIZE.h : LOOSE_BLOCK_SIZE) / 2, z },
       true,
     );
     b.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
@@ -122,8 +132,9 @@ export class LooseBlocks {
       if (!hit) continue;
       b.lastHit = s.time;
       const def = s.partDefs.find((p) => p.id === hit)!;
-      s.damage(hit, def.hp * LOOSE_BLOCK_DAMAGE);
-      s.damageEvents.push({ source: "loose-blocks", part: hit, time: s.time });
+      const rate = b.h.kind === "glass-pane" ? GLASS_PANE_DAMAGE : LOOSE_BLOCK_DAMAGE;
+      s.damage(hit, def.hp * rate);
+      s.damageEvents.push({ source: b.h.kind, part: hit, time: s.time });
     }
   }
   snapshot() {

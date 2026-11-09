@@ -90,7 +90,7 @@ export const DUNGEON_PREFAB_KINDS = [
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
 ] as const;
-export const LOOSE_BLOCK_PREFAB_KINDS = ["loose-blocks"] as const;
+export const LOOSE_BLOCK_PREFAB_KINDS = ["loose-blocks", "glass-pane"] as const;
 export const BURNING_COALS_PREFAB_KINDS = ["burning-coals"] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,
