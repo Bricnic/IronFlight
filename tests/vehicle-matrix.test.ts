@@ -19,6 +19,7 @@ expect(VEHICLES.map((v) => v.id)).toEqual([
   "snow-groomer",
   "hot-rod",
   "tow-truck",
+  "watermelon-car",
   "dune-buggy",
   "rally-hatch",
   "racing-semi",

@@ -42,6 +42,17 @@ export function buildHeadlightRig(): T.Group {
   return rig;
 }
 
+/** World bounds of bodywork meshes, skipping light-beam rigs that dwarf them. */
+export function bodyBounds(root: T.Object3D, rig?: T.Object3D | null): T.Box3 {
+  const bounds = new T.Box3();
+  const skip = new Set<T.Object3D>();
+  rig?.traverse((o) => skip.add(o));
+  root.traverse((o) => {
+    if (o instanceof T.Mesh && !skip.has(o)) bounds.expandByObject(o);
+  });
+  return bounds;
+}
+
 /** Toggle every light, cone and bulb in the rig together. */
 export function setHeadlightRig(rig: T.Group, on: boolean) {
   rig.traverse((o) => {

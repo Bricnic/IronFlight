@@ -27,7 +27,7 @@ import { SkidView } from "./skids";
 import { LoopView } from "./loop-view";
 import { BackgroundView } from "./background-view";
 import { getBackgroundTemplate, resolveMood } from "./backgrounds";
-import { buildHeadlightRig, setHeadlightRig } from "./headlights";
+import { bodyBounds, buildHeadlightRig, setHeadlightRig } from "./headlights";
 import { buildWheelSpray, updateWheelSpray } from "./wheel-spray";
 export class GameView {
   readonly scene = new T.Scene();
@@ -1074,7 +1074,7 @@ export class GameView {
   /** Frame the actual in-game vehicle and course for reproducible garage screenshots. */
   vehiclePreview() {
     this.render(true);
-    const bounds = new T.Box3().setFromObject(this.truck);
+    const bounds = bodyBounds(this.truck, this.headlightRig);
     const center = bounds.getCenter(new T.Vector3());
     const radius = bounds.getSize(new T.Vector3()).length() / 2;
     const distance =
