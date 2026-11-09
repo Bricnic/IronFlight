@@ -5,6 +5,9 @@ import {
   DINOSAUR_BITE,
   snapOpenness,
   limeJawPose,
+  ROBOT_LASER_RANGE,
+  robotLaserAngle,
+  robotLaserFiring,
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
@@ -26,6 +29,7 @@ type Model = {
   triangles: number;
   dinosaur?: ReturnType<typeof buildDinosaur>;
   machine?: ReturnType<typeof buildGauntletMachine>;
+  laser?: T.Group;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
 function consolidate(root: T.Group) {
@@ -70,7 +74,7 @@ const labelMessages: Record<string, [string, string]> = {
   cup: ["SQUISH CUP", "TIMED SQUASH / DRIVE BETWEEN"],
   clip: ["BAG CLIP", "LETHAL SNAP / CROSS WHEN FLAT"],
   flagpole: ["FLAG POLE", "RIDE UP / KNOCK THE FLAG"],
-  robot: ["SCRAP BOT", "MODERATE STOMP / TIME IT"],
+  robot: ["SCRAP BOT", "SWEEPING LASER / TIME THE STOMP"],
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
 };
 /** Upright billboard label anchored above the model at the given local height. */
@@ -635,7 +639,7 @@ function buildClipModel(h: DungeonHazard, root: T.Group): T.Group[] {
   root.add(pivot);
   return [pivot];
 }
-function buildRobotModel(h: DungeonHazard, root: T.Group): T.Group[] {
+function buildRobotModel(h: DungeonHazard, root: T.Group): { pivots: T.Group[]; laser: T.Group } {
   const red = standard(0xc23b2e, 0.35, 0.5);
   const dark = standard(0x2b2f33, 0.7, 0.5);
   const lamp = new T.MeshStandardMaterial({
@@ -676,7 +680,21 @@ function buildRobotModel(h: DungeonHazard, root: T.Group): T.Group[] {
     root.add(arm);
     pivots.push(arm);
   }
-  return pivots;
+  const laser = new T.Group();
+  laser.position.set(0, 6.8, 0.9);
+  const core = new T.Mesh(
+    new T.BoxGeometry(0.35, 0.35, ROBOT_LASER_RANGE),
+    new T.MeshBasicMaterial({ color: 0xff2a1a }),
+  );
+  core.position.z = ROBOT_LASER_RANGE / 2;
+  const glow = new T.Mesh(
+    new T.BoxGeometry(0.9, 0.9, ROBOT_LASER_RANGE),
+    new T.MeshBasicMaterial({ color: 0xff2a1a, transparent: true, opacity: 0.28, blending: T.AdditiveBlending, depthWrite: false }),
+  );
+  glow.position.z = ROBOT_LASER_RANGE / 2;
+  laser.add(core, glow);
+  root.add(laser);
+  return { pivots, laser };
 }
 function buildCageModel(h: DungeonHazard, root: T.Group): T.Group[] {
   const iron = standard(0x2b2f33, 0.7, 0.5);
@@ -817,7 +835,7 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     model.pivots = buildClipModel(h, root);
     root.add(buildDungeonLabel(h, 13));
   } else if (h.kind === "robot") {
-    model.pivots = buildRobotModel(h, root);
+    ({ pivots: model.pivots, laser: model.laser } = buildRobotModel(h, root));
     root.add(buildDungeonLabel(h, 13));
   } else if (h.kind === "cage") {
     model.pivots = buildCageModel(h, root);
@@ -1013,6 +1031,11 @@ export class DungeonView extends T.Group {
         // Arms wind up while crossable, then smash down on the stomp.
         m.pivots[0].rotation.x = open * -1.2;
         m.pivots[1].rotation.x = open * -1.2;
+        if (m.laser) {
+          const shifted = s.time + m.h.phase;
+          m.laser.rotation.y = robotLaserAngle(shifted);
+          m.laser.visible = robotLaserFiring(shifted);
+        }
       } else if (m.h.kind === "candle") {
         m.pivots.forEach((f, i) => {
           const base = (f.userData.base as number | undefined) ?? 1;

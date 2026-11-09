@@ -72,6 +72,22 @@ export const DUNGEON_STRIKE: Record<
 /** Scrap-bot stomp: moderate timed damage, never instantly lethal. */
 export const ROBOT_STOMP_RADIUS = 6;
 export const ROBOT_STOMP_DAMAGE = 25;
+/** Scrap-bot sweeping laser: periodic bursts, 30%/s exposure in 100ms ticks. */
+export const ROBOT_LASER_RANGE = 18;
+export const ROBOT_LASER_HALF_ANGLE = 0.09;
+export const ROBOT_LASER_ARC = 1.1;
+export const ROBOT_LASER_PERIOD = 4;
+export const ROBOT_LASER_ON = 3;
+export const ROBOT_LASER_CYCLE = 5;
+export const ROBOT_LASER_DPS = 0.3;
+export const ROBOT_LASER_TICK = 0.1;
+export function robotLaserAngle(shifted: number) {
+  return ROBOT_LASER_ARC * Math.sin((shifted / ROBOT_LASER_PERIOD) * Math.PI * 2);
+}
+export function robotLaserFiring(shifted: number) {
+  const t = ((shifted % ROBOT_LASER_CYCLE) + ROBOT_LASER_CYCLE) % ROBOT_LASER_CYCLE;
+  return t < ROBOT_LASER_ON;
+}
 /** Cage furniture dimensions, shared by the collider builder and the artist. */
 export const CAGE = { w: 3, h: 4, d: 3 } as const;
 /**
