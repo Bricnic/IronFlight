@@ -18,6 +18,12 @@ import {
   DUNGEON_STRIKE,
   ROBOT_STOMP_RADIUS,
   ROBOT_STOMP_DAMAGE,
+  ROBOT_LASER_RANGE,
+  ROBOT_LASER_HALF_ANGLE,
+  ROBOT_LASER_DPS,
+  ROBOT_LASER_TICK,
+  robotLaserAngle,
+  robotLaserFiring,
   CAGE,
   CLIPPER_BACK,
   WINDOW_GATE,
@@ -29,6 +35,7 @@ type Mechanism = {
   contacts: number;
   lastCycle: number;
   bite?: { started: number; turn: number; hit: boolean };
+  laser?: { debt: number; lastEvent: number };
 };
 export class DungeonPhysics {
   mechanisms: Mechanism[] = [];
@@ -159,6 +166,11 @@ export class DungeonPhysics {
     s.body.applyImpulse({ x: x * shove, y: 0, z: z * shove }, true);
     if (sc > 1) {
       this.ripWithDinosaur(kind, h, x, z, mouth, height);
+      // Two bites to kill: the second landed bite finds the chassis.
+      if (m.contacts >= 2) {
+        s.damage("chassis-front", 10000);
+        s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
+      }
     } else {
       s.damage("chassis-front", 32);
       s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
@@ -219,20 +231,57 @@ export class DungeonPhysics {
       if (h.kind === "robot") {
         const shifted = s.time + h.phase;
         const cycle = Math.floor(shifted / SNAP_CYCLE);
-        if (!snapStriking(shifted) || cycle === m.lastCycle) continue;
-        const rdx = p.x - h.x,
-          rdz = p.z - h.z;
-        if (rdx * rdx + rdz * rdz > ROBOT_STOMP_RADIUS * ROBOT_STOMP_RADIUS)
-          continue;
-        if (Math.abs(p.y - ((h.y ?? 0) + 1.5)) > 4) continue;
-        m.lastCycle = cycle;
-        m.contacts++;
-        s.damage("chassis-front", ROBOT_STOMP_DAMAGE);
-        s.damageEvents.push({
-          source: h.kind,
-          part: "chassis-front",
-          time: s.time,
-        });
+        if (snapStriking(shifted) && cycle !== m.lastCycle) {
+          const rdx = p.x - h.x,
+            rdz = p.z - h.z;
+          if (
+            rdx * rdx + rdz * rdz <= ROBOT_STOMP_RADIUS * ROBOT_STOMP_RADIUS &&
+            Math.abs(p.y - ((h.y ?? 0) + 1.5)) <= 4
+          ) {
+            m.lastCycle = cycle;
+            m.contacts++;
+            s.damage("chassis-front", ROBOT_STOMP_DAMAGE);
+            s.damageEvents.push({
+              source: h.kind,
+              part: "chassis-front",
+              time: s.time,
+            });
+          }
+        }
+        // Sweeping laser: 30% of current health per second of beam exposure,
+        // applied in 100ms ticks to every attached part.
+        const ldx = p.x - h.x, ldz = p.z - h.z;
+        if (
+          s.status === "driving" &&
+          robotLaserFiring(shifted) &&
+          Math.hypot(ldx, ldz) < ROBOT_LASER_RANGE &&
+          Math.abs(p.y - ((h.y ?? 0) + 1.5)) <= 4
+        ) {
+          const bearing = Math.atan2(ldx, ldz) - (h.yaw ?? 0);
+          const aim = robotLaserAngle(shifted);
+          const err = Math.atan2(Math.sin(bearing - aim), Math.cos(bearing - aim));
+          if (Math.abs(err) <= ROBOT_LASER_HALF_ANGLE) {
+            const laser = m.laser ?? (m.laser = { debt: 0, lastEvent: -100 });
+            laser.debt += DT;
+            while (laser.debt >= ROBOT_LASER_TICK) {
+              laser.debt -= ROBOT_LASER_TICK;
+              for (const d of s.partDefs) {
+                const st = s.parts.get(d.id)!;
+                if (st.body || st.health <= 0) continue;
+                s.damage(d.id, st.health * ROBOT_LASER_DPS * ROBOT_LASER_TICK);
+              }
+              m.contacts++;
+              if (s.time - laser.lastEvent > 0.5) {
+                laser.lastEvent = s.time;
+                s.damageEvents.push({
+                  source: h.kind,
+                  part: "chassis-front",
+                  time: s.time,
+                });
+              }
+            }
+          }
+        }
         continue;
       }
       const strike =

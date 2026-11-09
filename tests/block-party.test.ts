@@ -62,16 +62,16 @@ it("keeps the bumper arena off the checkpoint line", () => {
   }
 });
 
-it("takes a bite parking beside the red wyvern", () => {
+it("two red wyvern bites wreck a parked truck", () => {
   const sim = new Simulation();
   try {
     sim.startTrack(id);
-    sim.body.setTranslation({ x: 4, y: 11.1, z: -6 }, true);
+    sim.body.setTranslation({ x: 2, y: 11.1, z: -6 }, true);
     sim.run(4, { brake: 1 });
     expect(
       sim.damageEvents.some((e) => e.source === "ember-wyvern"),
     ).toBe(true);
-    expect(sim.status).toBe("driving");
+    expect(sim.status).toBe("wrecked");
   } finally {
     sim.dispose();
   }

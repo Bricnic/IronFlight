@@ -21,7 +21,7 @@
       "x": 30,
       "y": 2,
       "yaw": 1.5707963267948966,
-      "z": 70
+      "z": 58
     },
     {
       "name": "Pole exit",
@@ -53,12 +53,100 @@
       "texture": "grass_ground"
     },
     {
-      "id": "tb-road",
+      "id": "tb-road-0",
       "kind": "road",
-      "x": 0,
+      "x": -105,
       "y": 0.015,
       "z": 70,
-      "w": 340,
+      "w": 136,
+      "h": 0.03,
+      "d": 16,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "tb-road-1",
+      "kind": "road",
+      "x": -20,
+      "y": 0.019,
+      "z": 64,
+      "w": 48,
+      "h": 0.03,
+      "d": 16,
+      "yaw": 0.2914564546188057,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "tb-road-2",
+      "kind": "road",
+      "x": 20,
+      "y": 0.023,
+      "z": 58,
+      "w": 46,
+      "h": 0.03,
+      "d": 16,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "tb-road-3",
+      "kind": "road",
+      "x": 55,
+      "y": 0.027,
+      "z": 64,
+      "w": 38,
+      "h": 0.03,
+      "d": 16,
+      "yaw": -0.3805063771123649,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "tb-road-4",
+      "kind": "road",
+      "x": 75,
+      "y": 0.031,
+      "z": 70,
+      "w": 16,
+      "h": 0.03,
+      "d": 16,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "tb-road-5",
+      "kind": "road",
+      "x": 87.5,
+      "y": 0.035,
+      "z": 74,
+      "w": 23,
+      "h": 0.03,
+      "d": 16,
+      "yaw": -0.4899573267227737,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "tb-road-6",
+      "kind": "road",
+      "x": 102.5,
+      "y": 0.039,
+      "z": 74,
+      "w": 23,
+      "h": 0.03,
+      "d": 16,
+      "yaw": 0.4899573267227737,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "tb-road-7",
+      "kind": "road",
+      "x": 142.5,
+      "y": 0.043,
+      "z": 70,
+      "w": 71,
       "h": 0.03,
       "d": 16,
       "color": 3161673,
@@ -83,23 +171,25 @@
     {
       "id": "clip-1",
       "kind": "clip",
-      "x": 0,
+      "x": -8,
       "y": 0,
-      "z": 70
+      "z": 60,
+      "yaw": 0.2914564546188057
     },
     {
       "id": "clip-2",
       "kind": "clip",
-      "x": 60,
+      "x": 62,
       "y": 0,
-      "z": 70
+      "z": 67,
+      "yaw": -0.3805063771123649
     },
     {
       "id": "robot-0",
       "kind": "robot",
-      "x": 100,
+      "x": 95,
       "y": 0,
-      "z": 74
+      "z": 72
     },
     {
       "id": "flagpole-ride",
@@ -166,6 +256,118 @@
       "z": 70
     },
     {
+      "id": "tower-pane-8",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 4.4,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-9",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 4.95,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-10",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 5.5,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-11",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 6.05,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-12",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 6.6,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-13",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 7.15,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-14",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 7.7,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-15",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 8.25,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-16",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 8.8,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-17",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 9.35,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-18",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 9.9,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-19",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 10.45,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-20",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 11,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-21",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 11.55,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-22",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 12.1,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-23",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 12.65,
+      "z": 70
+    },
+    {
       "id": "pumpkin-0",
       "kind": "pumpkin",
       "x": -120,
@@ -180,20 +382,26 @@
     {
       "id": "raptor-0",
       "kind": "raptor",
-      "x": -40,
-      "z": 30
+      "scale": 2,
+      "x": -20,
+      "z": 56,
+      "yaw": 0
     },
     {
       "id": "raptor-1",
       "kind": "raptor",
-      "x": 20,
-      "z": 35
+      "scale": 2,
+      "x": 25,
+      "z": 66,
+      "yaw": 3.141592653589793
     },
     {
       "id": "spinosaurus-0",
       "kind": "spinosaurus",
-      "x": 80,
-      "z": 30
+      "scale": 2,
+      "x": 102,
+      "z": 65,
+      "yaw": 0
     }
   ],
   "medals": {
