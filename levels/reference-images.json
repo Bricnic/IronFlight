@@ -67,6 +67,18 @@
                                 "levelFile":  "Ring Chase.json"
                             },
                             {
+                                "filename":  "dc7b69ad-6037-4d2a-b396-adf1b99030a5.jfif",
+                                "sha256":  "4F27FB29E95A0049C0767A0734D12BDA2A9ADA1889ABA72B46CB25840FE6FF94",
+                                "levelFile":  "Block Party.json",
+                                "notes":  "Overhead toy-track photo on wood floor. Red car spawns at the bottom of the long black dashed road and drives it north under the blue magnetic-tile gate. Red ember-wyvern lunges from its perch east of the road past the gate. Narrow colored-tile path (yellow, orange, teal, orange) then the orange/teal box den east of the path (inner teal car omitted as background). Yellow pipe towers with an overhead span squeeze the road before the finish. Letter-block wall two high across the road is the final obstacle: foam-light loose blocks scatter on contact and chip 10 percent of a part when one falls onto the truck. Ad-libbed extension past the first wall: tile chicane, green raptor, second pipe span, scattered blocks, and a 3-high final wall with a runout guard. A bumper-arena siding (spur plus floor plus six AI cars) branches west off the mid road as an optional detour; checkpoints skip it."
+                            },
+                            {
+                                "filename":  "img20261108_15240562.png",
+                                "sha256":  "E20C0047A22C45E10EBBFC89F1D9B6605E15D98CCF7A8E4692A3C7018EDD710D",
+                                "levelFile":  "Frostfire Pass.json",
+                                "notes":  "Snowy U: book dodge west, letter-block wall with burning coals, giant raptor east, 3x snowman burst, checkered finish"
+                            },
+                            {
                                 "filename":  "4c605165-bda3-4723-b9bb-cf4a34725048.jpg",
                                 "sha256":  "00C373CECC1E2CE2F27441117756E1BE491FF3339A1BD81E8440FE9B97F81F93",
                                 "levelFile":  "Volcano Loop.json",

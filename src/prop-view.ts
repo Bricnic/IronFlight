@@ -85,6 +85,7 @@ export class PropView extends T.Group {
     const root = new T.Group(),
       fire = new T.Group();
     root.name = prop.definition.id;
+    root.scale.setScalar(prop.definition.scale ?? 1);
     fire.name = `${prop.definition.id}-flames`;
     // Visual-only pitch/roll inside the physics-driven root (yaw only).
     const tilt = new T.Group();

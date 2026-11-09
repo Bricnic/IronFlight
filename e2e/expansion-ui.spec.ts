@@ -9,13 +9,13 @@ async function startCourse(page: Page, id: TrackId) {
     g.startTrack(trackId);
   }, id);
 }
-test("menu counts twenty places with per-mode labels", async ({ page }) => {
+test("menu counts twenty-four places with per-mode labels", async ({ page }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await expect(
     page.locator("#level-select .track-select-intro"),
-  ).toContainText("23 places to send it.");
-  await expect(page.locator(".track-card")).toHaveCount(23);
+  ).toContainText("25 places to send it.");
+  await expect(page.locator(".track-card")).toHaveCount(25);
   const mode = (id: string) =>
     page.locator(`[data-track="${id}"] .track-mode`);
   await expect(mode("haunted-hollow")).toHaveText("DEMOLITION");
@@ -150,7 +150,7 @@ test("a ghost wreck shows retry and level select", async ({ page }) => {
   ).toBe("running");
   await page.getByRole("button", { name: "Level select", exact: true }).click();
   await expect(page.locator("#level-select")).toBeVisible();
-  await expect(page.locator(".track-card")).toHaveCount(23);
+  await expect(page.locator(".track-card")).toHaveCount(25);
 });
 test("narrow screens fit play and result", async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });

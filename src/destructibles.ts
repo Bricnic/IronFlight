@@ -15,6 +15,7 @@ export type PropDefinition = {
   x: number;
   z: number;
   ground: number;
+  scale?: number;
   yaw?: number;
   angle?: number;
   roll?: number;
@@ -83,7 +84,8 @@ export class Destructibles {
       const { kind, x, z, ground, yaw } = definition,
         sign = kind === "sign",
         stone = kind === "gravestone",
-        height = propHeight(kind);
+        scale = kind === "snowman" ? (definition.scale ?? 1) : 1,
+        height = propHeight(kind) * (kind === "snowman" ? scale : 1);
       const body = world.createRigidBody(
         (kind === "snowman"
           ? RAPIER.RigidBodyDesc.fixed()
@@ -136,7 +138,7 @@ export class Destructibles {
       } else if (kind === "snowman")
         colliders.push(
           world.createCollider(
-            RAPIER.ColliderDesc.ball(1.3).setSensor(true),
+            RAPIER.ColliderDesc.ball(1.3 * scale).setSensor(true),
             body,
           ),
         );
@@ -187,8 +189,12 @@ export class Destructibles {
     const prop = this.props.find((p) => p.definition.id === id);
     if (!prop) return;
     prop.definition = { ...prop.definition, x, z, ground };
+    const sc =
+      prop.definition.kind === "snowman"
+        ? (prop.definition.scale ?? 1)
+        : 1;
     prop.body.setTranslation(
-      { x, y: ground + propHeight(prop.definition.kind), z },
+      { x, y: ground + propHeight(prop.definition.kind) * sc, z },
       true,
     );
     prop.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
@@ -376,17 +382,25 @@ export class Destructibles {
     }
   }
   private rubble(prop: PropState) {
+    const sc =
+      prop.definition.kind === "snowman"
+        ? (prop.definition.scale ?? 1)
+        : 1;
     const position = prop.body.translation(),
       velocity = prop.body.linvel();
     for (let i = 0; i < (prop.definition.kind === "snowman" ? 12 : 4); i++) {
       const a = i * 1.5708 + 0.4,
-        size = [0.3 + (i % 2) * 0.15, 0.2 + (i % 3) * 0.1, 0.25];
+        size = [
+          (0.3 + (i % 2) * 0.15) * sc,
+          (0.2 + (i % 3) * 0.1) * sc,
+          0.25 * sc,
+        ];
       const body = this.world.createRigidBody(
         RAPIER.RigidBodyDesc.dynamic()
           .setTranslation(
-            position.x + Math.cos(a) * 0.8,
-            position.y + 0.6,
-            position.z + Math.sin(a) * 0.8,
+            position.x + Math.cos(a) * 0.8 * sc,
+            position.y + 0.6 * sc,
+            position.z + Math.sin(a) * 0.8 * sc,
           )
           .setLinvel(
             velocity.x * 0.5 + Math.cos(a) * 3,
