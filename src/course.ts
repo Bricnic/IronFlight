@@ -1177,6 +1177,7 @@ export function courseProps(track: Track): PropDefinition[] {
         x: p.x,
         z: p.z,
         ground: p.y ?? 0,
+        ...(p.scale === undefined ? {} : { scale: p.scale }),
         ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
         ...(p.angle === undefined ? {} : { angle: p.angle }),
         ...(p.roll === undefined ? {} : { roll: p.roll }),

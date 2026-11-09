@@ -30,7 +30,7 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-13).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-15).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
@@ -44,6 +44,8 @@ it("steps to the next and previous level with wraparound", () => {
     "Evil Tube Run",
     "Slime Surge",
     "Ring Chase",
+    "Block Party",
+    "Frostfire Pass",
   ]);
   expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
   expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
@@ -73,12 +75,16 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:slime-surge", -1)).toBe("custom:evil-tube-run");
   expect(stepTrackId("custom:slime-surge", 1)).toBe("custom:ring-chase");
   expect(stepTrackId("custom:ring-chase", -1)).toBe("custom:slime-surge");
-  expect(stepTrackId("custom:ring-chase", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:ring-chase");
+  expect(stepTrackId("custom:ring-chase", 1)).toBe("custom:block-party");
+  expect(stepTrackId("custom:block-party", -1)).toBe("custom:ring-chase");
+  expect(stepTrackId("custom:block-party", 1)).toBe("custom:frostfire-pass");
+  expect(stepTrackId("custom:frostfire-pass", -1)).toBe("custom:block-party");
+  expect(stepTrackId("custom:frostfire-pass", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:frostfire-pass");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:ring-chase");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:frostfire-pass");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:ring-chase");
+  expect(stepTrackId(undefined, -1)).toBe("custom:frostfire-pass");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);
