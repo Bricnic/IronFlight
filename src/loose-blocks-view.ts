@@ -1,5 +1,5 @@
 import * as T from "three";
-import { GLASS_PANE_SIZE, LOOSE_BLOCK_SIZE, type LooseBlock, type LooseBlocks } from "./loose-blocks";
+import { GLASS_PANE_SIZE, GLASS_SHARD_SIZE, LOOSE_BLOCK_SIZE, type LooseBlock, type LooseBlocks } from "./loose-blocks";
 
 /** Pastel cube faces with a dark letter, like the toy blocks. */
 const FACE_COLORS = ["#f2ede4", "#dcefe8", "#e4e9f7", "#f7e8e4", "#eef3da"];
@@ -42,10 +42,12 @@ const PANE_COLORS = [0xf2d24b, 0xf06a9e, 0x7fd67f, 0x6ab8f0];
 export function buildLooseBlockModel(h: LooseBlock) {
   const root = new T.Group();
   root.name = h.id;
-  const glass = h.kind === "glass-pane";
-  const geo = glass
-    ? new T.BoxGeometry(GLASS_PANE_SIZE.w, GLASS_PANE_SIZE.h, GLASS_PANE_SIZE.d)
-    : new T.BoxGeometry(LOOSE_BLOCK_SIZE, LOOSE_BLOCK_SIZE, LOOSE_BLOCK_SIZE);
+  const shard = h.kind === "glass-shard";
+  const glass = h.kind === "glass-pane" || shard;
+  const dims = shard ? GLASS_SHARD_SIZE : glass ? GLASS_PANE_SIZE : { w: LOOSE_BLOCK_SIZE, h: LOOSE_BLOCK_SIZE, d: LOOSE_BLOCK_SIZE };
+  const geo = new T.BoxGeometry(dims.w, dims.h, dims.d);
+
+
   const mat = glass
     ? new T.MeshStandardMaterial({ color: PANE_COLORS[hashId(h.id) % PANE_COLORS.length], transparent: true, opacity: 0.55, roughness: 0.15, metalness: 0.1 })
     : new T.MeshStandardMaterial({ map: letterTexture(h.id), roughness: 0.9 });
@@ -128,6 +130,9 @@ export class LooseBlocksView extends T.Group {
       this.models.set(block, model.root);
       this.add(model.root);
     }
+    for (const block of [...this.models.keys()])
+      if (!source.blocks.includes(block as LooseBlocks["blocks"][number]))
+        this.removeModel((block as { h: LooseBlock }).h.id);
     for (const [block, root] of this.models) {
       const state = block as LooseBlocks["blocks"][number];
       root.position.copy(state.body.translation());

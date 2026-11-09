@@ -256,6 +256,118 @@
       "z": 70
     },
     {
+      "id": "tower-pane-8",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 4.4,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-9",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 4.95,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-10",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 5.5,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-11",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 6.05,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-12",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 6.6,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-13",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 7.15,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-14",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 7.7,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-15",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 8.25,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-16",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 8.8,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-17",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 9.35,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-18",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 9.9,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-19",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 10.45,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-20",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 11,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-21",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 11.55,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-22",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 12.1,
+      "z": 70
+    },
+    {
+      "id": "tower-pane-23",
+      "kind": "glass-pane",
+      "x": 160,
+      "y": 12.65,
+      "z": 70
+    },
+    {
       "id": "pumpkin-0",
       "kind": "pumpkin",
       "x": -120,

@@ -41,7 +41,7 @@ it("stages the toy road: arena, clips, robot, flagpole, tower, dinos", () => {
   ])
     expect(kinds).toContain(kind);
   expect(kinds.filter((k) => k === "clip")).toHaveLength(3);
-  expect(kinds.filter((k) => k === "glass-pane").length).toBeGreaterThanOrEqual(8);
+  expect(kinds.filter((k) => k === "glass-pane")).toHaveLength(24);
   const roads = level.solids.filter((s) => s.kind === "road");
   expect(roads.length).toBeGreaterThanOrEqual(6);
   expect(roads.filter((s) => (s.yaw ?? 0) !== 0).length).toBeGreaterThanOrEqual(3);
