@@ -9,9 +9,15 @@ export function createWatermelonCar(_materials: TruckMaterials = {}) {
     roughness: 0.35,
   });
   const truck = createTruck({ paint });
+  // Fixed livery: keep the debug-menu tuning pass (TruckFireView.update)
+  // from repainting the rind with the selected primary color.
+  delete (paint.userData as Record<string, unknown>).truckColorSlot;
   const slice = new T.Group();
   slice.name = "melon-slice";
-  slice.position.set(0, 2.35, -0.05);
+  // The view poses each part in world space every frame and leaves the
+  // truck group at the origin, so the slice hangs off the roof part.
+  // Roof center is (0, 1.8, -0.05); this keeps the old world placement.
+  slice.position.set(0, 0.55, 0);
   const rind = new T.Mesh(
     new T.CylinderGeometry(1.15, 1.15, 2.0, 20, 1, false, 0, Math.PI),
     new T.MeshStandardMaterial({ color: 0x1f6b2a, roughness: 0.5 }),
@@ -36,6 +42,6 @@ export function createWatermelonCar(_materials: TruckMaterials = {}) {
     dot.position.set(-0.8 + i * 0.4, 0.1, 0.75 - (i % 2) * 0.3);
     slice.add(dot);
   }
-  truck.add(slice);
+  truck.getObjectByName("roof")!.add(slice);
   return truck;
 }
