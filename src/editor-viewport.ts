@@ -128,6 +128,7 @@ const PREFAB_COLORS: Record<string, number> = {
   axe: 0x9aa2a8,
   carousel: 0xff6bcb,
   "bumper-arena": 0x63e8fc,
+  "bumper-arena-xl": 0x3fc3f0,
   "hot-air-balloon": 0xffc23b,
   trampoline: 0x7af2ff,
   ghost: 0xc9b8ff,

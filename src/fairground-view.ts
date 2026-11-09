@@ -282,6 +282,52 @@ function buildArena() {
   batch(group);
   return group;
 }
+function buildArenaXL() {
+  const group = new T.Group(),
+    rail = metal(0xec4c8c),
+    gold = metal(0xffd768);
+  mesh(
+    group,
+    new T.BoxGeometry(64, 0.06, 100),
+    pbr("blue_plaster_wall", 6, { color: 0x4e86a6 }),
+    0,
+    0.03,
+  );
+  for (const side of [-1, 1]) {
+    box(group, [1, 2, 40], [side * 32, 1, -30], rail);
+    box(group, [1, 2, 40], [side * 32, 1, 30], rail);
+  }
+  box(group, [64, 2, 1], [0, 1, -50], rail);
+  box(group, [22, 2, 1], [-21, 1, 50], rail);
+  box(group, [22, 2, 1], [21, 1, 50], rail);
+  for (const side of [-1, 1])
+    box(group, [2, 6, 2], [side * 10, 3, 50], gold);
+  box(group, [24, 1.5, 1.5], [0, 6.5, 50], gold);
+  for (const x of [-31, 31])
+    for (const z of [-49, 49]) {
+      mesh(group, new T.CylinderGeometry(0.2, 0.3, 9, 24), gold, x, 4.5, z);
+      const flag = mesh(group, new T.ConeGeometry(1.4, 2.5, 3), rail, x, 9, z);
+      flag.rotation.z = -0.4;
+    }
+  const sign = label("BUMPER BRAWL XL");
+  sign.position.set(0, 6, -50);
+  sign.rotation.y = Math.PI;
+  group.add(sign);
+  for (const x of [-20, 0, 20])
+    for (const z of [-30, -15, 0, 15, 30]) {
+      const ring = mesh(
+        group,
+        new T.TorusGeometry(4, 0.06, 8, 64),
+        gold,
+        x,
+        0.08,
+        z,
+      );
+      ring.rotation.x = Math.PI / 2;
+    }
+  batch(group);
+  return group;
+}
 function buildBumper(index: number) {
   const group = new T.Group(),
     paint = metal(COLORS[index % 6]),
@@ -399,8 +445,9 @@ export class FairgroundView extends T.Group {
         this.carouselModels.set(c.p.id, model);
       }
       for (const p of sim.courseTrack?.custom?.prefabs ?? [])
-        if (p.kind === "bumper-arena") {
-          const model = buildArena();
+        if (p.kind === "bumper-arena" || p.kind === "bumper-arena-xl") {
+          const model =
+            p.kind === "bumper-arena-xl" ? buildArenaXL() : buildArena();
           model.position.set(p.x, p.y ?? 0, p.z);
           this.add(model);
         }

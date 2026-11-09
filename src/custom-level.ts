@@ -48,6 +48,7 @@ export const JAW_PREFAB_KINDS = [
 export const COURSE_PREFAB_KINDS = [
   "carousel",
   "bumper-arena",
+  "bumper-arena-xl",
   "hot-air-balloon",
   "hammer",
   "axe",

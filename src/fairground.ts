@@ -12,6 +12,7 @@ export const CAROUSEL_SLOTS = 12;
 export const CAROUSEL_OMEGA = 0.14;
 export const TRAP_SLOTS = [2, 5, 9];
 export const BUMPER_ARENA = { halfWidth: 32, halfDepth: 25 };
+export const BUMPER_ARENA_XL = { halfWidth: 32, halfDepth: 50 };
 const MPH60 = 60 * 0.44704;
 
 /** Equal-mass vehicles each lose 25% at 60 mph closing speed. Heavier cars
@@ -123,6 +124,7 @@ export class Fairground {
     for (const p of sim.courseTrack?.custom?.prefabs ?? []) {
       if (p.kind === "carousel") this.addCarousel(p);
       if (p.kind === "bumper-arena") this.addArena(p);
+      if (p.kind === "bumper-arena-xl") this.addArenaXL(p);
       if (p.kind === "hot-air-balloon") {
         const random = randomFor(p.id);
         this.balloons.push({
@@ -282,6 +284,58 @@ export class Fairground {
       });
     }
   }
+  private addArenaXL(p: CustomPrefab) {
+    const base = this.sim.world.createRigidBody(
+      R.RigidBodyDesc.fixed().setTranslation(p.x, p.y ?? 0, p.z),
+    );
+    // Double-length floor; one 20-wide gate centered on the south wall.
+    for (const side of [-1, 1]) {
+      this.box(base, side * 32, 1, -30, 1, 2, 40);
+      this.box(base, side * 32, 1, 30, 1, 2, 40);
+    }
+    this.box(base, 0, 1, -50, 64, 2, 1);
+    this.box(base, -21, 1, 50, 22, 2, 1);
+    this.box(base, 21, 1, 50, 22, 2, 1);
+    for (let i = 0; i < 6; i++) {
+      const x = p.x + ((i % 3) - 1) * 13,
+        z = p.z + (i < 3 ? -25 : 25);
+      const body = this.sim.world.createRigidBody(
+        R.RigidBodyDesc.dynamic()
+          .setTranslation(x, (p.y ?? 0) + 1.2, z)
+          .enabledRotations(false, true, false)
+          .setLinearDamping(0.3)
+          .setAngularDamping(4)
+          .setCcdEnabled(true),
+      );
+      const collider = this.sim.world.createCollider(
+        R.ColliderDesc.cuboid(1.6, 1.15, 2.2)
+          .setMass(3000)
+          .setFriction(0.15)
+          .setRestitution(0.6),
+        body,
+      );
+      this.bumpers.push({
+        id: `${p.id}-car-${i + 1}`,
+        arena: p,
+        body,
+        collider,
+        health: 1,
+        aggressive: false,
+        incoming: new Vector3(),
+        touching: false,
+        patrol: i * 1.047,
+        mode: i % 3 === 0 ? "cruise" : i % 3 === 1 ? "ram-car" : "wander",
+        targetId: `${p.id}-car-${((i + 1) % 6) + 1}`,
+        target: {
+          x: p.x + Math.sin(i * 2) * 23,
+          z: p.z + Math.cos(i * 2) * 32,
+        },
+        nextDecision: 0.6 + i * 0.23,
+        lastStrike: -100,
+        random: randomFor(`${p.id}-car-${i + 1}`),
+      });
+    }
+  }
   private playerIntersects(sensor: R.Collider) {
     return [...this.sim.parts.values()].some(
       (part) =>
@@ -386,7 +440,10 @@ export class Fairground {
               }
             : {
                 x: a.x + (car.random() * 2 - 1) * 24,
-                z: a.z + (car.random() * 2 - 1) * 17,
+                z:
+                  a.z +
+                  (car.random() * 2 - 1) *
+                    (a.kind === "bumper-arena-xl" ? 34 : 17),
               };
         car.nextDecision =
           s.time +
@@ -405,7 +462,12 @@ export class Fairground {
         : car.mode === "ram-car" && peer
           ? peer.body.translation()
           : car.mode === "cruise"
-            ? { x: a.x + Math.sin(phase) * 21, z: a.z + Math.cos(phase) * 15 }
+            ? {
+                x: a.x + Math.sin(phase) * 21,
+                z:
+                  a.z +
+                  Math.cos(phase) * (a.kind === "bumper-arena-xl" ? 30 : 15),
+              }
             : car.mode === "reverse"
               ? { x: pos.x * 2 - car.target.x, z: pos.z * 2 - car.target.z }
               : car.target;
