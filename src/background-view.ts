@@ -171,6 +171,18 @@ function place(
   return geometry;
 }
 
+/** Tile skyscraper side UVs so one window-texture repeat covers 4x8m (~0.67m windows). Roof keeps 0-1. */
+export function tileSkyscraperUVs(geometry: T.BufferGeometry, size: number) {
+  const uv = geometry.attributes.uv as T.BufferAttribute;
+  const n = geometry.attributes.normal as T.BufferAttribute;
+  const ru = size / 4, rv = size / 2;
+  for (let i = 0; i < uv.count; i++) {
+    if (Math.abs(n.getY(i)) > 0.5) continue;
+    uv.setXY(i, uv.getX(i) * ru, uv.getY(i) * rv);
+  }
+  uv.needsUpdate = true;
+}
+
 export class BackgroundView extends T.Group {
   private key = "";
   private builtTrack: Track | null = null;
@@ -299,8 +311,9 @@ export class BackgroundView extends T.Group {
       case "skyscraper":
         return this.cached(`sky|${id}|${repeat}|${ring.color ?? 0xffffff}`, () => {
           const windows = getWindowTexture();
+          if (windows) windows.wrapS = windows.wrapT = T.RepeatWrapping;
           const material = id
-            ? pbr(id, repeat, {
+            ? pbr(id, 1, {
                 color: ring.color ?? 0xffffff,
                 emissive: 0xffffff,
                 ...(windows ? { emissiveMap: windows } : {}),
@@ -489,12 +502,12 @@ export class BackgroundView extends T.Group {
         }
         break;
       }
-      case "skyscraper":
-        push(
-          place(new T.BoxGeometry(1, 4, 1), slot.x, y + size * 2, slot.z, size, slot.angle),
-          main(),
-        );
+      case "skyscraper": {
+        const tower = new T.BoxGeometry(1, 4, 1);
+        tileSkyscraperUVs(tower, size);
+        push(place(tower, slot.x, y + size * 2, slot.z, size, slot.angle), main());
         break;
+      }
       case "container-stack": {
         const material = main();
         const levels = 2 + Math.floor(variant * 2);
