@@ -49,9 +49,10 @@ export function driveToyboxRoadToCompletion(): number {
         const [wx, wz, , reach] = route[next];
         if (Math.hypot(wx - p.x, wz - p.z) < reach) next++;
       }
-      const [x, z, speed, , clipId] = sprinting
+      const target: [number, number, number, number, string?] = sprinting
         ? [sprinting.tx, sprinting.tz, 14, 0, undefined]
         : route[Math.min(next, route.length - 1)];
+      const [x, z, speed, , clipId] = target;
       const q = sim.body.rotation();
       const forwardX = 2 * (q.x * q.z + q.w * q.y);
       const forwardZ = 1 - 2 * (q.x ** 2 + q.y ** 2);
