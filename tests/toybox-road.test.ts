@@ -13,7 +13,7 @@ type Level = {
   mode: string;
   spawn: { x: number; y: number; z: number; yaw: number };
   checkpoints: { name: string; x: number; y: number; z: number; yaw: number }[];
-  solids: { id: string; kind: string; x: number; y: number; z: number; w: number; h: number; d: number }[];
+  solids: { id: string; kind: string; x: number; y: number; z: number; w: number; h: number; d: number; yaw?: number }[];
   prefabs: { id: string; kind: string; x: number; z: number }[];
   medals: { gold: number; silver: number; bronze: number };
   limit: number;
@@ -42,7 +42,17 @@ it("stages the toy road: arena, clips, robot, flagpole, tower, dinos", () => {
     expect(kinds).toContain(kind);
   expect(kinds.filter((k) => k === "clip")).toHaveLength(3);
   expect(kinds.filter((k) => k === "glass-pane").length).toBeGreaterThanOrEqual(8);
-  expect(level.solids.some((s) => s.kind === "road")).toBe(true);
+  const roads = level.solids.filter((s) => s.kind === "road");
+  expect(roads.length).toBeGreaterThanOrEqual(6);
+  expect(roads.filter((s) => (s.yaw ?? 0) !== 0).length).toBeGreaterThanOrEqual(3);
+  for (const dino of level.prefabs.filter((p) =>
+    ["raptor", "pterosaur", "spinosaurus", "ember-wyvern"].includes(p.kind),
+  )) {
+    const near = Math.min(
+      ...roads.map((s) => Math.hypot(dino.x - s.x, dino.z - s.z)),
+    );
+    expect(near, `${dino.id} hunts the road`).toBeLessThan(25);
+  }
   expect(level.medals.gold).toBeGreaterThan(0);
   expect(level.medals.silver).toBeGreaterThan(level.medals.gold);
   expect(level.medals.bronze).toBeGreaterThan(level.medals.silver);
