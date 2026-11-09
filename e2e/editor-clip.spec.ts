@@ -86,6 +86,9 @@ test("numeric clipping previews layers, cancels, commits once, saves, reloads an
     await page.clock.resume();
     await page.reload();
     await page.waitForFunction(() => !!window.__game);
+    // Re-pause: the reload restarts the hidden game loop, which saturates
+    // SwiftShader and starves the evaluates below.
+    await page.clock.pauseAt(new Date("2026-01-01T00:02:00Z"));
     await page
       .getByRole("button", { name: "Level editor", exact: true })
       .click();

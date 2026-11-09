@@ -6,6 +6,7 @@ import {
   removeLevel,
   exportLevel,
   importLevel,
+  registerStoredTracks,
   type LevelStoreDeps,
 } from "../src/level-store";
 import type { CustomLevel } from "../src/custom-level";
@@ -211,4 +212,15 @@ it("loads absent tracks into the registry without clobbering live ones", async (
   expect(getCustomTrack("custom:absent-track-xyz")!.checkpoints[0]).toMatchObject(
     { x: 12345 },
   );
+});
+
+it("registerStoredTracks skips corrupt entries instead of aborting", async () => {
+  const d = deps();
+  d.backend.files.set("Good One", level("Good One"));
+  d.backend.files.set("reference-images", { interpretationRules: [] });
+  d.backend.files.set("Good Two", level("Good Two"));
+  const { getCustomTrack } = await import("../src/custom-level");
+  await registerStoredTracks(d);
+  expect(getCustomTrack("custom:good-one")).toBeDefined();
+  expect(getCustomTrack("custom:good-two")).toBeDefined();
 });

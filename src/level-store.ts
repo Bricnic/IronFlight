@@ -143,9 +143,18 @@ export async function importLevel(
 /** Register every stored level at boot; never blocks the menu. */
 export async function registerStoredTracks(deps?: Partial<LevelStoreDeps>) {
   for (const track of officialFileTracks) registerCustomTrack(track);
+  let names: string[];
   try {
-    for (const name of await listLevels(deps)) await loadLevel(deps, name);
+    names = await listLevels(deps);
   } catch {
     // Custom levels are optional; the menu still opens.
+    return;
+  }
+  for (const name of names) {
+    try {
+      await loadLevel(deps, name);
+    } catch {
+      // One corrupt entry must not block the rest.
+    }
   }
 }

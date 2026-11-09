@@ -14,7 +14,7 @@ async function savePreviewLevel(page: Page) {
     await g.customLevels.save({
       name: "e2e-preview",
       mode: "race",
-      spawn: { x: 0, y: 2.1, z: -40, yaw: 0 },
+      spawn: { x: 0, y: 8, z: -40, yaw: 0 },
       checkpoints: [{ x: 0, z: 40 }],
       solids: [
         {
@@ -34,7 +34,7 @@ async function savePreviewLevel(page: Page) {
           kind: "barrier",
           x: 0,
           y: 8,
-          z: -20,
+          z: -34,
           w: 12,
           h: 16,
           d: 2,
@@ -46,7 +46,7 @@ async function savePreviewLevel(page: Page) {
           kind: "barrier",
           x: 0,
           y: 8,
-          z: -32,
+          z: -20,
           w: 12,
           h: 16,
           d: 2,

@@ -43,7 +43,8 @@ export function resolveViewportPick(hits: ViewportHit[]): EditorSelection {
   return resolveViewportStack(hits)[0]?.selection ?? null;
 }
 /** Selection highlights rebuild meshes, so retain logical ids rather than
- * object instances. Camera/content changes or a different click area restart. */
+ * object instances. Camera/content changes or a different click area restart.
+ * Coordinates are canvas-space NDC so page layout shifts never break a cycle. */
 export class ViewportPickCycle {
   private anchor = { x: Infinity, y: Infinity };
   private context = "";
@@ -51,7 +52,7 @@ export class ViewportPickCycle {
   private index = -1;
   reset() { this.index = -1; this.order = []; }
   private matches(x: number, y: number, picks: EditorSelection[], context: string) {
-    return this.index >= 0 && Math.hypot(x - this.anchor.x, y - this.anchor.y) < 4 && context === this.context &&
+    return this.index >= 0 && Math.hypot(x - this.anchor.x, y - this.anchor.y) < 0.02 && context === this.context &&
       picks.map(pickKey).sort().join("|") === this.order.map(pickKey).sort().join("|");
   }
   current(x: number, y: number, picks: EditorSelection[], context: string): EditorSelection {
@@ -269,13 +270,15 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     );
   };
   const pickAt = (clientX: number, clientY: number) => {
-    raycaster.setFromCamera(ndcAt(clientX, clientY), camera);
+    const ndc = ndcAt(clientX, clientY);
+    raycaster.setFromCamera(ndc, camera);
     const hits = group
       ? raycaster.intersectObjects(group.children, true)
       : [];
     const stack = resolveViewportStack(hits);
     return {
       stack,
+      ndc,
     };
   };
   let drag: { planeY: number; offX: number; offZ: number } | null = null;
@@ -319,15 +322,15 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     downY = e.clientY;
     moved = false;
     downEmpty = false;
-    const { stack } = pickAt(e.clientX, e.clientY);
+    const { stack, ndc } = pickAt(e.clientX, e.clientY);
     let selection: EditorSelection = stack[0]?.selection ?? null;
     if (store.tool === "select" && e.button === 0) {
       const picks = stack.map((entry) => entry.selection);
       const context = `${camera.matrixWorld.elements.join(",")}|${camera.projectionMatrix.elements.join(",")}|${store.preview}|${JSON.stringify(store.level)}`;
-      const current = cycle.current(e.clientX, e.clientY, picks, context);
+      const current = cycle.current(ndc.x, ndc.y, picks, context);
       if (current && pickKey(current) === pickKey(store.selection)) selection = current;
       else if (current) cycle.reset();
-      pendingClick = { x: e.clientX, y: e.clientY, picks, context };
+      pendingClick = { x: ndc.x, y: ndc.y, picks, context };
     }
     const point = stack.find((entry) => pickKey(entry.selection) === pickKey(selection))?.hit.point;
     if (store.tool === "select" && (e.shiftKey || e.ctrlKey || e.metaKey) && selection?.kind === "solid") {
@@ -592,6 +595,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         gate.position.set(cp.x, cp.y ?? 2, cp.z);
         gate.rotation.y = yaw;
         gate.userData.pick = { kind: "checkpoint", index: i };
+        if (preview) gate.layers.set(1); // gizmos hide in preview
         gate.userData.locked = !!cp.locked;
         group.add(gate);
       }
@@ -612,6 +616,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         marker.position.set(p.x, (p.y ?? 0) + 1.5, p.z);
         marker.rotation.set(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ");
         marker.userData.pick = { kind: "prefab", id: p.id };
+        if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!p.locked;
         if (selection != null && "id" in selection && selection.id === p.id)
           marker.scale.setScalar(1.6);
@@ -632,6 +637,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         );
         marker.position.set(t.x, t.y ?? (collectible ? 1.7 : 1.5), t.z);
         marker.userData.pick = { kind: "target", index: i };
+        if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!t.locked;
         if (
           selection != null &&
@@ -652,6 +658,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         );
         marker.position.set(r.x, r.y, r.z);
         marker.userData.pick = { kind: "ring", index: i };
+        if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!r.locked;
         if (
           selection != null &&
@@ -669,6 +676,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       spawn.position.set(level.spawn.x, level.spawn.y + 1.5, level.spawn.z);
       spawn.rotation.y = level.spawn.yaw;
       spawn.userData.pick = { kind: "spawn" };
+      if (preview) spawn.layers.set(1); // gizmos hide in preview
       spawn.userData.locked = !!level.spawn.locked;
       group.add(spawn);
       scene.add(group);
