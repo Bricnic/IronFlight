@@ -1,6 +1,7 @@
 import { ComicPhysics } from "./comic-physics";
 import { DungeonPhysics } from "./dungeon-physics";
 import { GuidedPipe } from "./guided-pipe";
+import { LooseBlocks } from "./loose-blocks";
 import { Fairground, CAROUSEL_OMEGA } from "./fairground";
 import { GhostSwarm } from "./ghosts";
 import { AxeArray } from "./axes";
@@ -65,6 +66,7 @@ export class Simulation {
   world!: RAPIER.World;
   comic!: ComicPhysics;
   dungeon!: DungeonPhysics;
+  looseBlocks!: LooseBlocks;
   guidedPipe!: GuidedPipe;
   fairground!: Fairground;
   ghosts!: GhostSwarm;
@@ -368,6 +370,7 @@ export class Simulation {
     );
     this.comic = new ComicPhysics(this);
     this.dungeon = new DungeonPhysics(this);
+    this.looseBlocks = new LooseBlocks(this);
     this.guidedPipe = new GuidedPipe(this);
     this.fairground = new Fairground(this);
     this.ghosts = new GhostSwarm(this);
@@ -865,12 +868,14 @@ export class Simulation {
       }
     this.updateLava();
     this.props.captureVelocities();
+    this.looseBlocks.captureVelocities();
     this.comic.before();
     this.ghosts.update();
     this.dungeon.gauntlet.before();
     this.world.step(this.events, this.hammerHooks);
     this.comic.after();
     const screwHit = this.dungeon.after();
+    this.looseBlocks.after();
     const fairgroundHit = this.fairground.after(before);
     this.ghosts.attack();
     if (this.courseTrack !== this.pianoKeyTrack) {
@@ -1462,6 +1467,7 @@ export class Simulation {
     return {
       comic: this.comic.snapshot(),
       dungeon: this.dungeon.snapshot(),
+      looseBlocks: this.looseBlocks.snapshot(),
       pipeRide: this.guidedPipe.snapshot(),
       fairground: this.fairground.snapshot(),
       ghosts: this.ghosts.snapshot(),

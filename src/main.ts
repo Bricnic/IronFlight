@@ -505,6 +505,13 @@ async function boot() {
         ...(prefab.y === undefined ? {} : { y: prefab.y }),
         ...(prefab.yaw === undefined ? {} : { yaw: prefab.yaw }),
       });
+    else if (prefab.kind === "loose-blocks")
+      sim.looseBlocks.addBlock({
+        id: prefab.id,
+        x: prefab.x,
+        z: prefab.z,
+        ...(prefab.y === undefined ? {} : { y: prefab.y }),
+      });
   }
   async function saveLiveEdit(next: CustomLevel) {
     const track = sim.courseTrack!;
@@ -568,8 +575,10 @@ async function boot() {
           const dz = updated.z - prefabCtx.prefab.z;
           sim.comic.moveHazard(updated.id, updated.x, y, updated.z);
           sim.dungeon.moveHazard(updated.id, updated.x, y, updated.z);
+          sim.looseBlocks.moveBlock(updated.id, updated.x, y, updated.z);
           view.moveComicModel(updated.id, dx, dy, dz);
           view.moveDungeonModel(updated.id, dx, dy, dz);
+          view.moveLooseBlockModel(updated.id, dx, dy, dz);
         }
         refreshSelBox();
         say(`Moved ${prefabCtx.prefab.id}`);
@@ -656,8 +665,10 @@ async function boot() {
         } else {
           sim.comic.removeHazard(prefabCtx.prefab.id);
           sim.dungeon.removeHazard(prefabCtx.prefab.id);
+          sim.looseBlocks.removeBlock(prefabCtx.prefab.id);
           view.removeComicModel(prefabCtx.prefab.id);
           view.removeDungeonModel(prefabCtx.prefab.id);
+          view.removeLooseBlockModel(prefabCtx.prefab.id);
         }
         selectSolid(null);
         say(`Deleted ${prefabCtx.prefab.id}`);

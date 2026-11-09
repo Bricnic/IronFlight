@@ -86,11 +86,13 @@ export const DUNGEON_PREFAB_KINDS = [
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
 ] as const;
+export const LOOSE_BLOCK_PREFAB_KINDS = ["loose-blocks"] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,
   ...COMIC_PREFAB_KINDS,
   ...COURSE_PREFAB_KINDS,
   ...DUNGEON_PREFAB_KINDS,
+  ...LOOSE_BLOCK_PREFAB_KINDS,
   "checkpoint",
 ] as const;
 export type PrefabKind = (typeof PREFAB_KINDS)[number];

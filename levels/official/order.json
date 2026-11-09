@@ -63,5 +63,10 @@
     "file": "Ring Chase.json",
     "thumbnail": "/tracks/ring-chase.png",
     "description": "Loop the arena for 18 rings: dodge the carousel and bumper brawl, time the chomp book and two glazed donut jaws, and outrun three ghosts."
+  },
+  {
+    "file": "Block Party.json",
+    "thumbnail": "/tracks/block-party.png",
+    "description": "Race the black road under the blue gate, dodge two dinos, thread tile chicanes, detour into the bumper arena, and smash two letter-block barricades."
   }
 ]

@@ -5,6 +5,7 @@ import { potionScale } from "./comic-hazards";
 import { CourseView } from "./course-view";
 import { LavaPartEffects } from "./lava-effects";
 import { PropView } from "./prop-view";
+import { LooseBlocksView } from "./loose-blocks-view";
 import * as T from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { deformGeometry } from "./damage";
@@ -35,6 +36,7 @@ export class GameView {
   readonly renderer: T.WebGLRenderer;
   readonly chase = new ChaseCamera(this.camera);
   private props = new PropView();
+  private looseBlocks = new LooseBlocksView();
   private comic = new ComicView();
   private dungeon = new DungeonView();
   private fairground = new FairgroundView();
@@ -107,6 +109,7 @@ export class GameView {
       this.skids,
       this.fire.smoke,
       this.props,
+      this.looseBlocks,
       this.lavaEffects,
       this.background,
     );
@@ -658,6 +661,12 @@ export class GameView {
   removePropModel(id: string) {
     this.props.removeModel(id);
   }
+  moveLooseBlockModel(id: string, dx: number, dy: number, dz: number) {
+    this.looseBlocks.moveModel(id, dx, dy, dz);
+  }
+  removeLooseBlockModel(id: string) {
+    this.looseBlocks.removeModel(id);
+  }
   stats() {
     const [lightA, lightB] = this.lightIntensities();
     return {
@@ -797,6 +806,7 @@ export class GameView {
         : root,
     );
     this.props.update(s.props, s.time);
+    this.looseBlocks.update(s.looseBlocks);
     this.lavaEffects.update(s);
     for (const lava of this.lava) {
       lava.userData.time.value = s.time;
