@@ -39,6 +39,6 @@ export function solidNeedsUVScaling(
     stone ||
     cliff ||
     !!s.texture ||
-    ["ground", "road", "ramp", "loop", "lava"].includes(s.kind)
+    ["ground", "road", "ramp", "loop", "lava", "slime"].includes(s.kind)
   );
 }

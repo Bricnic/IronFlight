@@ -208,7 +208,7 @@ export class CourseView extends T.Group {
           .translate(0, -s.h / 2, 0)
       : new T.BoxGeometry(s.w, s.h, s.d);
     if (solidNeedsUVScaling(s, stone, cliff)) {
-      scaleSolidUVs(geometry, s, s.kind === "ground" || !!s.footprint, s.kind === "lava" ? 9 : 3);
+      scaleSolidUVs(geometry, s, s.kind === "ground" || !!s.footprint, s.kind === "lava" ? 9 : s.kind === "slime" ? 33 : 3);
     }
     if (
       stone ||

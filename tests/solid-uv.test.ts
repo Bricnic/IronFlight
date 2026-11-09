@@ -55,6 +55,7 @@ it("scales side-face UVs from x+z and height", () => {
 it("scales UVs for lava, textured and ground-like kinds only", () => {
   const s = (kind: string, texture?: string) => ({ kind, texture });
   expect(solidNeedsUVScaling(s("lava"), false, false)).toBe(true);
+  expect(solidNeedsUVScaling(s("slime"), false, false)).toBe(true);
   expect(solidNeedsUVScaling(s("road"), false, false)).toBe(true);
   expect(solidNeedsUVScaling(s("barrier", "brick_01"), false, false)).toBe(true);
   expect(solidNeedsUVScaling(s("barrier"), false, false)).toBe(false);
@@ -76,4 +77,18 @@ it("scales lava UVs every 9m", () => {
     checked++;
   }
   expect(checked).toBeGreaterThan(0);
+});
+
+/** Slime tiles at 33m so its 0-1-tuned pattern keeps ~3m cells. */
+it("scales slime UVs every 33m", () => {
+  const geometry = new T.BoxGeometry(66, 2, 66);
+  scaleSolidUVs(geometry, { kind: "slime", x: 0, z: 0 }, false, 33);
+  const uv = geometry.attributes.uv as T.BufferAttribute;
+  const normals = geometry.attributes.normal as T.BufferAttribute;
+  let umax = -Infinity;
+  for (let i = 0; i < uv.count; i++) {
+    if (Math.abs(normals.getY(i)) <= 0.5) continue;
+    umax = Math.max(umax, uv.getX(i));
+  }
+  expect(umax).toBeCloseTo(1, 6);
 });
