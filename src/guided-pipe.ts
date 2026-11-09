@@ -70,7 +70,18 @@ function pose(pipe: CustomPrefab, distance: number) {
   const yaw = pipe.yaw ?? 0;
   const point = segment.getPointAt(t).applyAxisAngle(up, yaw);
   point.add(new Vector3(pipe.x, pipe.y ?? 0, pipe.z));
-  const direction = segment.getTangentAt(t).applyAxisAngle(up, yaw);
+  // Blend the tangent across the tube/exit joint: a rotation snap stalls CCD
+  // kinematic bodies, and yawed rides snap through a compound angle.
+  const JOINT_BLEND = 2;
+  const dJoint = distance - lengths.tube;
+  let direction = segment.getTangentAt(t).applyAxisAngle(up, yaw);
+  if (Math.abs(dJoint) < JOINT_BLEND) {
+    const tubeTan = ride.tube.getTangentAt(1).applyAxisAngle(up, yaw);
+    const exitTan = ride.exit.getTangentAt(0).applyAxisAngle(up, yaw);
+    const f = (dJoint + JOINT_BLEND) / (2 * JOINT_BLEND);
+    const s = f * f * (3 - 2 * f);
+    direction = tubeTan.multiplyScalar(1 - s).addScaledVector(exitTan, s).normalize();
+  }
   const heading = Math.atan2(direction.x, direction.z);
   const pitch = -Math.atan2(direction.y, Math.hypot(direction.x, direction.z));
   const rotation = new Quaternion().setFromEuler(new Euler(pitch, heading, 0, "YXZ"));

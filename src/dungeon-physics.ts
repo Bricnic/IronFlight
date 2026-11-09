@@ -90,9 +90,9 @@ export class DungeonPhysics {
       m.colliders.push(
         world.createCollider(
           R.ColliderDesc.cylinder(15, 0.4).setTranslation(
-            h.x,
+            h.x + 1.5 * Math.sin(h.yaw ?? 0),
             (h.y ?? 0) + 15,
-            h.z,
+            h.z + 1.5 * Math.cos(h.yaw ?? 0),
           ),
         ),
       );

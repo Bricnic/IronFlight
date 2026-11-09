@@ -60,15 +60,43 @@ it("rides up the pole, knocks the flag and exits driving", () => {
     sim.startTrack("custom:flagpole-fixture");
     let engaged = false;
     let peak = 0;
+    let exitZ = 0;
     for (let i = 0; i < 720; i++) {
       sim.step({ throttle: 1 });
       if (sim.guidedPipe.snapshot()) engaged = true;
+      else if (engaged && exitZ === 0) exitZ = sim.body.translation().z;
       peak = Math.max(peak, sim.body.translation().y);
     }
     expect(engaged).toBe(true);
     expect(peak).toBeGreaterThan(25);
     expect(sim.guidedPipe.knocked?.id).toBe("pole");
+    expect(exitZ).toBeGreaterThan(30);
     expect(sim.body.translation().z).toBeGreaterThan(26);
+    expect(sim.status).toBe("driving");
+  } finally {
+    sim.dispose();
+  }
+});
+
+it("exits a yawed pole without stalling at the tube joint", () => {
+  const level = blankLevel("Yaw90 Fixture");
+  level.prefabs = [
+    { id: "pole", kind: "flagpole", x: 0, z: 20, yaw: Math.PI / 2 },
+  ];
+  level.spawn = { x: -12, y: 2.1, z: 23, yaw: Math.PI / 2 };
+  registerCustomTrack(toTrack(validateCustomLevel(level)));
+  const sim = new Simulation();
+  try {
+    sim.startTrack("custom:yaw90-fixture");
+    let engaged = false;
+    let exitX = 0;
+    for (let i = 0; i < 900; i++) {
+      sim.step({ throttle: 1 });
+      if (sim.guidedPipe.snapshot()) engaged = true;
+      else if (engaged && exitX === 0) exitX = sim.body.translation().x;
+    }
+    expect(engaged).toBe(true);
+    expect(exitX).toBeGreaterThan(12);
     expect(sim.status).toBe("driving");
   } finally {
     sim.dispose();
