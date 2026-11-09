@@ -195,3 +195,10 @@ it("falls back by mode when the name matches nothing", () => {
     "pastoral-hills",
   );
 });
+
+it("renders cavern-dark against pure black sky and fog", () => {
+  const t = getBackgroundTemplate("cavern-dark");
+  expect(t.sky.top).toBe(0);
+  expect(t.sky.horizon).toBe(0);
+  expect(t.fog.color).toBe(0);
+});

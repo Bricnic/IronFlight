@@ -1,7 +1,7 @@
 {
   "name": "cavern-dark",
-  "sky": { "top": 658709, "horizon": 658709 },
-  "fog": { "color": 658709, "near": 60, "far": 280 },
+  "sky": { "top": 0, "horizon": 0 },
+  "fog": { "color": 0, "near": 60, "far": 280 },
   "sun": { "color": 16757866, "intensity": 1.1 },
   "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 0.85 },
   "env": 0.32,
