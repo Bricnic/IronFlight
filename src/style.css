@@ -1274,6 +1274,17 @@ kbd {
   margin-left: auto;
   margin-right: auto;
 }
+@media (max-width: 850px) {
+  /* Narrow screens: pin the stack left so it clears #telemetry. */
+  #status {
+    left: 20px;
+    transform: none;
+    max-width: calc(100vw - 280px);
+  }
+  #state-copy {
+    max-width: 100%;
+  }
+}
 .vehicle-preview img {
   display: block;
   width: 100%;
