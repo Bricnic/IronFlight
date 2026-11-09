@@ -27,6 +27,7 @@ test("normal startup shows the illustrated official lineup and keeps the simulat
     "Block Party",
     "Frostfire Pass",
     "Volcano Loop",
+    "Toybox Road",
   ]);
   for (const t of TRACKS) {
     await expect(
