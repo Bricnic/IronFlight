@@ -180,18 +180,21 @@
     {
       "id": "raptor-0",
       "kind": "raptor",
+      "scale": 2,
       "x": -40,
       "z": 30
     },
     {
       "id": "raptor-1",
       "kind": "raptor",
+      "scale": 2,
       "x": 20,
       "z": 35
     },
     {
       "id": "spinosaurus-0",
       "kind": "spinosaurus",
+      "scale": 2,
       "x": 80,
       "z": 30
     }

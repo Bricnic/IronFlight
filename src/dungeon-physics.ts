@@ -159,6 +159,11 @@ export class DungeonPhysics {
     s.body.applyImpulse({ x: x * shove, y: 0, z: z * shove }, true);
     if (sc > 1) {
       this.ripWithDinosaur(kind, h, x, z, mouth, height);
+      // Two bites to kill: the second landed bite finds the chassis.
+      if (m.contacts >= 2) {
+        s.damage("chassis-front", 10000);
+        s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
+      }
     } else {
       s.damage("chassis-front", 32);
       s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
