@@ -184,3 +184,18 @@ test("placement bar shows only on custom tracks", async ({ page }) => {
     "Bar Check",
   );
 });
+
+test("placement bar shows only the Edit toggle until editing starts", async ({ page }) => {
+  await startCustom(page, "Idle Bar");
+  await expect(page.locator("#placement-bar")).toBeVisible();
+  await expect(page.locator("#edit-toggle")).toBeVisible();
+  await expect(page.locator("#place-kind")).toBeHidden();
+  await expect(page.locator("#place-texture")).toBeHidden();
+  await expect(page.locator("#sel-rotate")).toBeHidden();
+  await page.locator("#edit-toggle").click();
+  await expect(page.locator("#place-kind")).toBeVisible();
+  await expect(page.locator("#place-texture")).toBeVisible();
+  await page.locator("#edit-toggle").click();
+  await expect(page.locator("#place-kind")).toBeHidden();
+  await page.evaluate((name) => window.__game!.customLevels.remove(name), "Idle Bar");
+});

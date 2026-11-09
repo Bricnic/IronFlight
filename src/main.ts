@@ -924,6 +924,7 @@ async function boot() {
     placementBar.hidden = !(
       surface === "play" && !!sim.courseTrack?.custom
     );
+    placementBar.classList.toggle("idle", !editing);
     const s = sim.snapshot(false),
       r = ROUTES.find((r) => r.id === s.stage);
     $("speed").textContent = Math.round(s.speed * 3.6)

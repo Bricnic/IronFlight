@@ -1220,6 +1220,9 @@ kbd {
   padding: 6px 8px;
   font: inherit;
 }
+#placement-bar.idle > :not(#edit-toggle):not(#place-status) {
+  display: none;
+}
 #place-status {
   color: #8fa5a8;
   max-width: 280px;
