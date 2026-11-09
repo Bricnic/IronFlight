@@ -30,7 +30,7 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-16).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-17).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
@@ -47,6 +47,7 @@ it("steps to the next and previous level with wraparound", () => {
     "Block Party",
     "Frostfire Pass",
     "Volcano Loop",
+    "Toybox Road",
   ]);
   expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
   expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
@@ -82,12 +83,14 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:frostfire-pass", -1)).toBe("custom:block-party");
   expect(stepTrackId("custom:frostfire-pass", 1)).toBe("custom:volcano-loop");
   expect(stepTrackId("custom:volcano-loop", -1)).toBe("custom:frostfire-pass");
-  expect(stepTrackId("custom:volcano-loop", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:volcano-loop");
+  expect(stepTrackId("custom:volcano-loop", 1)).toBe("custom:toybox-road");
+  expect(stepTrackId("custom:toybox-road", -1)).toBe("custom:volcano-loop");
+  expect(stepTrackId("custom:toybox-road", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:toybox-road");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:volcano-loop");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:toybox-road");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:volcano-loop");
+  expect(stepTrackId(undefined, -1)).toBe("custom:toybox-road");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

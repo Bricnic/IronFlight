@@ -78,5 +78,10 @@
     "file": "Volcano Loop.json",
     "thumbnail": "/tracks/volcano-loop.png",
     "description": "Circle the loop past the chomp book, hands and squish cup, then boost the lava gap beside the erupting volcano to the finish."
+  },
+  {
+    "file": "Toybox Road.json",
+    "thumbnail": "/tracks/toybox-road.png",
+    "description": "Escape the double bumper arena, time three bag-clip snaps, dodge the scrap bot, ride the flagpole over the top and smash the glass tower to the finish."
   }
 ]

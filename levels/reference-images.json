@@ -83,6 +83,11 @@
                                 "sha256":  "00C373CECC1E2CE2F27441117756E1BE491FF3339A1BD81E8440FE9B97F81F93",
                                 "levelFile":  "Volcano Loop.json",
                                 "notes":  "Hand-sketch loop. Start top-right down the east straight, chomp book on the south bend, hands and squish cup up the west alley, boost-pad jump over the lava gap beside the erupting volcano, finish gate on the north straight."
+                            },
+                            {
+                                "filename":  "e9436e3e-77bf-49e1-a393-c5f8d9bb8e9d.jpg",
+                                "sha256":  "AFCC061196DCA88CABD6598A5F14E6B42E160820B82C7CA725B548BC44DFB3DD",
+                                "levelFile":  "Toybox Road.json"
                             }
                         ]
 }

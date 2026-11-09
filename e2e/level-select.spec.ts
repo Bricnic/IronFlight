@@ -128,7 +128,7 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(25);
+  await expect(page.locator(".track-card")).toHaveCount(26);
   expect(
     await page
       .locator("#level-select")
