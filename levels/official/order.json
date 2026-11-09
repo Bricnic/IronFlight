@@ -68,5 +68,10 @@
     "file": "Block Party.json",
     "thumbnail": "/tracks/block-party.png",
     "description": "Race the black road under the blue gate, dodge two dinos, thread tile chicanes, detour into the bumper arena, and smash two letter-block barricades."
+  },
+  {
+    "file": "Frostfire Pass.json",
+    "thumbnail": "/tracks/frostfire-pass.png",
+    "description": "Run the snowy U past a chomp book, smash letter blocks and burning coals, dodge a giant raptor and burst a triple snowman before the checkered finish."
   }
 ]

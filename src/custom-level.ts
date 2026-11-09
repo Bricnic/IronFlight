@@ -87,12 +87,14 @@ export const DUNGEON_PREFAB_KINDS = [
   ...DINOSAUR_PREFAB_KINDS,
 ] as const;
 export const LOOSE_BLOCK_PREFAB_KINDS = ["loose-blocks"] as const;
+export const BURNING_COALS_PREFAB_KINDS = ["burning-coals"] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,
   ...COMIC_PREFAB_KINDS,
   ...COURSE_PREFAB_KINDS,
   ...DUNGEON_PREFAB_KINDS,
   ...LOOSE_BLOCK_PREFAB_KINDS,
+  ...BURNING_COALS_PREFAB_KINDS,
   "checkpoint",
 ] as const;
 export type PrefabKind = (typeof PREFAB_KINDS)[number];
@@ -428,8 +430,9 @@ export function validateCustomLevel(input: unknown): CustomLevel {
       errors,
       p?.scale === undefined ||
         (DINOSAUR_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
-        (JAW_PREFAB_KINDS as readonly string[]).includes(p?.kind),
-      `prefab ${p?.id ?? i} scale is only supported on dinosaurs and jaw traps`,
+        (JAW_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
+        p?.kind === "snowman",
+      `prefab ${p?.id ?? i} scale is only supported on dinosaurs, jaw traps and snowmen`,
     );
   }
   for (const [i, item] of [spawn, ...solids, ...prefabs, ...checkpoints, ...collectibles, ...demolish, ...rings].entries()) {

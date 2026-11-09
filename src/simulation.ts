@@ -2,6 +2,7 @@ import { ComicPhysics } from "./comic-physics";
 import { DungeonPhysics } from "./dungeon-physics";
 import { GuidedPipe } from "./guided-pipe";
 import { LooseBlocks } from "./loose-blocks";
+import { BurningCoals } from "./burning-coals";
 import { Fairground, CAROUSEL_OMEGA } from "./fairground";
 import { GhostSwarm } from "./ghosts";
 import { AxeArray } from "./axes";
@@ -67,6 +68,7 @@ export class Simulation {
   comic!: ComicPhysics;
   dungeon!: DungeonPhysics;
   looseBlocks!: LooseBlocks;
+  burningCoals!: BurningCoals;
   guidedPipe!: GuidedPipe;
   fairground!: Fairground;
   ghosts!: GhostSwarm;
@@ -371,6 +373,7 @@ export class Simulation {
     this.comic = new ComicPhysics(this);
     this.dungeon = new DungeonPhysics(this);
     this.looseBlocks = new LooseBlocks(this);
+    this.burningCoals = new BurningCoals(this);
     this.guidedPipe = new GuidedPipe(this);
     this.fairground = new Fairground(this);
     this.ghosts = new GhostSwarm(this);
@@ -876,6 +879,7 @@ export class Simulation {
     this.comic.after();
     const screwHit = this.dungeon.after();
     this.looseBlocks.after();
+    this.burningCoals.after();
     const fairgroundHit = this.fairground.after(before);
     this.ghosts.attack();
     if (this.courseTrack !== this.pianoKeyTrack) {
@@ -997,7 +1001,8 @@ export class Simulation {
     for (const id of destroyed) {
       const prop = this.props.props.find((p) => p.definition.id === id);
       if (prop?.definition.kind === "snowman") {
-        this.breakRandomPart("snowman");
+        const hits = Math.max(1, Math.round(prop.definition.scale ?? 1));
+        for (let i = 0; i < hits; i++) this.breakRandomPart("snowman");
         const p = this.body.translation();
         const box = this.slide.flowAt(p);
         const side = box
@@ -1005,9 +1010,19 @@ export class Simulation {
           : 1;
         this.body.applyImpulse(
           {
-            x: (box?.dirz ?? 1) * side * this.body.mass() * 2,
+            x:
+              (box?.dirz ?? 1) *
+              side *
+              this.body.mass() *
+              2 *
+              (prop.definition.scale ?? 1),
             y: 0,
-            z: -(box?.dirx ?? 0) * side * this.body.mass() * 2,
+            z:
+              -(box?.dirx ?? 0) *
+              side *
+              this.body.mass() *
+              2 *
+              (prop.definition.scale ?? 1),
           },
           true,
         );
@@ -1468,6 +1483,7 @@ export class Simulation {
       comic: this.comic.snapshot(),
       dungeon: this.dungeon.snapshot(),
       looseBlocks: this.looseBlocks.snapshot(),
+      burningCoals: this.burningCoals.snapshot(),
       pipeRide: this.guidedPipe.snapshot(),
       fairground: this.fairground.snapshot(),
       ghosts: this.ghosts.snapshot(),

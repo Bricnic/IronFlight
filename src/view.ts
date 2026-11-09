@@ -6,6 +6,7 @@ import { CourseView } from "./course-view";
 import { LavaPartEffects } from "./lava-effects";
 import { PropView } from "./prop-view";
 import { LooseBlocksView } from "./loose-blocks-view";
+import { BurningCoalsView } from "./burning-coals-view";
 import * as T from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { deformGeometry } from "./damage";
@@ -37,6 +38,7 @@ export class GameView {
   readonly chase = new ChaseCamera(this.camera);
   private props = new PropView();
   private looseBlocks = new LooseBlocksView();
+  private burningCoals = new BurningCoalsView();
   private comic = new ComicView();
   private dungeon = new DungeonView();
   private fairground = new FairgroundView();
@@ -110,6 +112,7 @@ export class GameView {
       this.fire.smoke,
       this.props,
       this.looseBlocks,
+      this.burningCoals,
       this.lavaEffects,
       this.background,
     );
@@ -667,6 +670,12 @@ export class GameView {
   removeLooseBlockModel(id: string) {
     this.looseBlocks.removeModel(id);
   }
+  moveBurningCoalModel(id: string, dx: number, dy: number, dz: number) {
+    this.burningCoals.moveModel(id, dx, dy, dz);
+  }
+  removeBurningCoalModel(id: string) {
+    this.burningCoals.removeModel(id);
+  }
   stats() {
     const [lightA, lightB] = this.lightIntensities();
     return {
@@ -807,6 +816,7 @@ export class GameView {
     );
     this.props.update(s.props, s.time);
     this.looseBlocks.update(s.looseBlocks);
+    this.burningCoals.update(s.burningCoals, s.time);
     this.lavaEffects.update(s);
     for (const lava of this.lava) {
       lava.userData.time.value = s.time;
