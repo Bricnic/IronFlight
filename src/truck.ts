@@ -274,6 +274,7 @@ export function createTruck(materials: TruckMaterials = {}) {
     0.02,
   );
   windshield.rotation.x = 0.23;
+  windshield.name = "windshield";
   const backglass = rounded(
     roof,
     [1.95, 0.65, 0.04],
@@ -283,6 +284,7 @@ export function createTruck(materials: TruckMaterials = {}) {
     0.02,
   );
   backglass.rotation.x = -0.14;
+  backglass.name = "rear-window";
   const cage = new T.Group();
   cage.name = "roll-cage";
   roof.add(cage);
