@@ -212,6 +212,16 @@ export class PropView extends T.Group {
       tilt.add(buildGravestoneMesh(seed));
     } else if (prop.definition.kind === "pumpkin") {
       tilt.add(buildPumpkinMesh());
+    } else if (prop.definition.kind === "candy-apple") {
+      tilt.add(buildCandyAppleMesh());
+    } else if (prop.definition.kind === "gumdrop-boulder") {
+      tilt.add(buildGumdropBoulderMesh());
+    } else if (prop.definition.kind === "peppermint-barrel") {
+      tilt.add(buildPeppermintBarrelMesh());
+    } else if (prop.definition.kind === "chocolate-crate") {
+      tilt.add(buildChocolateCrateMesh());
+    } else if (prop.definition.kind === "cotton-candy-cart") {
+      tilt.add(buildCottonCandyCartMesh());
     } else if (prop.definition.kind === "skull") {
       tilt.add(buildSkullMesh(1));
     } else {
@@ -298,6 +308,294 @@ export function buildGravestoneMesh(seed = 0) {
     slab(new T.BoxGeometry(0.5, 0.3, 0.06), moss, 0.3, -0.45, 0.22);
   return group;
 }
+function candyPart(
+  group: T.Group,
+  geometry: T.BufferGeometry,
+  material: T.Material,
+  x = 0,
+  y = 0,
+  z = 0,
+) {
+  const m = new T.Mesh(geometry, material);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  m.receiveShadow = true;
+  group.add(m);
+  return m;
+}
+
+/** Glossy red apple on a stick (pumpkin precedent: light roller). */
+export function buildCandyAppleMesh() {
+  const group = new T.Group();
+  candyPart(
+    group,
+    new T.SphereGeometry(0.7, 24, 18),
+    new T.MeshStandardMaterial({ color: 0xc81f2e, roughness: 0.25 }),
+  );
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.06, 0.06, 0.9, 10),
+    new T.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.9 }),
+    0,
+    0.85,
+    0,
+  );
+  const leaf = candyPart(
+    group,
+    new T.SphereGeometry(0.16, 10, 8),
+    new T.MeshStandardMaterial({ color: 0x3fa34d, roughness: 0.7 }),
+    0.16,
+    1.15,
+    0,
+  );
+  leaf.scale.set(1.4, 0.4, 0.7);
+  const drizzle = candyPart(
+    group,
+    new T.TorusGeometry(0.45, 0.05, 8, 24),
+    new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }),
+    0,
+    0.35,
+    0,
+  );
+  drizzle.rotation.x = Math.PI / 2 - 0.3;
+  const sprinkleColors = [0xffd94d, 0x4fb8ff, 0xffffff, 0x9ae06a, 0xc86ae0];
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const s = candyPart(
+      group,
+      new T.BoxGeometry(0.12, 0.05, 0.05),
+      new T.MeshStandardMaterial({
+        color: sprinkleColors[i % sprinkleColors.length],
+        roughness: 0.4,
+      }),
+      Math.cos(a) * 0.62,
+      0.1 + (i % 3) * 0.2,
+      Math.sin(a) * 0.62,
+    );
+    s.rotation.y = a;
+  }
+  return group;
+}
+
+/** Sugar-crusted gumdrop boulder (skull precedent: bouncy roller). */
+export function buildGumdropBoulderMesh() {
+  const group = new T.Group();
+  const gum = new T.MeshStandardMaterial({
+    color: 0x2fae5f,
+    roughness: 0.35,
+  });
+  candyPart(group, new T.CylinderGeometry(0.55, 0.8, 0.9, 20), gum, 0, -0.2, 0);
+  candyPart(
+    group,
+    new T.SphereGeometry(0.55, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    gum,
+    0,
+    0.25,
+    0,
+  );
+  const sugar = new T.MeshStandardMaterial({
+    color: 0xf2fbff,
+    roughness: 0.2,
+  });
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    const dome = i % 2 === 0;
+    candyPart(
+      group,
+      new T.BoxGeometry(0.12, 0.12, 0.12),
+      sugar,
+      Math.cos(a) * (dome ? 0.35 : 0.72),
+      dome ? 0.55 + (i % 3) * 0.08 : -0.35 + (i % 3) * 0.25,
+      Math.sin(a) * (dome ? 0.35 : 0.72),
+    );
+  }
+  return group;
+}
+
+/** Wooden barrel with peppermint hoops (barrel precedent: heavy, ignites). */
+export function buildPeppermintBarrelMesh() {
+  const group = new T.Group();
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.5, 0.5, 1.4, 24),
+    new T.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 0.8 }),
+  );
+  const red = new T.MeshStandardMaterial({ color: 0xd42a2a, roughness: 0.4 });
+  const white = new T.MeshStandardMaterial({ color: 0xf6f2ea, roughness: 0.4 });
+  for (const y of [-0.45, 0, 0.45]) {
+    for (const [dy, m] of [[-0.05, red], [0.05, white]] as const) {
+      const hoop = candyPart(
+        group,
+        new T.TorusGeometry(0.51, 0.045, 8, 28),
+        m,
+        0,
+        y + dy,
+        0,
+      );
+      hoop.rotation.x = Math.PI / 2;
+    }
+  }
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.5, 0.5, 0.08, 24),
+    new T.MeshStandardMaterial({ color: 0xf6f2ea, roughness: 0.5 }),
+    0,
+    0.74,
+    0,
+  );
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.4;
+    candyPart(
+      group,
+      new T.BoxGeometry(0.18, 0.04, 0.1),
+      red,
+      Math.cos(a) * 0.28,
+      0.78,
+      Math.sin(a) * 0.28,
+    );
+  }
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.05, 0.05, 0.5, 10),
+    white,
+    0.2,
+    1.05,
+    0,
+  );
+  const hook = candyPart(
+    group,
+    new T.TorusGeometry(0.12, 0.05, 8, 16, Math.PI),
+    red,
+    0.2,
+    1.3,
+    0,
+  );
+  hook.rotation.z = Math.PI / 2;
+  return group;
+}
+
+/** Slatted crate of chocolate bars (gravestone precedent: breaks, rubble). */
+export function buildChocolateCrateMesh() {
+  const group = new T.Group();
+  const wood = new T.MeshStandardMaterial({ color: 0x6e4a26, roughness: 0.85 });
+  const darkWood = new T.MeshStandardMaterial({
+    color: 0x4e3319,
+    roughness: 0.9,
+  });
+  for (const sx of [-1, 1])
+    for (const sz of [-1, 1])
+      candyPart(
+        group,
+        new T.BoxGeometry(0.18, 1.8, 0.18),
+        darkWood,
+        sx * 0.61,
+        0,
+        sz * 0.61,
+      );
+  for (const y of [-0.45, 0.45]) {
+    for (const sz of [-1, 1])
+      candyPart(
+        group,
+        new T.BoxGeometry(1.4, 0.3, 0.1),
+        wood,
+        0,
+        y,
+        sz * 0.65,
+      );
+    for (const sx of [-1, 1])
+      candyPart(
+        group,
+        new T.BoxGeometry(0.1, 0.3, 1.4),
+        wood,
+        sx * 0.65,
+        y,
+        0,
+      );
+  }
+  candyPart(group, new T.BoxGeometry(1.4, 0.15, 1.4), darkWood, 0, -0.82, 0);
+  const choco = new T.MeshStandardMaterial({ color: 0x3d2312, roughness: 0.5 });
+  const foil = new T.MeshStandardMaterial({
+    color: 0xd5a869,
+    roughness: 0.35,
+    metalness: 0.5,
+  });
+  const bars: Array<[number, number, T.Material]> = [
+    [-0.32, -0.32, choco],
+    [0.32, -0.32, foil],
+    [-0.32, 0.32, foil],
+    [0.32, 0.32, choco],
+  ];
+  for (const [x, z, m] of bars) {
+    candyPart(group, new T.BoxGeometry(0.5, 0.25, 0.5), m, x, 0.55, z);
+    candyPart(group, new T.BoxGeometry(0.2, 0.1, 0.2), m, x, 0.72, z);
+  }
+  return group;
+}
+
+/** Pink vending cart with striped awning (trash precedent: spills puffs). */
+export function buildCottonCandyCartMesh() {
+  const group = new T.Group();
+  const pink = new T.MeshStandardMaterial({ color: 0xf2a6c8, roughness: 0.6 });
+  const white = new T.MeshStandardMaterial({
+    color: 0xfdf3f7,
+    roughness: 0.6,
+  });
+  candyPart(group, new T.BoxGeometry(2.0, 0.9, 1.2), pink, 0, -0.2, 0);
+  const wheel = new T.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.8 });
+  for (const sx of [-1, 1])
+    for (const sz of [-1, 1]) {
+      const w = candyPart(
+        group,
+        new T.CylinderGeometry(0.3, 0.3, 0.12, 16),
+        wheel,
+        sx * 0.7,
+        -0.6,
+        sz * 0.65,
+      );
+      w.rotation.x = Math.PI / 2;
+    }
+  const pole = new T.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 0.8 });
+  for (const sx of [-1, 1])
+    candyPart(
+      group,
+      new T.CylinderGeometry(0.06, 0.06, 0.7, 10),
+      pole,
+      sx * 0.8,
+      0.55,
+      -0.3,
+    );
+  for (let i = 0; i < 6; i++)
+    candyPart(
+      group,
+      new T.BoxGeometry(0.35, 0.08, 1.0),
+      i % 2 ? white : pink,
+      -0.875 + i * 0.35,
+      0.92,
+      -0.3,
+    );
+  const cone = new T.MeshStandardMaterial({ color: 0xd9a066, roughness: 0.8 });
+  const puff = new T.MeshStandardMaterial({ color: 0xff9ecb, roughness: 0.9 });
+  for (const sx of [-1, 1]) {
+    candyPart(
+      group,
+      new T.ConeGeometry(0.12, 0.35, 12),
+      cone,
+      sx * 0.4,
+      0.42,
+      0.4,
+    ).rotation.x = Math.PI;
+    candyPart(
+      group,
+      new T.SphereGeometry(0.22, 12, 10),
+      puff,
+      sx * 0.4,
+      0.72,
+      0.4,
+    );
+  }
+  return group;
+}
+
 export function gravestoneStats(group: T.Group) {
   let meshes = 0,
     triangles = 0;

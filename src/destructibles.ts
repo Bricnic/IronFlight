@@ -9,7 +9,12 @@ export type PropKind =
   | "gravestone"
   | "snowman"
   | "skull"
-  | "pumpkin";
+  | "pumpkin"
+  | "candy-apple"
+  | "gumdrop-boulder"
+  | "peppermint-barrel"
+  | "chocolate-crate"
+  | "cotton-candy-cart";
 export type PropDefinition = {
   id: string;
   kind: PropKind;
@@ -57,6 +62,11 @@ function propHeight(kind: string) {
   if (kind === "trash") return 0.65;
   if (kind === "skull") return 0.45;
   if (kind === "pumpkin") return 0.7;
+  if (kind === "candy-apple") return 0.7;
+  if (kind === "gumdrop-boulder") return 0.8;
+  if (kind === "peppermint-barrel") return 0.7;
+  if (kind === "chocolate-crate") return 0.9;
+  if (kind === "cotton-candy-cart") return 0.9;
   return 0.7;
 }
 export class Destructibles {
@@ -160,6 +170,29 @@ export class Destructibles {
               .setMass(8)
               .setFriction(0.5)
               .setRestitution(0.35),
+            body,
+          ),
+        );
+      else if (kind === "candy-apple" || kind === "gumdrop-boulder")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.ball(kind === "candy-apple" ? 0.7 : 0.8)
+              .setMass(kind === "candy-apple" ? 8 : 14)
+              .setFriction(0.5)
+              .setRestitution(0.35),
+            body,
+          ),
+        );
+      else if (kind === "chocolate-crate" || kind === "cotton-candy-cart")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cuboid(
+              kind === "chocolate-crate" ? 0.7 : 1.1,
+              0.9,
+              0.7,
+            )
+              .setMass(kind === "chocolate-crate" ? 120 : 40)
+              .setFriction(0.7),
             body,
           ),
         );
@@ -305,7 +338,11 @@ export class Destructibles {
           .cross(away)
           .multiplyScalar(prop.body.mass() * Math.min(9, closing) * 0.35);
         prop.body.applyTorqueImpulse(axis, true);
-        if (prop.definition.kind === "trash" && !prop.spilled) {
+        if (
+          (prop.definition.kind === "trash" ||
+            prop.definition.kind === "cotton-candy-cart") &&
+          !prop.spilled
+        ) {
           prop.spilled = true;
           this.spill(prop, time);
         }
@@ -317,7 +354,8 @@ export class Destructibles {
           this.freshlyDestroyed.push(prop.definition.id);
         }
         if (
-          prop.definition.kind === "gravestone" &&
+          (prop.definition.kind === "gravestone" ||
+            prop.definition.kind === "chocolate-crate") &&
           !prop.broken &&
           closing > 2.5
         ) {
@@ -326,7 +364,8 @@ export class Destructibles {
           this.freshlyDestroyed.push(prop.definition.id);
         }
         if (
-          prop.definition.kind === "barrel" &&
+          (prop.definition.kind === "barrel" ||
+            prop.definition.kind === "peppermint-barrel") &&
           relative.length() * 3.6 >= 90 - 1e-6
         )
           prop.burningUntil = Math.max(prop.burningUntil, time + 6);
@@ -337,6 +376,7 @@ export class Destructibles {
     return fireExposure;
   }
   private spill(prop: PropState, time: number) {
+    const cart = prop.definition.kind === "cotton-candy-cart";
     const position = prop.body.translation(),
       velocity = prop.body.linvel();
     const lid = this.world.createRigidBody(
@@ -353,7 +393,7 @@ export class Destructibles {
     prop.pieces.push({
       body: lid,
       size: [1.02, 0.08, 1.02],
-      color: 0x293431,
+      color: cart ? 0xff9ecb : 0x293431,
       lid: true,
     });
     for (let i = 0; i < 12; i++) {
@@ -389,7 +429,9 @@ export class Destructibles {
       prop.pieces.push({
         body,
         size,
-        color: [0xc2b9a6, 0x779288, 0xc59b64, 0xe2ded3][i % 4],
+        color: cart
+          ? [0xff9ecb, 0xffffff, 0x9ad6ff, 0xb5f0c8][i % 4]
+          : [0xc2b9a6, 0x779288, 0xc59b64, 0xe2ded3][i % 4],
       });
     }
   }
@@ -436,7 +478,9 @@ export class Destructibles {
         color:
           prop.definition.kind === "snowman"
             ? [0xffffff, 0xdeefff, 0xff8b28, 0x202830][i % 4]
-            : [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
+            : prop.definition.kind === "chocolate-crate"
+              ? [0x4a2c14, 0x6b4423, 0xd5a869, 0x8a5a2b][i]
+              : [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
       });
     }
   }

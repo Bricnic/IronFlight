@@ -1,5 +1,5 @@
 import type { Track } from "./tracks.ts";
-import { DUNGEON_PREFAB_KINDS, type DinosaurKind } from "./custom-level.ts";
+import { DUNGEON_PREFAB_KINDS, type CandyLethalKind, type DinosaurKind } from "./custom-level.ts";
 export type DungeonKind = (typeof DUNGEON_PREFAB_KINDS)[number];
 export type DungeonHazard = {
   id: string;
@@ -60,7 +60,7 @@ export function snapStriking(time: number) {
 }
 /** Strike-zone radius and downward slam per trap kind; the shut trap is instantly lethal. */
 export const DUNGEON_STRIKE: Record<
-  "hands" | "scissors" | "clippers" | "cup" | "clip",
+  "hands" | "scissors" | "clippers" | "cup" | "clip" | CandyLethalKind,
   { radius: number; slam: number }
 > = {
   hands: { radius: 8, slam: 4 },
@@ -68,6 +68,14 @@ export const DUNGEON_STRIKE: Record<
   clippers: { radius: 7.5, slam: 5 },
   cup: { radius: 7, slam: 6 },
   clip: { radius: 7, slam: 6 },
+  "jawbreaker-crusher": { radius: 7.5, slam: 5 },
+  "candy-snap-jaws": { radius: 7.5, slam: 4 },
+  "gummy-vice": { radius: 7, slam: 0 },
+  "peppermint-slammer": { radius: 7, slam: 6 },
+  "taffy-snapper": { radius: 7, slam: 4 },
+  "licorice-shears": { radius: 7, slam: 0 },
+  "sugar-chomper": { radius: 8, slam: 4 },
+  "caramel-crusher": { radius: 7, slam: 6 },
 };
 /** Scrap-bot stomp: moderate timed damage, never instantly lethal. */
 export const ROBOT_STOMP_RADIUS = 6;
@@ -90,6 +98,15 @@ export function robotLaserFiring(shifted: number) {
 }
 /** Cage furniture dimensions, shared by the collider builder and the artist. */
 export const CAGE = { w: 3, h: 4, d: 3 } as const;
+/** Candy-land decor furniture, shared by the collider builder and the artist. Solid but never lethal: candy kinds have no DUNGEON_STRIKE entry. */
+export const CANDY_ARCH = { postW: 1.6, postH: 10, postD: 1.6, postX: 6 } as const;
+export const CANDY_TRUNK = { w: 2, h: 4, d: 2 } as const;
+export const CANDY_STAND = { w: 4, h: 1.5, d: 4 } as const;
+export const CANDY_CHOCOLATE = { w: 12, h: 3, d: 1.6 } as const;
+export const CANDY_STALL = { w: 6, h: 4, d: 5 } as const;
+export const CANDY_LAMP = { w: 1.6, h: 7, d: 1.6 } as const;
+/** Candy press-trap gantry posts; cars drive between them under the moving stamp. */
+export const CANDY_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6 } as const;
 /**
  * Clipper crusher furniture, shared by colliders and models. Hands and
  * scissors have no furniture: the truck drives straight through their

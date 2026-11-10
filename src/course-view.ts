@@ -5,7 +5,6 @@ import {
   pbr,
   lavaMaterial,
   bulkLavaMaterial,
-  lavaHazeMaterial,
   magneticTileMaterial,
   slimeMaterial,
   textureLoadErrors,
@@ -258,18 +257,6 @@ export class CourseView extends T.Group {
     mesh.castShadow = !["ground", "road", "slime"].includes(s.kind);
     mesh.receiveShadow = true;
     mesh.name = s.id;
-    if (s.kind === "lava") {
-      geometry.computeBoundingBox();
-      const bb = geometry.boundingBox!;
-      const haze = new T.Mesh(
-        new T.PlaneGeometry(bb.max.x - bb.min.x, bb.max.z - bb.min.z),
-        lavaHazeMaterial(),
-      );
-      haze.rotation.x = -Math.PI / 2;
-      haze.position.set((bb.max.x + bb.min.x) / 2, bb.max.y + 1.5, (bb.max.z + bb.min.z) / 2);
-      haze.name = `${s.id}-haze`;
-      mesh.add(haze);
-    }
     if (s.kind === "container")
       for (let i = -3; i <= 3; i++) {
         const rib = new T.Mesh(

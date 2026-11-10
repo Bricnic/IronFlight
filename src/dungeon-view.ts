@@ -11,11 +11,13 @@ import {
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
-import { isDinosaur, isGauntletMachine } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isDinosaur, isGauntletMachine } from "./custom-level";
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
+import { buildCandyDecor } from "./candy-view";
+import { buildCandyLethal, poseCandyLethal } from "./candy-lethal-view";
 import { assignCandleLights, buildCandleLightPool, CANDLE_LIGHT_COUNT, type CandleSource } from "./candle-lights";
 import type { Simulation } from "./simulation";
 
@@ -76,6 +78,14 @@ const labelMessages: Record<string, [string, string]> = {
   flagpole: ["FLAG POLE", "RIDE UP / KNOCK THE FLAG"],
   robot: ["SCRAP BOT", "SWEEPING LASER / TIME THE STOMP"],
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
+  "jawbreaker-crusher": ["JAWBREAKER CRUSHER", "TIMED CRUSH / DRIVE BETWEEN"],
+  "candy-snap-jaws": ["CANDY SNAP JAWS", "TIMED BITE / DRIVE BETWEEN"],
+  "gummy-vice": ["GUMMY VICE", "TIMED SQUEEZE / DRIVE BETWEEN"],
+  "peppermint-slammer": ["PEPPERMINT SLAMMER", "TIMED STAMP / DRIVE BETWEEN"],
+  "taffy-snapper": ["TAFFY SNAPPER", "TIMED SNAP / DRIVE BETWEEN"],
+  "licorice-shears": ["LICORICE SHEARS", "TIMED BLADES / DRIVE BETWEEN"],
+  "sugar-chomper": ["SUGAR CHOMPER", "TIMED BITE / DRIVE BETWEEN"],
+  "caramel-crusher": ["CARAMEL CRUSHER", "TIMED PRESS / DRIVE BETWEEN"],
 };
 /** Upright billboard label anchored above the model at the given local height. */
 export function buildDungeonLabel(h: DungeonHazard, topY: number): T.Sprite {
@@ -849,6 +859,11 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "flagpole") {
     model.pivots = [buildFlagpole(root)];
     root.add(buildDungeonLabel(h, 36));
+  } else if (isCandyDecor(h.kind)) {
+    model.pivots = buildCandyDecor(root, h.kind);
+  } else if (isCandyLethal(h.kind)) {
+    model.pivots = buildCandyLethal(root, h.kind);
+    root.add(buildDungeonLabel(h, 14.5));
   } else if (isGauntletMachine(h.kind)) {
     model.machine = buildGauntletMachine(root, { ...h, kind: h.kind });
   } else if (isDinosaur(h.kind)) {
@@ -1036,6 +1051,8 @@ export class DungeonView extends T.Group {
           m.laser.rotation.y = robotLaserAngle(shifted);
           m.laser.visible = robotLaserFiring(shifted);
         }
+      } else if (isCandyLethal(m.h.kind)) {
+        poseCandyLethal(m.h.kind, m.pivots, open);
       } else if (m.h.kind === "candle") {
         m.pivots.forEach((f, i) => {
           const base = (f.userData.base as number | undefined) ?? 1;

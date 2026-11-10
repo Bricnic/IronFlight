@@ -26,6 +26,11 @@ export const PROP_PREFAB_KINDS = [
   "snowman",
   "skull",
   "pumpkin",
+  "candy-apple",
+  "gumdrop-boulder",
+  "peppermint-barrel",
+  "chocolate-crate",
+  "cotton-candy-cart",
 ] as const;
 export const COMIC_PREFAB_KINDS = [
   "book",
@@ -75,6 +80,34 @@ export type GauntletKind = (typeof GAUNTLET_PREFAB_KINDS)[number];
 export function isGauntletMachine(kind: string): kind is GauntletKind {
   return (GAUNTLET_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Candy-land decor: solid non-lethal scenery served through the dungeon pipeline. */
+export const CANDY_PREFAB_KINDS = [
+  "candy-cane-arch",
+  "gumdrop-tree",
+  "lollipop-stand",
+  "chocolate-barrier",
+  "cotton-candy-stall",
+  "gumball-lamp",
+] as const;
+export type CandyKind = (typeof CANDY_PREFAB_KINDS)[number];
+export function isCandyDecor(kind: string): kind is CandyKind {
+  return (CANDY_PREFAB_KINDS as readonly string[]).includes(kind);
+}
+/** Candy-land lethal traps: snap-cycle insta-kill hazards served through the dungeon pipeline. */
+export const CANDY_LETHAL_PREFAB_KINDS = [
+  "jawbreaker-crusher",
+  "candy-snap-jaws",
+  "gummy-vice",
+  "peppermint-slammer",
+  "taffy-snapper",
+  "licorice-shears",
+  "sugar-chomper",
+  "caramel-crusher",
+] as const;
+export type CandyLethalKind = (typeof CANDY_LETHAL_PREFAB_KINDS)[number];
+export function isCandyLethal(kind: string): kind is CandyLethalKind {
+  return (CANDY_LETHAL_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -90,6 +123,8 @@ export const DUNGEON_PREFAB_KINDS = [
   "flagpole",
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
+  ...CANDY_PREFAB_KINDS,
+  ...CANDY_LETHAL_PREFAB_KINDS,
 ] as const;
 export const LOOSE_BLOCK_PREFAB_KINDS = ["loose-blocks", "glass-pane"] as const;
 export const BURNING_COALS_PREFAB_KINDS = ["burning-coals"] as const;
