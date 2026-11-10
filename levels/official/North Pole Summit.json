@@ -1,0 +1,651 @@
+{
+  "name": "North Pole Summit",
+  "backgroundTemplate": "christmas-midnight",
+  "mode": "race",
+  "spawn": {
+    "x": -300,
+    "y": 2,
+    "z": -160,
+    "yaw": 1.5707963267948966
+  },
+  "checkpoints": [
+    {
+      "name": "Gate 1",
+      "x": -60,
+      "y": 2,
+      "yaw": 1.5707963267948966,
+      "z": -160
+    },
+    {
+      "name": "Gate 2",
+      "x": -60,
+      "y": 2,
+      "yaw": 0,
+      "z": -20
+    },
+    {
+      "name": "Gate 3",
+      "x": 100,
+      "y": 2,
+      "yaw": 1.5707963267948966,
+      "z": -20
+    },
+    {
+      "name": "Gate 4",
+      "x": 100,
+      "y": 2,
+      "yaw": 0,
+      "z": 120
+    },
+    {
+      "name": "Finish",
+      "x": 420,
+      "y": 2,
+      "yaw": 1.5707963267948966,
+      "z": 120
+    }
+  ],
+  "solids": [
+    {
+      "id": "np-ground",
+      "kind": "ground",
+      "x": 60,
+      "y": -0.65,
+      "z": -20,
+      "w": 860,
+      "h": 1.3,
+      "d": 420,
+      "color": 14674418,
+      "locked": true,
+      "texture": "snow_01"
+    },
+    {
+      "id": "np-road-0",
+      "kind": "road",
+      "yaw": 1.5707963267948966,
+      "x": -180,
+      "z": -160,
+      "y": 0.015,
+      "w": 12,
+      "h": 0.03,
+      "d": 252,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "np-trim-0-a",
+      "kind": "road",
+      "x": -180,
+      "y": 0.045,
+      "z": -165.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 252,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "np-trim-0-b",
+      "kind": "road",
+      "x": -180,
+      "y": 0.045,
+      "z": -154.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 252,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "np-road-1",
+      "kind": "road",
+      "yaw": 0,
+      "x": -60,
+      "z": -90,
+      "y": 0.019,
+      "w": 12,
+      "h": 0.03,
+      "d": 152,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "np-trim-1-a",
+      "kind": "road",
+      "x": -65.4,
+      "y": 0.049,
+      "z": -90,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 152,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "np-trim-1-b",
+      "kind": "road",
+      "x": -54.6,
+      "y": 0.049,
+      "z": -90,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 152,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "np-road-2",
+      "kind": "road",
+      "yaw": 1.5707963267948966,
+      "x": 20,
+      "z": -20,
+      "y": 0.023,
+      "w": 12,
+      "h": 0.03,
+      "d": 172,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "np-trim-2-a",
+      "kind": "road",
+      "x": 20,
+      "y": 0.053,
+      "z": -25.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 172,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "np-trim-2-b",
+      "kind": "road",
+      "x": 20,
+      "y": 0.053,
+      "z": -14.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 172,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "np-road-3",
+      "kind": "road",
+      "yaw": 0,
+      "x": 100,
+      "z": 50,
+      "y": 0.027,
+      "w": 12,
+      "h": 0.03,
+      "d": 152,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "np-trim-3-a",
+      "kind": "road",
+      "x": 94.6,
+      "y": 0.056999999999999995,
+      "z": 50,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 152,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "np-trim-3-b",
+      "kind": "road",
+      "x": 105.4,
+      "y": 0.056999999999999995,
+      "z": 50,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 152,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "np-road-4",
+      "kind": "road",
+      "yaw": 1.5707963267948966,
+      "x": 260,
+      "z": 120,
+      "y": 0.031,
+      "w": 12,
+      "h": 0.03,
+      "d": 332,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "np-trim-4-a",
+      "kind": "road",
+      "x": 260,
+      "y": 0.061,
+      "z": 114.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 332,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "np-trim-4-b",
+      "kind": "road",
+      "x": 260,
+      "y": 0.061,
+      "z": 125.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 332,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "np-pad-start",
+      "kind": "tile",
+      "x": -292.8,
+      "y": 0.045,
+      "z": -160,
+      "w": 9,
+      "h": 0.03,
+      "d": 8,
+      "yaw": 1.5707963267948966,
+      "color": 2062906
+    },
+    {
+      "id": "np-pad-finish",
+      "kind": "tile",
+      "x": 407.2,
+      "y": 0.061,
+      "z": 120,
+      "w": 9,
+      "h": 0.03,
+      "d": 8,
+      "yaw": 1.5707963267948966,
+      "color": 13115182
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "np-arch-spawn",
+      "kind": "christmas-light-arch",
+      "x": -300,
+      "y": 0,
+      "z": -160,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-arch-cp0",
+      "kind": "christmas-light-arch",
+      "x": -60,
+      "y": 0,
+      "z": -160,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-arch-cp1",
+      "kind": "christmas-light-arch",
+      "x": -60,
+      "y": 0,
+      "z": -20,
+      "yaw": 0
+    },
+    {
+      "id": "np-arch-cp2",
+      "kind": "christmas-light-arch",
+      "x": 100,
+      "y": 0,
+      "z": -20,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-arch-cp3",
+      "kind": "christmas-light-arch",
+      "x": 100,
+      "y": 0,
+      "z": 120,
+      "yaw": 0
+    },
+    {
+      "id": "np-arch-cp4",
+      "kind": "christmas-light-arch",
+      "x": 420,
+      "y": 0,
+      "z": 120,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-lethal-0",
+      "kind": "christmas-nutcracker",
+      "x": -180,
+      "y": 0,
+      "z": -160,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-lethal-1",
+      "kind": "christmas-ice-vice",
+      "x": -60,
+      "y": 0,
+      "z": -90,
+      "yaw": 0
+    },
+    {
+      "id": "np-lethal-2",
+      "kind": "christmas-toy-chomper",
+      "x": 20,
+      "y": 0,
+      "z": -20,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-lethal-3",
+      "kind": "christmas-ornament-slammer",
+      "x": 20,
+      "y": 0,
+      "z": -20,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-lethal-4",
+      "kind": "christmas-sleigh-crusher",
+      "x": 100,
+      "y": 0,
+      "z": 50,
+      "yaw": 0
+    },
+    {
+      "id": "np-lethal-5",
+      "kind": "christmas-tinsel-snapper",
+      "x": 260,
+      "y": 0,
+      "z": 120,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-wall-0",
+      "kind": "christmas-gift-wall",
+      "x": -180,
+      "y": 0,
+      "z": -168.8,
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "np-stall-0",
+      "kind": "christmas-market-stall",
+      "x": -180,
+      "y": 0,
+      "z": -144,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-decor-0-0",
+      "kind": "christmas-tree",
+      "x": -252,
+      "y": 0,
+      "z": -171,
+      "yaw": 0
+    },
+    {
+      "id": "np-decor-0-1",
+      "kind": "christmas-lantern",
+      "x": -120,
+      "y": 0,
+      "z": -149,
+      "yaw": 0.7
+    },
+    {
+      "id": "np-div-0",
+      "kind": "christmas-reindeer",
+      "x": -240,
+      "y": 0,
+      "z": -160
+    },
+    {
+      "id": "np-prop-0-0",
+      "kind": "christmas-ornament",
+      "x": -204,
+      "y": 0,
+      "z": -157,
+      "yaw": 0
+    },
+    {
+      "id": "np-prop-0-1",
+      "kind": "christmas-cracker-barrel",
+      "x": -132,
+      "y": 0,
+      "z": -163,
+      "yaw": 1.3
+    },
+    {
+      "id": "np-wall-1",
+      "kind": "christmas-gift-wall",
+      "x": -68.8,
+      "y": 0,
+      "z": -90,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-stall-1",
+      "kind": "christmas-market-stall",
+      "x": -44,
+      "y": 0,
+      "z": -90,
+      "yaw": 0
+    },
+    {
+      "id": "np-decor-1-0",
+      "kind": "christmas-lantern",
+      "x": -71,
+      "y": 0,
+      "z": -132,
+      "yaw": 1.4
+    },
+    {
+      "id": "np-decor-1-1",
+      "kind": "christmas-reindeer",
+      "x": -49,
+      "y": 0,
+      "z": -55,
+      "yaw": 2.0999999999999996
+    },
+    {
+      "id": "np-div-1",
+      "kind": "christmas-reindeer",
+      "x": -60,
+      "y": 0,
+      "z": -125
+    },
+    {
+      "id": "np-prop-1-0",
+      "kind": "christmas-snow-boulder",
+      "x": -57,
+      "y": 0,
+      "z": -104,
+      "yaw": 2.6
+    },
+    {
+      "id": "np-prop-1-1",
+      "kind": "christmas-gift-crate",
+      "x": -63,
+      "y": 0,
+      "z": -62,
+      "yaw": 3.9000000000000004
+    },
+    {
+      "id": "np-wall-2",
+      "kind": "christmas-gift-wall",
+      "x": 20,
+      "y": 0,
+      "z": -28.8,
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "np-stall-2",
+      "kind": "christmas-market-stall",
+      "x": 20,
+      "y": 0,
+      "z": -4,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-decor-2-0",
+      "kind": "christmas-reindeer",
+      "x": -28,
+      "y": 0,
+      "z": -31,
+      "yaw": 2.8
+    },
+    {
+      "id": "np-decor-2-1",
+      "kind": "christmas-tree",
+      "x": 60,
+      "y": 0,
+      "z": -9,
+      "yaw": 3.5
+    },
+    {
+      "id": "np-div-2",
+      "kind": "christmas-reindeer",
+      "x": -20,
+      "y": 0,
+      "z": -20
+    },
+    {
+      "id": "np-prop-2-0",
+      "kind": "christmas-cocoa-cart",
+      "x": 4,
+      "y": 0,
+      "z": -17,
+      "yaw": 5.2
+    },
+    {
+      "id": "np-prop-2-1",
+      "kind": "christmas-ornament",
+      "x": 52,
+      "y": 0,
+      "z": -23,
+      "yaw": 6.5
+    },
+    {
+      "id": "np-wall-3",
+      "kind": "christmas-gift-wall",
+      "x": 91.2,
+      "y": 0,
+      "z": 50,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-stall-3",
+      "kind": "christmas-market-stall",
+      "x": 116,
+      "y": 0,
+      "z": 50,
+      "yaw": 0
+    },
+    {
+      "id": "np-decor-3-0",
+      "kind": "christmas-tree",
+      "x": 89,
+      "y": 0,
+      "z": 8,
+      "yaw": 4.199999999999999
+    },
+    {
+      "id": "np-decor-3-1",
+      "kind": "christmas-lantern",
+      "x": 111,
+      "y": 0,
+      "z": 85,
+      "yaw": 4.8999999999999995
+    },
+    {
+      "id": "np-div-3",
+      "kind": "christmas-reindeer",
+      "x": 100,
+      "y": 0,
+      "z": 15
+    },
+    {
+      "id": "np-prop-3-0",
+      "kind": "christmas-cracker-barrel",
+      "x": 103,
+      "y": 0,
+      "z": 36,
+      "yaw": 7.800000000000001
+    },
+    {
+      "id": "np-prop-3-1",
+      "kind": "christmas-snow-boulder",
+      "x": 97,
+      "y": 0,
+      "z": 78,
+      "yaw": 9.1
+    },
+    {
+      "id": "np-wall-4",
+      "kind": "christmas-gift-wall",
+      "x": 260,
+      "y": 0,
+      "z": 111.2,
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "np-stall-4",
+      "kind": "christmas-market-stall",
+      "x": 260,
+      "y": 0,
+      "z": 136,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "np-decor-4-0",
+      "kind": "christmas-lantern",
+      "x": 164,
+      "y": 0,
+      "z": 109,
+      "yaw": 5.6
+    },
+    {
+      "id": "np-decor-4-1",
+      "kind": "christmas-reindeer",
+      "x": 340,
+      "y": 0,
+      "z": 131,
+      "yaw": 6.3
+    },
+    {
+      "id": "np-div-4",
+      "kind": "christmas-reindeer",
+      "x": 180,
+      "y": 0,
+      "z": 120
+    },
+    {
+      "id": "np-prop-4-0",
+      "kind": "christmas-gift-crate",
+      "x": 228,
+      "y": 0,
+      "z": 123,
+      "yaw": 10.4
+    },
+    {
+      "id": "np-prop-4-1",
+      "kind": "christmas-cocoa-cart",
+      "x": 324,
+      "y": 0,
+      "z": 117,
+      "yaw": 11.700000000000001
+    }
+  ],
+  "medals": {
+    "gold": 180,
+    "silver": 270,
+    "bronze": 396
+  },
+  "limit": 420
+}

@@ -31,6 +31,11 @@ export const PROP_PREFAB_KINDS = [
   "peppermint-barrel",
   "chocolate-crate",
   "cotton-candy-cart",
+  "christmas-ornament",
+  "christmas-snow-boulder",
+  "christmas-cracker-barrel",
+  "christmas-gift-crate",
+  "christmas-cocoa-cart",
 ] as const;
 export const COMIC_PREFAB_KINDS = [
   "book",
@@ -108,6 +113,34 @@ export type CandyLethalKind = (typeof CANDY_LETHAL_PREFAB_KINDS)[number];
 export function isCandyLethal(kind: string): kind is CandyLethalKind {
   return (CANDY_LETHAL_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Christmas decor: solid non-lethal scenery served through the dungeon pipeline. */
+export const CHRISTMAS_PREFAB_KINDS = [
+  "christmas-tree",
+  "christmas-light-arch",
+  "christmas-market-stall",
+  "christmas-lantern",
+  "christmas-gift-wall",
+  "christmas-reindeer",
+] as const;
+export type ChristmasKind = (typeof CHRISTMAS_PREFAB_KINDS)[number];
+export function isChristmasDecor(kind: string): kind is ChristmasKind {
+  return (CHRISTMAS_PREFAB_KINDS as readonly string[]).includes(kind);
+}
+/** Christmas lethal traps: snap-cycle insta-kill hazards served through the dungeon pipeline. */
+export const CHRISTMAS_LETHAL_PREFAB_KINDS = [
+  "christmas-nutcracker",
+  "christmas-ice-vice",
+  "christmas-toy-chomper",
+  "christmas-yeti-jaws",
+  "christmas-ornament-slammer",
+  "christmas-sleigh-crusher",
+  "christmas-icicle-shears",
+  "christmas-tinsel-snapper",
+] as const;
+export type ChristmasLethalKind = (typeof CHRISTMAS_LETHAL_PREFAB_KINDS)[number];
+export function isChristmasLethal(kind: string): kind is ChristmasLethalKind {
+  return (CHRISTMAS_LETHAL_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -125,6 +158,8 @@ export const DUNGEON_PREFAB_KINDS = [
   ...DINOSAUR_PREFAB_KINDS,
   ...CANDY_PREFAB_KINDS,
   ...CANDY_LETHAL_PREFAB_KINDS,
+  ...CHRISTMAS_PREFAB_KINDS,
+  ...CHRISTMAS_LETHAL_PREFAB_KINDS,
 ] as const;
 export const LOOSE_BLOCK_PREFAB_KINDS = ["loose-blocks", "glass-pane"] as const;
 export const BURNING_COALS_PREFAB_KINDS = ["burning-coals"] as const;

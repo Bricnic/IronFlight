@@ -1,0 +1,56 @@
+{
+  "name": "christmas-midnight",
+  "sky": { "top": 859190, "horizon": 2574963 },
+  "fog": { "color": 1320511, "near": 120, "far": 580 },
+  "sun": { "color": 9417960, "intensity": 0.9 },
+  "hemi": { "sky": 2372685, "ground": 658964, "intensity": 0.7 },
+  "env": 0.35,
+  "shapes": [
+    {
+      "kind": "mountain",
+      "count": 8,
+      "radius": 420,
+      "y": -6,
+      "size": [60, 120],
+      "seed": 501,
+      "color": 2832981
+    },
+    {
+      "kind": "tree",
+      "texture": "bark_brown_01",
+      "count": 18,
+      "radius": 280,
+      "y": 0,
+      "size": [6, 12],
+      "seed": 502,
+      "color": 2051386
+    },
+    {
+      "kind": "tent",
+      "count": 5,
+      "radius": 290,
+      "y": 0,
+      "size": [18, 28],
+      "seed": 503,
+      "color": 8006197
+    },
+    {
+      "kind": "moon",
+      "count": 1,
+      "radius": 480,
+      "y": 140,
+      "size": [26, 26],
+      "seed": 504,
+      "color": 15920344
+    }
+  ],
+  "clouds": {
+    "count": 10,
+    "y": [80, 140],
+    "radius": [240, 480],
+    "color": 5926804,
+    "opacity": 0.85,
+    "drift": 0.8,
+    "seed": 505
+  }
+}

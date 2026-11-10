@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isDinosaur, isGauntletMachine, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import {
@@ -32,6 +32,13 @@ import {
   CANDY_STALL,
   CANDY_LAMP,
   CANDY_PRESS,
+  CHRISTMAS_ARCH,
+  CHRISTMAS_TRUNK,
+  CHRISTMAS_STALL,
+  CHRISTMAS_LANTERN,
+  CHRISTMAS_GIFTS,
+  CHRISTMAS_DEER,
+  CHRISTMAS_PRESS,
   CLIPPER_BACK,
   WINDOW_GATE,
   type DungeonHazard,
@@ -86,7 +93,18 @@ export class DungeonPhysics {
       );
       m.colliders.push(c);
     };
-    if (isCandyLethal(h.kind)) {
+    if (isChristmasLethal(h.kind)) {
+      // Press traps keep solid side posts; the rest drive straight through
+      // like hands/scissors and kill via the shared snap-strike check.
+      if (
+        h.kind === "christmas-nutcracker" ||
+        h.kind === "christmas-ornament-slammer" ||
+        h.kind === "christmas-sleigh-crusher"
+      ) {
+        solid(CHRISTMAS_PRESS.postW, CHRISTMAS_PRESS.postH, CHRISTMAS_PRESS.postD, -CHRISTMAS_PRESS.postX, 0);
+        solid(CHRISTMAS_PRESS.postW, CHRISTMAS_PRESS.postH, CHRISTMAS_PRESS.postD, CHRISTMAS_PRESS.postX, 0);
+      }
+    } else if (isCandyLethal(h.kind)) {
       // Press traps keep solid side posts; the rest drive straight through
       // like hands/scissors and kill via the shared snap-strike check.
       if (
@@ -123,6 +141,22 @@ export class DungeonPhysics {
       );
     } else if (h.kind === "clippers") {
       solid(CLIPPER_BACK.w, CLIPPER_BACK.h, CLIPPER_BACK.d, 0, CLIPPER_BACK.z);
+    } else if (isChristmasDecor(h.kind)) {
+      // Bumpable scenery only: christmas decor kinds have no strike entry, so after() never fires.
+      if (h.kind === "christmas-light-arch") {
+        solid(CHRISTMAS_ARCH.postW, CHRISTMAS_ARCH.postH, CHRISTMAS_ARCH.postD, -CHRISTMAS_ARCH.postX, 0);
+        solid(CHRISTMAS_ARCH.postW, CHRISTMAS_ARCH.postH, CHRISTMAS_ARCH.postD, CHRISTMAS_ARCH.postX, 0);
+      } else if (h.kind === "christmas-tree") {
+        solid(CHRISTMAS_TRUNK.w, CHRISTMAS_TRUNK.h, CHRISTMAS_TRUNK.d, 0, 0);
+      } else if (h.kind === "christmas-market-stall") {
+        solid(CHRISTMAS_STALL.w, CHRISTMAS_STALL.h, CHRISTMAS_STALL.d, 0, 0);
+      } else if (h.kind === "christmas-lantern") {
+        solid(CHRISTMAS_LANTERN.w, CHRISTMAS_LANTERN.h, CHRISTMAS_LANTERN.d, 0, 0);
+      } else if (h.kind === "christmas-gift-wall") {
+        solid(CHRISTMAS_GIFTS.w, CHRISTMAS_GIFTS.h, CHRISTMAS_GIFTS.d, 0, 0);
+      } else if (h.kind === "christmas-reindeer") {
+        solid(CHRISTMAS_DEER.w, CHRISTMAS_DEER.h, CHRISTMAS_DEER.d, 0, 0);
+      }
     } else if (isCandyDecor(h.kind)) {
       // Bumpable scenery only: candy kinds have no strike entry, so after() never fires.
       if (h.kind === "candy-cane-arch") {

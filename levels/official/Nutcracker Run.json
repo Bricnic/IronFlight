@@ -1,0 +1,635 @@
+{
+  "name": "Nutcracker Run",
+  "backgroundTemplate": "christmas-midnight",
+  "mode": "race",
+  "spawn": {
+    "x": -260,
+    "y": 2,
+    "z": -120,
+    "yaw": 1.5707963267948966
+  },
+  "checkpoints": [
+    {
+      "name": "Gate 1",
+      "x": -60,
+      "y": 2,
+      "yaw": 1.5707963267948966,
+      "z": -120
+    },
+    {
+      "name": "Gate 2",
+      "x": -60,
+      "y": 2,
+      "yaw": 0,
+      "z": -20
+    },
+    {
+      "name": "Gate 3",
+      "x": 60,
+      "y": 2,
+      "yaw": 1.5707963267948966,
+      "z": -20
+    },
+    {
+      "name": "Gate 4",
+      "x": 60,
+      "y": 2,
+      "yaw": 0,
+      "z": 80
+    },
+    {
+      "name": "Finish",
+      "x": 340,
+      "y": 2,
+      "yaw": 1.5707963267948966,
+      "z": 80
+    }
+  ],
+  "solids": [
+    {
+      "id": "nr-ground",
+      "kind": "ground",
+      "x": 40,
+      "y": -0.65,
+      "z": -20,
+      "w": 740,
+      "h": 1.3,
+      "d": 340,
+      "color": 14674418,
+      "locked": true,
+      "texture": "snow_01"
+    },
+    {
+      "id": "nr-road-0",
+      "kind": "road",
+      "yaw": 1.5707963267948966,
+      "x": -160,
+      "z": -120,
+      "y": 0.015,
+      "w": 16,
+      "h": 0.03,
+      "d": 216,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "nr-trim-0-a",
+      "kind": "road",
+      "x": -160,
+      "y": 0.045,
+      "z": -127.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 216,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "nr-trim-0-b",
+      "kind": "road",
+      "x": -160,
+      "y": 0.045,
+      "z": -112.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 216,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "nr-road-1",
+      "kind": "road",
+      "yaw": 0,
+      "x": -60,
+      "z": -70,
+      "y": 0.019,
+      "w": 16,
+      "h": 0.03,
+      "d": 116,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "nr-trim-1-a",
+      "kind": "road",
+      "x": -67.4,
+      "y": 0.049,
+      "z": -70,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 116,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "nr-trim-1-b",
+      "kind": "road",
+      "x": -52.6,
+      "y": 0.049,
+      "z": -70,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 116,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "nr-road-2",
+      "kind": "road",
+      "yaw": 1.5707963267948966,
+      "x": 0,
+      "z": -20,
+      "y": 0.023,
+      "w": 16,
+      "h": 0.03,
+      "d": 136,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "nr-trim-2-a",
+      "kind": "road",
+      "x": 0,
+      "y": 0.053,
+      "z": -27.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 136,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "nr-trim-2-b",
+      "kind": "road",
+      "x": 0,
+      "y": 0.053,
+      "z": -12.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 136,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "nr-road-3",
+      "kind": "road",
+      "yaw": 0,
+      "x": 60,
+      "z": 30,
+      "y": 0.027,
+      "w": 16,
+      "h": 0.03,
+      "d": 116,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "nr-trim-3-a",
+      "kind": "road",
+      "x": 52.6,
+      "y": 0.056999999999999995,
+      "z": 30,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 116,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "nr-trim-3-b",
+      "kind": "road",
+      "x": 67.4,
+      "y": 0.056999999999999995,
+      "z": 30,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 116,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "nr-road-4",
+      "kind": "road",
+      "yaw": 1.5707963267948966,
+      "x": 200,
+      "z": 80,
+      "y": 0.031,
+      "w": 16,
+      "h": 0.03,
+      "d": 296,
+      "color": 2575203,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "nr-trim-4-a",
+      "kind": "road",
+      "x": 200,
+      "y": 0.061,
+      "z": 72.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 296,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "nr-trim-4-b",
+      "kind": "road",
+      "x": 200,
+      "y": 0.061,
+      "z": 87.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 296,
+      "yaw": 1.5707963267948966,
+      "color": 16777215
+    },
+    {
+      "id": "nr-pad-start",
+      "kind": "tile",
+      "x": -254,
+      "y": 0.045,
+      "z": -120,
+      "w": 12,
+      "h": 0.03,
+      "d": 8,
+      "yaw": 1.5707963267948966,
+      "color": 2062906
+    },
+    {
+      "id": "nr-pad-finish",
+      "kind": "tile",
+      "x": 328.8,
+      "y": 0.061,
+      "z": 80,
+      "w": 12,
+      "h": 0.03,
+      "d": 8,
+      "yaw": 1.5707963267948966,
+      "color": 13115182
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "nr-arch-spawn",
+      "kind": "christmas-light-arch",
+      "x": -260,
+      "y": 0,
+      "z": -120,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-arch-cp0",
+      "kind": "christmas-light-arch",
+      "x": -60,
+      "y": 0,
+      "z": -120,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-arch-cp1",
+      "kind": "christmas-light-arch",
+      "x": -60,
+      "y": 0,
+      "z": -20,
+      "yaw": 0
+    },
+    {
+      "id": "nr-arch-cp2",
+      "kind": "christmas-light-arch",
+      "x": 60,
+      "y": 0,
+      "z": -20,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-arch-cp3",
+      "kind": "christmas-light-arch",
+      "x": 60,
+      "y": 0,
+      "z": 80,
+      "yaw": 0
+    },
+    {
+      "id": "nr-arch-cp4",
+      "kind": "christmas-light-arch",
+      "x": 340,
+      "y": 0,
+      "z": 80,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-lethal-0",
+      "kind": "christmas-yeti-jaws",
+      "x": -160,
+      "y": 0,
+      "z": -120,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-lethal-1",
+      "kind": "christmas-icicle-shears",
+      "x": -60,
+      "y": 0,
+      "z": -70,
+      "yaw": 0
+    },
+    {
+      "id": "nr-lethal-2",
+      "kind": "christmas-sleigh-crusher",
+      "x": 60,
+      "y": 0,
+      "z": 30,
+      "yaw": 0
+    },
+    {
+      "id": "nr-lethal-3",
+      "kind": "christmas-toy-chomper",
+      "x": 200,
+      "y": 0,
+      "z": 80,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-wall-0",
+      "kind": "christmas-gift-wall",
+      "x": -160,
+      "y": 0,
+      "z": -130.8,
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "nr-stall-0",
+      "kind": "christmas-market-stall",
+      "x": -160,
+      "y": 0,
+      "z": -102,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-decor-0-0",
+      "kind": "christmas-tree",
+      "x": -220,
+      "y": 0,
+      "z": -133,
+      "yaw": 0
+    },
+    {
+      "id": "nr-decor-0-1",
+      "kind": "christmas-lantern",
+      "x": -110,
+      "y": 0,
+      "z": -107,
+      "yaw": 0.7
+    },
+    {
+      "id": "nr-div-0",
+      "kind": "christmas-reindeer",
+      "x": -210,
+      "y": 0,
+      "z": -120
+    },
+    {
+      "id": "nr-prop-0-0",
+      "kind": "christmas-ornament",
+      "x": -180,
+      "y": 0,
+      "z": -116,
+      "yaw": 0
+    },
+    {
+      "id": "nr-prop-0-1",
+      "kind": "christmas-cracker-barrel",
+      "x": -120,
+      "y": 0,
+      "z": -124,
+      "yaw": 1.3
+    },
+    {
+      "id": "nr-wall-1",
+      "kind": "christmas-gift-wall",
+      "x": -70.8,
+      "y": 0,
+      "z": -70,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-stall-1",
+      "kind": "christmas-market-stall",
+      "x": -42,
+      "y": 0,
+      "z": -70,
+      "yaw": 0
+    },
+    {
+      "id": "nr-decor-1-0",
+      "kind": "christmas-lantern",
+      "x": -73,
+      "y": 0,
+      "z": -100,
+      "yaw": 1.4
+    },
+    {
+      "id": "nr-decor-1-1",
+      "kind": "christmas-reindeer",
+      "x": -47,
+      "y": 0,
+      "z": -45,
+      "yaw": 2.0999999999999996
+    },
+    {
+      "id": "nr-div-1",
+      "kind": "christmas-reindeer",
+      "x": -60,
+      "y": 0,
+      "z": -95
+    },
+    {
+      "id": "nr-prop-1-0",
+      "kind": "christmas-snow-boulder",
+      "x": -56,
+      "y": 0,
+      "z": -80,
+      "yaw": 2.6
+    },
+    {
+      "id": "nr-prop-1-1",
+      "kind": "christmas-gift-crate",
+      "x": -64,
+      "y": 0,
+      "z": -50,
+      "yaw": 3.9000000000000004
+    },
+    {
+      "id": "nr-wall-2",
+      "kind": "christmas-gift-wall",
+      "x": 0,
+      "y": 0,
+      "z": -30.8,
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "nr-stall-2",
+      "kind": "christmas-market-stall",
+      "x": 0,
+      "y": 0,
+      "z": -2,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-decor-2-0",
+      "kind": "christmas-reindeer",
+      "x": -36,
+      "y": 0,
+      "z": -33,
+      "yaw": 2.8
+    },
+    {
+      "id": "nr-decor-2-1",
+      "kind": "christmas-tree",
+      "x": 30,
+      "y": 0,
+      "z": -7,
+      "yaw": 3.5
+    },
+    {
+      "id": "nr-div-2",
+      "kind": "christmas-reindeer",
+      "x": -30,
+      "y": 0,
+      "z": -20
+    },
+    {
+      "id": "nr-prop-2-0",
+      "kind": "christmas-cocoa-cart",
+      "x": -12,
+      "y": 0,
+      "z": -16,
+      "yaw": 5.2
+    },
+    {
+      "id": "nr-prop-2-1",
+      "kind": "christmas-ornament",
+      "x": 24,
+      "y": 0,
+      "z": -24,
+      "yaw": 6.5
+    },
+    {
+      "id": "nr-wall-3",
+      "kind": "christmas-gift-wall",
+      "x": 49.2,
+      "y": 0,
+      "z": 30,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-stall-3",
+      "kind": "christmas-market-stall",
+      "x": 78,
+      "y": 0,
+      "z": 30,
+      "yaw": 0
+    },
+    {
+      "id": "nr-decor-3-0",
+      "kind": "christmas-tree",
+      "x": 47,
+      "y": 0,
+      "z": 0,
+      "yaw": 4.199999999999999
+    },
+    {
+      "id": "nr-decor-3-1",
+      "kind": "christmas-lantern",
+      "x": 73,
+      "y": 0,
+      "z": 55,
+      "yaw": 4.8999999999999995
+    },
+    {
+      "id": "nr-div-3",
+      "kind": "christmas-reindeer",
+      "x": 60,
+      "y": 0,
+      "z": 5
+    },
+    {
+      "id": "nr-prop-3-0",
+      "kind": "christmas-cracker-barrel",
+      "x": 64,
+      "y": 0,
+      "z": 20,
+      "yaw": 7.800000000000001
+    },
+    {
+      "id": "nr-prop-3-1",
+      "kind": "christmas-snow-boulder",
+      "x": 56,
+      "y": 0,
+      "z": 50,
+      "yaw": 9.1
+    },
+    {
+      "id": "nr-wall-4",
+      "kind": "christmas-gift-wall",
+      "x": 200,
+      "y": 0,
+      "z": 69.2,
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "nr-stall-4",
+      "kind": "christmas-market-stall",
+      "x": 200,
+      "y": 0,
+      "z": 98,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "nr-decor-4-0",
+      "kind": "christmas-lantern",
+      "x": 116,
+      "y": 0,
+      "z": 67,
+      "yaw": 5.6
+    },
+    {
+      "id": "nr-decor-4-1",
+      "kind": "christmas-reindeer",
+      "x": 270,
+      "y": 0,
+      "z": 93,
+      "yaw": 6.3
+    },
+    {
+      "id": "nr-div-4",
+      "kind": "christmas-reindeer",
+      "x": 130,
+      "y": 0,
+      "z": 80
+    },
+    {
+      "id": "nr-prop-4-0",
+      "kind": "christmas-gift-crate",
+      "x": 172,
+      "y": 0,
+      "z": 84,
+      "yaw": 10.4
+    },
+    {
+      "id": "nr-prop-4-1",
+      "kind": "christmas-cocoa-cart",
+      "x": 256,
+      "y": 0,
+      "z": 76,
+      "yaw": 11.700000000000001
+    }
+  ],
+  "medals": {
+    "gold": 110,
+    "silver": 165,
+    "bronze": 242
+  },
+  "limit": 260
+}

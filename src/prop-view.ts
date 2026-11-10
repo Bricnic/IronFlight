@@ -222,6 +222,16 @@ export class PropView extends T.Group {
       tilt.add(buildChocolateCrateMesh());
     } else if (prop.definition.kind === "cotton-candy-cart") {
       tilt.add(buildCottonCandyCartMesh());
+    } else if (prop.definition.kind === "christmas-ornament") {
+      tilt.add(buildChristmasOrnamentMesh());
+    } else if (prop.definition.kind === "christmas-snow-boulder") {
+      tilt.add(buildChristmasSnowBoulderMesh());
+    } else if (prop.definition.kind === "christmas-cracker-barrel") {
+      tilt.add(buildChristmasCrackerBarrelMesh());
+    } else if (prop.definition.kind === "christmas-gift-crate") {
+      tilt.add(buildChristmasGiftCrateMesh());
+    } else if (prop.definition.kind === "christmas-cocoa-cart") {
+      tilt.add(buildChristmasCocoaCartMesh());
     } else if (prop.definition.kind === "skull") {
       tilt.add(buildSkullMesh(1));
     } else {
@@ -593,6 +603,284 @@ export function buildCottonCandyCartMesh() {
       0.4,
     );
   }
+  return group;
+}
+
+/** Glossy red bauble with gold cap (apple precedent: light roller). */
+export function buildChristmasOrnamentMesh() {
+  const group = new T.Group();
+  candyPart(
+    group,
+    new T.SphereGeometry(0.7, 24, 18),
+    new T.MeshStandardMaterial({ color: 0xc81f2e, roughness: 0.25 }),
+  );
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.16, 0.2, 0.25, 12),
+    new T.MeshStandardMaterial({ color: 0xd8a83a, roughness: 0.35, metalness: 0.5 }),
+    0,
+    0.78,
+    0,
+  );
+  const loop = candyPart(
+    group,
+    new T.TorusGeometry(0.12, 0.04, 8, 16),
+    new T.MeshStandardMaterial({ color: 0xd8a83a, roughness: 0.35, metalness: 0.5 }),
+    0,
+    1.0,
+    0,
+  );
+  loop.rotation.y = Math.PI / 2;
+  const band = candyPart(
+    group,
+    new T.TorusGeometry(0.62, 0.05, 8, 28),
+    new T.MeshStandardMaterial({ color: 0xd8a83a, roughness: 0.35, metalness: 0.5 }),
+    0,
+    0.1,
+    0,
+  );
+  band.rotation.x = Math.PI / 2;
+  const snow = new T.MeshStandardMaterial({ color: 0xf2f7fb, roughness: 0.4 });
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    candyPart(
+      group,
+      new T.BoxGeometry(0.3, 0.06, 0.06),
+      snow,
+      Math.cos(a) * 0.6,
+      -0.25 + (i % 2) * 0.5,
+      Math.sin(a) * 0.6,
+    ).rotation.y = a;
+  }
+  return group;
+}
+
+/** Packed snowball with ice crystals and pine sprigs (boulder precedent: bouncy roller). */
+export function buildChristmasSnowBoulderMesh() {
+  const group = new T.Group();
+  candyPart(
+    group,
+    new T.SphereGeometry(0.8, 22, 16),
+    new T.MeshStandardMaterial({ color: 0xe8eef4, roughness: 0.85 }),
+  );
+  const ice = new T.MeshStandardMaterial({ color: 0x9ad6ff, roughness: 0.2 });
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const shard = candyPart(
+      group,
+      new T.ConeGeometry(0.14, 0.55, 6),
+      ice,
+      Math.cos(a) * 0.72,
+      0.15 + (i % 3) * 0.2,
+      Math.sin(a) * 0.72,
+    );
+    shard.rotation.z = -Math.cos(a) * 0.7;
+    shard.rotation.x = Math.sin(a) * 0.7;
+  }
+  const pine = new T.MeshStandardMaterial({ color: 0x1f6b3a, roughness: 0.8 });
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2 + 0.5;
+    candyPart(
+      group,
+      new T.ConeGeometry(0.16, 0.5, 8),
+      pine,
+      Math.cos(a) * 0.6,
+      0.62,
+      Math.sin(a) * 0.6,
+    );
+  }
+  const lump = new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2 + 1.0;
+    candyPart(
+      group,
+      new T.SphereGeometry(0.18, 10, 8),
+      lump,
+      Math.cos(a) * 0.68,
+      -0.35,
+      Math.sin(a) * 0.68,
+    );
+  }
+  return group;
+}
+
+/** Wooden barrel stuffed with party crackers (barrel precedent: heavy, ignites). */
+export function buildChristmasCrackerBarrelMesh() {
+  const group = new T.Group();
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.5, 0.5, 1.4, 24),
+    new T.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.8 }),
+  );
+  const gold = new T.MeshStandardMaterial({ color: 0xd8a83a, roughness: 0.35, metalness: 0.5 });
+  for (const y of [-0.45, 0.45]) {
+    const hoop = candyPart(
+      group,
+      new T.TorusGeometry(0.51, 0.045, 8, 28),
+      gold,
+      0,
+      y,
+      0,
+    );
+    hoop.rotation.x = Math.PI / 2;
+  }
+  const paper = [
+    new T.MeshStandardMaterial({ color: 0xc81f2e, roughness: 0.5 }),
+    new T.MeshStandardMaterial({ color: 0x1f6b3a, roughness: 0.5 }),
+    new T.MeshStandardMaterial({ color: 0xd8a83a, roughness: 0.5 }),
+    new T.MeshStandardMaterial({ color: 0x3fa7ff, roughness: 0.5 }),
+  ];
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.4;
+    const tilt = new T.Group();
+    tilt.position.set(Math.cos(a) * 0.2, 0.7, Math.sin(a) * 0.2);
+    tilt.rotation.z = 0.35 * (i % 2 ? 1 : -1);
+    tilt.rotation.x = 0.25 * (i < 2 ? 1 : -1);
+    group.add(tilt);
+    candyPart(tilt, new T.CylinderGeometry(0.11, 0.11, 0.4, 12), paper[i], 0, 0.35, 0);
+    candyPart(tilt, new T.ConeGeometry(0.11, 0.22, 12), paper[i], 0, 0.66, 0);
+    const tail = candyPart(tilt, new T.ConeGeometry(0.11, 0.22, 12), paper[i], 0, 0.04, 0);
+    tail.rotation.x = Math.PI;
+  }
+  return group;
+}
+
+/** Slatted crate of wrapped presents (gravestone precedent: breaks, rubble). */
+export function buildChristmasGiftCrateMesh() {
+  const group = new T.Group();
+  const wood = new T.MeshStandardMaterial({ color: 0x6e4a26, roughness: 0.85 });
+  const darkWood = new T.MeshStandardMaterial({
+    color: 0x4e3319,
+    roughness: 0.9,
+  });
+  for (const sx of [-1, 1])
+    for (const sz of [-1, 1])
+      candyPart(
+        group,
+        new T.BoxGeometry(0.18, 1.8, 0.18),
+        darkWood,
+        sx * 0.61,
+        0,
+        sz * 0.61,
+      );
+  for (const y of [-0.45, 0.45]) {
+    for (const sz of [-1, 1])
+      candyPart(
+        group,
+        new T.BoxGeometry(1.4, 0.3, 0.1),
+        wood,
+        0,
+        y,
+        sz * 0.65,
+      );
+    for (const sx of [-1, 1])
+      candyPart(
+        group,
+        new T.BoxGeometry(0.1, 0.3, 1.4),
+        wood,
+        sx * 0.65,
+        y,
+        0,
+      );
+  }
+  candyPart(group, new T.BoxGeometry(1.4, 0.15, 1.4), darkWood, 0, -0.82, 0);
+  const papers = [0xc81f2e, 0x1f6b3a, 0x3fa7ff, 0xd8a83a];
+  const ribbon = new T.MeshStandardMaterial({ color: 0xf2f7fb, roughness: 0.4 });
+  const gifts: Array<[number, number, number]> = [
+    [-0.32, -0.32, 0],
+    [0.32, -0.32, 1],
+    [-0.32, 0.32, 2],
+    [0.32, 0.32, 3],
+  ];
+  for (const [x, z, ci] of gifts) {
+    candyPart(
+      group,
+      new T.BoxGeometry(0.5, 0.5, 0.5),
+      new T.MeshStandardMaterial({ color: papers[ci], roughness: 0.5 }),
+      x,
+      0.35,
+      z,
+    );
+    candyPart(group, new T.BoxGeometry(0.54, 0.12, 0.14), ribbon, x, 0.35, z);
+  }
+  return group;
+}
+
+/** Wooden cocoa cart with striped awning (trash precedent: spills litter). */
+export function buildChristmasCocoaCartMesh() {
+  const group = new T.Group();
+  const wood = new T.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.8 });
+  const green = new T.MeshStandardMaterial({ color: 0x1f6b3a, roughness: 0.6 });
+  const white = new T.MeshStandardMaterial({ color: 0xfdf3f7, roughness: 0.6 });
+  candyPart(group, new T.BoxGeometry(2.0, 0.9, 1.2), wood, 0, -0.2, 0);
+  const wheel = new T.MeshStandardMaterial({ color: 0x4e3319, roughness: 0.8 });
+  for (const sx of [-1, 1])
+    for (const sz of [-1, 1]) {
+      const w = candyPart(
+        group,
+        new T.CylinderGeometry(0.3, 0.3, 0.12, 16),
+        wheel,
+        sx * 0.7,
+        -0.6,
+        sz * 0.65,
+      );
+      w.rotation.x = Math.PI / 2;
+    }
+  const pole = new T.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 0.8 });
+  for (const sx of [-1, 1])
+    candyPart(
+      group,
+      new T.CylinderGeometry(0.06, 0.06, 0.7, 10),
+      pole,
+      sx * 0.8,
+      0.55,
+      -0.3,
+    );
+  for (let i = 0; i < 6; i++)
+    candyPart(
+      group,
+      new T.BoxGeometry(0.35, 0.08, 1.0),
+      i % 2 ? white : green,
+      -0.875 + i * 0.35,
+      0.92,
+      -0.3,
+    );
+  const mug = new T.MeshStandardMaterial({ color: 0xc81f2e, roughness: 0.5 });
+  const cocoa = new T.MeshStandardMaterial({ color: 0x4a2c14, roughness: 0.7 });
+  for (const sx of [-1, 1]) {
+    candyPart(
+      group,
+      new T.CylinderGeometry(0.14, 0.12, 0.3, 12),
+      mug,
+      sx * 0.5,
+      0.4,
+      0.4,
+    );
+    candyPart(
+      group,
+      new T.SphereGeometry(0.08, 10, 8),
+      cocoa,
+      sx * 0.5,
+      0.56,
+      0.4,
+    );
+  }
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.18, 0.18, 0.4, 12),
+    new T.MeshStandardMaterial({ color: 0xcfe8ff, roughness: 0.2, transparent: true, opacity: 0.6 }),
+    0,
+    0.45,
+    0.4,
+  );
+  candyPart(
+    group,
+    new T.SphereGeometry(0.1, 10, 8),
+    new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }),
+    0,
+    0.5,
+    0.4,
+  );
   return group;
 }
 

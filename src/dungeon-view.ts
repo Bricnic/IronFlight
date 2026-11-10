@@ -11,13 +11,15 @@ import {
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
-import { isCandyDecor, isCandyLethal, isDinosaur, isGauntletMachine } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine } from "./custom-level";
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
 import { buildCandyDecor } from "./candy-view";
+import { buildChristmasDecor } from "./christmas-view";
 import { buildCandyLethal, poseCandyLethal } from "./candy-lethal-view";
+import { buildChristmasLethal, poseChristmasLethal } from "./christmas-lethal-view";
 import { assignCandleLights, buildCandleLightPool, CANDLE_LIGHT_COUNT, type CandleSource } from "./candle-lights";
 import type { Simulation } from "./simulation";
 
@@ -86,6 +88,14 @@ const labelMessages: Record<string, [string, string]> = {
   "licorice-shears": ["LICORICE SHEARS", "TIMED BLADES / DRIVE BETWEEN"],
   "sugar-chomper": ["SUGAR CHOMPER", "TIMED BITE / DRIVE BETWEEN"],
   "caramel-crusher": ["CARAMEL CRUSHER", "TIMED PRESS / DRIVE BETWEEN"],
+  "christmas-nutcracker": ["NUTCRACKER", "TIMED CRUSH / DRIVE BETWEEN"],
+  "christmas-ice-vice": ["ICE VICE", "TIMED SQUEEZE / DRIVE BETWEEN"],
+  "christmas-toy-chomper": ["TOY CHOMPER", "TIMED BITE / DRIVE BETWEEN"],
+  "christmas-yeti-jaws": ["YETI JAWS", "TIMED BITE / DRIVE BETWEEN"],
+  "christmas-ornament-slammer": ["ORNAMENT SLAMMER", "TIMED STAMP / DRIVE BETWEEN"],
+  "christmas-sleigh-crusher": ["SLEIGH CRUSHER", "TIMED PRESS / DRIVE BETWEEN"],
+  "christmas-icicle-shears": ["ICICLE SHEARS", "TIMED BLADES / DRIVE BETWEEN"],
+  "christmas-tinsel-snapper": ["TINSEL SNAPPER", "TIMED SNAP / DRIVE BETWEEN"],
 };
 /** Upright billboard label anchored above the model at the given local height. */
 export function buildDungeonLabel(h: DungeonHazard, topY: number): T.Sprite {
@@ -861,6 +871,11 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     root.add(buildDungeonLabel(h, 36));
   } else if (isCandyDecor(h.kind)) {
     model.pivots = buildCandyDecor(root, h.kind);
+  } else if (isChristmasDecor(h.kind)) {
+    model.pivots = buildChristmasDecor(root, h.kind);
+  } else if (isChristmasLethal(h.kind)) {
+    model.pivots = buildChristmasLethal(root, h.kind);
+    root.add(buildDungeonLabel(h, 14.5));
   } else if (isCandyLethal(h.kind)) {
     model.pivots = buildCandyLethal(root, h.kind);
     root.add(buildDungeonLabel(h, 14.5));
@@ -1051,6 +1066,8 @@ export class DungeonView extends T.Group {
           m.laser.rotation.y = robotLaserAngle(shifted);
           m.laser.visible = robotLaserFiring(shifted);
         }
+      } else if (isChristmasLethal(m.h.kind)) {
+        poseChristmasLethal(m.h.kind, m.pivots, open);
       } else if (isCandyLethal(m.h.kind)) {
         poseCandyLethal(m.h.kind, m.pivots, open);
       } else if (m.h.kind === "candle") {

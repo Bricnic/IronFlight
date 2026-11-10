@@ -14,7 +14,12 @@ export type PropKind =
   | "gumdrop-boulder"
   | "peppermint-barrel"
   | "chocolate-crate"
-  | "cotton-candy-cart";
+  | "cotton-candy-cart"
+  | "christmas-ornament"
+  | "christmas-snow-boulder"
+  | "christmas-cracker-barrel"
+  | "christmas-gift-crate"
+  | "christmas-cocoa-cart";
 export type PropDefinition = {
   id: string;
   kind: PropKind;
@@ -67,6 +72,11 @@ function propHeight(kind: string) {
   if (kind === "peppermint-barrel") return 0.7;
   if (kind === "chocolate-crate") return 0.9;
   if (kind === "cotton-candy-cart") return 0.9;
+  if (kind === "christmas-ornament") return 0.7;
+  if (kind === "christmas-snow-boulder") return 0.8;
+  if (kind === "christmas-cracker-barrel") return 0.7;
+  if (kind === "christmas-gift-crate") return 0.9;
+  if (kind === "christmas-cocoa-cart") return 0.9;
   return 0.7;
 }
 export class Destructibles {
@@ -173,6 +183,16 @@ export class Destructibles {
             body,
           ),
         );
+      else if (kind === "christmas-ornament" || kind === "christmas-snow-boulder")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.ball(kind === "christmas-ornament" ? 0.7 : 0.8)
+              .setMass(kind === "christmas-ornament" ? 8 : 14)
+              .setFriction(0.5)
+              .setRestitution(0.35),
+            body,
+          ),
+        );
       else if (kind === "candy-apple" || kind === "gumdrop-boulder")
         colliders.push(
           world.createCollider(
@@ -180,6 +200,19 @@ export class Destructibles {
               .setMass(kind === "candy-apple" ? 8 : 14)
               .setFriction(0.5)
               .setRestitution(0.35),
+            body,
+          ),
+        );
+      else if (kind === "christmas-gift-crate" || kind === "christmas-cocoa-cart")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cuboid(
+              kind === "christmas-gift-crate" ? 0.7 : 1.1,
+              0.9,
+              0.7,
+            )
+              .setMass(kind === "christmas-gift-crate" ? 120 : 40)
+              .setFriction(0.7),
             body,
           ),
         );
@@ -340,7 +373,8 @@ export class Destructibles {
         prop.body.applyTorqueImpulse(axis, true);
         if (
           (prop.definition.kind === "trash" ||
-            prop.definition.kind === "cotton-candy-cart") &&
+            prop.definition.kind === "cotton-candy-cart" ||
+            prop.definition.kind === "christmas-cocoa-cart") &&
           !prop.spilled
         ) {
           prop.spilled = true;
@@ -355,7 +389,8 @@ export class Destructibles {
         }
         if (
           (prop.definition.kind === "gravestone" ||
-            prop.definition.kind === "chocolate-crate") &&
+            prop.definition.kind === "chocolate-crate" ||
+            prop.definition.kind === "christmas-gift-crate") &&
           !prop.broken &&
           closing > 2.5
         ) {
@@ -365,7 +400,8 @@ export class Destructibles {
         }
         if (
           (prop.definition.kind === "barrel" ||
-            prop.definition.kind === "peppermint-barrel") &&
+            prop.definition.kind === "peppermint-barrel" ||
+            prop.definition.kind === "christmas-cracker-barrel") &&
           relative.length() * 3.6 >= 90 - 1e-6
         )
           prop.burningUntil = Math.max(prop.burningUntil, time + 6);
@@ -377,6 +413,7 @@ export class Destructibles {
   }
   private spill(prop: PropState, time: number) {
     const cart = prop.definition.kind === "cotton-candy-cart";
+    const cocoa = prop.definition.kind === "christmas-cocoa-cart";
     const position = prop.body.translation(),
       velocity = prop.body.linvel();
     const lid = this.world.createRigidBody(
@@ -393,7 +430,7 @@ export class Destructibles {
     prop.pieces.push({
       body: lid,
       size: [1.02, 0.08, 1.02],
-      color: cart ? 0xff9ecb : 0x293431,
+      color: cart ? 0xff9ecb : cocoa ? 0x1f6b3a : 0x293431,
       lid: true,
     });
     for (let i = 0; i < 12; i++) {
@@ -431,7 +468,9 @@ export class Destructibles {
         size,
         color: cart
           ? [0xff9ecb, 0xffffff, 0x9ad6ff, 0xb5f0c8][i % 4]
-          : [0xc2b9a6, 0x779288, 0xc59b64, 0xe2ded3][i % 4],
+          : cocoa
+            ? [0x4a2c14, 0xffffff, 0x7a4a2b, 0xd8a83a][i % 4]
+            : [0xc2b9a6, 0x779288, 0xc59b64, 0xe2ded3][i % 4],
       });
     }
   }
@@ -480,7 +519,9 @@ export class Destructibles {
             ? [0xffffff, 0xdeefff, 0xff8b28, 0x202830][i % 4]
             : prop.definition.kind === "chocolate-crate"
               ? [0x4a2c14, 0x6b4423, 0xd5a869, 0x8a5a2b][i]
-              : [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
+              : prop.definition.kind === "christmas-gift-crate"
+                ? [0xc81f2e, 0x1f6b3a, 0xd8a83a, 0x6e4a26][i]
+                : [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
       });
     }
   }

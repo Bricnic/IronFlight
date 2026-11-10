@@ -1,5 +1,5 @@
 import type { Track } from "./tracks.ts";
-import { DUNGEON_PREFAB_KINDS, type CandyLethalKind, type DinosaurKind } from "./custom-level.ts";
+import { DUNGEON_PREFAB_KINDS, type CandyLethalKind, type ChristmasLethalKind, type DinosaurKind } from "./custom-level.ts";
 export type DungeonKind = (typeof DUNGEON_PREFAB_KINDS)[number];
 export type DungeonHazard = {
   id: string;
@@ -60,7 +60,7 @@ export function snapStriking(time: number) {
 }
 /** Strike-zone radius and downward slam per trap kind; the shut trap is instantly lethal. */
 export const DUNGEON_STRIKE: Record<
-  "hands" | "scissors" | "clippers" | "cup" | "clip" | CandyLethalKind,
+  "hands" | "scissors" | "clippers" | "cup" | "clip" | CandyLethalKind | ChristmasLethalKind,
   { radius: number; slam: number }
 > = {
   hands: { radius: 8, slam: 4 },
@@ -76,6 +76,14 @@ export const DUNGEON_STRIKE: Record<
   "licorice-shears": { radius: 7, slam: 0 },
   "sugar-chomper": { radius: 8, slam: 4 },
   "caramel-crusher": { radius: 7, slam: 6 },
+  "christmas-nutcracker": { radius: 7.5, slam: 5 },
+  "christmas-ice-vice": { radius: 7, slam: 0 },
+  "christmas-toy-chomper": { radius: 7.5, slam: 4 },
+  "christmas-yeti-jaws": { radius: 8, slam: 4 },
+  "christmas-ornament-slammer": { radius: 7, slam: 6 },
+  "christmas-sleigh-crusher": { radius: 7, slam: 6 },
+  "christmas-icicle-shears": { radius: 7, slam: 0 },
+  "christmas-tinsel-snapper": { radius: 7, slam: 4 },
 };
 /** Scrap-bot stomp: moderate timed damage, never instantly lethal. */
 export const ROBOT_STOMP_RADIUS = 6;
@@ -107,6 +115,15 @@ export const CANDY_STALL = { w: 6, h: 4, d: 5 } as const;
 export const CANDY_LAMP = { w: 1.6, h: 7, d: 1.6 } as const;
 /** Candy press-trap gantry posts; cars drive between them under the moving stamp. */
 export const CANDY_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6 } as const;
+/** Christmas decor furniture, shared by the collider builder and the artist. Solid but never lethal: christmas kinds have no DUNGEON_STRIKE entry. */
+export const CHRISTMAS_ARCH = { postW: 1.6, postH: 10, postD: 1.6, postX: 6.5 } as const;
+export const CHRISTMAS_TRUNK = { w: 2, h: 4, d: 2 } as const;
+export const CHRISTMAS_STALL = { w: 6, h: 4, d: 5 } as const;
+export const CHRISTMAS_LANTERN = { w: 1.6, h: 7, d: 1.6 } as const;
+export const CHRISTMAS_GIFTS = { w: 12, h: 3, d: 1.6 } as const;
+export const CHRISTMAS_DEER = { w: 4, h: 1.5, d: 4 } as const;
+/** Christmas press-trap gantry posts; cars drive between them under the moving stamp. */
+export const CHRISTMAS_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6.5 } as const;
 /**
  * Clipper crusher furniture, shared by colliders and models. Hands and
  * scissors have no furniture: the truck drives straight through their

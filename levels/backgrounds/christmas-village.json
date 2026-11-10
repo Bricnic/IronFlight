@@ -1,0 +1,55 @@
+{
+  "name": "christmas-village",
+  "sky": { "top": 3108788, "horizon": 13624306 },
+  "fog": { "color": 13624306, "near": 160, "far": 640 },
+  "sun": { "color": 16773848, "intensity": 3.2 },
+  "hemi": { "sky": 12441586, "ground": 5929612, "intensity": 1.8 },
+  "env": 0.75,
+  "shapes": [
+    {
+      "kind": "snow-peak",
+      "texture": "snow_01",
+      "count": 10,
+      "radius": 420,
+      "y": 0,
+      "size": [100, 200],
+      "seed": 401
+    },
+    {
+      "kind": "tree",
+      "texture": "bark_brown_01",
+      "count": 24,
+      "radius": 260,
+      "y": 0,
+      "size": [6, 12],
+      "seed": 402,
+      "color": 3042118
+    },
+    {
+      "kind": "tent",
+      "count": 6,
+      "radius": 300,
+      "y": 0,
+      "size": [18, 28],
+      "seed": 403,
+      "color": 11549230
+    },
+    {
+      "kind": "toy-block",
+      "count": 10,
+      "radius": 360,
+      "y": 0,
+      "size": [10, 20],
+      "seed": 404
+    }
+  ],
+  "clouds": {
+    "count": 14,
+    "y": [90, 150],
+    "radius": [240, 480],
+    "color": 16777215,
+    "opacity": 0.9,
+    "drift": 1.4,
+    "seed": 405
+  }
+}
