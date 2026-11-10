@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import * as T from "three";
 import { PARTS, deformGeometry } from "../src/damage";
+import { bodyBounds } from "../src/headlights";
 import { getVehicle, validateVehicles } from "../src/vehicles";
 import { createHovercraft, hovercraftStats } from "../src/hovercraft";
 import { createSnowGroomer, groomerStats } from "../src/snow-groomer";
@@ -72,6 +73,28 @@ for (const car of NEW_CARS) {
       stats.triangles,
       `${car.id} vs truck`,
     ).toBeGreaterThan(TRUCK_BASELINE.triangles * 0.4);
+  });
+
+  // Onboarding showroom-zoom gate (see the pipeline build prompt step 6):
+  // mirrors GameView.vehiclePreview's framing math (fov 55, 1.03 margin) so a
+  // stray far-flung mesh or an offset build fails here instead of shipping a
+  // wrong-zoom public/vehicles/<id>.png. Band calibrated over the full
+  // garage: healthy distances run 7.99 (sports-car) to 12.96 (stretch-limo);
+  // the hearse/fuel-tanker/golf-cart glitch previews implied ~25m.
+  it(`new-car ${car.id} frames a consistent showroom zoom`, () => {
+    const group = car.build();
+    group.updateMatrixWorld(true);
+    const bounds = bodyBounds(group, null);
+    const center = bounds.getCenter(new T.Vector3());
+    const radius = bounds.getSize(new T.Vector3()).length() / 2;
+    const distance =
+      (radius / Math.sin(T.MathUtils.degToRad(55 / 2))) * 1.03;
+    expect(distance, `${car.id} showroom distance`).toBeGreaterThanOrEqual(7);
+    expect(distance, `${car.id} showroom distance`).toBeLessThanOrEqual(14);
+    expect(Math.abs(center.x), `${car.id} center.x`).toBeLessThanOrEqual(1.5);
+    expect(center.y, `${car.id} center.y`).toBeGreaterThanOrEqual(-1.5);
+    expect(center.y, `${car.id} center.y`).toBeLessThanOrEqual(3);
+    expect(Math.abs(center.z), `${car.id} center.z`).toBeLessThanOrEqual(2.5);
   });
 }
 
