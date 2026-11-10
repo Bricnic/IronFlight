@@ -7,7 +7,7 @@ import { DT } from "../src/clock";
 import { TruckFireView } from "../src/truck-fire";
 import { createTruck } from "../src/truck";
 import * as T from "three";
-import { lavaMaterial } from "../src/materials";
+import { lavaHazeMaterial, lavaMaterial } from "../src/materials";
 beforeAll(initPhysics);
 
 for (const id of ["roof", "door-left", "wheel-fl", "chassis-rear", "hood"])
@@ -171,4 +171,14 @@ it("blends a close-range detail map over the base lava flow", () => {
     expect(shader.fragmentShader).toContain("texture2D(lavaDetail, flowUv * 7.0)");
     expect(shader.fragmentShader).toContain("smoothstep(25.0, 110.0, length(vViewPosition))");
   } finally { load.mockRestore(); }
+});
+
+it("floats a distance-faded haze sheet over lava", () => {
+  const mat = lavaHazeMaterial();
+  expect(mat.transparent).toBe(true);
+  expect(mat.depthWrite).toBe(false);
+  expect(mat.blending).toBe(T.AdditiveBlending);
+  expect(mat.vertexShader).toContain("hazeDist");
+  expect(mat.fragmentShader).toContain("smoothstep(20.0, 130.0, hazeDist)");
+  expect(mat.fragmentShader).toContain("hazeUv");
 });

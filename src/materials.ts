@@ -118,6 +118,40 @@ export function lavaMaterial() {
   return material;
 }
 
+/** Additive heat-haze sheet: transparent up close, warm glow at distance. */
+export function lavaHazeMaterial() {
+  return new T.ShaderMaterial({
+    uniforms: {
+      hazeColor: { value: new T.Color(0xff7a1a) },
+      hazeMax: { value: 0.5 },
+    },
+    vertexShader: `
+      varying vec2 hazeUv;
+      varying float hazeDist;
+      void main() {
+        hazeUv = uv;
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        hazeDist = length(mvPosition.xyz);
+        gl_Position = projectionMatrix * mvPosition;
+      }`,
+    fragmentShader: `
+      varying vec2 hazeUv;
+      varying float hazeDist;
+      uniform vec3 hazeColor;
+      uniform float hazeMax;
+      void main() {
+        float edge = smoothstep(0.0, 0.12, hazeUv.x) * smoothstep(1.0, 0.88, hazeUv.x)
+          * smoothstep(0.0, 0.12, hazeUv.y) * smoothstep(1.0, 0.88, hazeUv.y);
+        float a = hazeMax * smoothstep(20.0, 130.0, hazeDist) * edge;
+        gl_FragColor = vec4(hazeColor, a);
+      }`,
+    transparent: true,
+    depthWrite: false,
+    blending: T.AdditiveBlending,
+    side: T.DoubleSide,
+  });
+}
+
 function patternSurface(
   material: T.MeshStandardMaterial,
   pattern: string,
