@@ -83,6 +83,14 @@ for (const spec of TRACKS) {
     const pace = poly / level.medals.gold;
     expect(pace, `${spec.file} pace ${pace.toFixed(2)} u/s`).toBeGreaterThanOrEqual(PACE_LO);
     expect(pace, `${spec.file} pace ${pace.toFixed(2)} u/s`).toBeLessThanOrEqual(PACE_HI);
+    // Medal-independent ideal-line bounds: a tool-assisted perfect run down
+    // the middle of the track (no shortcuts) takes >= 45s, a slow steady
+    // finisher still beats 300s, and gold stays achievable by that ideal.
+    const perfect = poly / PACE_HI;
+    const steady = poly / PACE_LO;
+    expect(perfect, `${spec.file} perfect ${perfect.toFixed(1)}s`).toBeGreaterThanOrEqual(45);
+    expect(steady, `${spec.file} steady ${steady.toFixed(1)}s`).toBeLessThanOrEqual(300);
+    expect(perfect, `${spec.file} gold achievable`).toBeLessThanOrEqual(level.medals.gold);
     // Explicit vertical layers, no coplanar suspects.
     const { suspects } = scanLevel(level as unknown as ZLevel);
     expect(suspects, `${spec.file}: ${JSON.stringify(suspects)}`).toEqual([]);
