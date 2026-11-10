@@ -4,6 +4,7 @@ import { flameIntensity, type Hazard } from "./hazards";
 import {
   pbr,
   lavaMaterial,
+  bulkLavaMaterial,
   lavaHazeMaterial,
   magneticTileMaterial,
   slimeMaterial,
@@ -22,6 +23,7 @@ import { courseSolids, type CourseSolid } from "./course";
 import { BOOST_PAD } from "./custom-level";
 import { solidQuaternion } from "./euler";
 import { scaleSolidUVs, solidNeedsUVScaling } from "./solid-uv";
+import { createRockField, updateRockField, ROCK_SPAWN_RADIUS, type LavaLake, type LavaRock, type RockCover, type RockFocus } from "./lava-rocks";
 import { slideProfileY, type Checkpoint, type Track } from "./tracks";
 import type { Simulation } from "./simulation";
 import { buildToyCheckpoint } from "./toy-track-view";
@@ -70,11 +72,23 @@ export function defaultTextureFor(
   if (s.kind === "ground") return groundMapForTrack(trackId);
   return undefined;
 }
+/** Large-scale lava lakes (>100x100) use the procedural bulk material instead of image textures. */
+export function isBulkLava(s: { kind: string; w: number; d: number }) {
+  return s.kind === "lava" && s.w > 100 && s.d > 100;
+}
+
 export class CourseView extends T.Group {
   private key = "";
   private hazardTime = 0;
   private lavaMaterials: T.MeshStandardMaterial[] = [];
   private slimeMaterials: T.MeshStandardMaterial[] = [];
+  private rockField: LavaRock[] = [];
+  private rockLakes: LavaLake[] = [];
+  private rockMeshes = new Map<number, T.Mesh>();
+  private rockMaterial: T.MeshStandardMaterial | null = null;
+  private rockTime = 0;
+  private rockFocus: RockFocus | null = null;
+  private rockCovers: RockCover[] = [];
   private hazards: {
     h: Hazard;
     root: T.Group;
@@ -150,7 +164,9 @@ export class CourseView extends T.Group {
     );
     const mat =
       s.kind === "lava"
-        ? lavaMaterial()
+        ? isBulkLava(s)
+          ? bulkLavaMaterial()
+          : lavaMaterial()
         : s.texture
           ? pbr(s.texture, 1, { color: s.color, roughness: 0.9 })
           : cliff
@@ -209,7 +225,7 @@ export class CourseView extends T.Group {
           .translate(0, -s.h / 2, 0)
       : new T.BoxGeometry(s.w, s.h, s.d);
     if (solidNeedsUVScaling(s, stone, cliff)) {
-      scaleSolidUVs(geometry, s, s.kind === "ground" || !!s.footprint, s.kind === "lava" ? 9 : s.kind === "slime" ? 33 : 3);
+      scaleSolidUVs(geometry, s, s.kind === "ground" || !!s.footprint, s.kind === "lava" ? (isBulkLava(s) ? 33 : 9) : s.kind === "slime" ? 33 : 3);
     }
     if (
       stone ||
@@ -454,6 +470,33 @@ export class CourseView extends T.Group {
         mesh.material as T.MeshStandardMaterial;
   }
 
+  private updateRocks(sim: Simulation) {
+    if (this.rockLakes.length === 0 || !this.rockMaterial) return;
+    const dt = Math.min(Math.max(sim.time - this.rockTime, 0), 1);
+    this.rockTime = sim.time;
+    this.rockField = updateRockField(this.rockField, this.rockLakes, dt, sim.time, Math.random, this.rockFocus, this.rockCovers);
+    const live = new Set(this.rockField.map((r) => r.id));
+    for (const [id, mesh] of this.rockMeshes) {
+      if (!live.has(id)) {
+        this.remove(mesh);
+        mesh.geometry.dispose();
+        this.rockMeshes.delete(id);
+      }
+    }
+    for (const rock of this.rockField) {
+      let mesh = this.rockMeshes.get(rock.id);
+      if (!mesh) {
+        mesh = new T.Mesh(new T.IcosahedronGeometry(rock.scale, 0), this.rockMaterial);
+        mesh.rotation.z = rock.phase;
+        this.rockMeshes.set(rock.id, mesh);
+        this.add(mesh);
+      }
+      const lake = this.rockLakes[rock.lake] ?? this.rockLakes[0];
+      mesh.position.set(rock.x, lake.surfaceY + rock.y - rock.scale * 0.35, rock.z);
+      mesh.rotation.y = rock.angle;
+      mesh.scale.set(1, 0.7, 1);
+    }
+  }
   update(sim: Simulation, camera?: T.Camera) {
     this.hazardTime = sim.time;
     const run = sim.trackRun;
@@ -502,6 +545,12 @@ export class CourseView extends T.Group {
       this.wetSurfaces = [];
       this.lavaMaterials = [];
       this.slimeMaterials = [];
+      this.rockField = [];
+      this.rockLakes = [];
+      this.rockMeshes.clear();
+      this.rockMaterial = null;
+      this.rockFocus = null;
+      this.rockCovers = [];
       if (run) {
         const track = run.track;
         if (!track.legacy)
@@ -520,6 +569,20 @@ export class CourseView extends T.Group {
             this.meshes.push(mesh);
             if (s.kind === "loop") this.loopSegmentModels++;
           }
+        if (!track.legacy) {
+          this.rockLakes = courseSolids(track)
+            .filter(isBulkLava)
+            .map((s) => ({ x: s.x, z: s.z, w: s.w, d: s.d, surfaceY: s.y + s.h / 2 }));
+          this.rockFocus = { x: track.spawn.x, z: track.spawn.z, radius: ROCK_SPAWN_RADIUS };
+          const surface = Math.min(...this.rockLakes.map((l) => l.surfaceY));
+          this.rockCovers = courseSolids(track)
+            .filter((s) => s.kind !== "lava" && s.y + s.h / 2 > surface + 1)
+            .map((s) => ({ x: s.x, z: s.z, w: s.w, d: s.d }));
+          this.rockField = createRockField(this.rockLakes, Math.random, this.rockFocus, this.rockCovers);
+          this.rockMeshes.clear();
+          this.rockMaterial = new T.MeshStandardMaterial({ color: 0x14100e, roughness: 0.95, flatShading: true });
+          this.rockTime = sim.time;
+        }
         for (const h of courseHazards(track)) {
           const root = new T.Group();
           root.position.set(h.x, h.y, h.z);
@@ -796,11 +859,13 @@ export class CourseView extends T.Group {
     if (!run) return;
     for (const material of this.lavaMaterials) {
       material.userData.time.value = sim.time;
-      material.map!.offset.set((sim.time * 0.035) % 1, (sim.time * 0.025) % 1);
-      material.map!.updateMatrix();
+      if (!material.map) continue;
+      material.map.offset.set((sim.time * 0.035) % 1, (sim.time * 0.025) % 1);
+      material.map.updateMatrix();
     }
     for (const material of this.slimeMaterials)
       material.userData.time.value = sim.time;
+    this.updateRocks(sim);
     for (const model of this.hazards) {
       if (model.rotor) model.rotor.rotation.z = sim.hammerPhase;
       if (model.flames) {
