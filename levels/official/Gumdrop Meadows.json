@@ -1,0 +1,566 @@
+{
+  "name": "Gumdrop Meadows",
+  "backgroundTemplate": "candy-meadows",
+  "mode": "race",
+  "spawn": {
+    "x": -140,
+    "y": 2,
+    "z": -60,
+    "yaw": 1.570796
+  },
+  "checkpoints": [
+    {
+      "name": "Gate 1",
+      "x": -60,
+      "y": 2,
+      "yaw": 1.570796,
+      "z": -60
+    },
+    {
+      "name": "Gate 2",
+      "x": -60,
+      "y": 2,
+      "yaw": 0,
+      "z": 20
+    },
+    {
+      "name": "Gate 3",
+      "x": 20,
+      "y": 2,
+      "yaw": 1.570796,
+      "z": 20
+    },
+    {
+      "name": "Gate 4",
+      "x": 20,
+      "y": 2,
+      "yaw": 0,
+      "z": 100
+    },
+    {
+      "name": "Finish",
+      "x": 110,
+      "y": 2,
+      "yaw": 1.570796,
+      "z": 100
+    }
+  ],
+  "solids": [
+    {
+      "id": "gm-ground",
+      "kind": "ground",
+      "x": -15,
+      "y": -0.65,
+      "z": 20,
+      "w": 390,
+      "h": 1.3,
+      "d": 300,
+      "color": 8837530,
+      "locked": true,
+      "texture": "grass_ground"
+    },
+    {
+      "id": "gm-road-0",
+      "kind": "road",
+      "x": -102,
+      "y": 0.015,
+      "z": -60,
+      "w": 20,
+      "h": 0.03,
+      "d": 104,
+      "yaw": 1.570796,
+      "color": 15901896,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "gm-trim-0-a",
+      "kind": "road",
+      "x": -102,
+      "y": 0.045,
+      "z": -50.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 104,
+      "yaw": 1.570796,
+      "color": 16777215
+    },
+    {
+      "id": "gm-trim-0-b",
+      "kind": "road",
+      "x": -102,
+      "y": 0.045,
+      "z": -69.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 104,
+      "yaw": 1.570796,
+      "color": 16777215
+    },
+    {
+      "id": "gm-road-1",
+      "kind": "road",
+      "x": -60,
+      "y": 0.019,
+      "z": -20,
+      "w": 20,
+      "h": 0.03,
+      "d": 100,
+      "yaw": 0,
+      "color": 15901896,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "gm-trim-1-a",
+      "kind": "road",
+      "x": -69.4,
+      "y": 0.049,
+      "z": -20,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 100,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "gm-trim-1-b",
+      "kind": "road",
+      "x": -50.6,
+      "y": 0.049,
+      "z": -20,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 100,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "gm-road-2",
+      "kind": "road",
+      "x": -20,
+      "y": 0.023,
+      "z": 20,
+      "w": 20,
+      "h": 0.03,
+      "d": 100,
+      "yaw": 1.570796,
+      "color": 15901896,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "gm-trim-2-a",
+      "kind": "road",
+      "x": -20,
+      "y": 0.053,
+      "z": 29.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 100,
+      "yaw": 1.570796,
+      "color": 16777215
+    },
+    {
+      "id": "gm-trim-2-b",
+      "kind": "road",
+      "x": -20,
+      "y": 0.053,
+      "z": 10.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 100,
+      "yaw": 1.570796,
+      "color": 16777215
+    },
+    {
+      "id": "gm-road-3",
+      "kind": "road",
+      "x": 20,
+      "y": 0.027,
+      "z": 60,
+      "w": 20,
+      "h": 0.03,
+      "d": 100,
+      "yaw": 0,
+      "color": 15901896,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "gm-trim-3-a",
+      "kind": "road",
+      "x": 10.6,
+      "y": 0.057,
+      "z": 60,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 100,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "gm-trim-3-b",
+      "kind": "road",
+      "x": 29.4,
+      "y": 0.057,
+      "z": 60,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 100,
+      "yaw": 0,
+      "color": 16777215
+    },
+    {
+      "id": "gm-road-4",
+      "kind": "road",
+      "x": 71,
+      "y": 0.031,
+      "z": 100,
+      "w": 20,
+      "h": 0.03,
+      "d": 122,
+      "yaw": 1.570796,
+      "color": 15901896,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "gm-trim-4-a",
+      "kind": "road",
+      "x": 71,
+      "y": 0.061,
+      "z": 109.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 122,
+      "yaw": 1.570796,
+      "color": 16777215
+    },
+    {
+      "id": "gm-trim-4-b",
+      "kind": "road",
+      "x": 71,
+      "y": 0.061,
+      "z": 90.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 122,
+      "yaw": 1.570796,
+      "color": 16777215
+    },
+    {
+      "id": "gm-pad-start",
+      "kind": "tile",
+      "x": -135,
+      "y": 0.045,
+      "z": -60,
+      "w": 12,
+      "h": 0.03,
+      "d": 8,
+      "yaw": 1.570796,
+      "color": 3655793
+    },
+    {
+      "id": "gm-pad-finish",
+      "kind": "tile",
+      "x": 103,
+      "y": 0.061,
+      "z": 100,
+      "w": 12,
+      "h": 0.03,
+      "d": 8,
+      "yaw": 1.570796,
+      "color": 16777215
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "gm-lethal-0",
+      "kind": "candy-snap-jaws",
+      "x": -20,
+      "y": 0,
+      "z": 20,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-lethal-1",
+      "kind": "taffy-snapper",
+      "x": 65,
+      "y": 0,
+      "z": 100,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-arch-spawn",
+      "kind": "candy-cane-arch",
+      "x": -130,
+      "y": 0,
+      "z": -60,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-arch-cp0",
+      "kind": "candy-cane-arch",
+      "x": -60,
+      "y": 0,
+      "z": -60,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-arch-cp1",
+      "kind": "candy-cane-arch",
+      "x": -60,
+      "y": 0,
+      "z": 20,
+      "yaw": 0
+    },
+    {
+      "id": "gm-arch-cp2",
+      "kind": "candy-cane-arch",
+      "x": 20,
+      "y": 0,
+      "z": 20,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-arch-cp3",
+      "kind": "candy-cane-arch",
+      "x": 20,
+      "y": 0,
+      "z": 100,
+      "yaw": 0
+    },
+    {
+      "id": "gm-arch-cp4",
+      "kind": "candy-cane-arch",
+      "x": 110,
+      "y": 0,
+      "z": 100,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-decor-0-0",
+      "kind": "gumdrop-tree",
+      "x": -120,
+      "y": 0,
+      "z": -75.5,
+      "yaw": 0
+    },
+    {
+      "id": "gm-decor-0-1",
+      "kind": "gumball-lamp",
+      "x": -80,
+      "y": 0,
+      "z": -44.5,
+      "yaw": 0.7
+    },
+    {
+      "id": "gm-stall-0-0",
+      "kind": "cotton-candy-stall",
+      "x": -100,
+      "y": 0,
+      "z": -36,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-wall-0-0",
+      "kind": "chocolate-barrier",
+      "x": -100,
+      "y": 0,
+      "z": -72.6,
+      "yaw": 3.1416
+    },
+    {
+      "id": "gm-decor-1-0",
+      "kind": "gumball-lamp",
+      "x": -75.5,
+      "y": 0,
+      "z": -40,
+      "yaw": 1
+    },
+    {
+      "id": "gm-decor-1-1",
+      "kind": "lollipop-stand",
+      "x": -44.5,
+      "y": 0,
+      "z": 0,
+      "yaw": 1.7
+    },
+    {
+      "id": "gm-stall-1-0",
+      "kind": "cotton-candy-stall",
+      "x": -36,
+      "y": 0,
+      "z": -20,
+      "yaw": 0
+    },
+    {
+      "id": "gm-wall-1-0",
+      "kind": "chocolate-barrier",
+      "x": -72.6,
+      "y": 0,
+      "z": -20,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-decor-2-0",
+      "kind": "lollipop-stand",
+      "x": -40,
+      "y": 0,
+      "z": 4.5,
+      "yaw": 2
+    },
+    {
+      "id": "gm-decor-2-1",
+      "kind": "gumdrop-tree",
+      "x": 0,
+      "y": 0,
+      "z": 35.5,
+      "yaw": 2.7
+    },
+    {
+      "id": "gm-stall-2-0",
+      "kind": "cotton-candy-stall",
+      "x": -20,
+      "y": 0,
+      "z": 44,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-wall-2-0",
+      "kind": "chocolate-barrier",
+      "x": -20,
+      "y": 0,
+      "z": 7.4,
+      "yaw": 3.1416
+    },
+    {
+      "id": "gm-decor-3-0",
+      "kind": "gumdrop-tree",
+      "x": 4.5,
+      "y": 0,
+      "z": 40,
+      "yaw": 3
+    },
+    {
+      "id": "gm-decor-3-1",
+      "kind": "gumball-lamp",
+      "x": 35.5,
+      "y": 0,
+      "z": 80,
+      "yaw": 3.7
+    },
+    {
+      "id": "gm-stall-3-0",
+      "kind": "cotton-candy-stall",
+      "x": 44,
+      "y": 0,
+      "z": 60,
+      "yaw": 0
+    },
+    {
+      "id": "gm-wall-3-0",
+      "kind": "chocolate-barrier",
+      "x": 7.4,
+      "y": 0,
+      "z": 60,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-decor-4-0",
+      "kind": "gumball-lamp",
+      "x": 35,
+      "y": 0,
+      "z": 84.5,
+      "yaw": 4
+    },
+    {
+      "id": "gm-decor-4-1",
+      "kind": "lollipop-stand",
+      "x": 65,
+      "y": 0,
+      "z": 115.5,
+      "yaw": 4.7
+    },
+    {
+      "id": "gm-decor-4-2",
+      "kind": "gumdrop-tree",
+      "x": 95,
+      "y": 0,
+      "z": 84.5,
+      "yaw": 5.4
+    },
+    {
+      "id": "gm-stall-4-0",
+      "kind": "cotton-candy-stall",
+      "x": 65,
+      "y": 0,
+      "z": 124,
+      "yaw": 1.5708
+    },
+    {
+      "id": "gm-wall-4-0",
+      "kind": "chocolate-barrier",
+      "x": 65,
+      "y": 0,
+      "z": 87.4,
+      "yaw": 3.1416
+    },
+    {
+      "id": "gm-div-0-0.5",
+      "kind": "lollipop-stand",
+      "x": -100,
+      "y": 0,
+      "z": -60
+    },
+    {
+      "id": "gm-div-3-0.5",
+      "kind": "lollipop-stand",
+      "x": 20,
+      "y": 0,
+      "z": 60
+    },
+    {
+      "id": "gm-prop-0",
+      "kind": "candy-apple",
+      "x": -116,
+      "y": 0,
+      "z": -64,
+      "yaw": 1.3
+    },
+    {
+      "id": "gm-prop-1",
+      "kind": "peppermint-barrel",
+      "x": -63,
+      "y": 0,
+      "z": -12,
+      "yaw": 2.6
+    },
+    {
+      "id": "gm-prop-2",
+      "kind": "candy-apple",
+      "x": -40,
+      "y": 0,
+      "z": 25,
+      "yaw": 3.9
+    },
+    {
+      "id": "gm-prop-3",
+      "kind": "gumdrop-boulder",
+      "x": 23,
+      "y": 0,
+      "z": 76,
+      "yaw": 5.2
+    },
+    {
+      "id": "gm-prop-4",
+      "kind": "peppermint-barrel",
+      "x": 47,
+      "y": 0,
+      "z": 95,
+      "yaw": 0.22
+    }
+  ],
+  "medals": {
+    "gold": 50,
+    "silver": 75,
+    "bronze": 110
+  },
+  "limit": 150
+}

@@ -83,5 +83,30 @@
     "file": "Toybox Road.json",
     "thumbnail": "/tracks/toybox-road.png",
     "description": "Escape the double bumper arena, time three bag-clip snaps, dodge the scrap bot, ride the flagpole over the top and smash the glass tower to the finish."
+  },
+  {
+    "file": "Gumdrop Meadows.json",
+    "thumbnail": "/tracks/gumdrop-meadows.png",
+    "description": "Staircase sprint on the wide pink road: thread candy-cane arches, smash candy apples and peppermint barrels, and time two snap jaws. Gold in fifty seconds."
+  },
+  {
+    "file": "Lollipop Loop.json",
+    "thumbnail": "/tracks/lollipop-loop.png",
+    "description": "Sweep the mint loop past lollipop dividers, smash chocolate crates and the cotton-candy cart, and time the gummy vice, shears and sugar chomper."
+  },
+  {
+    "file": "Peppermint Pass.json",
+    "thumbnail": "/tracks/peppermint-pass.png",
+    "description": "Night serpentine on red peppermint: brave the jawbreaker crusher, peppermint slammer, snap jaws and caramel crusher between gumdrop boulder fields."
+  },
+  {
+    "file": "Chocolate Chasm.json",
+    "thumbnail": "/tracks/chocolate-chasm.png",
+    "description": "Zigzag the narrow chocolate road, slalom two chocolate-bar chicanes, and survive five snap traps from chomper to jawbreaker crusher."
+  },
+  {
+    "file": "Sugar Rush Summit.json",
+    "thumbnail": "/tracks/sugar-rush-summit.png",
+    "description": "The midnight finale: a narrow glowing-violet serpentine with six press and snap traps and eight candy wrecks between you and the gold finish."
   }
 ]

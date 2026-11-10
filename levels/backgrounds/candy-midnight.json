@@ -1,0 +1,54 @@
+{
+  "name": "candy-midnight",
+  "sky": { "top": 1774656, "horizon": 16743096 },
+  "fog": { "color": 4860526, "near": 120, "far": 580 },
+  "sun": { "color": 10467583, "intensity": 0.9 },
+  "hemi": { "sky": 3811950, "ground": 854558, "intensity": 0.7 },
+  "env": 0.35,
+  "shapes": [
+    {
+      "kind": "mountain",
+      "count": 8,
+      "radius": 420,
+      "y": -6,
+      "size": [60, 120],
+      "seed": 301,
+      "color": 5978764
+    },
+    {
+      "kind": "toy-block",
+      "count": 12,
+      "radius": 300,
+      "y": 0,
+      "size": [12, 24],
+      "seed": 302
+    },
+    {
+      "kind": "tent",
+      "count": 5,
+      "radius": 280,
+      "y": 0,
+      "size": [20, 30],
+      "seed": 303,
+      "color": 16762077
+    },
+    {
+      "kind": "moon",
+      "count": 1,
+      "radius": 480,
+      "y": 140,
+      "size": [26, 26],
+      "seed": 304,
+      "color": 16748456
+    }
+  ],
+  "clouds": {
+    "count": 10,
+    "y": [80, 140],
+    "radius": [240, 480],
+    "color": 10479823,
+    "opacity": 0.85,
+    "drift": 0.8,
+    "seed": 305
+  }
+}

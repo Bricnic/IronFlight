@@ -30,7 +30,7 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-17).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-22).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
@@ -48,6 +48,11 @@ it("steps to the next and previous level with wraparound", () => {
     "Frostfire Pass",
     "Volcano Loop",
     "Toybox Road",
+    "Gumdrop Meadows",
+    "Lollipop Loop",
+    "Peppermint Pass",
+    "Chocolate Chasm",
+    "Sugar Rush Summit",
   ]);
   expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
   expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
@@ -85,12 +90,22 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:volcano-loop", -1)).toBe("custom:frostfire-pass");
   expect(stepTrackId("custom:volcano-loop", 1)).toBe("custom:toybox-road");
   expect(stepTrackId("custom:toybox-road", -1)).toBe("custom:volcano-loop");
-  expect(stepTrackId("custom:toybox-road", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:toybox-road");
+  expect(stepTrackId("custom:toybox-road", 1)).toBe("custom:gumdrop-meadows");
+  expect(stepTrackId("custom:gumdrop-meadows", -1)).toBe("custom:toybox-road");
+  expect(stepTrackId("custom:gumdrop-meadows", 1)).toBe("custom:lollipop-loop");
+  expect(stepTrackId("custom:lollipop-loop", -1)).toBe("custom:gumdrop-meadows");
+  expect(stepTrackId("custom:lollipop-loop", 1)).toBe("custom:peppermint-pass");
+  expect(stepTrackId("custom:peppermint-pass", -1)).toBe("custom:lollipop-loop");
+  expect(stepTrackId("custom:peppermint-pass", 1)).toBe("custom:chocolate-chasm");
+  expect(stepTrackId("custom:chocolate-chasm", -1)).toBe("custom:peppermint-pass");
+  expect(stepTrackId("custom:chocolate-chasm", 1)).toBe("custom:sugar-rush-summit");
+  expect(stepTrackId("custom:sugar-rush-summit", -1)).toBe("custom:chocolate-chasm");
+  expect(stepTrackId("custom:sugar-rush-summit", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:sugar-rush-summit");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:toybox-road");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:sugar-rush-summit");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:toybox-road");
+  expect(stepTrackId(undefined, -1)).toBe("custom:sugar-rush-summit");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

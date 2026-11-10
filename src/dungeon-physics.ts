@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isDinosaur, isGauntletMachine, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isDinosaur, isGauntletMachine, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import {
@@ -25,6 +25,13 @@ import {
   robotLaserAngle,
   robotLaserFiring,
   CAGE,
+  CANDY_ARCH,
+  CANDY_TRUNK,
+  CANDY_STAND,
+  CANDY_CHOCOLATE,
+  CANDY_STALL,
+  CANDY_LAMP,
+  CANDY_PRESS,
   CLIPPER_BACK,
   WINDOW_GATE,
   type DungeonHazard,
@@ -79,7 +86,18 @@ export class DungeonPhysics {
       );
       m.colliders.push(c);
     };
-    if (isGauntletMachine(h.kind)) {
+    if (isCandyLethal(h.kind)) {
+      // Press traps keep solid side posts; the rest drive straight through
+      // like hands/scissors and kill via the shared snap-strike check.
+      if (
+        h.kind === "jawbreaker-crusher" ||
+        h.kind === "peppermint-slammer" ||
+        h.kind === "caramel-crusher"
+      ) {
+        solid(CANDY_PRESS.postW, CANDY_PRESS.postH, CANDY_PRESS.postD, -CANDY_PRESS.postX, 0);
+        solid(CANDY_PRESS.postW, CANDY_PRESS.postH, CANDY_PRESS.postD, CANDY_PRESS.postX, 0);
+      }
+    } else if (isGauntletMachine(h.kind)) {
       this.gauntlet.add(m.h);
       if (h.kind === "screw-field") solid(SCREW_FIELD_SIZE, 1.2, SCREW_FIELD_SIZE, 0, 0, -1.2);
       if (h.kind === "volcano")
@@ -105,6 +123,22 @@ export class DungeonPhysics {
       );
     } else if (h.kind === "clippers") {
       solid(CLIPPER_BACK.w, CLIPPER_BACK.h, CLIPPER_BACK.d, 0, CLIPPER_BACK.z);
+    } else if (isCandyDecor(h.kind)) {
+      // Bumpable scenery only: candy kinds have no strike entry, so after() never fires.
+      if (h.kind === "candy-cane-arch") {
+        solid(CANDY_ARCH.postW, CANDY_ARCH.postH, CANDY_ARCH.postD, -CANDY_ARCH.postX, 0);
+        solid(CANDY_ARCH.postW, CANDY_ARCH.postH, CANDY_ARCH.postD, CANDY_ARCH.postX, 0);
+      } else if (h.kind === "gumdrop-tree") {
+        solid(CANDY_TRUNK.w, CANDY_TRUNK.h, CANDY_TRUNK.d, 0, 0);
+      } else if (h.kind === "lollipop-stand") {
+        solid(CANDY_STAND.w, CANDY_STAND.h, CANDY_STAND.d, 0, 0);
+      } else if (h.kind === "chocolate-barrier") {
+        solid(CANDY_CHOCOLATE.w, CANDY_CHOCOLATE.h, CANDY_CHOCOLATE.d, 0, 0);
+      } else if (h.kind === "cotton-candy-stall") {
+        solid(CANDY_STALL.w, CANDY_STALL.h, CANDY_STALL.d, 0, 0);
+      } else if (h.kind === "gumball-lamp") {
+        solid(CANDY_LAMP.w, CANDY_LAMP.h, CANDY_LAMP.d, 0, 0);
+      }
     }
   }
   /** Live editing: shift one hazard and its furniture by delta. */
