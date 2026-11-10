@@ -66,6 +66,12 @@ export function lavaMaterial() {
   const map = loader.load("/textures/custom-lava.jfif", undefined, undefined, () => {
     failures.add("/textures/custom-lava.jfif");
   });
+  const detail = loader.load("/textures/custom-lava-detail.png", undefined, undefined, () => {
+    failures.add("/textures/custom-lava-detail.png");
+  });
+  detail.wrapS = detail.wrapT = T.RepeatWrapping;
+  detail.colorSpace = T.SRGBColorSpace;
+  detail.anisotropy = 8;
   map.wrapS = map.wrapT = T.RepeatWrapping;
   map.colorSpace = T.SRGBColorSpace;
   map.anisotropy = 8;
@@ -81,10 +87,14 @@ export function lavaMaterial() {
   material.userData.time = time;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.lavaTime = time;
-    shader.fragmentShader = "uniform float lavaTime;\n" + shader.fragmentShader;
+    shader.uniforms.lavaDetail = { value: detail };
+    shader.fragmentShader =
+      "uniform float lavaTime;\nuniform sampler2D lavaDetail;\n" + shader.fragmentShader;
     const uv = `vec2 flowUv = vMapUv;
       float heat = pow(0.5 + 0.5 * sin(flowUv.x * 4.1 + sin(flowUv.y * 3.7)), 4.0);
-      flowUv += heat * 0.018 * vec2(sin(flowUv.y * 22.0 + lavaTime * 1.4), cos(flowUv.x * 19.0 - lavaTime * 1.1));`;
+      flowUv += heat * 0.018 * vec2(sin(flowUv.y * 22.0 + lavaTime * 1.4), cos(flowUv.x * 19.0 - lavaTime * 1.1));
+      vec4 lavaDetailTex = texture2D(lavaDetail, flowUv * 7.0);
+      float lavaDetailMix = (1.0 - smoothstep(25.0, 110.0, length(vViewPosition))) * 0.65;`;
     shader.fragmentShader = shader.fragmentShader
       .replace(
         "#include <map_fragment>",
@@ -93,14 +103,16 @@ export function lavaMaterial() {
           T.ShaderChunk.map_fragment.replace(
             "texture2D( map, vMapUv )",
             "texture2D( map, flowUv )",
-          ),
+          ) +
+          "\n diffuseColor.rgb = mix(diffuseColor.rgb, lavaDetailTex.rgb * (0.55 + diffuseColor.rgb), lavaDetailMix);",
       )
       .replace(
         "#include <emissivemap_fragment>",
         T.ShaderChunk.emissivemap_fragment.replace(
           "texture2D( emissiveMap, vEmissiveMapUv )",
           "texture2D( emissiveMap, flowUv )",
-        ),
+        ) +
+        "\n totalEmissiveRadiance = mix(totalEmissiveRadiance, lavaDetailTex.rgb * 1.15, lavaDetailMix);",
       );
   };
   return material;
