@@ -925,8 +925,8 @@ export class GameView {
       debris ? new T.Quaternion().copy(debris.rotation()) : q,
       elapsed,
       this.snapCamera || snap,
-      s.courseTrack?.id === "inferno-vault" &&
-        !!s.parts.get("chassis-front")?.lava,
+      // Any lava sink pans the camera above the surface (was inferno-only).
+      !!s.parts.get("chassis-front")?.lava,
     );
     if (this.overview && s.skidStrokes.length) {
       const bounds = new T.Box3();

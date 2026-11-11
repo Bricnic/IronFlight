@@ -13,7 +13,10 @@ const route = [
   [0, -46, 10, 4], [0, -52, 12, 4], [0, -64, 13, 5],
   [3, -80, 10, 4], [3, -88, 9, 4], [-3, -98, 9, 4],
   [-2, -106, 10, 4], [0, -112, 11, 4], [0, -118, 12, 4],
-  [0, -127, 12, 0],
+  [0, -127, 12, 5], [0, -140, 12, 5], [4, -152, 10, 4], [4, -156, 10, 4],
+  [-4, -172, 9, 4], [0, -182, 11, 4], [0, -194, 12, 4], [4, -200, 10, 4],
+  [4, -204, 10, 4], [-4, -220, 9, 4], [0, -230, 11, 4], [0, -242, 12, 4],
+  [0, -254, 11, 4], [0, -264, 11, 4], [0, -272, 11, 0],
 ];
 
 function driveStep(sim: Simulation, x: number, z: number, targetSpeed: number) {
@@ -63,7 +66,7 @@ export function driveBlockPartyToCompletion(vehicleId?: string): number {
       sim.trackRun!.status,
       `Waypoint ${next}, position ${JSON.stringify(sim.body.translation())}, events ${JSON.stringify(sim.damageEvents.slice(-3))}`,
     ).toBe("completed");
-    expect(sim.trackRun!.checkpoint).toBe(3);
+    expect(sim.trackRun!.checkpoint).toBe(4);
     const smashed = sim.looseBlocks.blocks.filter((b, i) => {
       const p = b.body.translation();
       return Math.hypot(p.x - start[i].x, p.z - start[i].z) > 2;

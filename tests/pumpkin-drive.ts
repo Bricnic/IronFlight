@@ -20,7 +20,10 @@ export function drivePumpkinToCompletion(vehicleId?: string): number {
       [52, 79, 25, 9],
       [60, 90, 9, 5], [63, 97, 8, 4], [65, 105, 8, 5],
       [67, 113, 8, 5], [70, 121, 8, 5],
-      [72, 130, 12, 6], [72, 142, 12, 6], [72, 158, 10, 0],
+      [72, 130, 12, 6], [72, 142, 12, 6], [80, 152, 10, 5], [96, 150, 10, 5],
+      [112, 150, 10, 5], [128, 150, 10, 5], [144, 152, 9, 5], [156, 158, 9, 5],
+      [168, 168, 9, 5], [176, 182, 9, 5], [176, 200, 12, 5], [176, 220, 12, 5],
+      [176, 240, 12, 5], [176, 258, 10, 0],
     ];
     let next = 0;
     let overSlime = false;
@@ -55,7 +58,7 @@ export function drivePumpkinToCompletion(vehicleId?: string): number {
       `Waypoint ${next}, position ${JSON.stringify(sim.body.translation())}, events ${JSON.stringify(sim.damageEvents.slice(-3))}`,
     ).toBe("completed");
     expect(overSlime).toBe(true);
-    expect(sim.trackRun!.checkpoint).toBe(3);
+    expect(sim.trackRun!.checkpoint).toBe(4);
     expect(sim.trackRun!.ringsDone).toContain(0);
     expect(sim.trackRun!.elapsed).toBeLessThan(240);
     elapsed = sim.trackRun!.elapsed;

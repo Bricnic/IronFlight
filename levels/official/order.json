@@ -42,7 +42,7 @@
   {
     "file": "Pumpkin Pass.json",
     "thumbnail": "/tracks/pumpkin-pass.png",
-    "description": "Race the Halloween toy track: yellow straight, junction bend, blue slide, slime jump and orange loop turn to the finish ring."
+    "description": "Race the Halloween toy track: yellow straight, junction bend, blue slide, slime jump, orange loop turn, east bend and south straight to the finish ring."
   },
   {
     "file": "Booster Gap.json",
@@ -67,7 +67,7 @@
   {
     "file": "Block Party.json",
     "thumbnail": "/tracks/block-party.png",
-    "description": "Race the black road under the blue gate, dodge two dinos, thread tile chicanes, detour into the bumper arena, and smash two letter-block barricades."
+    "description": "Race the black road under the blue gate, dodge two dinos, thread tile chicanes, detour into the bumper arena, race the south chicanes, and smash three letter-block barricades."
   },
   {
     "file": "Frostfire Pass.json",
