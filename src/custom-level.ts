@@ -31,6 +31,7 @@ export const PROP_PREFAB_KINDS = [
   "peppermint-barrel",
   "chocolate-crate",
   "cotton-candy-cart",
+  "lollipop-stand",
   "christmas-ornament",
   "christmas-snow-boulder",
   "christmas-cracker-barrel",
@@ -89,7 +90,6 @@ export function isGauntletMachine(kind: string): kind is GauntletKind {
 export const CANDY_PREFAB_KINDS = [
   "candy-cane-arch",
   "gumdrop-tree",
-  "lollipop-stand",
   "chocolate-barrier",
   "cotton-candy-stall",
   "gumball-lamp",

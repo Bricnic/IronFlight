@@ -27,7 +27,6 @@ import {
   CAGE,
   CANDY_ARCH,
   CANDY_TRUNK,
-  CANDY_STAND,
   CANDY_CHOCOLATE,
   CANDY_STALL,
   CANDY_LAMP,
@@ -173,8 +172,6 @@ export class DungeonPhysics {
         solid(CANDY_ARCH.postW, CANDY_ARCH.postH, CANDY_ARCH.postD, CANDY_ARCH.postX, 0);
       } else if (h.kind === "gumdrop-tree") {
         solid(CANDY_TRUNK.w, CANDY_TRUNK.h, CANDY_TRUNK.d, 0, 0);
-      } else if (h.kind === "lollipop-stand") {
-        solid(CANDY_STAND.w, CANDY_STAND.h, CANDY_STAND.d, 0, 0);
       } else if (h.kind === "chocolate-barrier") {
         solid(CANDY_CHOCOLATE.w, CANDY_CHOCOLATE.h, CANDY_CHOCOLATE.d, 0, 0);
       } else if (h.kind === "cotton-candy-stall") {

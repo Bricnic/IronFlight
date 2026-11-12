@@ -15,6 +15,7 @@ export type PropKind =
   | "peppermint-barrel"
   | "chocolate-crate"
   | "cotton-candy-cart"
+  | "lollipop-stand"
   | "christmas-ornament"
   | "christmas-snow-boulder"
   | "christmas-cracker-barrel"
@@ -72,6 +73,7 @@ function propHeight(kind: string) {
   if (kind === "peppermint-barrel") return 0.7;
   if (kind === "chocolate-crate") return 0.9;
   if (kind === "cotton-candy-cart") return 0.9;
+  if (kind === "lollipop-stand") return 1.5;
   if (kind === "christmas-ornament") return 0.7;
   if (kind === "christmas-snow-boulder") return 0.8;
   if (kind === "christmas-cracker-barrel") return 0.7;
@@ -105,6 +107,7 @@ export class Destructibles {
     {
       const { kind, x, z, ground, yaw } = definition,
         sign = kind === "sign",
+        lollipop = kind === "lollipop-stand",
         stone = kind === "gravestone",
         scale = kind === "snowman" ? (definition.scale ?? 1) : 1,
         height = propHeight(kind) * (kind === "snowman" ? scale : 1);
@@ -150,6 +153,47 @@ export class Destructibles {
             { x: 0, y: 0, z: 0 },
             new Quaternion(),
             { x: 0, y: -1.55, z: 0 },
+            new Quaternion(),
+          ),
+          base,
+          body,
+          true,
+        );
+        joint.setContactsEnabled(false);
+      } else if (lollipop) {
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cuboid(2, 0.75, 2)
+              .setTranslation(0, -0.75, 0)
+              .setMass(30),
+            body,
+          ),
+        );
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cylinder(3.5, 0.35)
+              .setTranslation(0, 3.5, 0)
+              .setMass(10),
+            body,
+          ),
+        );
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cuboid(3, 3, 0.3)
+              .setTranslation(0, 7.6, 0)
+              .setMass(20),
+            body,
+          ),
+        );
+        const base = world.createRigidBody(
+          RAPIER.RigidBodyDesc.fixed().setTranslation(x, ground + 0.05, z),
+        );
+        world.createCollider(RAPIER.ColliderDesc.cuboid(0.3, 0.1, 0.3), base);
+        joint = world.createImpulseJoint(
+          RAPIER.JointData.fixed(
+            { x: 0, y: 0, z: 0 },
+            new Quaternion(),
+            { x: 0, y: -1.45, z: 0 },
             new Quaternion(),
           ),
           base,
@@ -355,7 +399,11 @@ export class Destructibles {
       const closing = Math.max(0, relative.dot(away));
       if (contact && closing > 0.6 && time - prop.lastHit > 0.3) {
         prop.lastHit = time;
-        if (prop.definition.kind === "sign" && prop.joint) {
+        if (
+          (prop.definition.kind === "sign" ||
+            prop.definition.kind === "lollipop-stand") &&
+          prop.joint
+        ) {
           this.world.removeImpulseJoint(prop.joint, true);
           prop.joint = undefined;
           prop.broken = true;

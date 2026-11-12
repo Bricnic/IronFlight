@@ -31,8 +31,8 @@ function fixture(prefabs: CustomPrefab[], spawn = { x: 0, y: 2.1, z: -20, yaw: 0
   return sim;
 }
 
-it("registers six candy-land decor prefabs as non-lethal dungeon scenery", () => {
-  expect(KINDS).toHaveLength(6);
+it("registers five candy-land decor prefabs as non-lethal dungeon scenery", () => {
+  expect(KINDS).toHaveLength(5);
   for (const kind of KINDS) {
     for (const list of [PREFAB_KINDS, DUNGEON_PREFAB_KINDS, CANDY_PREFAB_KINDS])
       expect(list).toContain(kind);
@@ -43,6 +43,7 @@ it("registers six candy-land decor prefabs as non-lethal dungeon scenery", () =>
     ).toBeUndefined();
   }
   expect(isCandyDecor("cage")).toBe(false);
+  expect(isCandyDecor("lollipop-stand")).toBe(false);
 });
 
 it("validates candy prefabs with yaw and places them from the palette", () => {
@@ -57,7 +58,7 @@ it("validates candy prefabs with yaw and places them from the palette", () => {
       yaw: 0.5,
     })),
   });
-  expect(level.prefabs).toHaveLength(6);
+  expect(level.prefabs).toHaveLength(5);
   expect(dungeonHazards(toTrack(level)).map((h) => h.kind).sort()).toEqual(
     [...KINDS].sort(),
   );
@@ -71,7 +72,7 @@ it("validates candy prefabs with yaw and places them from the palette", () => {
   expect(placed.prefabs[0].kind).toBe("gumdrop-tree");
 });
 
-it("builds six detailed static models headlessly", () => {
+it("builds five detailed static models headlessly", () => {
   for (const kind of KINDS) {
     const raw = new T.Group();
     buildCandyDecor(raw, kind);
@@ -97,7 +98,7 @@ it("spawns solid colliders that never deal damage", () => {
   );
   try {
     const mechanisms = sim.dungeon.mechanisms.filter((m) => isCandyDecor(m.h.kind));
-    expect(mechanisms).toHaveLength(6);
+    expect(mechanisms).toHaveLength(5);
     for (const m of mechanisms) {
       const want = m.h.kind === "candy-cane-arch" ? 2 : 1;
       expect(m.colliders.length, m.h.kind).toBe(want);

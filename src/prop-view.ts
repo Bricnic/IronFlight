@@ -2,6 +2,7 @@ import * as T from "three";
 import { Destructibles, type PropState } from "./destructibles";
 import { buildSkullMesh } from "./dungeon-view";
 import { buildPumpkinMesh } from "./course-view";
+import { buildLollipop } from "./candy-view";
 import { flameMaterial } from "./materials";
 export class PropView extends T.Group {
   private source?: Destructibles;
@@ -222,6 +223,30 @@ export class PropView extends T.Group {
       tilt.add(buildChocolateCrateMesh());
     } else if (prop.definition.kind === "cotton-candy-cart") {
       tilt.add(buildCottonCandyCartMesh());
+    } else if (prop.definition.kind === "lollipop-stand") {
+      const pop = buildLollipopStandMesh();
+      pop.position.y = -1.5;
+      tilt.add(pop);
+      const base = mesh(
+        new T.BoxGeometry(0.6, 0.2, 0.6),
+        new T.MeshStandardMaterial({ color: 0x6f716b, roughness: 1 }),
+        this,
+      );
+      base.position.set(
+        prop.definition.x,
+        prop.definition.ground + 0.05,
+        prop.definition.z,
+      );
+      const stump = mesh(
+        new T.CylinderGeometry(0.35, 0.35, 0.3, 12),
+        new T.MeshStandardMaterial({ color: 0xf6f2ea, roughness: 0.5 }),
+        this,
+      );
+      stump.position.set(
+        prop.definition.x,
+        prop.definition.ground + 0.2,
+        prop.definition.z,
+      );
     } else if (prop.definition.kind === "christmas-ornament") {
       tilt.add(buildChristmasOrnamentMesh());
     } else if (prop.definition.kind === "christmas-snow-boulder") {
@@ -881,6 +906,13 @@ export function buildChristmasCocoaCartMesh() {
     0.5,
     0.4,
   );
+  return group;
+}
+
+/** Rainbow swirl lollipop on a striped pole (sign precedent: snaps off its base). */
+export function buildLollipopStandMesh() {
+  const group = new T.Group();
+  buildLollipop(group);
   return group;
 }
 

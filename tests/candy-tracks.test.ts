@@ -19,6 +19,7 @@ const CANDY_DESTRUCTIBLES = [
   "peppermint-barrel",
   "chocolate-crate",
   "cotton-candy-cart",
+  "lollipop-stand",
 ];
 // Observed official-race pace band (checkpoint-polyline units per gold second:
 // Toybox Road 3.55 .. Machine Gauntlet 12.61); ideal-line estimates must land inside it.

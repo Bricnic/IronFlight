@@ -133,7 +133,7 @@ function buildTree(root: T.Group) {
 }
 
 /** Rainbow swirl disc on a striped pole over a circus base. */
-function buildLollipop(root: T.Group) {
+export function buildLollipop(root: T.Group) {
   const red = mat(0xc23b2e, 0.5);
   const white = mat(WHITE, 0.5);
   mesh(
@@ -354,7 +354,6 @@ function buildLamp(root: T.Group) {
 export function buildCandyDecor(root: T.Group, kind: CandyKind): T.Group[] {
   if (kind === "candy-cane-arch") buildArch(root);
   else if (kind === "gumdrop-tree") buildTree(root);
-  else if (kind === "lollipop-stand") buildLollipop(root);
   else if (kind === "chocolate-barrier") buildChocolate(root);
   else if (kind === "cotton-candy-stall") buildStall(root);
   else if (kind === "gumball-lamp") buildLamp(root);
