@@ -24,7 +24,7 @@ const levelJson = () =>
 it("stages the photo: gate, wyvern, tile path, pipes and a block wall", () => {
   const level = levelJson();
   const kinds = level.prefabs.map((p) => p.kind);
-  expect(kinds.filter((k) => k === "loose-blocks")).toHaveLength(29);
+  expect(kinds.filter((k) => k === "loose-blocks")).toHaveLength(39);
   expect(kinds.filter((k) => k === "ember-wyvern")).toHaveLength(1);
   expect(kinds.filter((k) => k === "raptor")).toHaveLength(1);
   expect(kinds.filter((k) => k === "bumper-arena")).toHaveLength(1);
@@ -41,14 +41,23 @@ it("stages the photo: gate, wyvern, tile path, pipes and a block wall", () => {
     "pipe2-span",
     "arena-floor",
     "lava-lake",
+    "ext-road-3",
+    "chicane-c",
+    "chicane-d",
+    "ext-road-4",
+    "chicane-e",
+    "chicane-f",
+    "ext-road-5",
+    "final-road-2",
   ])
     expect(ids).toContain(want);
-  expect(level.checkpoints).toHaveLength(3);
+  expect(level.checkpoints).toHaveLength(4);
   expect(level.backgroundTemplate).toBe("toybox-volcano");
 });
 
 it("completes the reference drive within the limit", () => {
   const elapsed = driveBlockPartyToCompletion();
+  expect(elapsed).toBeGreaterThanOrEqual(30);
   const level = levelJson();
   expect(elapsed).toBeLessThan(level.limit);
   expect(level.medals.bronze).toBeLessThan(level.limit);

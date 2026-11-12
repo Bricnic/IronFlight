@@ -76,6 +76,12 @@ export function isBulkLava(s: { kind: string; w: number; d: number }) {
   return s.kind === "lava" && s.w > 100 && s.d > 100;
 }
 
+/** Gate banner caption. Closed circuits finish where they start, so the arch reads both. */
+export function gateCaption(track: Track, gate: Checkpoint, index: number, total: number): string {
+  if (index !== total - 1 || track.ring) return `CHECKPOINT ${index + 1}`;
+  const atStart = Math.hypot(gate.x - track.spawn.x, gate.z - track.spawn.z) < 10;
+  return atStart ? "START \u00B7 FINISH" : "FINISH";
+}
 export class CourseView extends T.Group {
   private key = "";
   private hazardTime = 0;
@@ -292,10 +298,7 @@ export class CourseView extends T.Group {
       banner.position.y = 5.1;
       g.add(banner);
     }
-    const caption =
-      index === total - 1 && !track.ring
-        ? "FINISH"
-        : `CHECKPOINT ${index + 1}`;
+    const caption = gateCaption(track, gate, index, total);
     g.userData.label = caption;
     const label = this.label(caption, track.color);
     label.name = "gate-label";

@@ -128,3 +128,25 @@ test("live normal-speed camera remains smooth through a full keyboard-driven jum
   expect(motion.maxBackstep).toBeLessThan(0.004);
   await page.screenshot({ path: info.outputPath("rear-camera-finish.png") });
 });
+
+test("lava sink keeps the chase camera above the surface on custom tracks", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.evaluate(() => {
+    const g = window.__game!;
+    g.pause(true);
+    g.startTrack("custom:block-party");
+    g.place({ x: 30, y: 2, z: -23 }, 0);
+    g.advanceFrames(600, 1, {});
+  });
+  // Let the live render loop converge the sink blend.
+  await page.waitForTimeout(2500);
+  const state = await page.evaluate(() => ({
+    camera: window.__game!.camera(),
+    lava: !!window.__game!.snapshot().parts["chassis-front"]?.lava,
+  }));
+  expect(state.lava).toBe(true);
+  expect(state.camera.position.y).toBeGreaterThanOrEqual(8);
+});

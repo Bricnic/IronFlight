@@ -28,6 +28,11 @@ test("normal startup shows the illustrated official lineup and keeps the simulat
     "Frostfire Pass",
     "Volcano Loop",
     "Toybox Road",
+    "Gumdrop Meadows",
+    "Lollipop Loop",
+    "Peppermint Pass",
+    "Chocolate Chasm",
+    "Sugar Rush Summit",
   ]);
   for (const t of TRACKS) {
     await expect(
@@ -129,7 +134,7 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(26);
+  await expect(page.locator(".track-card")).toHaveCount(31);
   expect(
     await page
       .locator("#level-select")

@@ -36,21 +36,26 @@ it("lines the path with trash and guards the sides with hazards", () => {
   expect(count("axe")).toBeGreaterThanOrEqual(3);
 });
 
-it("runs two checkpoints plus a goal ring under a four-minute limit", () => {
+it("runs three checkpoints plus a goal ring under a four-minute limit", () => {
   const level = levelJson();
   expect(level.limit).toBe(240);
   expect(level.medals.bronze).toBeLessThan(240);
-  expect(level.checkpoints).toHaveLength(3);
+  expect(level.checkpoints).toHaveLength(4);
   expect(level.rings.filter((r) => r.goal)).toHaveLength(1);
   const ids = level.solids.map((s) => s.id);
   expect(ids).toContain("slime-pit");
   expect(ids).toContain("k1-kicker");
   expect(ids).toContain("l1-landing");
+  expect(ids).toContain("t2-turn");
+  expect(ids).toContain("f2-east");
+  expect(ids).toContain("t3-corner");
+  expect(ids).toContain("f3-south");
+  expect(ids).toContain("f4-final");
   expect(level.backgroundTemplate).toBe("haunted-night");
 });
 
 it("drives straight, bend, slide, slime jump and loop turn in under four minutes", () => {
-  drivePumpkinToCompletion();
+  expect(drivePumpkinToCompletion()).toBeGreaterThanOrEqual(30);
 });
 
 it("kills a truck that lands in the slime pit", () => {

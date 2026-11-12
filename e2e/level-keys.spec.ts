@@ -22,11 +22,11 @@ test("N and P step through levels with wraparound", async ({ page }) => {
     window.__game!.startTrack("sky-slide");
   });
   await expect.poll(trackId, { timeout: 15000 }).toBe("sky-slide");
-  for (const id of ["custom:fairground", "custom:dungeon", "custom:jurassic-junction", "custom:emberfall-causeway", "custom:chompworks", "custom:machine-gauntlet", "custom:amber-undertow", "custom:fireside-sonata", "custom:pumpkin-pass", "custom:booster-gap", "custom:evil-tube-run", "custom:slime-surge", "custom:ring-chase", "custom:block-party", "custom:frostfire-pass", "custom:volcano-loop", "custom:toybox-road", "triple-loop", "harbor-sprint"]) {
+  for (const id of ["custom:fairground", "custom:dungeon", "custom:jurassic-junction", "custom:emberfall-causeway", "custom:chompworks", "custom:machine-gauntlet", "custom:amber-undertow", "custom:fireside-sonata", "custom:pumpkin-pass", "custom:booster-gap", "custom:evil-tube-run", "custom:slime-surge", "custom:ring-chase", "custom:block-party", "custom:frostfire-pass", "custom:volcano-loop", "custom:toybox-road", "custom:gumdrop-meadows", "custom:lollipop-loop", "custom:peppermint-pass", "custom:chocolate-chasm", "custom:sugar-rush-summit", "triple-loop", "harbor-sprint"]) {
     await page.keyboard.press("n");
     await expect.poll(trackId, { timeout: 15000 }).toBe(id);
   }
-  for (const id of ["triple-loop", "custom:toybox-road", "custom:volcano-loop", "custom:frostfire-pass", "custom:block-party", "custom:ring-chase", "custom:slime-surge", "custom:evil-tube-run", "custom:booster-gap", "custom:pumpkin-pass", "custom:fireside-sonata", "custom:amber-undertow", "custom:machine-gauntlet", "custom:chompworks", "custom:emberfall-causeway", "custom:jurassic-junction", "custom:dungeon", "custom:fairground", "sky-slide"]) {
+  for (const id of ["triple-loop", "custom:sugar-rush-summit", "custom:chocolate-chasm", "custom:peppermint-pass", "custom:lollipop-loop", "custom:gumdrop-meadows", "custom:toybox-road", "custom:volcano-loop", "custom:frostfire-pass", "custom:block-party", "custom:ring-chase", "custom:slime-surge", "custom:evil-tube-run", "custom:booster-gap", "custom:pumpkin-pass", "custom:fireside-sonata", "custom:amber-undertow", "custom:machine-gauntlet", "custom:chompworks", "custom:emberfall-causeway", "custom:jurassic-junction", "custom:dungeon", "custom:fairground", "sky-slide"]) {
     await page.keyboard.press("p");
     await expect.poll(trackId, { timeout: 15000 }).toBe(id);
   }
