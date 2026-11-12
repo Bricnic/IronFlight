@@ -99,7 +99,8 @@ it("spawns solid colliders that never deal damage", () => {
     const mechanisms = sim.dungeon.mechanisms.filter((m) => isChristmasDecor(m.h.kind));
     expect(mechanisms).toHaveLength(6);
     for (const m of mechanisms) {
-      const want = m.h.kind === "christmas-light-arch" ? 2 : 1;
+      const want =
+        m.h.kind === "christmas-light-arch" || m.h.kind === "christmas-reindeer" ? 2 : 1;
       expect(m.colliders.length, m.h.kind).toBe(want);
     }
     for (let i = 0; i < 120; i++) sim.step({ throttle: 0 });
@@ -130,5 +131,17 @@ it("blocks the car at the gift wall but lets it pass under the arch", () => {
     expect(arch.damageEvents.filter((e) => e.source === "christmas-light-arch")).toHaveLength(0);
   } finally {
     arch.dispose();
+  }
+});
+
+it("stops the car dead at the reindeer like a wall", () => {
+  const sim = fixture([{ id: "deer", kind: "christmas-reindeer", x: 0, z: 30 }]);
+  try {
+    for (let i = 0; i < 600; i++) sim.step({ throttle: 1 });
+    expect(sim.body.translation().z).toBeLessThan(30);
+    expect(sim.status).toBe("driving");
+    expect(sim.damageEvents.filter((e) => e.source === "christmas-reindeer")).toHaveLength(0);
+  } finally {
+    sim.dispose();
   }
 });

@@ -48,6 +48,22 @@ it("builds a sky dome, shapes and clouds for a track", () => {
   expect(stats.clouds).toBe(12);
 });
 
+for (const template of ["christmas-village", "christmas-midnight"]) {
+  it(`builds the festive rings for ${template}`, () => {
+    const view = new BackgroundView();
+    view.update(
+      { ...getTrack("triple-loop"), backgroundTemplate: template },
+      0,
+      0,
+      0,
+      650,
+    );
+    expect(view.stats().template).toBe(template);
+    expect(view.stats().shapes).toBeGreaterThan(10);
+    expect(meshes(view).length).toBeGreaterThan(1);
+  });
+}
+
 it("darkens clouds to storm gray in rain", () => {
   const view = new BackgroundView();
   const dry = { night: false, rain: false };

@@ -180,6 +180,39 @@ for (const kind of KINDS) {
   });
 }
 
+for (const kind of ["christmas-icicle-shears", "christmas-tinsel-snapper"] as const) {
+  it(`${kind} far-edge clip still destroys the truck`, () => {
+    // Shear blades reach |x| ~ 9.3; a car centered at 10.5 overlaps the far
+    // edge by about a unit, so the snap must still catch it, on both blades.
+    for (const side of [1, -1]) {
+      const sim = fixture([{ id: `${kind}-edge`, kind, x: 0, z: 0 }]);
+      try {
+        sim.body.setTranslation({ x: side * 10.5, y: 2.1, z: 0 }, true);
+        sim.run(SNAP_CYCLE + 1);
+        const hits = sim.damageEvents.filter((e) => e.source === kind);
+        expect(hits.length).toBeGreaterThanOrEqual(1);
+        expect(sim.snapshot().status).toBe("wrecked");
+      } finally {
+        sim.dispose();
+      }
+    }
+  });
+}
+
+it("christmas shears spare a truck fully clear of the blades", () => {
+  const sim = fixture([{ id: "shears-far", kind: "christmas-icicle-shears", x: 0, z: 0 }]);
+  try {
+    sim.body.setTranslation({ x: 13, y: 2.1, z: 0 }, true);
+    sim.run(SNAP_CYCLE + 1);
+    expect(
+      sim.damageEvents.filter((e) => e.source === "christmas-icicle-shears"),
+    ).toHaveLength(0);
+    expect(sim.snapshot().status).not.toBe("wrecked");
+  } finally {
+    sim.dispose();
+  }
+});
+
 it("press traps keep solid posts while the rest drive straight through", () => {
   const sim = fixture(KINDS.map((kind, i) => ({ id: `lethal-${i}`, kind, x: i * 30, z: 60 })));
   try {

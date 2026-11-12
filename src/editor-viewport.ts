@@ -155,6 +155,7 @@ const PREFAB_COLORS: Record<string, number> = {
   "loose-blocks": 0xe0a458,
   "glass-pane": 0xe8d44d,
   "burning-coals": 0xff5a1f,
+  "fragile-ice": 0x9ad6ff,
   cage: 0x5a636b,
   "jail-cell": 0x7a8494,
   candle: 0xffb347,

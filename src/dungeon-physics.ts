@@ -38,6 +38,7 @@ import {
   CHRISTMAS_LANTERN,
   CHRISTMAS_GIFTS,
   CHRISTMAS_DEER,
+  CHRISTMAS_DEER_BODY,
   CHRISTMAS_PRESS,
   CLIPPER_BACK,
   WINDOW_GATE,
@@ -156,6 +157,14 @@ export class DungeonPhysics {
         solid(CHRISTMAS_GIFTS.w, CHRISTMAS_GIFTS.h, CHRISTMAS_GIFTS.d, 0, 0);
       } else if (h.kind === "christmas-reindeer") {
         solid(CHRISTMAS_DEER.w, CHRISTMAS_DEER.h, CHRISTMAS_DEER.d, 0, 0);
+        solid(
+          CHRISTMAS_DEER_BODY.w,
+          CHRISTMAS_DEER_BODY.h,
+          CHRISTMAS_DEER_BODY.d,
+          0,
+          0,
+          CHRISTMAS_DEER.h,
+        );
       }
     } else if (isCandyDecor(h.kind)) {
       // Bumpable scenery only: candy kinds have no strike entry, so after() never fires.

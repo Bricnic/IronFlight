@@ -16,6 +16,10 @@ export const SHAPE_KINDS = [
   "toy-block",
   "rock-wall",
   "moon",
+  "snow-hill",
+  "christmas-tree",
+  "gift-pile",
+  "village-house",
 ] as const;
 export type ShapeKind = (typeof SHAPE_KINDS)[number];
 

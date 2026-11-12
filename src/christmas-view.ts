@@ -265,7 +265,7 @@ function buildGifts(root: T.Group) {
   mesh(root, new T.BoxGeometry(w, 0.3, d + 0.6), mat(WHITE, 0.9), 0, 0.15, 0);
 }
 
-/** Wooden reindeer statue on a round stone base; only the base collides. */
+/** Wooden reindeer statue on a round stone base; plinth and statue both collide. */
 function buildReindeer(root: T.Group) {
   const { w, h, d } = CHRISTMAS_DEER;
   mesh(root, new T.BoxGeometry(w, h, d), mat(0x8f979b, 0.9), 0, h / 2, 0);

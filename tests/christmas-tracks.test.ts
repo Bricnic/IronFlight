@@ -94,8 +94,11 @@ for (const spec of TRACKS) {
     // Explicit vertical layers, no coplanar suspects.
     const { suspects } = scanLevel(level as unknown as ZLevel);
     expect(suspects, `${spec.file}: ${JSON.stringify(suspects)}`).toEqual([]);
-    const tops = level.solids.map((s) => s.y + s.h / 2);
-    expect(Math.min(...tops)).toBeCloseTo(0, 6);
+    const groundTops = level.solids
+      .filter((s) => s.kind === "ground")
+      .map((s) => s.y + s.h / 2);
+    expect(Math.min(...groundTops)).toBeCloseTo(0, 6);
+    expect(Math.max(...groundTops)).toBeCloseTo(0, 6);
     // Christmas dressing on every track.
     const kinds = level.prefabs.map((p) => p.kind);
     const decor = kinds.filter((k) => (CHRISTMAS_PREFAB_KINDS as readonly string[]).includes(k));
@@ -131,6 +134,53 @@ for (const spec of TRACKS) {
     expect(bytes.readUInt32BE(20)).toBeGreaterThanOrEqual(360);
   });
 }
+
+const PREFAB_RADII: Record<string, number> = {
+  "christmas-tree": 3.5,
+  "christmas-light-arch": 7.5,
+  "christmas-market-stall": 4,
+  "christmas-lantern": 1.2,
+  "christmas-gift-wall": 6.2,
+  "christmas-reindeer": 2.5,
+  "christmas-nutcracker": 8,
+  "christmas-ice-vice": 8.5,
+  "christmas-toy-chomper": 5.5,
+  "christmas-yeti-jaws": 5.5,
+  "christmas-ornament-slammer": 8,
+  "christmas-sleigh-crusher": 8,
+  "christmas-icicle-shears": 10,
+  "christmas-tinsel-snapper": 10,
+  "christmas-ornament": 1.5,
+  "christmas-snow-boulder": 2,
+  "christmas-cracker-barrel": 1.5,
+  "christmas-gift-crate": 1.5,
+  "christmas-cocoa-cart": 2.5,
+  "guided-pipe": 6,
+  "trampoline": 3,
+  "boost-pad": 7,
+  "fragile-ice": 3.5,
+};
+
+it("keeps christmas prefabs visually separated", () => {
+  // Thousands of ice tiles make per-pair expects too slow; collect, then assert once.
+  const violations: string[] = [];
+  outer: for (const spec of TRACKS) {
+    const level = load(spec.file);
+    for (let i = 0; i < level.prefabs.length; i++)
+      for (let j = i + 1; j < level.prefabs.length; j++) {
+        const a = level.prefabs[i], b = level.prefabs[j];
+        const need = ((PREFAB_RADII[a.kind] ?? 2) + (PREFAB_RADII[b.kind] ?? 2)) * 0.7;
+        const dist = Math.hypot(a.x - b.x, a.z - b.z);
+        if (dist < need) {
+          violations.push(
+            `${spec.file}: ${a.id} overlaps ${b.id} (dist ${dist.toFixed(1)} < ${need.toFixed(1)})`,
+          );
+          if (violations.length >= 20) break outer;
+        }
+      }
+  }
+  expect(violations).toEqual([]);
+});
 
 it("the five christmas tracks use every new decor, destructible, background and lethal", () => {
   for (const kind of CHRISTMAS_DESTRUCTIBLES)

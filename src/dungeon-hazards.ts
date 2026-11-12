@@ -82,8 +82,8 @@ export const DUNGEON_STRIKE: Record<
   "christmas-yeti-jaws": { radius: 8, slam: 4 },
   "christmas-ornament-slammer": { radius: 7, slam: 6 },
   "christmas-sleigh-crusher": { radius: 7, slam: 6 },
-  "christmas-icicle-shears": { radius: 7, slam: 0 },
-  "christmas-tinsel-snapper": { radius: 7, slam: 4 },
+  "christmas-icicle-shears": { radius: 11, slam: 0 },
+  "christmas-tinsel-snapper": { radius: 11, slam: 4 },
 };
 /** Scrap-bot stomp: moderate timed damage, never instantly lethal. */
 export const ROBOT_STOMP_RADIUS = 6;
@@ -122,6 +122,8 @@ export const CHRISTMAS_STALL = { w: 6, h: 4, d: 5 } as const;
 export const CHRISTMAS_LANTERN = { w: 1.6, h: 7, d: 1.6 } as const;
 export const CHRISTMAS_GIFTS = { w: 12, h: 3, d: 1.6 } as const;
 export const CHRISTMAS_DEER = { w: 4, h: 1.5, d: 4 } as const;
+/** Wooden statue above the plinth; together they stop the truck like a wall. */
+export const CHRISTMAS_DEER_BODY = { w: 2.4, h: 4.2, d: 2.8 } as const;
 /** Christmas press-trap gantry posts; cars drive between them under the moving stamp. */
 export const CHRISTMAS_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6.5 } as const;
 /**

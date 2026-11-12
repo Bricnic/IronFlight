@@ -9,38 +9,44 @@
     {
       "kind": "snow-peak",
       "texture": "snow_01",
-      "count": 10,
+      "count": 8,
       "radius": 420,
       "y": 0,
       "size": [100, 200],
       "seed": 401
     },
     {
-      "kind": "tree",
-      "texture": "bark_brown_01",
-      "count": 24,
-      "radius": 260,
+      "kind": "snow-hill",
+      "texture": "snow_01",
+      "count": 8,
+      "radius": 340,
       "y": 0,
-      "size": [6, 12],
-      "seed": 402,
-      "color": 3042118
+      "size": [50, 110],
+      "seed": 402
     },
     {
-      "kind": "tent",
-      "count": 6,
+      "kind": "christmas-tree",
+      "count": 10,
+      "radius": 280,
+      "y": 0,
+      "size": [14, 24],
+      "seed": 403
+    },
+    {
+      "kind": "village-house",
+      "count": 7,
       "radius": 300,
       "y": 0,
-      "size": [18, 28],
-      "seed": 403,
-      "color": 11549230
+      "size": [10, 18],
+      "seed": 404
     },
     {
-      "kind": "toy-block",
-      "count": 10,
-      "radius": 360,
+      "kind": "gift-pile",
+      "count": 8,
+      "radius": 250,
       "y": 0,
-      "size": [10, 20],
-      "seed": 404
+      "size": [8, 14],
+      "seed": 405
     }
   ],
   "clouds": {
@@ -50,6 +56,6 @@
     "color": 16777215,
     "opacity": 0.9,
     "drift": 1.4,
-    "seed": 405
+    "seed": 406
   }
 }

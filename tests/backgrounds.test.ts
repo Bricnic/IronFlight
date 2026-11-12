@@ -91,6 +91,10 @@ it("exposes the documented shape kinds", () => {
       "toy-block",
       "rock-wall",
       "moon",
+      "snow-hill",
+      "christmas-tree",
+      "gift-pile",
+      "village-house",
     ].sort(),
   );
 });
@@ -194,6 +198,16 @@ it("falls back by mode when the name matches nothing", () => {
   expect(backgroundForLevel({ name: "Zzxq", mode: "race" })).toBe(
     "pastoral-hills",
   );
+});
+
+it("dresses christmas templates in festive shapes, not circus tents", () => {
+  for (const name of ["christmas-village", "christmas-midnight"]) {
+    const kinds = getBackgroundTemplate(name).shapes.map((s) => s.kind);
+    expect(kinds, `${name} has no tents`).not.toContain("tent");
+    expect(kinds, `${name} has no toy blocks`).not.toContain("toy-block");
+    for (const kind of ["snow-hill", "christmas-tree", "gift-pile", "village-house"])
+      expect(kinds, `${name} has ${kind}`).toContain(kind);
+  }
 });
 
 it("renders cavern-dark against pure black sky and fog", () => {

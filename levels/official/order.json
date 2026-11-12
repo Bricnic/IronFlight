@@ -112,26 +112,26 @@
   {
     "file": "Tinsel Town.json",
     "thumbnail": "/tracks/tinsel-town.png",
-    "description": "Staircase sprint on the wide snow road: thread light arches, smash ornaments and cracker barrels, and time the toy chomper and tinsel snapper. Gold in fifty seconds."
+    "description": "Rolling hill sprint on the wide snow road: thread light arches over two climbs, smash ornaments and cracker barrels, and time the toy chomper and tinsel snapper. Gold in fifty seconds."
   },
   {
     "file": "Mistletoe Mile.json",
     "thumbnail": "/tracks/mistletoe-mile.png",
-    "description": "Sweep the village loop past lantern dividers, smash gift crates and the cocoa cart, and time the nutcracker, ice vice and ornament slammer."
+    "description": "Diagonal dash to the mountain tube: brave the nutcracker and ice vice, climb to the guided pipe, and dodge the ornament slammer past fragile ice fields."
   },
   {
     "file": "Nutcracker Run.json",
     "thumbnail": "/tracks/nutcracker-run.png",
-    "description": "Night serpentine on narrow ice: brave the yeti jaws, icicle shears, sleigh crusher and toy chomper between snow-boulder fields."
+    "description": "Night mountain climb with a summit plateau, a valley jump and four snap traps from yeti jaws to the sleigh crusher above frozen lakes."
   },
   {
     "file": "Sleigh Bell Sprint.json",
     "thumbnail": "/tracks/sleigh-bell-sprint.png",
-    "description": "Zigzag the narrow holiday road, slalom gift-wall chicanes, and survive five snap traps from nutcracker to tinsel snapper."
+    "description": "Valley zigzag with rolling hills and a fire-road jump: survive five snap traps from nutcracker to tinsel snapper between walls of fragile ice."
   },
   {
     "file": "North Pole Summit.json",
     "thumbnail": "/tracks/north-pole-summit.png",
-    "description": "The midnight finale: a narrow glowing-violet serpentine with six press and snap traps and ten holiday wrecks between you and the gold finish."
+    "description": "The midnight finale: a diagonal ascent with hills and a jump, a mountain tube ride, and six press and snap traps across the frozen summit."
   }
 ]

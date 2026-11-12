@@ -16,23 +16,37 @@
       "color": 2832981
     },
     {
-      "kind": "tree",
-      "texture": "bark_brown_01",
-      "count": 18,
-      "radius": 280,
+      "kind": "snow-hill",
+      "texture": "snow_01",
+      "count": 6,
+      "radius": 340,
       "y": 0,
-      "size": [6, 12],
-      "seed": 502,
-      "color": 2051386
+      "size": [50, 110],
+      "seed": 502
     },
     {
-      "kind": "tent",
-      "count": 5,
-      "radius": 290,
+      "kind": "christmas-tree",
+      "count": 8,
+      "radius": 280,
       "y": 0,
-      "size": [18, 28],
-      "seed": 503,
-      "color": 8006197
+      "size": [14, 24],
+      "seed": 503
+    },
+    {
+      "kind": "village-house",
+      "count": 6,
+      "radius": 300,
+      "y": 0,
+      "size": [10, 18],
+      "seed": 504
+    },
+    {
+      "kind": "gift-pile",
+      "count": 6,
+      "radius": 250,
+      "y": 0,
+      "size": [8, 14],
+      "seed": 505
     },
     {
       "kind": "moon",
@@ -40,7 +54,7 @@
       "radius": 480,
       "y": 140,
       "size": [26, 26],
-      "seed": 504,
+      "seed": 506,
       "color": 15920344
     }
   ],
@@ -51,6 +65,6 @@
     "color": 5926804,
     "opacity": 0.85,
     "drift": 0.8,
-    "seed": 505
+    "seed": 507
   }
 }
