@@ -41,9 +41,11 @@ for (const kind of [
   test(`${kind} physical direct encounter destroys truck`, () => {
     const s = new Simulation();
     const id =
-      kind === "teeth" || kind === "burner" || kind === "computer"
-        ? "foundry-run"
-        : "harbor-sprint";
+      kind === "water"
+        ? "inferno-vault"
+        : kind === "teeth" || kind === "burner" || kind === "computer"
+          ? "foundry-run"
+          : "skyline-circuit";
     s.startTrack(id);
     const h = s.comic.mechanisms.find((m) => m.h.kind === kind)!;
     expect(h).toBeTruthy();
@@ -58,7 +60,7 @@ for (const kind of [
 
 test("initial jaw collider pose matches the visible open book, then closes destructively", () => {
   const s = new Simulation();
-  s.startTrack("harbor-sprint");
+  s.startTrack("skyline-circuit");
   const m = s.comic.mechanisms.find((m) => m.h.kind === "book")!;
   expect(m.bodies[0].rotation().x).toBeCloseTo(Math.sin(1.12 / 2));
   s.body.setTranslation({ x: m.h.x, y: 2.1, z: m.h.z }, true);

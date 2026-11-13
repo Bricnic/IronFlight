@@ -15,7 +15,7 @@ function yawOffset(dx: number, dz: number, yaw: number) {
   };
 }
 import { loopRingSolids, loopSupportSolids } from "./loop.ts";
-import { clipFootprint, subtractFootprint } from "./solid-clip.ts";
+import { clipFootprint } from "./solid-clip.ts";
 export type CourseSolid = {
   id: string;
   kind:
@@ -114,7 +114,6 @@ function rectangleFootprint(w: number, d: number): Point[] {
 }
 export const courseAvailable = (id: string) =>
   [
-    "harbor-sprint",
     "foundry-run",
     "skyline-circuit",
     "scrapyard-sweep",
@@ -278,15 +277,12 @@ export function courseSolids(track: Track): CourseSolid[] {
       color: 0x6d817c,
     },
   ];
-  const harbor = track.id === "harbor-sprint";
   const skyline = track.id === "skyline-circuit";
-  const clippedRoads =
-    harbor || skyline ? miteredRoads(track.path, skyline) : [];
+  const clippedRoads = skyline ? miteredRoads(track.path, skyline) : [];
   solids.push(...clippedRoads);
   for (
     let i = 1;
     track.mode === "race" &&
-    !harbor &&
     !skyline &&
     track.id !== "canyon-plunge" &&
     track.id !== "sky-slide" &&
@@ -307,39 +303,6 @@ export function courseSolids(track: Track): CourseSolid[] {
       yaw: Math.atan2(b.x - a.x, b.z - a.z),
       color: 0x303e49,
     });
-  }
-  if (harbor) {
-    for (let i = 0; i < 9; i++)
-      for (const side of [-1, 1])
-        solids.push({
-          id: `cargo-${side}-${i}`,
-          kind: "container",
-          x: side * (45 + (i % 3) * 8),
-          y: 2.6,
-          z: -65 + i * 45,
-          w: 8,
-          h: 5.2,
-          d: 16,
-          color: side === 1 ? 0x497fa3 : 0xac623f,
-        });
-    // Actual chicane structures flank the gates, leaving the center route open.
-    for (const [x, z] of [
-      [-16, 30],
-      [25, 82],
-      [-5, 155],
-      [40, 220],
-    ])
-      solids.push({
-        id: `chicane-${z}`,
-        kind: "barrier",
-        x,
-        y: 0.8,
-        z,
-        w: 6,
-        h: 1.6,
-        d: 5,
-        color: 0xe6c16a,
-      });
   }
   if (track.id === "foundry-run") {
     solids[0].color = 0x665d55;
@@ -1042,26 +1005,7 @@ export function courseSolids(track: Track): CourseSolid[] {
         d: 32,
         color: 0xc3c4c5,
       };
-      if (harbor) {
-        // Give the main road ownership where the crossing apron meets it.
-        const pieces = clippedRoads.reduce(
-          (remaining, road) => {
-            const cutter = road.footprint.map((p) => ({
-              x: p.x + road.x - approach.x,
-              z: p.z + road.z - approach.z,
-            }));
-            return remaining.flatMap((piece) => subtractFootprint(piece, cutter));
-          },
-          [rectangleFootprint(approach.w, approach.d)],
-        );
-        pieces.forEach((footprint, i) =>
-          solids.push({
-            ...approach,
-            id: i === 0 ? approach.id : `${approach.id}-${i}`,
-            footprint,
-          }),
-        );
-      } else solids.push(approach);
+      solids.push(approach);
     }
   // Subtract water-road apertures from the concrete, so failed skims really sink.
   let result = solids;
@@ -1227,10 +1171,5 @@ export function courseProps(track: Track): PropDefinition[] {
         ground: 0,
       })),
     );
-  return track.id === "harbor-sprint"
-    ? [
-        { id: "harbor-sign", kind: "sign", x: -19, z: -55, ground: 0 },
-        { id: "harbor-trash", kind: "trash", x: 34, z: 35, ground: 0 },
-      ]
-    : [];
+  return [];
 }

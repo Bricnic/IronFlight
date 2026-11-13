@@ -26,7 +26,7 @@ it("haunts the hollow with three distant ghosts and nowhere else", () => {
     expect(Number.isFinite(d.x + d.z + d.phase)).toBe(true);
     expect(Math.hypot(d.x - spawn.x, d.z - spawn.z)).toBeGreaterThan(15);
   }
-  expect(ghostDefs(getTrack("harbor-sprint"))).toEqual([]);
+  expect(ghostDefs(getTrack("foundry-run"))).toEqual([]);
   expect(ghostDefs()).toEqual([]);
 });
 it("spawns custom ghost prefabs and nowhere else", () => {

@@ -55,33 +55,6 @@ async function removeClone(page: Page, name: string) {
     name,
   );
 }
-test("harbor clone matches at the start", async ({ page }) => {
-  const { name, slug } = await loadClone(page, "clone-harbor-sprint.json");
-  const at = await spot(page, "harbor-sprint", "start");
-  await shoot(page, "harbor-sprint", at, "artifacts/showcase-harbor-start-official.png");
-  await shoot(page, slug, at, "artifacts/showcase-harbor-start-clone.png");
-  await removeClone(page, name);
-});
-test("harbor clone matches mid-track", async ({ page }) => {
-  const { name, slug } = await loadClone(page, "clone-harbor-sprint.json");
-  const at = await spot(page, "harbor-sprint", "mid");
-  await shoot(page, "harbor-sprint", at, "artifacts/showcase-harbor-mid-official.png");
-  await shoot(page, slug, at, "artifacts/showcase-harbor-mid-clone.png");
-  await removeClone(page, name);
-});
-test("harbor clone drives to completion", async ({ page }) => {
-  const { name, slug } = await loadClone(page, "clone-harbor-sprint.json");
-  await page.evaluate((s) => {
-    const g = window.__game!;
-    g.pause(true);
-    g.startTrack(s as `custom:${string}`);
-  }, slug);
-  const result = await driveTrack(page, slug, false);
-  expect(result.state.run?.status, JSON.stringify(result.state.run)).toBe(
-    "completed",
-  );
-  await removeClone(page, name);
-});
 test("triple-loop clone matches at the start", async ({ page }) => {
   const { name, slug } = await loadClone(page, "clone-triple-loop.json");
   const at = await spot(page, "triple-loop", "start");

@@ -9,7 +9,7 @@ const result = (
   status: "completed" | "failed" = "completed",
   variant = "default",
 ) => ({
-  ...new TrackRun(getTrack("harbor-sprint"), variant).snapshot(),
+  ...new TrackRun(getTrack("foundry-run"), variant).snapshot(),
   status,
   elapsed: time,
 });
@@ -31,15 +31,15 @@ it("retains gold times for the JSON-authored Fairground through reload", () => {
 it("keeps only faster completed times and reloads medals", () => {
   const storage = memory(),
     scores = new BestTimes(storage);
+  expect(scores.record(result(85))).toBe(true);
+  expect(scores.best("foundry-run")?.medal).toBe("bronze");
   expect(scores.record(result(55))).toBe(true);
-  expect(scores.best("harbor-sprint")?.medal).toBe("bronze");
-  expect(scores.record(result(45))).toBe(true);
-  expect(scores.best("harbor-sprint")?.medal).toBe("silver");
-  expect(scores.record(result(30))).toBe(true);
-  expect(scores.best("harbor-sprint")?.medal).toBe("gold");
+  expect(scores.best("foundry-run")?.medal).toBe("silver");
+  expect(scores.record(result(38))).toBe(true);
+  expect(scores.best("foundry-run")?.medal).toBe("gold");
   expect(scores.record(result(40))).toBe(false);
   expect(scores.record(result(10, "failed"))).toBe(false);
-  expect(new BestTimes(storage).best("harbor-sprint")?.time).toBe(30);
+  expect(new BestTimes(storage).best("foundry-run")?.time).toBe(38);
 });
 it("isolates Triple Loop lane records", () => {
   const scores = new BestTimes(memory());
@@ -62,9 +62,9 @@ it("handles corrupt/blocked storage and refuses invalid times", () => {
     },
   ]) {
     const scores = new BestTimes(storage);
-    expect(scores.best("harbor-sprint")).toBeNull();
+    expect(scores.best("foundry-run")).toBeNull();
     expect(() => scores.record(result(30))).not.toThrow();
-    expect(scores.best("harbor-sprint")?.time).toBe(30);
+    expect(scores.best("foundry-run")?.time).toBe(30);
     expect(scores.record(result(NaN))).toBe(false);
     expect(scores.record(result(-1))).toBe(false);
   }

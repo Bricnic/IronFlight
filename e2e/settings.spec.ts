@@ -41,7 +41,7 @@ test("settings page toggles video quality live", async ({ page }) => {
   const stored = await page.evaluate(() =>
     localStorage.getItem("iron-flight-settings-v1"),
   );
-  expect(JSON.parse(stored!)).toEqual({ video: "high", night: false, rain: false });
+  expect(JSON.parse(stored!)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: false });
   await page.locator("#settings-back").click();
   await expect(page.locator("#settings-screen")).toBeHidden();
 });
@@ -90,4 +90,50 @@ test("weather toggles flip badges, stats and storage", async ({ page }) => {
   await expect.poll(weather, { timeout: 15000 }).toEqual({ night: true, rain: true });
   await expect(page.locator("#weather-night")).toBeVisible();
   await expect(page.locator("#weather-rain")).toBeVisible();
+});
+
+test("randomize atmosphere grays out manual toggles and rerolls on retry", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  const weather = () => page.evaluate(() => window.__game!.stats().weather);
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.locator('[data-weather="night"] button').click();
+  await expect(page.locator('[data-weather="night"]')).toHaveClass(/selected/);
+  await page.locator('[data-weather="randomize"] button').click();
+  await expect(page.locator('[data-weather="randomize"]')).toHaveClass(/selected/);
+  for (const flag of ["night", "rain"]) {
+    await expect(page.locator(`[data-weather="${flag}"]`)).toHaveClass(/disabled/);
+    await expect(page.locator(`[data-weather="${flag}"]`)).not.toHaveClass(/selected/);
+    await expect(page.locator(`[data-weather="${flag}"] button`)).toBeDisabled();
+  }
+  const stored = await page.evaluate(() =>
+    localStorage.getItem("iron-flight-settings-v1"),
+  );
+  expect(JSON.parse(stored!)).toMatchObject({
+    night: false,
+    rain: false,
+    randomizeAtmosphere: true,
+  });
+  await page.locator("#settings-back").click();
+  await page.evaluate(() => {
+    Math.random = () => 0.1;
+  });
+  await page.evaluate(() => window.__game!.startTrack("foundry-run"));
+  await expect.poll(weather, { timeout: 15000 }).toEqual({ night: true, rain: true });
+  await expect(page.locator("#weather-night")).toBeVisible();
+  await expect(page.locator("#weather-rain")).toBeVisible();
+  await page.evaluate(() => {
+    Math.random = () => 0.9;
+  });
+  await page.keyboard.press("r");
+  await expect.poll(weather, { timeout: 15000 }).toEqual({ night: false, rain: false });
+  await expect(page.locator("#weather-night")).toBeHidden();
+  await expect(page.locator("#weather-rain")).toBeHidden();
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.locator('[data-weather="randomize"] button').click();
+  await expect(page.locator('[data-weather="randomize"]')).not.toHaveClass(/selected/);
+  for (const flag of ["night", "rain"]) {
+    await expect(page.locator(`[data-weather="${flag}"]`)).not.toHaveClass(/disabled/);
+    await expect(page.locator(`[data-weather="${flag}"] button`)).toBeEnabled();
+  }
 });

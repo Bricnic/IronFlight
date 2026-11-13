@@ -59,12 +59,12 @@ it("matches or beats truck triangle detail", () => {
   const truck = truckStats(createTruck());
   expect(car.triangles).toBeGreaterThanOrEqual(truck.triangles);
 });
-it("headlessly completes Harbor Sprint in the ambulance", () => {
+it("headlessly completes Foundry Run in the ambulance", () => {
   const s = new Simulation();
   s.setVehicle("ambulance");
   expect(s.snapshot(false).vehicleId).toBe("ambulance");
-  s.startTrack("harbor-sprint");
-  const track = getTrack("harbor-sprint");
+  s.startTrack("foundry-run");
+  const track = getTrack("foundry-run");
   for (let i = 0; i < 120 * 100 && s.trackRun?.status === "running"; i++)
     s.step(courseDriver(s.snapshot(), track));
   expect(

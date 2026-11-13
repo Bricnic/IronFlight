@@ -35,7 +35,7 @@ it("defines flow zones along the slide and a trampoline ahead of the ring", () =
   const ring = slide().ring!;
   expect(defs.trampolines[0].x).toBe(ring.x);
   expect(defs.trampolines[0].z).toBeLessThan(ring.z);
-  expect(slideDefs(getTrack("harbor-sprint"))).toEqual({
+  expect(slideDefs(getTrack("foundry-run"))).toEqual({
     flows: [],
     trampolines: [],
   });

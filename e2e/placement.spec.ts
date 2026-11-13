@@ -168,7 +168,7 @@ test("placement bar shows only on custom tracks", async ({ page }) => {
   await page.evaluate(() => {
     const g = window.__game!;
     g.pause(true);
-    g.startTrack("harbor-sprint");
+    g.startTrack("foundry-run");
   });
   await expect(page.locator("#placement-bar")).toBeHidden();
   await page.evaluate(async (level) => {

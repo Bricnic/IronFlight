@@ -11,18 +11,18 @@ test("N and P step through levels with wraparound", async ({ page }) => {
   await page.evaluate(() => {
     const g = window.__game!;
     g.pause(true);
-    g.startTrack("harbor-sprint");
+    g.startTrack("triple-loop");
   });
-  await expect.poll(trackId, { timeout: 15000 }).toBe("harbor-sprint");
+  await expect.poll(trackId, { timeout: 15000 }).toBe("triple-loop");
   await page.keyboard.press("n");
   await expect.poll(trackId, { timeout: 15000 }).toBe("foundry-run");
   await page.keyboard.press("p");
-  await expect.poll(trackId, { timeout: 15000 }).toBe("harbor-sprint");
+  await expect.poll(trackId, { timeout: 15000 }).toBe("triple-loop");
   await page.evaluate(() => {
     window.__game!.startTrack("sky-slide");
   });
   await expect.poll(trackId, { timeout: 15000 }).toBe("sky-slide");
-  for (const id of ["custom:fairground", "custom:dungeon", "custom:jurassic-junction", "custom:emberfall-causeway", "custom:chompworks", "custom:machine-gauntlet", "custom:amber-undertow", "custom:fireside-sonata", "custom:pumpkin-pass", "custom:booster-gap", "custom:evil-tube-run", "custom:slime-surge", "custom:ring-chase", "custom:block-party", "custom:frostfire-pass", "custom:volcano-loop", "custom:toybox-road", "triple-loop", "harbor-sprint"]) {
+  for (const id of ["custom:fairground", "custom:dungeon", "custom:jurassic-junction", "custom:emberfall-causeway", "custom:chompworks", "custom:machine-gauntlet", "custom:amber-undertow", "custom:fireside-sonata", "custom:pumpkin-pass", "custom:booster-gap", "custom:evil-tube-run", "custom:slime-surge", "custom:ring-chase", "custom:block-party", "custom:frostfire-pass", "custom:volcano-loop", "custom:toybox-road", "triple-loop", "foundry-run"]) {
     await page.keyboard.press("n");
     await expect.poll(trackId, { timeout: 15000 }).toBe(id);
   }
@@ -51,7 +51,7 @@ test("L returns to level select from an active run", async ({ page }) => {
   await page.evaluate(() => {
     const g = window.__game!;
     g.pause(true);
-    g.startTrack("harbor-sprint");
+    g.startTrack("foundry-run");
   });
   await expect(page.locator("#level-select")).toBeHidden();
   await page.keyboard.press("l");

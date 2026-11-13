@@ -4,22 +4,6 @@ import { driveTrack } from "./course-driver";
 const NEW_VEHICLES = ["hovercraft", "snow-groomer", "hot-rod", "tow-truck"];
 
 for (const vehicle of NEW_VEHICLES) {
-  test(`${vehicle}: Harbor Sprint finishes 6/6 gates above 0.8 integrity`, async ({
-    page,
-  }, info) => {
-    const result = await driveTrack(page, "harbor-sprint", true, vehicle);
-    expect(result.state.vehicleId).toBe(vehicle);
-    expect(result.state.run?.status, JSON.stringify(result.state.run)).toBe(
-      "completed",
-    );
-    expect(result.state.run?.checkpoint).toBe(6);
-    expect(result.state.integrity).toBeGreaterThan(0.8);
-    expect(result.initial.gates).toBe(6);
-    expect(result.art.gates).toBe(0);
-    expect(result.art.solids).toBeGreaterThan(20);
-    await page.screenshot({ path: info.outputPath(`${vehicle}-harbor.png`) });
-  });
-
   test(`${vehicle}: Foundry Run clears the ramp above 0.4 integrity`, async ({
     page,
   }, info) => {

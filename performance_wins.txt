@@ -1,0 +1,7 @@
+# Performance wins: one line per shipped optimization.
+# Method: scripts/perf/benchmark.mjs on NVIDIA RTX 2080 SUPER (real GPU, headless
+# Chromium), default high settings, 1280x720, scripted W + weave drive per level.
+# Metrics: load_ms (click Play -> run + textures + 3 frames), frame-time p50/p75/
+# p90/p99 (ms), drops_per_min (frames >34ms, scaled), fps_mean. A win ships when a
+# metric improves >5% (median of reps) with no primary metric regressing >2%.
+# Columns: date | description | commit | walltime on fix | metric | before -> after | change

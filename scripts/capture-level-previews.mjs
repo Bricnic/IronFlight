@@ -4,7 +4,7 @@ import { mkdir, readFile } from "node:fs/promises";
 // Usage: PREVIEW_PORT=5199 node scripts/capture-level-previews.mjs [id...]
 // IDs default to the full official lineup, read live from the level-select
 // screen; pass a subset to recapture. Each level uses the next vehicle in
-// garage order (triple-loop -> Monster Truck, harbor-sprint -> Sports Car,
+// garage order (triple-loop -> Monster Truck, foundry-run -> Sports Car,
 // ...) at the default chase distance, with a stylized top-down minimap of
 // the level drawn as a box in the lower right of each preview.
 const PORT = process.env.PREVIEW_PORT ?? "5173";

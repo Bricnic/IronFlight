@@ -5,6 +5,7 @@ import { createLevelEditor } from "./level-editor";
 import { shouldSyncFromSession } from "./editor-state";
 import { createSettings } from "./settings-screen";
 import { loadSettings } from "./settings";
+import { randomWeather } from "./weather";
 import { loadedTextureIds, textureLoadErrors } from "./materials";
 import * as T from "three";
 import { solidQuaternion } from "./euler";
@@ -127,6 +128,15 @@ async function boot() {
   });
   const $ = (id: string) => document.getElementById(id)!;
   ($("target") as HTMLSelectElement).value = lab.selected;
+  function paintWeatherBadges() {
+    document.getElementById("weather-night")!.hidden = !sim.weather.night;
+    document.getElementById("weather-rain")!.hidden = !sim.weather.rain;
+  }
+  /** Fresh night/rain roll on every level start when randomized. */
+  function applyLevelWeather() {
+    if (loadSettings().randomizeAtmosphere) sim.weather = randomWeather();
+    paintWeatherBadges();
+  }
   function select(stage: Stage) {
     surface = "play";
     exitEdit();
@@ -136,6 +146,7 @@ async function boot() {
     settingsScreens?.hide();
     recordedRun = undefined;
     applyStoredVehicle();
+    applyLevelWeather();
     sim.reset(stage);
     view.resetTruck();
     clock.reset();
@@ -162,6 +173,7 @@ async function boot() {
   ) {
     if (vehicle) sim.vehicleId = getVehicle(vehicle).id;
     else applyStoredVehicle();
+    applyLevelWeather();
     sim.startTrack(id, lane);
     view.resetTruck();
     clock.reset();
@@ -277,20 +289,16 @@ async function boot() {
     startOfficial(id),
   );
   $("level-editor-button").onclick = showLevelEditor;
-  const paintWeather = () => {
-    document.getElementById("weather-night")!.hidden = !sim.weather.night;
-    document.getElementById("weather-rain")!.hidden = !sim.weather.rain;
-  };
   settingsScreens = createSettings(
     app,
     (tier) => view.applyQuality(tier),
     showLevelSelect,
     (weather) => {
       sim.weather = { ...weather };
-      paintWeather();
+      paintWeatherBadges();
     },
   );
-  paintWeather();
+  paintWeatherBadges();
   $("settings-button").onclick = showSettings;
   // In-game placement for custom levels: ghost brick, live commit, disk save.
   app.insertAdjacentHTML(

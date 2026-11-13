@@ -42,7 +42,7 @@ try {
   for (const id of ids) {
     await page.evaluate((id) => {
       const g = window.__game;
-      g.startTrack("harbor-sprint", "easy", id);
+      g.startTrack("foundry-run", "easy", id);
       g.place({ x: 0, y: 2.1, z: -95 }, 0);
       g.advanceFrames(45, 1, {});
     }, id);

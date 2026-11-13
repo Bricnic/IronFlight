@@ -18,6 +18,8 @@ export interface GameSettings {
   video: VideoQuality;
   night: boolean;
   rain: boolean;
+  /** Re-roll night/rain at the start of every level and retry. */
+  randomizeAtmosphere: boolean;
 }
 const SETTINGS_KEY = "iron-flight-settings-v1";
 export interface SettingsStorage {
@@ -36,19 +38,27 @@ export function loadSettings(
     if (raw) {
       const parsed = JSON.parse(raw) as unknown;
       const video = (parsed as { video?: unknown } | null)?.video;
-      if (isTier(video)) return { video, ...parseWeatherFlags(parsed) };
+      if (isTier(video))
+        return {
+          video,
+          ...parseWeatherFlags(parsed),
+          randomizeAtmosphere:
+            (parsed as { randomizeAtmosphere?: unknown } | null)
+              ?.randomizeAtmosphere === true,
+        };
     }
   } catch {
     // Corrupt JSON falls through to the default.
   }
-  return { video: "high", ...DEFAULT_WEATHER };
+  return { video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false };
 }
 export function saveSettings(
   video: VideoQuality,
   weather: WeatherFlags = DEFAULT_WEATHER,
+  randomizeAtmosphere = false,
   storage: SettingsStorage = globalThis.localStorage,
 ): GameSettings {
-  const settings = { video, ...weather };
+  const settings = { video, ...weather, randomizeAtmosphere };
   storage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   return settings;
 }

@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 const tracks = [
-  "harbor-sprint",
   "foundry-run",
   "skyline-circuit",
   "scrapyard-sweep",

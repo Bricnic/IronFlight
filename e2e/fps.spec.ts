@@ -4,7 +4,6 @@ test.slow();
 
 const TRACKS = [
   "triple-loop",
-  "harbor-sprint",
   "foundry-run",
   "skyline-circuit",
   "scrapyard-sweep",

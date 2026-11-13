@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { TrackRun, medalFor } from "../src/track-run";
 import { getTrack, gates, type Track } from "../src/tracks";
 const race: Track = {
-  ...getTrack("harbor-sprint"),
+  ...getTrack("foundry-run"),
   checkpoints: gates(
     [
       { x: 0, z: 0 },

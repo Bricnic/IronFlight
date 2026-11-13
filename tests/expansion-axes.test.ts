@@ -31,7 +31,7 @@ it("hangs six phased axes over the canyon and nowhere else", () => {
   expect(new Set(defs.map((d) => d.phase)).size).toBe(6);
   for (const d of defs)
     expect(Number.isFinite(d.x + d.y + d.z + d.phase)).toBe(true);
-  expect(axeDefs(getTrack("harbor-sprint"))).toEqual([]);
+  expect(axeDefs(getTrack("foundry-run"))).toEqual([]);
   expect(axeDefs()).toEqual([]);
 });
 it("pendulum angle and velocity follow amplitude, period and phase", () => {

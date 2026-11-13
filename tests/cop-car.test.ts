@@ -72,12 +72,12 @@ it("flashes the bar only above 90 game mph", () => {
   expect(lightBarState(25.01, 1 / 6).b).toBeGreaterThan(1);
   expect(lightBarState(31, 10).a).not.toBe(lightBarState(31, 10 + 1 / 6).a);
 });
-it("headlessly completes Harbor Sprint in the cop car", () => {
+it("headlessly completes Foundry Run in the cop car", () => {
   const s = new Simulation();
   s.setVehicle("cop-car");
   expect(s.snapshot(false).vehicleId).toBe("cop-car");
-  s.startTrack("harbor-sprint");
-  const track = getTrack("harbor-sprint");
+  s.startTrack("foundry-run");
+  const track = getTrack("foundry-run");
   for (let i = 0; i < 120 * 100 && s.trackRun?.status === "running"; i++)
     s.step(courseDriver(s.snapshot(), track));
   expect(
