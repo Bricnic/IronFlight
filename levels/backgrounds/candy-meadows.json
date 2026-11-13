@@ -1,0 +1,55 @@
+{
+  "name": "candy-meadows",
+  "sky": { "top": 5220607, "horizon": 16766700 },
+  "fog": { "color": 16766700, "near": 140, "far": 620 },
+  "sun": { "color": 16773572, "intensity": 3.2 },
+  "hemi": { "sky": 16771574, "ground": 9068446, "intensity": 1.8 },
+  "env": 0.75,
+  "shapes": [
+    {
+      "kind": "hill",
+      "count": 10,
+      "radius": 320,
+      "y": -4,
+      "size": [40, 90],
+      "seed": 201,
+      "color": 16752338
+    },
+    {
+      "kind": "tree",
+      "texture": "bark_brown_01",
+      "count": 22,
+      "radius": 260,
+      "y": 0,
+      "size": [6, 12],
+      "seed": 202,
+      "color": 16736162
+    },
+    {
+      "kind": "tent",
+      "count": 6,
+      "radius": 290,
+      "y": 0,
+      "size": [20, 30],
+      "seed": 203,
+      "color": 16766954
+    },
+    {
+      "kind": "toy-block",
+      "count": 14,
+      "radius": 380,
+      "y": 0,
+      "size": [10, 22],
+      "seed": 204
+    }
+  ],
+  "clouds": {
+    "count": 14,
+    "y": [90, 150],
+    "radius": [240, 480],
+    "color": 16773368,
+    "opacity": 0.9,
+    "drift": 1.2,
+    "seed": 205
+  }
+}

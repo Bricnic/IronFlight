@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import * as T from "three";
 import { PARTS, deformGeometry } from "../src/damage";
+import { bodyBounds } from "../src/headlights";
 import { getVehicle, validateVehicles } from "../src/vehicles";
 import { createHovercraft, hovercraftStats } from "../src/hovercraft";
 import { createSnowGroomer, groomerStats } from "../src/snow-groomer";
@@ -22,20 +23,19 @@ const NEW_CARS = [
   ...THEMED_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
   ...GENERATED_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
 ] as const;
+const KIT_CARS = [...CONCEPT_VEHICLES, ...THEMED_VEHICLES, ...GENERATED_VEHICLES];
+const TRUCK_BASELINE = truckStats(createTruck());
 
-it("catalogs the new cars on the shared part slots", () => {
-  for (const car of NEW_CARS) {
+for (const car of NEW_CARS) {
+  it(`new-car ${car.id} catalogs on the shared part slots`, () => {
     const def = getVehicle(car.id);
     expect(def.parts.map((p) => p.id)).toEqual(PARTS.map((p) => p.id));
     expect(def.suspension).toHaveLength(4);
     for (const [i, part] of def.parts.entries())
       expect(part.hp).toBe(PARTS[i].hp);
-  }
-  expect(() => validateVehicles()).not.toThrow();
-});
+  });
 
-it("covers every new-car part with a deformable first child", () => {
-  for (const car of NEW_CARS) {
+  it(`new-car ${car.id} covers every part with a deformable first child`, () => {
     const group = car.build();
     for (const def of PARTS) {
       const g = group.getObjectByName(def.id);
@@ -47,11 +47,9 @@ it("covers every new-car part with a deformable first child", () => {
         `${car.id}:${def.id}`,
       ).toBe(true);
     }
-  }
-});
+  });
 
-it("a dent displaces new-car hood vertices", () => {
-  for (const car of NEW_CARS) {
+  it(`new-car ${car.id} dent displaces hood vertices`, () => {
     const group = car.build();
     const hood = group.getObjectByName("hood")!.children[0] as T.Mesh;
     const attr = hood.geometry.attributes.position as T.BufferAttribute;
@@ -65,28 +63,51 @@ it("a dent displaces new-car hood vertices", () => {
     for (let i = 0; i < before.length; i++)
       if (Math.abs(before[i] - after[i]) > 1e-9) moved++;
     expect(moved, car.id).toBeGreaterThan(0);
-  }
-});
+  });
 
-it("new cars carry high-poly detail near truck density", () => {
-  const truck = truckStats(createTruck());
-  for (const car of NEW_CARS) {
+  it(`new-car ${car.id} carries high-poly detail near truck density`, () => {
     const stats = car.stats(car.build());
     expect(stats.triangles, `${car.id} triangles`).toBeGreaterThan(40000);
     expect(stats.meshes, `${car.id} meshes`).toBeGreaterThan(60);
     expect(
       stats.triangles,
       `${car.id} vs truck`,
-    ).toBeGreaterThan(truck.triangles * 0.4);
-  }
-});
+    ).toBeGreaterThan(TRUCK_BASELINE.triangles * 0.4);
+  });
 
-it("the Gemini concepts use detailed geometry and four animated wheel assemblies", () => {
-  for (const { id, build } of [...CONCEPT_VEHICLES, ...THEMED_VEHICLES, ...GENERATED_VEHICLES]) {
+  // Onboarding showroom-zoom gate (see the pipeline build prompt step 6):
+  // mirrors GameView.vehiclePreview's framing math (fov 55, 1.03 margin) so a
+  // stray far-flung mesh or an offset build fails here instead of shipping a
+  // wrong-zoom public/vehicles/<id>.png. Band calibrated over the full
+  // garage: healthy distances run 7.99 (sports-car) to 12.96 (stretch-limo);
+  // the hearse/fuel-tanker/golf-cart glitch previews implied ~25m.
+  it(`new-car ${car.id} frames a consistent showroom zoom`, () => {
+    const group = car.build();
+    group.updateMatrixWorld(true);
+    const bounds = bodyBounds(group, null);
+    const center = bounds.getCenter(new T.Vector3());
+    const radius = bounds.getSize(new T.Vector3()).length() / 2;
+    const distance =
+      (radius / Math.sin(T.MathUtils.degToRad(55 / 2))) * 1.03;
+    expect(distance, `${car.id} showroom distance`).toBeGreaterThanOrEqual(7);
+    expect(distance, `${car.id} showroom distance`).toBeLessThanOrEqual(14);
+    expect(Math.abs(center.x), `${car.id} center.x`).toBeLessThanOrEqual(1.5);
+    expect(center.y, `${car.id} center.y`).toBeGreaterThanOrEqual(-1.5);
+    expect(center.y, `${car.id} center.y`).toBeLessThanOrEqual(3);
+    expect(Math.abs(center.z), `${car.id} center.z`).toBeLessThanOrEqual(2.5);
+  });
+}
+
+for (const { id, build } of KIT_CARS) {
+  it(`new-car ${id} uses detailed geometry and four treaded wheel assemblies`, () => {
     const { triangles, treadBlocks } = truckStats(build());
     expect(triangles, id).toBeGreaterThanOrEqual(90_000);
     expect(treadBlocks, id).toBeGreaterThanOrEqual(384);
-  }
+  });
+}
+
+it("validates the whole vehicle registry without errors", () => {
+  expect(() => validateVehicles()).not.toThrow();
 });
 
 it("the garage includes one vehicle for each of the twenty themed concepts", () => {

@@ -1,0 +1,15 @@
+{
+  "theme": "candy land",
+  "levels": 5,
+  "decor": 6,
+  "destructibles": 5,
+  "backgrounds": 2,
+  "lethals": 8,
+  "gemini": true,
+  "mode": "race",
+  "goldMin": 45,
+  "goldMax": 200,
+  "idealMin": 45,
+  "idealMax": 300,
+  "previewVehicle": "random"
+}

@@ -68,6 +68,7 @@ const KIND_TEXTURE: Partial<Record<string, string>> = {
   smokestack: "concrete_floor_02",
   "toy-block": "blue_plaster_wall",
   "rock-wall": "dark_rock_02",
+  "snow-hill": "snow_01",
 };
 
 const FOLIAGE_GREENS = [0x3f7a3a, 0x4d8a3f, 0x2f6b35];
@@ -171,6 +172,18 @@ function place(
   return geometry;
 }
 
+/** Tile skyscraper side UVs so one window-texture repeat covers 4x8m (~0.67m windows). Roof keeps 0-1. */
+export function tileSkyscraperUVs(geometry: T.BufferGeometry, size: number) {
+  const uv = geometry.attributes.uv as T.BufferAttribute;
+  const n = geometry.attributes.normal as T.BufferAttribute;
+  const ru = size / 4, rv = size / 2;
+  for (let i = 0; i < uv.count; i++) {
+    if (Math.abs(n.getY(i)) > 0.5) continue;
+    uv.setXY(i, uv.getX(i) * ru, uv.getY(i) * rv);
+  }
+  uv.needsUpdate = true;
+}
+
 export class BackgroundView extends T.Group {
   private key = "";
   private builtTrack: Track | null = null;
@@ -260,6 +273,20 @@ export class BackgroundView extends T.Group {
     });
   }
 
+  private glowMat(color: number, emissive: number, intensity: number) {
+    return this.cached(`glow|${color}|${emissive}|${intensity}`, () => {
+      const material = new T.MeshStandardMaterial({
+        color,
+        emissive,
+        emissiveIntensity: intensity,
+        roughness: 0.6,
+        metalness: 0,
+      });
+      material.fog = false;
+      return material;
+    });
+  }
+
   private texMat(
     id: string,
     repeat: number,
@@ -299,8 +326,9 @@ export class BackgroundView extends T.Group {
       case "skyscraper":
         return this.cached(`sky|${id}|${repeat}|${ring.color ?? 0xffffff}`, () => {
           const windows = getWindowTexture();
+          if (windows) windows.wrapS = windows.wrapT = T.RepeatWrapping;
           const material = id
-            ? pbr(id, repeat, {
+            ? pbr(id, 1, {
                 color: ring.color ?? 0xffffff,
                 emissive: 0xffffff,
                 ...(windows ? { emissiveMap: windows } : {}),
@@ -489,12 +517,12 @@ export class BackgroundView extends T.Group {
         }
         break;
       }
-      case "skyscraper":
-        push(
-          place(new T.BoxGeometry(1, 4, 1), slot.x, y + size * 2, slot.z, size, slot.angle),
-          main(),
-        );
+      case "skyscraper": {
+        const tower = new T.BoxGeometry(1, 4, 1);
+        tileSkyscraperUVs(tower, size);
+        push(place(tower, slot.x, y + size * 2, slot.z, size, slot.angle), main());
         break;
+      }
       case "container-stack": {
         const material = main();
         const levels = 2 + Math.floor(variant * 2);
@@ -583,6 +611,138 @@ export class BackgroundView extends T.Group {
           main(),
         );
         break;
+      case "snow-hill":
+        push(
+          place(
+            new T.SphereGeometry(1, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+            slot.x,
+            y,
+            slot.z,
+            size,
+            0,
+            size * 0.45,
+          ),
+          main(),
+        );
+        break;
+      case "christmas-tree": {
+        const bark = this.texMat(
+          ring.texture ?? KIND_TEXTURE.tree!,
+          repeat,
+          horizon,
+          ring.radius,
+        );
+        const fir = this.flatMat(0x1f6b3a);
+        const snow = this.flatMat(0xf2f7fb);
+        const put = (geometry: T.BufferGeometry, lx: number, ly: number, lz: number, material: T.Material) =>
+          push(
+            place(geometry, slot.x + lx * size, y + ly * size, slot.z + lz * size, size),
+            material,
+          );
+        put(new T.CylinderGeometry(0.09, 0.13, 1, 6), 0, 0.5, 0, bark);
+        const tiers: [number, number, number][] = [
+          [0.62, 1.15, 1.1],
+          [0.46, 1.75, 0.9],
+          [0.3, 2.25, 0.75],
+        ];
+        for (const [r, cy, h] of tiers) {
+          put(new T.ConeGeometry(r, h, 8), 0, cy, 0, fir);
+          put(new T.ConeGeometry(r * 0.55, h * 0.4, 8), 0, cy + h * 0.32, 0, snow);
+        }
+        const baubles = [0xd42a2a, 0xffd23b, 0x3fa7ff];
+        tiers.forEach(([r, cy], ti) => {
+          for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2 + ti * 0.7 + variant * 3;
+            const mat =
+              i % 2 === 0
+                ? this.glowMat(0xfff2cc, 0xffd27a, 1.6)
+                : this.flatMat(baubles[(i + ti) % baubles.length]);
+            put(
+              new T.SphereGeometry(i % 2 === 0 ? 0.035 : 0.05, 6, 5),
+              Math.cos(a) * r * 0.85,
+              cy - 0.18,
+              Math.sin(a) * r * 0.85,
+              mat,
+            );
+          }
+        });
+        const star = new T.OctahedronGeometry(0.09);
+        star.scale(1, 1.4, 1);
+        put(star, 0, 2.75, 0, this.glowMat(0xffd23b, 0xffc95a, 1.2));
+        break;
+      }
+      case "gift-pile": {
+        const papers = [0xc81f2e, 0x1f6b3a, 0x3d7ad9, 0xd8a83a];
+        const facing = slot.angle;
+        const c = Math.cos(facing), s = Math.sin(facing);
+        const put = (geometry: T.BufferGeometry, lx: number, ly: number, lz: number, material: T.Material) =>
+          push(
+            place(
+              geometry,
+              slot.x + (lx * c + lz * s) * size,
+              y + ly * size,
+              slot.z + (-lx * s + lz * c) * size,
+              size,
+              facing,
+            ),
+            material,
+          );
+        const gifts: [number, number, number, number, number, number][] = [
+          // x, z, baseY, w, h, paperIndex
+          [-0.28, 0.1, 0, 0.5, 0.34, Math.floor(variant * 4) % 4],
+          [0.3, -0.12, 0, 0.42, 0.3, (Math.floor(variant * 4) + 1) % 4],
+          [0.02, 0.05, 0.34, 0.36, 0.28, (Math.floor(variant * 4) + 2) % 4],
+        ];
+        for (const [gx, gz, gy, w, h, pi] of gifts) {
+          put(new T.BoxGeometry(w, h, w), gx, gy + h / 2, gz, this.flatMat(papers[pi]));
+          const ribbon = this.flatMat(pi % 2 ? 0xf2f7fb : 0xd8a83a);
+          put(new T.BoxGeometry(0.07, h + 0.01, w + 0.01), gx, gy + h / 2, gz, ribbon);
+          put(new T.BoxGeometry(w + 0.01, h + 0.01, 0.07), gx, gy + h / 2, gz, ribbon);
+        }
+        const bow = new T.TorusGeometry(0.07, 0.03, 6, 10);
+        put(bow, 0.02, 0.66, 0.05, this.flatMat(0xc81f2e));
+        break;
+      }
+      case "village-house": {
+        const facing = Math.atan2(-slot.x, -slot.z);
+        const c = Math.cos(facing), s = Math.sin(facing);
+        const put = (geometry: T.BufferGeometry, lx: number, ly: number, lz: number, material: T.Material) =>
+          push(
+            place(
+              geometry,
+              slot.x + (lx * c + lz * s) * size,
+              y + ly * size,
+              slot.z + (-lx * s + lz * c) * size,
+              size,
+              facing,
+            ),
+            material,
+          );
+        put(
+          new T.BoxGeometry(0.8, 0.5, 0.6),
+          0,
+          0.25,
+          0,
+          this.flatMat(ring.color ?? 0xd9c9a8),
+        );
+        const roof = this.flatMat(0x8a2a22);
+        const snow = this.flatMat(0xf2f7fb);
+        for (const side of [-1, 1]) {
+          const slab = new T.BoxGeometry(0.52, 0.06, 0.72);
+          slab.rotateZ(side * -0.62);
+          put(slab, side * -0.19, 0.62, 0, roof);
+          const cap = new T.BoxGeometry(0.54, 0.05, 0.74);
+          cap.rotateZ(side * -0.62);
+          put(cap, side * -0.19, 0.68, 0, snow);
+        }
+        const windows = this.glowMat(0xffc978, 0xff9a3c, 1.8);
+        for (const side of [-1, 1])
+          put(new T.BoxGeometry(0.13, 0.16, 0.03), side * 0.24, 0.28, 0.3, windows);
+        put(new T.BoxGeometry(0.14, 0.3, 0.04), 0, 0.15, 0.3, this.flatMat(0x4a2c14));
+        put(new T.BoxGeometry(0.1, 0.26, 0.1), 0.26, 0.72, -0.1, this.flatMat(0x6e4a3a));
+        put(new T.BoxGeometry(0.13, 0.05, 0.13), 0.26, 0.87, -0.1, snow);
+        break;
+      }
       case "moon": {
         const material = new T.SpriteMaterial({
           map: getMoonTexture(),

@@ -1,8 +1,8 @@
 import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
-import { Quaternion, Vector3 } from "three";
+import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isDinosaur, isGauntletMachine, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import {
@@ -18,7 +18,30 @@ import {
   DUNGEON_STRIKE,
   ROBOT_STOMP_RADIUS,
   ROBOT_STOMP_DAMAGE,
+  ROBOT_LASER_RANGE,
+  ROBOT_LASER_HALF_ANGLE,
+  ROBOT_LASER_DPS,
+  ROBOT_LASER_TICK,
+  robotLaserAngle,
+  robotLaserFiring,
   CAGE,
+  CACTI_PATCH,
+  ROCKER,
+  BOULDER,
+  CANDY_ARCH,
+  CANDY_TRUNK,
+  CANDY_CHOCOLATE,
+  CANDY_STALL,
+  CANDY_LAMP,
+  CANDY_PRESS,
+  CHRISTMAS_ARCH,
+  CHRISTMAS_TRUNK,
+  CHRISTMAS_STALL,
+  CHRISTMAS_LANTERN,
+  CHRISTMAS_GIFTS,
+  CHRISTMAS_DEER,
+  CHRISTMAS_DEER_BODY,
+  CHRISTMAS_PRESS,
   CLIPPER_BACK,
   WINDOW_GATE,
   type DungeonHazard,
@@ -29,6 +52,11 @@ type Mechanism = {
   contacts: number;
   lastCycle: number;
   bite?: { started: number; turn: number; hit: boolean };
+  laser?: { debt: number; lastEvent: number };
+  body?: R.RigidBody;
+  tilt?: number;
+  triggered?: boolean;
+  aboard?: boolean;
 };
 export class DungeonPhysics {
   mechanisms: Mechanism[] = [];
@@ -72,7 +100,29 @@ export class DungeonPhysics {
       );
       m.colliders.push(c);
     };
-    if (isGauntletMachine(h.kind)) {
+    if (isChristmasLethal(h.kind)) {
+      // Press traps keep solid side posts; the rest drive straight through
+      // like hands/scissors and kill via the shared snap-strike check.
+      if (
+        h.kind === "christmas-nutcracker" ||
+        h.kind === "christmas-ornament-slammer" ||
+        h.kind === "christmas-sleigh-crusher"
+      ) {
+        solid(CHRISTMAS_PRESS.postW, CHRISTMAS_PRESS.postH, CHRISTMAS_PRESS.postD, -CHRISTMAS_PRESS.postX, 0);
+        solid(CHRISTMAS_PRESS.postW, CHRISTMAS_PRESS.postH, CHRISTMAS_PRESS.postD, CHRISTMAS_PRESS.postX, 0);
+      }
+    } else if (isCandyLethal(h.kind)) {
+      // Press traps keep solid side posts; the rest drive straight through
+      // like hands/scissors and kill via the shared snap-strike check.
+      if (
+        h.kind === "jawbreaker-crusher" ||
+        h.kind === "peppermint-slammer" ||
+        h.kind === "caramel-crusher"
+      ) {
+        solid(CANDY_PRESS.postW, CANDY_PRESS.postH, CANDY_PRESS.postD, -CANDY_PRESS.postX, 0);
+        solid(CANDY_PRESS.postW, CANDY_PRESS.postH, CANDY_PRESS.postD, CANDY_PRESS.postX, 0);
+      }
+    } else if (isGauntletMachine(h.kind)) {
       this.gauntlet.add(m.h);
       if (h.kind === "screw-field") solid(SCREW_FIELD_SIZE, 1.2, SCREW_FIELD_SIZE, 0, 0, -1.2);
       if (h.kind === "volcano")
@@ -86,6 +136,50 @@ export class DungeonPhysics {
       }
     } else if (h.kind === "cage") {
       solid(CAGE.w, CAGE.h, CAGE.d, 0, 0);
+    } else if (h.kind === "cacti-patch") {
+      solid(CACTI_PATCH.w, CACTI_PATCH.h, CACTI_PATCH.d, 0, 0);
+    } else if (h.kind === "rocker") {
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.kinematicPositionBased().setTranslation(
+          h.x,
+          (h.y ?? 0) + ROCKER.pivotY,
+          h.z,
+        ),
+      );
+      m.body = body;
+      m.tilt = ROCKER.restTilt;
+      const deck = (x: number, y: number, z: number, w: number, hgt: number, d: number) => {
+        m.colliders.push(
+          world.createCollider(
+            R.ColliderDesc.cuboid(w / 2, hgt / 2, d / 2)
+              .setTranslation(x, y, z)
+              .setFriction(0.9),
+            body,
+          ),
+        );
+      };
+      deck(0, 0, 0, ROCKER.w, ROCKER.h, ROCKER.d);
+      for (const side of [-1, 1])
+        deck(side * (ROCKER.w / 2 - 0.4), 0.9, 0, 0.8, 1.2, ROCKER.d);
+    } else if (h.kind === "boulder") {
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.dynamic()
+          .setTranslation(h.x, (h.y ?? 0) + BOULDER.radius + 0.1, h.z)
+          .setLinearDamping(0.05)
+          .setAngularDamping(0.1)
+          .setCcdEnabled(true),
+      );
+      m.body = body;
+      m.triggered = false;
+      m.colliders.push(
+        world.createCollider(
+          R.ColliderDesc.ball(BOULDER.radius)
+            .setMass(120)
+            .setFriction(0.9)
+            .setRestitution(0.1),
+          body,
+        ),
+      );
     } else if (h.kind === "flagpole") {
       m.colliders.push(
         world.createCollider(
@@ -98,6 +192,90 @@ export class DungeonPhysics {
       );
     } else if (h.kind === "clippers") {
       solid(CLIPPER_BACK.w, CLIPPER_BACK.h, CLIPPER_BACK.d, 0, CLIPPER_BACK.z);
+    } else if (isChristmasDecor(h.kind)) {
+      // Bumpable scenery only: christmas decor kinds have no strike entry, so after() never fires.
+      if (h.kind === "christmas-light-arch") {
+        solid(CHRISTMAS_ARCH.postW, CHRISTMAS_ARCH.postH, CHRISTMAS_ARCH.postD, -CHRISTMAS_ARCH.postX, 0);
+        solid(CHRISTMAS_ARCH.postW, CHRISTMAS_ARCH.postH, CHRISTMAS_ARCH.postD, CHRISTMAS_ARCH.postX, 0);
+      } else if (h.kind === "christmas-tree") {
+        solid(CHRISTMAS_TRUNK.w, CHRISTMAS_TRUNK.h, CHRISTMAS_TRUNK.d, 0, 0);
+      } else if (h.kind === "christmas-market-stall") {
+        solid(CHRISTMAS_STALL.w, CHRISTMAS_STALL.h, CHRISTMAS_STALL.d, 0, 0);
+      } else if (h.kind === "christmas-lantern") {
+        solid(CHRISTMAS_LANTERN.w, CHRISTMAS_LANTERN.h, CHRISTMAS_LANTERN.d, 0, 0);
+      } else if (h.kind === "christmas-gift-wall") {
+        solid(CHRISTMAS_GIFTS.w, CHRISTMAS_GIFTS.h, CHRISTMAS_GIFTS.d, 0, 0);
+      } else if (h.kind === "christmas-reindeer") {
+        solid(CHRISTMAS_DEER.w, CHRISTMAS_DEER.h, CHRISTMAS_DEER.d, 0, 0);
+        solid(
+          CHRISTMAS_DEER_BODY.w,
+          CHRISTMAS_DEER_BODY.h,
+          CHRISTMAS_DEER_BODY.d,
+          0,
+          0,
+          CHRISTMAS_DEER.h,
+        );
+      }
+    } else if (isCandyDecor(h.kind)) {
+      // Bumpable scenery only: candy kinds have no strike entry, so after() never fires.
+      if (h.kind === "candy-cane-arch") {
+        solid(CANDY_ARCH.postW, CANDY_ARCH.postH, CANDY_ARCH.postD, -CANDY_ARCH.postX, 0);
+        solid(CANDY_ARCH.postW, CANDY_ARCH.postH, CANDY_ARCH.postD, CANDY_ARCH.postX, 0);
+      } else if (h.kind === "gumdrop-tree") {
+        solid(CANDY_TRUNK.w, CANDY_TRUNK.h, CANDY_TRUNK.d, 0, 0);
+      } else if (h.kind === "chocolate-barrier") {
+        solid(CANDY_CHOCOLATE.w, CANDY_CHOCOLATE.h, CANDY_CHOCOLATE.d, 0, 0);
+      } else if (h.kind === "cotton-candy-stall") {
+        solid(CANDY_STALL.w, CANDY_STALL.h, CANDY_STALL.d, 0, 0);
+      } else if (h.kind === "gumball-lamp") {
+        solid(CANDY_LAMP.w, CANDY_LAMP.h, CANDY_LAMP.d, 0, 0);
+      }
+    }
+  }
+  /** Pre-step kinematic updates: rocker seesaws follow the car aboard. */
+  before() {
+    const s = this.sim;
+    for (const m of this.mechanisms) {
+      if (m.h.kind !== "rocker" || !m.body) continue;
+      const yaw = m.h.yaw ?? 0;
+      const cos = Math.cos(yaw), sin = Math.sin(yaw);
+      const p = s.body.translation();
+      const dx = p.x - m.h.x, dz = p.z - m.h.z;
+      const lx = dx * cos - dz * sin, lz = dx * sin + dz * cos;
+      const py = (m.h.y ?? 0) + ROCKER.pivotY;
+      // Latching boarding: the entry edge stays pinned down until the car is
+      // committed past it, so the rising deck can never trap the nose.
+      const nearDeck =
+        Math.abs(lx) < ROCKER.w / 2 && Math.abs(p.y - py) < 4;
+      if (m.aboard) {
+        if (
+          lz > ROCKER.d / 2 + 2 ||
+          lz < -ROCKER.d / 2 - 3 ||
+          !nearDeck
+        )
+          m.aboard = false;
+      } else if (
+        lz > -ROCKER.d / 2 + 1 &&
+        lz < ROCKER.d / 2 &&
+        nearDeck
+      ) {
+        m.aboard = true;
+      }
+      let target: number = ROCKER.restTilt;
+      if (m.aboard) {
+        if (lz < -ROCKER.d / 2 + 8) target = ROCKER.restTilt;
+        else if (lz > ROCKER.d / 2 - 2) target = m.tilt ?? ROCKER.restTilt;
+        else
+          target =
+            Math.max(-1, Math.min(1, lz / (ROCKER.d / 2))) * ROCKER.maxTilt;
+      }
+      const cur = m.tilt ?? ROCKER.restTilt;
+      const step = ROCKER.rate * DT;
+      m.tilt = cur + Math.max(-step, Math.min(step, target - cur));
+      m.body.setNextKinematicTranslation({ x: m.h.x, y: py, z: m.h.z });
+      m.body.setNextKinematicRotation(
+        new Quaternion().setFromEuler(new Euler(m.tilt, yaw, 0, "YXZ")),
+      );
     }
   }
   /** Live editing: shift one hazard and its furniture by delta. */
@@ -111,6 +289,11 @@ export class DungeonPhysics {
     m.h.y = y;
     m.h.z = z;
     this.gauntlet.move(id, dx, dy, dz);
+    if (m.body) {
+      const p = m.body.translation();
+      m.body.setTranslation({ x: p.x + dx, y: p.y + dy, z: p.z + dz }, true);
+      return;
+    }
     for (const c of m.colliders) {
       const p = c.translation();
       c.setTranslation({ x: p.x + dx, y: p.y + dy, z: p.z + dz });
@@ -123,6 +306,51 @@ export class DungeonPhysics {
     const [m] = this.mechanisms.splice(at, 1);
     this.gauntlet.remove(id);
     for (const c of m.colliders) this.sim.world.removeCollider(c, true);
+    if (m.body) this.sim.world.removeRigidBody(m.body);
+  }
+  /** Proximity boulder: rolls along its yaw heading once, lethal on contact. */
+  private rollBoulder(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    if (s.status !== "driving" || !m.body) return;
+    if (!m.triggered) {
+      const b = m.body.translation();
+      if (Math.hypot(p.x - b.x, p.z - b.z) > BOULDER.trigger) return;
+      m.triggered = true;
+      const yaw = m.h.yaw ?? 0;
+      const dir = new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+      m.body.setLinvel(
+        { x: dir.x * BOULDER.speed, y: 0, z: dir.z * BOULDER.speed },
+        true,
+      );
+      const axis = new Vector3(0, 1, 0).cross(dir);
+      m.body.setAngvel(
+        {
+          x: (axis.x * BOULDER.speed) / BOULDER.radius,
+          y: (axis.y * BOULDER.speed) / BOULDER.radius,
+          z: (axis.z * BOULDER.speed) / BOULDER.radius,
+        },
+        true,
+      );
+      return;
+    }
+    for (const c of m.colliders) {
+      let hit = false;
+      this.sim.world.contactPairsWith(c, (other) => {
+        if (other.parent()?.handle === s.body.handle)
+          this.sim.world.contactPair(c, other, (manifold) => {
+            if (manifold.numSolverContacts() > 0) hit = true;
+          });
+      });
+      if (hit) {
+        m.contacts++;
+        s.damage("chassis-front", 10000);
+        s.damageEvents.push({
+          source: "boulder",
+          part: "chassis-front",
+          time: s.time,
+        });
+      }
+    }
   }
   private attackWithDinosaur(m: Mechanism, kind: DinosaurKind, p: R.Vector) {
     const s = this.sim;
@@ -159,6 +387,11 @@ export class DungeonPhysics {
     s.body.applyImpulse({ x: x * shove, y: 0, z: z * shove }, true);
     if (sc > 1) {
       this.ripWithDinosaur(kind, h, x, z, mouth, height);
+      // Two bites to kill: the second landed bite finds the chassis.
+      if (m.contacts >= 2) {
+        s.damage("chassis-front", 10000);
+        s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
+      }
     } else {
       s.damage("chassis-front", 32);
       s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
@@ -219,22 +452,64 @@ export class DungeonPhysics {
       if (h.kind === "robot") {
         const shifted = s.time + h.phase;
         const cycle = Math.floor(shifted / SNAP_CYCLE);
-        if (!snapStriking(shifted) || cycle === m.lastCycle) continue;
-        const rdx = p.x - h.x,
-          rdz = p.z - h.z;
-        if (rdx * rdx + rdz * rdz > ROBOT_STOMP_RADIUS * ROBOT_STOMP_RADIUS)
-          continue;
-        if (Math.abs(p.y - ((h.y ?? 0) + 1.5)) > 4) continue;
-        m.lastCycle = cycle;
-        m.contacts++;
-        s.damage("chassis-front", ROBOT_STOMP_DAMAGE);
-        s.damageEvents.push({
-          source: h.kind,
-          part: "chassis-front",
-          time: s.time,
-        });
+        if (snapStriking(shifted) && cycle !== m.lastCycle) {
+          const rdx = p.x - h.x,
+            rdz = p.z - h.z;
+          if (
+            rdx * rdx + rdz * rdz <= ROBOT_STOMP_RADIUS * ROBOT_STOMP_RADIUS &&
+            Math.abs(p.y - ((h.y ?? 0) + 1.5)) <= 4
+          ) {
+            m.lastCycle = cycle;
+            m.contacts++;
+            s.damage("chassis-front", ROBOT_STOMP_DAMAGE);
+            s.damageEvents.push({
+              source: h.kind,
+              part: "chassis-front",
+              time: s.time,
+            });
+          }
+        }
+        // Sweeping laser: 30% of current health per second of beam exposure,
+        // applied in 100ms ticks to every attached part.
+        const ldx = p.x - h.x, ldz = p.z - h.z;
+        if (
+          s.status === "driving" &&
+          robotLaserFiring(shifted) &&
+          Math.hypot(ldx, ldz) < ROBOT_LASER_RANGE &&
+          Math.abs(p.y - ((h.y ?? 0) + 1.5)) <= 4
+        ) {
+          const bearing = Math.atan2(ldx, ldz) - (h.yaw ?? 0);
+          const aim = robotLaserAngle(shifted);
+          const err = Math.atan2(Math.sin(bearing - aim), Math.cos(bearing - aim));
+          if (Math.abs(err) <= ROBOT_LASER_HALF_ANGLE) {
+            const laser = m.laser ?? (m.laser = { debt: 0, lastEvent: -100 });
+            laser.debt += DT;
+            while (laser.debt >= ROBOT_LASER_TICK) {
+              laser.debt -= ROBOT_LASER_TICK;
+              for (const d of s.partDefs) {
+                const st = s.parts.get(d.id)!;
+                if (st.body || st.health <= 0) continue;
+                s.damage(d.id, st.health * ROBOT_LASER_DPS * ROBOT_LASER_TICK);
+              }
+              m.contacts++;
+              if (s.time - laser.lastEvent > 0.5) {
+                laser.lastEvent = s.time;
+                s.damageEvents.push({
+                  source: h.kind,
+                  part: "chassis-front",
+                  time: s.time,
+                });
+              }
+            }
+          }
+        }
         continue;
       }
+      if (h.kind === "boulder") {
+        this.rollBoulder(m, p);
+        continue;
+      }
+      if (h.kind === "rocker") continue;
       const strike =
         DUNGEON_STRIKE[h.kind as keyof typeof DUNGEON_STRIKE];
       if (!strike) continue;

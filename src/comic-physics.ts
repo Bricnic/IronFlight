@@ -149,7 +149,7 @@ export class ComicPhysics {
               ).setTranslation(h.x + x, BURNER_DRUM.y, h.z),
             ),
           );
-      } else if (h.kind === "water") {
+      } else if (h.kind === "water" || h.kind === "shark-pool") {
         box(0, -4.3, 0, 12, 0.6, 24);
         box(0, -1.8, 0, 12, 9, 24, true);
         for (const side of [-1, 1]) box(side * 6.5, 0.2, 0, 1, 0.4, 26);
@@ -333,7 +333,10 @@ export class ComicPhysics {
             });
           }
         }
-      } else if (h.kind === "water") {
+      } else if (h.kind === "water" || h.kind === "shark-pool") {
+        // Shark pools share the skim-or-sink crossing, but slow swimmers meet
+        // the sharks: triple damage rate and a much faster wreck.
+        const sharks = h.kind === "shark-pool";
         if (this.intersects(m.sensors[1])) {
           const f = new Vector3(0, 0, 1).applyQuaternion(
             new Quaternion().copy(s.body.rotation()),
@@ -361,8 +364,17 @@ export class ComicPhysics {
             m.sinking += DT;
             s.body.setLinvel({ x: v.x * 0.9, y: -1.8, z: v.z * 0.9 }, true);
             for (const part of this.sim.partDefs)
-              s.damage(part.id, part.hp * DT * 0.45);
-            if (m.sinking > 2.5) s.damage("chassis-front", 10000);
+              s.damage(part.id, part.hp * DT * (sharks ? 1.5 : 0.45));
+            if (sharks && s.time - m.triggered > 0.5) {
+              m.triggered = s.time;
+              s.damageEvents.push({
+                source: "shark-pool",
+                part: "chassis-front",
+                time: s.time,
+              });
+            }
+            if (m.sinking > (sharks ? 1.2 : 2.5))
+              s.damage("chassis-front", 10000);
           }
         } else {
           m.skimming = false;

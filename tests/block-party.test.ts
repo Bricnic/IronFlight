@@ -24,7 +24,7 @@ const levelJson = () =>
 it("stages the photo: gate, wyvern, tile path, pipes and a block wall", () => {
   const level = levelJson();
   const kinds = level.prefabs.map((p) => p.kind);
-  expect(kinds.filter((k) => k === "loose-blocks")).toHaveLength(29);
+  expect(kinds.filter((k) => k === "loose-blocks")).toHaveLength(39);
   expect(kinds.filter((k) => k === "ember-wyvern")).toHaveLength(1);
   expect(kinds.filter((k) => k === "raptor")).toHaveLength(1);
   expect(kinds.filter((k) => k === "bumper-arena")).toHaveLength(1);
@@ -41,14 +41,23 @@ it("stages the photo: gate, wyvern, tile path, pipes and a block wall", () => {
     "pipe2-span",
     "arena-floor",
     "lava-lake",
+    "ext-road-3",
+    "chicane-c",
+    "chicane-d",
+    "ext-road-4",
+    "chicane-e",
+    "chicane-f",
+    "ext-road-5",
+    "final-road-2",
   ])
     expect(ids).toContain(want);
-  expect(level.checkpoints).toHaveLength(3);
+  expect(level.checkpoints).toHaveLength(4);
   expect(level.backgroundTemplate).toBe("toybox-volcano");
 });
 
 it("completes the reference drive within the limit", () => {
   const elapsed = driveBlockPartyToCompletion();
+  expect(elapsed).toBeGreaterThanOrEqual(30);
   const level = levelJson();
   expect(elapsed).toBeLessThan(level.limit);
   expect(level.medals.bronze).toBeLessThan(level.limit);
@@ -62,16 +71,16 @@ it("keeps the bumper arena off the checkpoint line", () => {
   }
 });
 
-it("takes a bite parking beside the red wyvern", () => {
+it("two red wyvern bites wreck a parked truck", () => {
   const sim = new Simulation();
   try {
     sim.startTrack(id);
-    sim.body.setTranslation({ x: 4, y: 11.1, z: -6 }, true);
+    sim.body.setTranslation({ x: 2, y: 11.1, z: -6 }, true);
     sim.run(4, { brake: 1 });
     expect(
       sim.damageEvents.some((e) => e.source === "ember-wyvern"),
     ).toBe(true);
-    expect(sim.status).toBe("driving");
+    expect(sim.status).toBe("wrecked");
   } finally {
     sim.dispose();
   }

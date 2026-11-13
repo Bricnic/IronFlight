@@ -103,6 +103,52 @@ it("exits a yawed pole without stalling at the tube joint", () => {
   }
 });
 
+it("engages the ride on any base touch and completes the ascent", () => {
+  const level = blankLevel("Base Touch Fixture");
+  level.prefabs = [{ id: "pole", kind: "flagpole", x: 0, z: 20 }];
+  level.spawn = { x: -2.5, y: 2.1, z: 8, yaw: 0 };
+  registerCustomTrack(toTrack(validateCustomLevel(level)));
+  const sim = new Simulation();
+  try {
+    sim.startTrack("custom:base-touch-fixture");
+    // Parked on the base, off the inlet lane and standing still: the old
+    // plane-crossing trigger cannot fire here.
+    sim.body.setTranslation({ x: 2, y: 2, z: 20.5 }, true);
+    sim.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    for (let i = 0; i < 30 && !sim.guidedPipe.snapshot(); i++) sim.step({});
+    expect(sim.guidedPipe.snapshot()).not.toBeNull();
+    let peak = 0;
+    for (let i = 0; i < 720; i++) {
+      sim.step({});
+      peak = Math.max(peak, sim.body.translation().y);
+    }
+    expect(peak).toBeGreaterThan(25);
+    expect(sim.guidedPipe.knocked?.id).toBe("pole");
+    expect(sim.guidedPipe.snapshot()).toBeNull();
+    expect(sim.status).toBe("driving");
+  } finally {
+    sim.dispose();
+  }
+});
+
+it("ignores trucks parked clear of the base", () => {
+  const level = blankLevel("Base Clear Fixture");
+  level.prefabs = [{ id: "pole", kind: "flagpole", x: 0, z: 20 }];
+  level.spawn = { x: -2.5, y: 2.1, z: 8, yaw: 0 };
+  registerCustomTrack(toTrack(validateCustomLevel(level)));
+  const sim = new Simulation();
+  try {
+    sim.startTrack("custom:base-clear-fixture");
+    sim.body.setTranslation({ x: 10, y: 2, z: 20 }, true);
+    sim.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    for (let i = 0; i < 60; i++) sim.step({});
+    expect(sim.guidedPipe.snapshot()).toBeNull();
+    expect(sim.status).toBe("driving");
+  } finally {
+    sim.dispose();
+  }
+});
+
 it("builds a poled flag model headlessly", () => {
   const model = buildDungeonModel({
     id: "test-pole",

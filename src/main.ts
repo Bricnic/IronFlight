@@ -528,6 +528,13 @@ async function boot() {
         z: prefab.z,
         ...(prefab.y === undefined ? {} : { y: prefab.y }),
       });
+    else if (prefab.kind === "fragile-ice")
+      sim.fragileIce.addTile({
+        id: prefab.id,
+        x: prefab.x,
+        z: prefab.z,
+        ...(prefab.y === undefined ? {} : { y: prefab.y }),
+      });
   }
   async function saveLiveEdit(next: CustomLevel) {
     const track = sim.courseTrack!;
@@ -593,10 +600,12 @@ async function boot() {
           sim.dungeon.moveHazard(updated.id, updated.x, y, updated.z);
           sim.looseBlocks.moveBlock(updated.id, updated.x, y, updated.z);
           sim.burningCoals.moveCoal(updated.id, updated.x, y, updated.z);
+          sim.fragileIce.moveTile(updated.id, updated.x, y, updated.z);
           view.moveComicModel(updated.id, dx, dy, dz);
           view.moveDungeonModel(updated.id, dx, dy, dz);
           view.moveLooseBlockModel(updated.id, dx, dy, dz);
           view.moveBurningCoalModel(updated.id, dx, dy, dz);
+          view.moveFragileIceModel(updated.id, dx, dy, dz);
         }
         refreshSelBox();
         say(`Moved ${prefabCtx.prefab.id}`);
@@ -685,10 +694,12 @@ async function boot() {
           sim.dungeon.removeHazard(prefabCtx.prefab.id);
           sim.looseBlocks.removeBlock(prefabCtx.prefab.id);
           sim.burningCoals.removeCoal(prefabCtx.prefab.id);
+          sim.fragileIce.removeTile(prefabCtx.prefab.id);
           view.removeComicModel(prefabCtx.prefab.id);
           view.removeDungeonModel(prefabCtx.prefab.id);
           view.removeLooseBlockModel(prefabCtx.prefab.id);
           view.removeBurningCoalModel(prefabCtx.prefab.id);
+          view.removeFragileIceModel(prefabCtx.prefab.id);
         }
         selectSolid(null);
         say(`Deleted ${prefabCtx.prefab.id}`);
@@ -932,6 +943,7 @@ async function boot() {
     placementBar.hidden = !(
       surface === "play" && !!sim.courseTrack?.custom
     );
+    placementBar.classList.toggle("idle", !editing);
     const s = sim.snapshot(false),
       r = ROUTES.find((r) => r.id === s.stage);
     $("speed").textContent = Math.round(s.speed * 3.6)

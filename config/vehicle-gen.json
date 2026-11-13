@@ -8,8 +8,5 @@
   "port": 5240,
   "push": true,
   "pushTarget": "main",
-  "knownFailures": [
-    "completes all 15 chests within the five-minute limit",
-    "every track resolves a background template"
-  ]
+  "knownFailures": []
 }

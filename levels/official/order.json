@@ -42,7 +42,7 @@
   {
     "file": "Pumpkin Pass.json",
     "thumbnail": "/tracks/pumpkin-pass.png",
-    "description": "Race the Halloween toy track: yellow straight, junction bend, blue slide, slime jump and orange loop turn to the finish ring."
+    "description": "Race the Halloween toy track: yellow straight, junction bend, blue slide, slime jump, orange loop turn, east bend and south straight to the finish ring."
   },
   {
     "file": "Booster Gap.json",
@@ -67,7 +67,7 @@
   {
     "file": "Block Party.json",
     "thumbnail": "/tracks/block-party.png",
-    "description": "Race the black road under the blue gate, dodge two dinos, thread tile chicanes, detour into the bumper arena, and smash two letter-block barricades."
+    "description": "Race the black road under the blue gate, dodge two dinos, thread tile chicanes, detour into the bumper arena, race the south chicanes, and smash three letter-block barricades."
   },
   {
     "file": "Frostfire Pass.json",
@@ -83,5 +83,70 @@
     "file": "Toybox Road.json",
     "thumbnail": "/tracks/toybox-road.png",
     "description": "Escape the double bumper arena, time three bag-clip snaps, dodge the scrap bot, ride the flagpole over the top and smash the glass tower to the finish."
+  },
+  {
+    "file": "Gumdrop Meadows.json",
+    "thumbnail": "/tracks/gumdrop-meadows.png",
+    "description": "Staircase sprint on the wide pink road: thread candy-cane arches, smash candy apples and peppermint barrels, and time two snap jaws. Gold in fifty seconds."
+  },
+  {
+    "file": "Lollipop Loop.json",
+    "thumbnail": "/tracks/lollipop-loop.png",
+    "description": "Sweep the mint loop past lollipop dividers, smash chocolate crates and the cotton-candy cart, and time the gummy vice, shears and sugar chomper."
+  },
+  {
+    "file": "Peppermint Pass.json",
+    "thumbnail": "/tracks/peppermint-pass.png",
+    "description": "Night serpentine on red peppermint: brave the jawbreaker crusher, peppermint slammer, snap jaws and caramel crusher between gumdrop boulder fields."
+  },
+  {
+    "file": "Chocolate Chasm.json",
+    "thumbnail": "/tracks/chocolate-chasm.png",
+    "description": "Zigzag the narrow chocolate road, slalom two chocolate-bar chicanes, and survive five snap traps from chomper to jawbreaker crusher."
+  },
+  {
+    "file": "Sugar Rush Summit.json",
+    "thumbnail": "/tracks/sugar-rush-summit.png",
+    "description": "The midnight finale: a narrow glowing-violet serpentine with six press and snap traps and eight candy wrecks between you and the gold finish."
+  },
+  {
+    "file": "Tinsel Town.json",
+    "thumbnail": "/tracks/tinsel-town.png",
+    "description": "Rolling hill sprint on the wide snow road: thread light arches over two climbs, smash ornaments and cracker barrels, and time the toy chomper and tinsel snapper. Gold in fifty seconds."
+  },
+  {
+    "file": "Mistletoe Mile.json",
+    "thumbnail": "/tracks/mistletoe-mile.png",
+    "description": "Diagonal dash to the mountain tube: brave the nutcracker and ice vice, climb to the guided pipe, and dodge the ornament slammer past fragile ice fields."
+  },
+  {
+    "file": "Nutcracker Run.json",
+    "thumbnail": "/tracks/nutcracker-run.png",
+    "description": "Night mountain climb with a summit plateau, a valley jump and four snap traps from yeti jaws to the sleigh crusher above frozen lakes."
+  },
+  {
+    "file": "Sleigh Bell Sprint.json",
+    "thumbnail": "/tracks/sleigh-bell-sprint.png",
+    "description": "Valley zigzag with rolling hills and a fire-road jump: survive five snap traps from nutcracker to tinsel snapper between walls of fragile ice."
+  },
+  {
+    "file": "North Pole Summit.json",
+    "thumbnail": "/tracks/north-pole-summit.png",
+    "description": "The midnight finale: a diagonal ascent with hills and a jump, a mountain tube ride, and six press and snap traps across the frozen summit."
+  },
+  {
+    "file": "Tabletop Brawl.json",
+    "thumbnail": "/tracks/tabletop-brawl.png",
+    "description": "Scrap across the toy table for eight scattered rings: two stunt loops, a dino launcher, cacti desert, potion tube, snapping jaws and two ghosts."
+  },
+  {
+    "file": "Sharkbite Run.json",
+    "thumbnail": "/tracks/sharkbite-run.png",
+    "description": "Smash the block wall, jump the cacti, skim the shark pool at full speed, then drive the dino mouth tunnel to the gray platform finish."
+  },
+  {
+    "file": "Rock and Roll.json",
+    "thumbnail": "/tracks/rock-and-roll.png",
+    "description": "Cross the screw field, jump the coal flames, ride the giant seesaw, creep past two rolling boulders, thread the dino loop and race the gray straight."
   }
 ]

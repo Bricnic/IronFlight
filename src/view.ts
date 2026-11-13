@@ -7,6 +7,7 @@ import { LavaPartEffects } from "./lava-effects";
 import { PropView } from "./prop-view";
 import { LooseBlocksView } from "./loose-blocks-view";
 import { BurningCoalsView } from "./burning-coals-view";
+import { FragileIceView } from "./fragile-ice-view";
 import * as T from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { deformGeometry } from "./damage";
@@ -39,6 +40,7 @@ export class GameView {
   private props = new PropView();
   private looseBlocks = new LooseBlocksView();
   private burningCoals = new BurningCoalsView();
+  private fragileIce = new FragileIceView();
   private comic = new ComicView();
   private dungeon = new DungeonView();
   private fairground = new FairgroundView();
@@ -113,6 +115,7 @@ export class GameView {
       this.props,
       this.looseBlocks,
       this.burningCoals,
+      this.fragileIce,
       this.lavaEffects,
       this.background,
     );
@@ -676,6 +679,12 @@ export class GameView {
   removeBurningCoalModel(id: string) {
     this.burningCoals.removeModel(id);
   }
+  moveFragileIceModel(id: string, dx: number, dy: number, dz: number) {
+    this.fragileIce.moveModel(id, dx, dy, dz);
+  }
+  removeFragileIceModel(id: string) {
+    this.fragileIce.removeModel(id);
+  }
   stats() {
     const [lightA, lightB] = this.lightIntensities();
     return {
@@ -817,6 +826,7 @@ export class GameView {
     this.props.update(s.props, s.time);
     this.looseBlocks.update(s.looseBlocks);
     this.burningCoals.update(s.burningCoals, s.time);
+    this.fragileIce.update(s.fragileIce, s.time);
     this.lavaEffects.update(s);
     for (const lava of this.lava) {
       lava.userData.time.value = s.time;
@@ -925,8 +935,8 @@ export class GameView {
       debris ? new T.Quaternion().copy(debris.rotation()) : q,
       elapsed,
       this.snapCamera || snap,
-      s.courseTrack?.id === "inferno-vault" &&
-        !!s.parts.get("chassis-front")?.lava,
+      // Any lava sink pans the camera above the surface (was inferno-only).
+      !!s.parts.get("chassis-front")?.lava,
     );
     if (this.overview && s.skidStrokes.length) {
       const bounds = new T.Box3();

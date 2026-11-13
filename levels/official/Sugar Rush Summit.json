@@ -1,0 +1,856 @@
+{
+  "name": "Sugar Rush Summit",
+  "backgroundTemplate": "candy-midnight",
+  "mode": "race",
+  "spawn": {
+    "x": 80,
+    "y": 2,
+    "z": -140,
+    "yaw": -1.570796
+  },
+  "checkpoints": [
+    {
+      "name": "Gate 1",
+      "x": -180,
+      "y": 2,
+      "yaw": -1.570796,
+      "z": -140
+    },
+    {
+      "name": "Gate 2",
+      "x": -180,
+      "y": 2,
+      "yaw": 0,
+      "z": -30
+    },
+    {
+      "name": "Gate 3",
+      "x": 80,
+      "y": 2,
+      "yaw": 1.570796,
+      "z": -30
+    },
+    {
+      "name": "Gate 4",
+      "x": 80,
+      "y": 2,
+      "yaw": 0,
+      "z": 80
+    },
+    {
+      "name": "Finish",
+      "x": -180,
+      "y": 2,
+      "yaw": -1.570796,
+      "z": 80
+    }
+  ],
+  "solids": [
+    {
+      "id": "sr-ground",
+      "kind": "ground",
+      "x": -50,
+      "y": -0.65,
+      "z": -30,
+      "w": 400,
+      "h": 1.3,
+      "d": 360,
+      "color": 2037568,
+      "locked": true,
+      "texture": "dark_rock_02"
+    },
+    {
+      "id": "sr-road-0",
+      "kind": "road",
+      "x": -46,
+      "y": 0.015,
+      "z": -140,
+      "w": 12,
+      "h": 0.03,
+      "d": 280,
+      "yaw": -1.570796,
+      "color": 10120191,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "sr-trim-0-a",
+      "kind": "road",
+      "x": -46,
+      "y": 0.045,
+      "z": -145.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 280,
+      "yaw": -1.570796,
+      "color": 8257514
+    },
+    {
+      "id": "sr-trim-0-b",
+      "kind": "road",
+      "x": -46,
+      "y": 0.045,
+      "z": -134.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 280,
+      "yaw": -1.570796,
+      "color": 8257514
+    },
+    {
+      "id": "sr-road-1",
+      "kind": "road",
+      "x": -180,
+      "y": 0.019,
+      "z": -85,
+      "w": 12,
+      "h": 0.03,
+      "d": 122,
+      "yaw": 0,
+      "color": 10120191,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "sr-trim-1-a",
+      "kind": "road",
+      "x": -185.4,
+      "y": 0.049,
+      "z": -85,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 122,
+      "yaw": 0,
+      "color": 8257514
+    },
+    {
+      "id": "sr-trim-1-b",
+      "kind": "road",
+      "x": -174.6,
+      "y": 0.049,
+      "z": -85,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 122,
+      "yaw": 0,
+      "color": 8257514
+    },
+    {
+      "id": "sr-road-2",
+      "kind": "road",
+      "x": -50,
+      "y": 0.023,
+      "z": -30,
+      "w": 12,
+      "h": 0.03,
+      "d": 272,
+      "yaw": 1.570796,
+      "color": 10120191,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "sr-trim-2-a",
+      "kind": "road",
+      "x": -50,
+      "y": 0.053,
+      "z": -24.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 272,
+      "yaw": 1.570796,
+      "color": 8257514
+    },
+    {
+      "id": "sr-trim-2-b",
+      "kind": "road",
+      "x": -50,
+      "y": 0.053,
+      "z": -35.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 272,
+      "yaw": 1.570796,
+      "color": 8257514
+    },
+    {
+      "id": "sr-road-3",
+      "kind": "road",
+      "x": 80,
+      "y": 0.027,
+      "z": 25,
+      "w": 12,
+      "h": 0.03,
+      "d": 122,
+      "yaw": 0,
+      "color": 10120191,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "sr-trim-3-a",
+      "kind": "road",
+      "x": 74.6,
+      "y": 0.057,
+      "z": 25,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 122,
+      "yaw": 0,
+      "color": 8257514
+    },
+    {
+      "id": "sr-trim-3-b",
+      "kind": "road",
+      "x": 85.4,
+      "y": 0.057,
+      "z": 25,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 122,
+      "yaw": 0,
+      "color": 8257514
+    },
+    {
+      "id": "sr-road-4",
+      "kind": "road",
+      "x": -58,
+      "y": 0.031,
+      "z": 80,
+      "w": 12,
+      "h": 0.03,
+      "d": 288,
+      "yaw": -1.570796,
+      "color": 10120191,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "sr-trim-4-a",
+      "kind": "road",
+      "x": -58,
+      "y": 0.061,
+      "z": 74.6,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 288,
+      "yaw": -1.570796,
+      "color": 8257514
+    },
+    {
+      "id": "sr-trim-4-b",
+      "kind": "road",
+      "x": -58,
+      "y": 0.061,
+      "z": 85.4,
+      "w": 1.2,
+      "h": 0.03,
+      "d": 288,
+      "yaw": -1.570796,
+      "color": 8257514
+    },
+    {
+      "id": "sr-pad-start",
+      "kind": "tile",
+      "x": 75,
+      "y": 0.045,
+      "z": -140,
+      "w": 9,
+      "h": 0.03,
+      "d": 8,
+      "yaw": -1.570796,
+      "color": 3655793
+    },
+    {
+      "id": "sr-pad-finish",
+      "kind": "tile",
+      "x": -173,
+      "y": 0.061,
+      "z": 80,
+      "w": 9,
+      "h": 0.03,
+      "d": 8,
+      "yaw": -1.570796,
+      "color": 16777215
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "sr-lethal-0",
+      "kind": "peppermint-slammer",
+      "x": -24,
+      "y": 0,
+      "z": -140,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-lethal-1",
+      "kind": "caramel-crusher",
+      "x": -102,
+      "y": 0,
+      "z": -140,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-lethal-2",
+      "kind": "candy-snap-jaws",
+      "x": -50,
+      "y": 0,
+      "z": -30,
+      "yaw": 1.5708
+    },
+    {
+      "id": "sr-lethal-3",
+      "kind": "gummy-vice",
+      "x": 80,
+      "y": 0,
+      "z": 25,
+      "yaw": 0
+    },
+    {
+      "id": "sr-lethal-4",
+      "kind": "sugar-chomper",
+      "x": -11,
+      "y": 0,
+      "z": 80,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-lethal-5",
+      "kind": "licorice-shears",
+      "x": -102,
+      "y": 0,
+      "z": 80,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-arch-spawn",
+      "kind": "candy-cane-arch",
+      "x": 70,
+      "y": 0,
+      "z": -140,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-arch-cp0",
+      "kind": "candy-cane-arch",
+      "x": -180,
+      "y": 0,
+      "z": -140,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-arch-cp1",
+      "kind": "candy-cane-arch",
+      "x": -180,
+      "y": 0,
+      "z": -30,
+      "yaw": 0
+    },
+    {
+      "id": "sr-arch-cp2",
+      "kind": "candy-cane-arch",
+      "x": 80,
+      "y": 0,
+      "z": -30,
+      "yaw": 1.5708
+    },
+    {
+      "id": "sr-arch-cp3",
+      "kind": "candy-cane-arch",
+      "x": 80,
+      "y": 0,
+      "z": 80,
+      "yaw": 0
+    },
+    {
+      "id": "sr-arch-cp4",
+      "kind": "candy-cane-arch",
+      "x": -180,
+      "y": 0,
+      "z": 80,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-decor-0-0",
+      "kind": "gumdrop-tree",
+      "x": 65.56,
+      "y": 0,
+      "z": -128.5,
+      "yaw": 0
+    },
+    {
+      "id": "sr-decor-0-1",
+      "kind": "gumball-lamp",
+      "x": 36.67,
+      "y": 0,
+      "z": -151.5,
+      "yaw": 0.7
+    },
+    {
+      "id": "sr-decor-0-2",
+      "kind": "lollipop-stand",
+      "x": 7.78,
+      "y": 0,
+      "z": -128.5,
+      "yaw": 1.4
+    },
+    {
+      "id": "sr-decor-0-3",
+      "kind": "gumdrop-tree",
+      "x": -21.11,
+      "y": 0,
+      "z": -151.5,
+      "yaw": 2.1
+    },
+    {
+      "id": "sr-decor-0-4",
+      "kind": "gumball-lamp",
+      "x": -50,
+      "y": 0,
+      "z": -128.5,
+      "yaw": 2.8
+    },
+    {
+      "id": "sr-decor-0-5",
+      "kind": "lollipop-stand",
+      "x": -78.89,
+      "y": 0,
+      "z": -151.5,
+      "yaw": 3.5
+    },
+    {
+      "id": "sr-decor-0-6",
+      "kind": "gumdrop-tree",
+      "x": -107.78,
+      "y": 0,
+      "z": -128.5,
+      "yaw": 4.2
+    },
+    {
+      "id": "sr-decor-0-7",
+      "kind": "gumball-lamp",
+      "x": -136.67,
+      "y": 0,
+      "z": -151.5,
+      "yaw": 4.9
+    },
+    {
+      "id": "sr-decor-0-8",
+      "kind": "lollipop-stand",
+      "x": -165.56,
+      "y": 0,
+      "z": -128.5,
+      "yaw": 5.6
+    },
+    {
+      "id": "sr-stall-0-0",
+      "kind": "cotton-candy-stall",
+      "x": 15,
+      "y": 0,
+      "z": -160,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-stall-0-1",
+      "kind": "cotton-candy-stall",
+      "x": -115,
+      "y": 0,
+      "z": -120,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-wall-0-0",
+      "kind": "chocolate-barrier",
+      "x": 36.67,
+      "y": 0,
+      "z": -131.4,
+      "yaw": 0
+    },
+    {
+      "id": "sr-wall-0-1",
+      "kind": "chocolate-barrier",
+      "x": -50,
+      "y": 0,
+      "z": -148.6,
+      "yaw": 0
+    },
+    {
+      "id": "sr-wall-0-2",
+      "kind": "chocolate-barrier",
+      "x": -136.67,
+      "y": 0,
+      "z": -131.4,
+      "yaw": 0
+    },
+    {
+      "id": "sr-decor-1-0",
+      "kind": "gumball-lamp",
+      "x": -191.5,
+      "y": 0,
+      "z": -121.67,
+      "yaw": 1
+    },
+    {
+      "id": "sr-decor-1-1",
+      "kind": "lollipop-stand",
+      "x": -168.5,
+      "y": 0,
+      "z": -85,
+      "yaw": 1.7
+    },
+    {
+      "id": "sr-decor-1-2",
+      "kind": "gumdrop-tree",
+      "x": -191.5,
+      "y": 0,
+      "z": -48.33,
+      "yaw": 2.4
+    },
+    {
+      "id": "sr-stall-1-0",
+      "kind": "cotton-candy-stall",
+      "x": -160,
+      "y": 0,
+      "z": -85,
+      "yaw": 0
+    },
+    {
+      "id": "sr-wall-1-0",
+      "kind": "chocolate-barrier",
+      "x": -188.6,
+      "y": 0,
+      "z": -85,
+      "yaw": 1.5708
+    },
+    {
+      "id": "sr-decor-2-0",
+      "kind": "lollipop-stand",
+      "x": -165.56,
+      "y": 0,
+      "z": -41.5,
+      "yaw": 2
+    },
+    {
+      "id": "sr-decor-2-1",
+      "kind": "gumdrop-tree",
+      "x": -136.67,
+      "y": 0,
+      "z": -18.5,
+      "yaw": 2.7
+    },
+    {
+      "id": "sr-decor-2-2",
+      "kind": "gumball-lamp",
+      "x": -107.78,
+      "y": 0,
+      "z": -41.5,
+      "yaw": 3.4
+    },
+    {
+      "id": "sr-decor-2-3",
+      "kind": "lollipop-stand",
+      "x": -78.89,
+      "y": 0,
+      "z": -18.5,
+      "yaw": 4.1
+    },
+    {
+      "id": "sr-decor-2-4",
+      "kind": "gumdrop-tree",
+      "x": -50,
+      "y": 0,
+      "z": -41.5,
+      "yaw": 4.8
+    },
+    {
+      "id": "sr-decor-2-5",
+      "kind": "gumball-lamp",
+      "x": -21.11,
+      "y": 0,
+      "z": -18.5,
+      "yaw": 5.5
+    },
+    {
+      "id": "sr-decor-2-6",
+      "kind": "lollipop-stand",
+      "x": 7.78,
+      "y": 0,
+      "z": -41.5,
+      "yaw": 6.2
+    },
+    {
+      "id": "sr-decor-2-7",
+      "kind": "gumdrop-tree",
+      "x": 36.67,
+      "y": 0,
+      "z": -18.5,
+      "yaw": 0.62
+    },
+    {
+      "id": "sr-decor-2-8",
+      "kind": "gumball-lamp",
+      "x": 65.56,
+      "y": 0,
+      "z": -41.5,
+      "yaw": 1.32
+    },
+    {
+      "id": "sr-stall-2-0",
+      "kind": "cotton-candy-stall",
+      "x": -115,
+      "y": 0,
+      "z": -10,
+      "yaw": 1.5708
+    },
+    {
+      "id": "sr-stall-2-1",
+      "kind": "cotton-candy-stall",
+      "x": 15,
+      "y": 0,
+      "z": -50,
+      "yaw": 1.5708
+    },
+    {
+      "id": "sr-wall-2-0",
+      "kind": "chocolate-barrier",
+      "x": -136.67,
+      "y": 0,
+      "z": -38.6,
+      "yaw": 3.1416
+    },
+    {
+      "id": "sr-wall-2-1",
+      "kind": "chocolate-barrier",
+      "x": -50,
+      "y": 0,
+      "z": -21.4,
+      "yaw": 3.1416
+    },
+    {
+      "id": "sr-wall-2-2",
+      "kind": "chocolate-barrier",
+      "x": 36.67,
+      "y": 0,
+      "z": -38.6,
+      "yaw": 3.1416
+    },
+    {
+      "id": "sr-decor-3-0",
+      "kind": "gumdrop-tree",
+      "x": 68.5,
+      "y": 0,
+      "z": -11.67,
+      "yaw": 3
+    },
+    {
+      "id": "sr-decor-3-1",
+      "kind": "gumball-lamp",
+      "x": 91.5,
+      "y": 0,
+      "z": 25,
+      "yaw": 3.7
+    },
+    {
+      "id": "sr-decor-3-2",
+      "kind": "lollipop-stand",
+      "x": 68.5,
+      "y": 0,
+      "z": 61.67,
+      "yaw": 4.4
+    },
+    {
+      "id": "sr-stall-3-0",
+      "kind": "cotton-candy-stall",
+      "x": 100,
+      "y": 0,
+      "z": 25,
+      "yaw": 0
+    },
+    {
+      "id": "sr-wall-3-0",
+      "kind": "chocolate-barrier",
+      "x": 71.4,
+      "y": 0,
+      "z": 25,
+      "yaw": 1.5708
+    },
+    {
+      "id": "sr-decor-4-0",
+      "kind": "gumball-lamp",
+      "x": 65.56,
+      "y": 0,
+      "z": 91.5,
+      "yaw": 4
+    },
+    {
+      "id": "sr-decor-4-1",
+      "kind": "lollipop-stand",
+      "x": 36.67,
+      "y": 0,
+      "z": 68.5,
+      "yaw": 4.7
+    },
+    {
+      "id": "sr-decor-4-2",
+      "kind": "gumdrop-tree",
+      "x": 7.78,
+      "y": 0,
+      "z": 91.5,
+      "yaw": 5.4
+    },
+    {
+      "id": "sr-decor-4-3",
+      "kind": "gumball-lamp",
+      "x": -21.11,
+      "y": 0,
+      "z": 68.5,
+      "yaw": 6.1
+    },
+    {
+      "id": "sr-decor-4-4",
+      "kind": "lollipop-stand",
+      "x": -50,
+      "y": 0,
+      "z": 91.5,
+      "yaw": 0.52
+    },
+    {
+      "id": "sr-decor-4-5",
+      "kind": "gumdrop-tree",
+      "x": -78.89,
+      "y": 0,
+      "z": 68.5,
+      "yaw": 1.22
+    },
+    {
+      "id": "sr-decor-4-6",
+      "kind": "gumball-lamp",
+      "x": -107.78,
+      "y": 0,
+      "z": 91.5,
+      "yaw": 1.92
+    },
+    {
+      "id": "sr-decor-4-7",
+      "kind": "lollipop-stand",
+      "x": -136.67,
+      "y": 0,
+      "z": 68.5,
+      "yaw": 2.62
+    },
+    {
+      "id": "sr-decor-4-8",
+      "kind": "gumdrop-tree",
+      "x": -165.56,
+      "y": 0,
+      "z": 91.5,
+      "yaw": 3.32
+    },
+    {
+      "id": "sr-stall-4-0",
+      "kind": "cotton-candy-stall",
+      "x": 15,
+      "y": 0,
+      "z": 60,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-stall-4-1",
+      "kind": "cotton-candy-stall",
+      "x": -115,
+      "y": 0,
+      "z": 100,
+      "yaw": -1.5708
+    },
+    {
+      "id": "sr-wall-4-0",
+      "kind": "chocolate-barrier",
+      "x": 36.67,
+      "y": 0,
+      "z": 88.6,
+      "yaw": 0
+    },
+    {
+      "id": "sr-wall-4-1",
+      "kind": "chocolate-barrier",
+      "x": -50,
+      "y": 0,
+      "z": 71.4,
+      "yaw": 0
+    },
+    {
+      "id": "sr-wall-4-2",
+      "kind": "chocolate-barrier",
+      "x": -136.67,
+      "y": 0,
+      "z": 88.6,
+      "yaw": 0
+    },
+    {
+      "id": "sr-prop-0",
+      "kind": "gumdrop-boulder",
+      "x": 28,
+      "y": 0,
+      "z": -138,
+      "yaw": 1.3
+    },
+    {
+      "id": "sr-prop-1",
+      "kind": "chocolate-crate",
+      "x": -63,
+      "y": 0,
+      "z": -142,
+      "yaw": 2.6
+    },
+    {
+      "id": "sr-prop-2",
+      "kind": "candy-apple",
+      "x": -178,
+      "y": 0,
+      "z": -85,
+      "yaw": 3.9
+    },
+    {
+      "id": "sr-prop-3",
+      "kind": "peppermint-barrel",
+      "x": -102,
+      "y": 0,
+      "z": -33,
+      "yaw": 5.2
+    },
+    {
+      "id": "sr-prop-4",
+      "kind": "cotton-candy-cart",
+      "x": 2,
+      "y": 0,
+      "z": -28,
+      "yaw": 0.22
+    },
+    {
+      "id": "sr-prop-5",
+      "kind": "candy-apple",
+      "x": 77,
+      "y": 0,
+      "z": 3,
+      "yaw": 1.52
+    },
+    {
+      "id": "sr-prop-6",
+      "kind": "chocolate-crate",
+      "x": 28,
+      "y": 0,
+      "z": 82,
+      "yaw": 2.82
+    },
+    {
+      "id": "sr-prop-7",
+      "kind": "gumdrop-boulder",
+      "x": -55.2,
+      "y": 0,
+      "z": 77,
+      "yaw": 4.12
+    }
+  ],
+  "medals": {
+    "gold": 180,
+    "silver": 270,
+    "bronze": 390
+  },
+  "limit": 420
+}

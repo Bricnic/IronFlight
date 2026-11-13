@@ -48,6 +48,7 @@
       "id": "olive-guard",
       "name": "Olive transporter dinosaur",
       "kind": "spinosaurus",
+      "scale": 2,
       "x": 58,
       "y": 11.7,
       "z": 68,

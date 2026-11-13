@@ -13,8 +13,10 @@ import {
 import {
   GLASS_PANE_DAMAGE,
   GLASS_PANE_SIZE,
+  GLASS_SHARD_COUNT,
+  GLASS_SHARD_SIZE,
 } from "../src/loose-blocks";
-import { buildLooseBlockModel } from "../src/loose-blocks-view";
+import { buildLooseBlockModel, LooseBlocksView } from "../src/loose-blocks-view";
 
 beforeAll(initPhysics);
 
@@ -42,12 +44,16 @@ it("crumples the tower when the truck rams its base", () => {
   const sim = fixture(panes);
   try {
     expect(sim.looseBlocks.blocks).toHaveLength(6);
-    const top = sim.looseBlocks.blocks[5].body;
-    const startY = top.translation().y;
+    const topState = sim.looseBlocks.blocks[5];
+    const startY = topState.body.translation().y;
     sim.body.setTranslation({ x: 0, y: 2.1, z: -20 }, true);
     sim.body.setLinvel({ x: 0, y: 0, z: 30 }, true);
     sim.run(3);
-    expect(startY - top.translation().y).toBeGreaterThan(1);
+    const gone = !sim.looseBlocks.blocks.includes(topState);
+    const dropped = gone
+      ? Infinity
+      : startY - topState.body.translation().y;
+    expect(dropped).toBeGreaterThan(1);
   } finally {
     sim.dispose();
   }
@@ -92,4 +98,81 @@ it("builds a semi-transparent colored pane model", () => {
   expect(mat.transparent).toBe(true);
   expect(mat.opacity).toBeLessThan(1);
   expect(model.triangles).toBeGreaterThan(0);
+});
+
+it("shatters into shards on a hard floor landing", () => {
+  expect(GLASS_SHARD_COUNT).toBeGreaterThanOrEqual(3);
+  const sim = fixture([
+    { id: "drop", kind: "glass-pane", x: 0, y: 8, z: 0 },
+  ]);
+  try {
+    for (let i = 0; i < 600 && sim.looseBlocks.blocks.length === 1; i++)
+      sim.step({});
+    const shards = sim.looseBlocks.blocks.filter(
+      (b) => b.h.kind === "glass-shard",
+    );
+    expect(sim.looseBlocks.blocks.some((b) => b.h.id === "drop")).toBe(false);
+    expect(shards).toHaveLength(GLASS_SHARD_COUNT);
+    sim.run(2);
+    for (const shard of sim.looseBlocks.blocks)
+      expect(shard.body.translation().y).toBeLessThan(1.5);
+    expect(
+      sim.looseBlocks.blocks.filter((b) => b.h.kind === "glass-shard"),
+    ).toHaveLength(GLASS_SHARD_COUNT);
+  } finally {
+    sim.dispose();
+  }
+});
+
+it("leaves shards harmless and whole", () => {
+  const sim = fixture([]);
+  try {
+    sim.looseBlocks.addBlock({ id: "splinter", kind: "glass-shard", x: 0, y: 6, z: -40 });
+    sim.body.setTranslation({ x: 0, y: 2.1, z: -40 }, true);
+    sim.run(2);
+    expect(
+      sim.damageEvents.some((event) => event.source === "glass-shard"),
+    ).toBe(false);
+    expect(
+      sim.looseBlocks.blocks.some((b) => b.h.id === "splinter"),
+    ).toBe(true);
+    expect(sim.status).toBe("driving");
+  } finally {
+    sim.dispose();
+  }
+});
+
+it("builds a small transparent shard model", () => {
+  const model = buildLooseBlockModel({
+    id: "pane-0-shard-1",
+    kind: "glass-shard",
+    x: 0,
+    z: 0,
+  });
+  const mesh = model.root.children[0] as T.Mesh;
+  const geo = mesh.geometry as T.BoxGeometry;
+  expect(geo.parameters.width).toBe(GLASS_SHARD_SIZE.w);
+  expect(geo.parameters.height).toBe(GLASS_SHARD_SIZE.h);
+  const mat = mesh.material as T.MeshStandardMaterial;
+  expect(mat.transparent).toBe(true);
+  expect(model.triangles).toBeGreaterThan(0);
+});
+
+it("swaps the pane model for shard models when it shatters", () => {
+  const sim = fixture([
+    { id: "drop", kind: "glass-pane", x: 0, y: 8, z: 0 },
+  ]);
+  try {
+    const view = new LooseBlocksView();
+    view.update(sim.looseBlocks);
+    expect(view.children).toHaveLength(1);
+    for (let i = 0; i < 600 && sim.looseBlocks.blocks.length === 1; i++) {
+      sim.step({});
+      view.update(sim.looseBlocks);
+    }
+    view.update(sim.looseBlocks);
+    expect(view.children).toHaveLength(GLASS_SHARD_COUNT);
+  } finally {
+    sim.dispose();
+  }
 });

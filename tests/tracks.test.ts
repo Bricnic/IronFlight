@@ -29,7 +29,7 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-17).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-30).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
@@ -47,6 +47,19 @@ it("steps to the next and previous level with wraparound", () => {
     "Frostfire Pass",
     "Volcano Loop",
     "Toybox Road",
+    "Gumdrop Meadows",
+    "Lollipop Loop",
+    "Peppermint Pass",
+    "Chocolate Chasm",
+    "Sugar Rush Summit",
+    "Tinsel Town",
+    "Mistletoe Mile",
+    "Nutcracker Run",
+    "Sleigh Bell Sprint",
+    "North Pole Summit",
+    "Tabletop Brawl",
+    "Sharkbite Run",
+    "Rock and Roll",
   ]);
   expect(stepTrackId("triple-loop", 1)).toBe("foundry-run");
   expect(stepTrackId("foundry-run", -1)).toBe("triple-loop");
@@ -84,12 +97,38 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:volcano-loop", -1)).toBe("custom:frostfire-pass");
   expect(stepTrackId("custom:volcano-loop", 1)).toBe("custom:toybox-road");
   expect(stepTrackId("custom:toybox-road", -1)).toBe("custom:volcano-loop");
-  expect(stepTrackId("custom:toybox-road", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:toybox-road");
+  expect(stepTrackId("custom:toybox-road", 1)).toBe("custom:gumdrop-meadows");
+  expect(stepTrackId("custom:gumdrop-meadows", -1)).toBe("custom:toybox-road");
+  expect(stepTrackId("custom:gumdrop-meadows", 1)).toBe("custom:lollipop-loop");
+  expect(stepTrackId("custom:lollipop-loop", -1)).toBe("custom:gumdrop-meadows");
+  expect(stepTrackId("custom:lollipop-loop", 1)).toBe("custom:peppermint-pass");
+  expect(stepTrackId("custom:peppermint-pass", -1)).toBe("custom:lollipop-loop");
+  expect(stepTrackId("custom:peppermint-pass", 1)).toBe("custom:chocolate-chasm");
+  expect(stepTrackId("custom:chocolate-chasm", -1)).toBe("custom:peppermint-pass");
+  expect(stepTrackId("custom:chocolate-chasm", 1)).toBe("custom:sugar-rush-summit");
+  expect(stepTrackId("custom:sugar-rush-summit", -1)).toBe("custom:chocolate-chasm");
+  expect(stepTrackId("custom:sugar-rush-summit", 1)).toBe("custom:tinsel-town");
+  expect(stepTrackId("custom:tinsel-town", -1)).toBe("custom:sugar-rush-summit");
+  expect(stepTrackId("custom:tinsel-town", 1)).toBe("custom:mistletoe-mile");
+  expect(stepTrackId("custom:mistletoe-mile", -1)).toBe("custom:tinsel-town");
+  expect(stepTrackId("custom:mistletoe-mile", 1)).toBe("custom:nutcracker-run");
+  expect(stepTrackId("custom:nutcracker-run", -1)).toBe("custom:mistletoe-mile");
+  expect(stepTrackId("custom:nutcracker-run", 1)).toBe("custom:sleigh-bell-sprint");
+  expect(stepTrackId("custom:sleigh-bell-sprint", -1)).toBe("custom:nutcracker-run");
+  expect(stepTrackId("custom:sleigh-bell-sprint", 1)).toBe("custom:north-pole-summit");
+  expect(stepTrackId("custom:north-pole-summit", -1)).toBe("custom:sleigh-bell-sprint");
+  expect(stepTrackId("custom:north-pole-summit", 1)).toBe("custom:tabletop-brawl");
+  expect(stepTrackId("custom:tabletop-brawl", -1)).toBe("custom:north-pole-summit");
+  expect(stepTrackId("custom:tabletop-brawl", 1)).toBe("custom:sharkbite-run");
+  expect(stepTrackId("custom:sharkbite-run", -1)).toBe("custom:tabletop-brawl");
+  expect(stepTrackId("custom:sharkbite-run", 1)).toBe("custom:rock-and-roll");
+  expect(stepTrackId("custom:rock-and-roll", -1)).toBe("custom:sharkbite-run");
+  expect(stepTrackId("custom:rock-and-roll", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:rock-and-roll");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:toybox-road");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:rock-and-roll");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:toybox-road");
+  expect(stepTrackId(undefined, -1)).toBe("custom:rock-and-roll");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

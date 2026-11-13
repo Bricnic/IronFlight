@@ -1,0 +1,5 @@
+﻿found,asset,asset_name,description,comment
+2026-11-09T16:34Z,level,city-skyline skyscrapers,windows unnaturally large (6x12 cells stretched over 60-140u faces = 10-23u per window vs 4u car),D1-buildings-before.png; window emissiveMap uses 0-1 UVs - must tile with building size
+2026-11-09T16:34Z,level,lava solids (course-view),lava texture stretched instead of tiling (730x730 lake maps 0-1 UV),D2-lava-before.png; scaleSolidUVs excludes lava kind in course-view.ts:210
+2026-11-09T16:34Z,level,dungeon,far walls pop from black + background near-black but not pure; infinite background should read black,D3-dungeon-long-before.png D3-dungeon-low.png; cavern-dark sky/fog 0x0A0D15
+2026-11-09T16:53Z,level,slime solids (course-view),slime pattern stretched like lava was (960x1420 lake maps 0-1 UV = 87x203u blobs),same UV exclusion as D-2; pattern tuned for 0-1 so needs 33m tiles to keep ~3m cells

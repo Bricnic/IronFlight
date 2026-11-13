@@ -18,6 +18,12 @@ export const GLASS_PANE_SIZE = { w: 4, h: 0.5, d: 4 } as const;
 export const GLASS_PANE_MASS = 3;
 /** Fraction of a part's max HP dealt when a pane falls onto the truck. */
 export const GLASS_PANE_DAMAGE = 0.05;
+/** A pane landing hard on the floor bursts into this many shards. */
+export const GLASS_SHARD_COUNT = 5;
+export const GLASS_SHARD_SIZE = { w: 0.7, h: 0.12, d: 0.7 } as const;
+export const GLASS_SHARD_MASS = 0.2;
+/** Downward pane speed that shatters on floor contact. */
+export const GLASS_SHATTER_FALL_SPEED = 2;
 
 export type LooseBlock = {
   kind: string;
@@ -60,12 +66,14 @@ export class LooseBlocks {
     for (const h of looseBlockHazards(sim.courseTrack)) this.addBlock(h);
   }
   /** Live placement: add one block without resetting the run. */
-  addBlock(h: LooseBlock) {
+  addBlock(h: LooseBlock): BlockState {
     const world = this.sim.world;
     const glass = h.kind === "glass-pane";
-    const hx = glass ? GLASS_PANE_SIZE.w / 2 : LOOSE_BLOCK_SIZE / 2;
-    const hy = glass ? GLASS_PANE_SIZE.h / 2 : LOOSE_BLOCK_SIZE / 2;
-    const hz = glass ? GLASS_PANE_SIZE.d / 2 : LOOSE_BLOCK_SIZE / 2;
+    const shard = h.kind === "glass-shard";
+    const dims = shard ? GLASS_SHARD_SIZE : glass ? GLASS_PANE_SIZE : null;
+    const hx = dims ? dims.w / 2 : LOOSE_BLOCK_SIZE / 2;
+    const hy = dims ? dims.h / 2 : LOOSE_BLOCK_SIZE / 2;
+    const hz = dims ? dims.d / 2 : LOOSE_BLOCK_SIZE / 2;
     const body = world.createRigidBody(
       R.RigidBodyDesc.dynamic()
         .setTranslation(h.x, (h.y ?? 0) + hy, h.z)
@@ -75,12 +83,14 @@ export class LooseBlocks {
     );
     const collider = world.createCollider(
       R.ColliderDesc.cuboid(hx, hy, hz)
-        .setMass(glass ? GLASS_PANE_MASS : LOOSE_BLOCK_MASS)
+        .setMass(shard ? GLASS_SHARD_MASS : glass ? GLASS_PANE_MASS : LOOSE_BLOCK_MASS)
         .setFriction(0.55)
         .setRestitution(0.15),
       body,
     );
-    this.blocks.push({ h: { ...h }, body, collider, lastHit: -Infinity });
+    const state: BlockState = { h: { ...h }, body, collider, lastHit: -Infinity };
+    this.blocks.push(state);
+    return state;
   }
   /** Live editing: shift one block and stop it dead. */
   moveBlock(id: string, x: number, y: number, z: number) {
@@ -125,6 +135,7 @@ export class LooseBlocks {
       if (collider) parts.set(collider.handle, def.id);
     }
     for (const b of this.blocks) {
+      if (b.h.kind === "glass-shard") continue;
       const falling = (this.incoming.get(b) ?? b.body.linvel()).y;
       if (falling > -LOOSE_BLOCK_FALL_SPEED) continue;
       if (s.time - b.lastHit < LOOSE_BLOCK_COOLDOWN) continue;
@@ -135,6 +146,53 @@ export class LooseBlocks {
       const rate = b.h.kind === "glass-pane" ? GLASS_PANE_DAMAGE : LOOSE_BLOCK_DAMAGE;
       s.damage(hit, def.hp * rate);
       s.damageEvents.push({ source: b.h.kind, part: hit, time: s.time });
+    }
+    const shattered: BlockState[] = [];
+    for (const b of this.blocks) {
+      if (b.h.kind !== "glass-pane") continue;
+      const falling = (this.incoming.get(b) ?? b.body.linvel()).y;
+      if (falling > -GLASS_SHATTER_FALL_SPEED) continue;
+      if (!this.floorContact(b)) continue;
+      shattered.push(b);
+    }
+    for (const b of shattered) this.shatter(b);
+  }
+  /** True while touching static world geometry (floor, road, walls). */
+  private floorContact(b: BlockState) {
+    let grounded = false;
+    this.sim.world.contactPairsWith(b.collider, (other) => {
+      if (grounded) return;
+      const parent = other.parent();
+      if (parent && parent.bodyType() !== R.RigidBodyType.Fixed) return;
+      this.sim.world.contactPair(b.collider, other, (manifold) => {
+        if (manifold.numSolverContacts() > 0) grounded = true;
+      });
+    });
+    return grounded;
+  }
+  /** Burst one landed pane into deterministic shards. */
+  private shatter(b: BlockState) {
+    const p = b.body.translation();
+    const id = b.h.id;
+    this.removeBlock(id);
+    const kicks = [
+      { ox: 0, oz: 0, vx: 0, vz: 0 },
+      { ox: 0.9, oz: 0, vx: 2.5, vz: 0 },
+      { ox: -0.9, oz: 0, vx: -2.5, vz: 0 },
+      { ox: 0, oz: 0.9, vx: 0, vz: 2.5 },
+      { ox: 0, oz: -0.9, vx: 0, vz: -2.5 },
+    ];
+    for (let i = 0; i < GLASS_SHARD_COUNT; i++) {
+      const kick = kicks[i % kicks.length];
+      const shard = this.addBlock({
+        id: `${id}-shard-${i}`,
+        kind: "glass-shard",
+        x: p.x + kick.ox,
+        y: Math.max(0.4, p.y),
+        z: p.z + kick.oz,
+      });
+      shard.body.setLinvel({ x: kick.vx, y: 2, z: kick.vz }, true);
+      shard.body.setAngvel({ x: i * 2 - 4, y: 0, z: 4 - i * 2 }, true);
     }
   }
   snapshot() {

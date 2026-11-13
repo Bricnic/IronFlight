@@ -43,7 +43,8 @@ export function resolveViewportPick(hits: ViewportHit[]): EditorSelection {
   return resolveViewportStack(hits)[0]?.selection ?? null;
 }
 /** Selection highlights rebuild meshes, so retain logical ids rather than
- * object instances. Camera/content changes or a different click area restart. */
+ * object instances. Camera/content changes or a different click area restart.
+ * Coordinates are canvas-space NDC so page layout shifts never break a cycle. */
 export class ViewportPickCycle {
   private anchor = { x: Infinity, y: Infinity };
   private context = "";
@@ -51,7 +52,7 @@ export class ViewportPickCycle {
   private index = -1;
   reset() { this.index = -1; this.order = []; }
   private matches(x: number, y: number, picks: EditorSelection[], context: string) {
-    return this.index >= 0 && Math.hypot(x - this.anchor.x, y - this.anchor.y) < 4 && context === this.context &&
+    return this.index >= 0 && Math.hypot(x - this.anchor.x, y - this.anchor.y) < 0.02 && context === this.context &&
       picks.map(pickKey).sort().join("|") === this.order.map(pickKey).sort().join("|");
   }
   current(x: number, y: number, picks: EditorSelection[], context: string): EditorSelection {
@@ -119,6 +120,7 @@ const PREFAB_COLORS: Record<string, number> = {
   burner: 0xff7a1f,
   water: 0x4fb8ff,
   potion: 0x9ae06a,
+  "shark-pool": 0x8a1622,
   sign: 0xe6c16a,
   trash: 0x8a8f96,
   barrel: 0xc25a3a,
@@ -139,6 +141,11 @@ const PREFAB_COLORS: Record<string, number> = {
   checkpoint: 0x6ae08a,
   skull: 0xe8e0cc,
   pumpkin: 0xd8641f,
+  "candy-apple": 0xc81f2e,
+  "gumdrop-boulder": 0x2fae5f,
+  "peppermint-barrel": 0xe23b3b,
+  "chocolate-crate": 0x6b4423,
+  "cotton-candy-cart": 0xff9ecb,
   hands: 0xff5a3c,
   scissors: 0xc7ccd2,
   clippers: 0x9fb8cc,
@@ -149,9 +156,46 @@ const PREFAB_COLORS: Record<string, number> = {
   "loose-blocks": 0xe0a458,
   "glass-pane": 0xe8d44d,
   "burning-coals": 0xff5a1f,
+  "fragile-ice": 0x9ad6ff,
   cage: 0x5a636b,
+  "cacti-patch": 0x3fa34d,
+  rocker: 0xb08d57,
+  boulder: 0x8a7a5f,
   "jail-cell": 0x7a8494,
   candle: 0xffb347,
+  "candy-cane-arch": 0xe23b3b,
+  "gumdrop-tree": 0x5fd35f,
+  "lollipop-stand": 0xff6fc3,
+  "chocolate-barrier": 0x6b4423,
+  "cotton-candy-stall": 0x9ad6ff,
+  "gumball-lamp": 0xffc23b,
+  "jawbreaker-crusher": 0xff4f6d,
+  "candy-snap-jaws": 0xff6fa5,
+  "gummy-vice": 0x7be495,
+  "peppermint-slammer": 0xe23b3b,
+  "taffy-snapper": 0xff9ec7,
+  "licorice-shears": 0x3a2b3f,
+  "sugar-chomper": 0xb98ae0,
+  "caramel-crusher": 0xd98a2b,
+  "christmas-tree": 0x2e8b47,
+  "christmas-light-arch": 0xffe14d,
+  "christmas-market-stall": 0x9a6a3a,
+  "christmas-lantern": 0xffc978,
+  "christmas-gift-wall": 0xb03a48,
+  "christmas-reindeer": 0xb07a4a,
+  "christmas-ornament": 0xe02040,
+  "christmas-snow-boulder": 0xdfefff,
+  "christmas-cracker-barrel": 0xb06030,
+  "christmas-gift-crate": 0x3f7a4d,
+  "christmas-cocoa-cart": 0x7a4a2b,
+  "christmas-nutcracker": 0xd42a2e,
+  "christmas-ice-vice": 0x7fcbe8,
+  "christmas-toy-chomper": 0x53c1de,
+  "christmas-yeti-jaws": 0xeaf6ff,
+  "christmas-ornament-slammer": 0xc81f5e,
+  "christmas-sleigh-crusher": 0x8a1f2b,
+  "christmas-icicle-shears": 0xbfe8ff,
+  "christmas-tinsel-snapper": 0xd8b93a,
   "boost-pad": 0x35f0d0,
 };
 /** Minimal orbit: drag rotates, wheel zooms, shift-drag pans. */
@@ -269,13 +313,15 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     );
   };
   const pickAt = (clientX: number, clientY: number) => {
-    raycaster.setFromCamera(ndcAt(clientX, clientY), camera);
+    const ndc = ndcAt(clientX, clientY);
+    raycaster.setFromCamera(ndc, camera);
     const hits = group
       ? raycaster.intersectObjects(group.children, true)
       : [];
     const stack = resolveViewportStack(hits);
     return {
       stack,
+      ndc,
     };
   };
   let drag: { planeY: number; offX: number; offZ: number } | null = null;
@@ -319,15 +365,15 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     downY = e.clientY;
     moved = false;
     downEmpty = false;
-    const { stack } = pickAt(e.clientX, e.clientY);
+    const { stack, ndc } = pickAt(e.clientX, e.clientY);
     let selection: EditorSelection = stack[0]?.selection ?? null;
     if (store.tool === "select" && e.button === 0) {
       const picks = stack.map((entry) => entry.selection);
       const context = `${camera.matrixWorld.elements.join(",")}|${camera.projectionMatrix.elements.join(",")}|${store.preview}|${JSON.stringify(store.level)}`;
-      const current = cycle.current(e.clientX, e.clientY, picks, context);
+      const current = cycle.current(ndc.x, ndc.y, picks, context);
       if (current && pickKey(current) === pickKey(store.selection)) selection = current;
       else if (current) cycle.reset();
-      pendingClick = { x: e.clientX, y: e.clientY, picks, context };
+      pendingClick = { x: ndc.x, y: ndc.y, picks, context };
     }
     const point = stack.find((entry) => pickKey(entry.selection) === pickKey(selection))?.hit.point;
     if (store.tool === "select" && (e.shiftKey || e.ctrlKey || e.metaKey) && selection?.kind === "solid") {
@@ -592,6 +638,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         gate.position.set(cp.x, cp.y ?? 2, cp.z);
         gate.rotation.y = yaw;
         gate.userData.pick = { kind: "checkpoint", index: i };
+        if (preview) gate.layers.set(1); // gizmos hide in preview
         gate.userData.locked = !!cp.locked;
         group.add(gate);
       }
@@ -612,6 +659,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         marker.position.set(p.x, (p.y ?? 0) + 1.5, p.z);
         marker.rotation.set(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ");
         marker.userData.pick = { kind: "prefab", id: p.id };
+        if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!p.locked;
         if (selection != null && "id" in selection && selection.id === p.id)
           marker.scale.setScalar(1.6);
@@ -632,6 +680,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         );
         marker.position.set(t.x, t.y ?? (collectible ? 1.7 : 1.5), t.z);
         marker.userData.pick = { kind: "target", index: i };
+        if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!t.locked;
         if (
           selection != null &&
@@ -652,6 +701,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         );
         marker.position.set(r.x, r.y, r.z);
         marker.userData.pick = { kind: "ring", index: i };
+        if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!r.locked;
         if (
           selection != null &&
@@ -669,6 +719,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       spawn.position.set(level.spawn.x, level.spawn.y + 1.5, level.spawn.z);
       spawn.rotation.y = level.spawn.yaw;
       spawn.userData.pick = { kind: "spawn" };
+      if (preview) spawn.layers.set(1); // gizmos hide in preview
       spawn.userData.locked = !!level.spawn.locked;
       group.add(spawn);
       scene.add(group);

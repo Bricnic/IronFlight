@@ -5,14 +5,23 @@ import {
   DINOSAUR_BITE,
   snapOpenness,
   limeJawPose,
+  ROBOT_LASER_RANGE,
+  robotLaserAngle,
+  robotLaserFiring,
+  ROCKER,
+  BOULDER,
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
-import { isDinosaur, isGauntletMachine } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine } from "./custom-level";
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
+import { buildCandyDecor } from "./candy-view";
+import { buildChristmasDecor } from "./christmas-view";
+import { buildCandyLethal, poseCandyLethal } from "./candy-lethal-view";
+import { buildChristmasLethal, poseChristmasLethal } from "./christmas-lethal-view";
 import { assignCandleLights, buildCandleLightPool, CANDLE_LIGHT_COUNT, type CandleSource } from "./candle-lights";
 import type { Simulation } from "./simulation";
 
@@ -26,6 +35,7 @@ type Model = {
   triangles: number;
   dinosaur?: ReturnType<typeof buildDinosaur>;
   machine?: ReturnType<typeof buildGauntletMachine>;
+  laser?: T.Group;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
 function consolidate(root: T.Group) {
@@ -70,8 +80,25 @@ const labelMessages: Record<string, [string, string]> = {
   cup: ["SQUISH CUP", "TIMED SQUASH / DRIVE BETWEEN"],
   clip: ["BAG CLIP", "LETHAL SNAP / CROSS WHEN FLAT"],
   flagpole: ["FLAG POLE", "RIDE UP / KNOCK THE FLAG"],
-  robot: ["SCRAP BOT", "MODERATE STOMP / TIME IT"],
+  robot: ["SCRAP BOT", "SWEEPING LASER / TIME THE STOMP"],
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
+  boulder: ["BOULDER DASH", "ROLLS WHEN CLOSE / SLOW OR DODGE"],
+  "jawbreaker-crusher": ["JAWBREAKER CRUSHER", "TIMED CRUSH / DRIVE BETWEEN"],
+  "candy-snap-jaws": ["CANDY SNAP JAWS", "TIMED BITE / DRIVE BETWEEN"],
+  "gummy-vice": ["GUMMY VICE", "TIMED SQUEEZE / DRIVE BETWEEN"],
+  "peppermint-slammer": ["PEPPERMINT SLAMMER", "TIMED STAMP / DRIVE BETWEEN"],
+  "taffy-snapper": ["TAFFY SNAPPER", "TIMED SNAP / DRIVE BETWEEN"],
+  "licorice-shears": ["LICORICE SHEARS", "TIMED BLADES / DRIVE BETWEEN"],
+  "sugar-chomper": ["SUGAR CHOMPER", "TIMED BITE / DRIVE BETWEEN"],
+  "caramel-crusher": ["CARAMEL CRUSHER", "TIMED PRESS / DRIVE BETWEEN"],
+  "christmas-nutcracker": ["NUTCRACKER", "TIMED CRUSH / DRIVE BETWEEN"],
+  "christmas-ice-vice": ["ICE VICE", "TIMED SQUEEZE / DRIVE BETWEEN"],
+  "christmas-toy-chomper": ["TOY CHOMPER", "TIMED BITE / DRIVE BETWEEN"],
+  "christmas-yeti-jaws": ["YETI JAWS", "TIMED BITE / DRIVE BETWEEN"],
+  "christmas-ornament-slammer": ["ORNAMENT SLAMMER", "TIMED STAMP / DRIVE BETWEEN"],
+  "christmas-sleigh-crusher": ["SLEIGH CRUSHER", "TIMED PRESS / DRIVE BETWEEN"],
+  "christmas-icicle-shears": ["ICICLE SHEARS", "TIMED BLADES / DRIVE BETWEEN"],
+  "christmas-tinsel-snapper": ["TINSEL SNAPPER", "TIMED SNAP / DRIVE BETWEEN"],
 };
 /** Upright billboard label anchored above the model at the given local height. */
 export function buildDungeonLabel(h: DungeonHazard, topY: number): T.Sprite {
@@ -635,7 +662,7 @@ function buildClipModel(h: DungeonHazard, root: T.Group): T.Group[] {
   root.add(pivot);
   return [pivot];
 }
-function buildRobotModel(h: DungeonHazard, root: T.Group): T.Group[] {
+function buildRobotModel(h: DungeonHazard, root: T.Group): { pivots: T.Group[]; laser: T.Group } {
   const red = standard(0xc23b2e, 0.35, 0.5);
   const dark = standard(0x2b2f33, 0.7, 0.5);
   const lamp = new T.MeshStandardMaterial({
@@ -676,7 +703,21 @@ function buildRobotModel(h: DungeonHazard, root: T.Group): T.Group[] {
     root.add(arm);
     pivots.push(arm);
   }
-  return pivots;
+  const laser = new T.Group();
+  laser.position.set(0, 6.8, 0.9);
+  const core = new T.Mesh(
+    new T.BoxGeometry(0.35, 0.35, ROBOT_LASER_RANGE),
+    new T.MeshBasicMaterial({ color: 0xff2a1a }),
+  );
+  core.position.z = ROBOT_LASER_RANGE / 2;
+  const glow = new T.Mesh(
+    new T.BoxGeometry(0.9, 0.9, ROBOT_LASER_RANGE),
+    new T.MeshBasicMaterial({ color: 0xff2a1a, transparent: true, opacity: 0.28, blending: T.AdditiveBlending, depthWrite: false }),
+  );
+  glow.position.z = ROBOT_LASER_RANGE / 2;
+  laser.add(core, glow);
+  root.add(laser);
+  return { pivots, laser };
 }
 function buildCageModel(h: DungeonHazard, root: T.Group): T.Group[] {
   const iron = standard(0x2b2f33, 0.7, 0.5);
@@ -709,6 +750,117 @@ function buildCageModel(h: DungeonHazard, root: T.Group): T.Group[] {
   const skeleton = buildSkeletonMesh(0.78);
   skeleton.position.y = 0.35;
   root.add(skeleton);
+  return [];
+}
+function buildCactiPatchModel(h: DungeonHazard, root: T.Group): T.Group[] {
+  const sand = standard(0xd9b98a, 0, 0.9);
+  const green = standard(0x3fa34d, 0, 0.7);
+  const rib = standard(0x2e7d3a, 0, 0.8);
+  const mound = new T.Mesh(new T.CylinderGeometry(2.4, 3, 1, 20), sand);
+  mound.position.y = 0.5;
+  mound.castShadow = true;
+  mound.receiveShadow = true;
+  root.add(mound);
+  const saguaro = (x: number, z: number, height: number, arms: number) => {
+    const trunk = new T.Mesh(
+      new T.CapsuleGeometry(0.35, height, 8, 16),
+      green,
+    );
+    trunk.position.set(x, 1 + height / 2 + 0.35, z);
+    trunk.castShadow = true;
+    trunk.receiveShadow = true;
+    root.add(trunk);
+    for (let i = 0; i < arms; i++) {
+      const side = i % 2 ? -1 : 1;
+      const arm = new T.Mesh(new T.CapsuleGeometry(0.2, 0.9, 6, 12), green);
+      arm.position.set(x + side * 0.55, 1.6 + i * 0.5, z);
+      arm.rotation.z = side * 1.1;
+      arm.castShadow = true;
+      root.add(arm);
+    }
+    for (let i = 0; i < 4; i++) {
+      const spike = new T.Mesh(new T.ConeGeometry(0.06, 0.3, 6), rib);
+      const a = (i / 4) * Math.PI * 2 + x;
+      spike.position.set(x + Math.cos(a) * 0.38, 2 + i * 0.4, z + Math.sin(a) * 0.38);
+      spike.rotation.z = -Math.cos(a) * 1.2;
+      spike.rotation.x = Math.sin(a) * 1.2;
+      root.add(spike);
+    }
+  };
+  saguaro(-1.2, 0.5, 2.2, 2);
+  saguaro(1.1, -0.8, 3, 1);
+  saguaro(0.4, 1.3, 1.6, 2);
+  void h;
+  return [];
+}
+function buildRockerModel(h: DungeonHazard, root: T.Group): T.Group[] {
+  const wood = standard(0x9a6f3c, 0, 0.8);
+  const darkWood = standard(0x6e4a26, 0, 0.85);
+  const stone = standard(0x5a5f66, 0, 0.9);
+  const axle = new T.Mesh(
+    new T.CylinderGeometry(1, 1, ROCKER.w + 1, 16),
+    darkWood,
+  );
+  axle.rotation.z = Math.PI / 2;
+  axle.position.y = ROCKER.pivotY - 0.6;
+  axle.castShadow = true;
+  axle.receiveShadow = true;
+  root.add(axle);
+  for (const side of [-1, 1]) {
+    const foot = new T.Mesh(
+      new T.BoxGeometry(2, ROCKER.pivotY - 0.6, 3),
+      stone,
+    );
+    foot.position.set(side * (ROCKER.w / 2 - 1), (ROCKER.pivotY - 0.6) / 2, 0);
+    foot.castShadow = true;
+    foot.receiveShadow = true;
+    root.add(foot);
+  }
+  const tilt = new T.Group();
+  tilt.position.y = ROCKER.pivotY;
+  const deck = new T.Mesh(
+    new T.BoxGeometry(ROCKER.w, ROCKER.h, ROCKER.d),
+    wood,
+  );
+  deck.castShadow = true;
+  deck.receiveShadow = true;
+  tilt.add(deck);
+  for (const z of [-11.5, -8.2, -4.9, -1.6, 1.6, 4.9, 8.2, 11.5]) {
+    const slat = new T.Mesh(new T.BoxGeometry(ROCKER.w, 0.05, 1), darkWood);
+    slat.position.set(0, 0.32, z);
+    slat.receiveShadow = true;
+    tilt.add(slat);
+  }
+  for (const z of [-10, -5, 0, 5, 10]) {
+    const beam = new T.Mesh(
+      new T.BoxGeometry(ROCKER.w + 0.5, 0.25, 0.8),
+      darkWood,
+    );
+    beam.position.set(0, -0.4, z);
+    beam.castShadow = true;
+    tilt.add(beam);
+  }
+  for (const side of [-1, 1]) {
+    const rail = new T.Mesh(new T.BoxGeometry(0.8, 1.2, ROCKER.d), darkWood);
+    rail.position.set(side * (ROCKER.w / 2 - 0.4), 0.9, 0);
+    rail.castShadow = true;
+    tilt.add(rail);
+  }
+  root.add(tilt);
+  void h;
+  return [tilt];
+}
+function buildBoulderModel(h: DungeonHazard, root: T.Group): T.Group[] {
+  const rock = new T.MeshStandardMaterial({
+    color: 0x6b5d4f,
+    roughness: 1,
+    flatShading: true,
+  });
+  const ball = new T.Mesh(new T.IcosahedronGeometry(BOULDER.radius, 3), rock);
+  ball.castShadow = true;
+  ball.receiveShadow = true;
+  root.add(ball);
+  void h;
   return [];
 }
 function buildJailCellModel(h: DungeonHazard, root: T.Group): T.Group[] {
@@ -817,10 +969,17 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     model.pivots = buildClipModel(h, root);
     root.add(buildDungeonLabel(h, 13));
   } else if (h.kind === "robot") {
-    model.pivots = buildRobotModel(h, root);
+    ({ pivots: model.pivots, laser: model.laser } = buildRobotModel(h, root));
     root.add(buildDungeonLabel(h, 13));
   } else if (h.kind === "cage") {
     model.pivots = buildCageModel(h, root);
+  } else if (h.kind === "cacti-patch") {
+    model.pivots = buildCactiPatchModel(h, root);
+  } else if (h.kind === "rocker") {
+    model.pivots = buildRockerModel(h, root);
+  } else if (h.kind === "boulder") {
+    model.pivots = buildBoulderModel(h, root);
+    root.add(buildDungeonLabel(h, 5));
   } else if (h.kind === "candle") {
     model.pivots = buildCandleModel(h, root);
   } else if (h.kind === "lime-chomper") {
@@ -831,6 +990,16 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "flagpole") {
     model.pivots = [buildFlagpole(root)];
     root.add(buildDungeonLabel(h, 36));
+  } else if (isCandyDecor(h.kind)) {
+    model.pivots = buildCandyDecor(root, h.kind);
+  } else if (isChristmasDecor(h.kind)) {
+    model.pivots = buildChristmasDecor(root, h.kind);
+  } else if (isChristmasLethal(h.kind)) {
+    model.pivots = buildChristmasLethal(root, h.kind);
+    root.add(buildDungeonLabel(h, 14.5));
+  } else if (isCandyLethal(h.kind)) {
+    model.pivots = buildCandyLethal(root, h.kind);
+    root.add(buildDungeonLabel(h, 14.5));
   } else if (isGauntletMachine(h.kind)) {
     model.machine = buildGauntletMachine(root, { ...h, kind: h.kind });
   } else if (isDinosaur(h.kind)) {
@@ -984,6 +1153,23 @@ export class DungeonView extends T.Group {
         poseDinosaur(m.dinosaur, elapsed, bite?.turn ?? 0, aim);
         continue;
       }
+      if (m.h.kind === "rocker") {
+        const tilt = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.tilt;
+        if (m.pivots[0] && tilt !== undefined) m.pivots[0].rotation.x = tilt;
+        continue;
+      }
+      if (m.h.kind === "boulder") {
+        const body = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.body;
+        if (body) {
+          m.root.position.copy(body.translation());
+          m.root.quaternion.copy(body.rotation());
+        }
+        continue;
+      }
       if (m.h.kind === "lime-chomper") {
         m.pivots[0].rotation.x = -0.82 * limeJawPose(s.time + m.h.phase).openness;
         continue;
@@ -1013,6 +1199,15 @@ export class DungeonView extends T.Group {
         // Arms wind up while crossable, then smash down on the stomp.
         m.pivots[0].rotation.x = open * -1.2;
         m.pivots[1].rotation.x = open * -1.2;
+        if (m.laser) {
+          const shifted = s.time + m.h.phase;
+          m.laser.rotation.y = robotLaserAngle(shifted);
+          m.laser.visible = robotLaserFiring(shifted);
+        }
+      } else if (isChristmasLethal(m.h.kind)) {
+        poseChristmasLethal(m.h.kind, m.pivots, open);
+      } else if (isCandyLethal(m.h.kind)) {
+        poseCandyLethal(m.h.kind, m.pivots, open);
       } else if (m.h.kind === "candle") {
         m.pivots.forEach((f, i) => {
           const base = (f.userData.base as number | undefined) ?? 1;

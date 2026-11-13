@@ -1,6 +1,6 @@
 import { expect, it, vi, beforeEach, afterEach } from "vitest";
-import { Color, Mesh, Sprite, Texture, TextureLoader } from "three";
-import { BackgroundView, applyHaze } from "../src/background-view";
+import { BoxGeometry, BufferAttribute, Color, Mesh, Sprite, Texture, TextureLoader } from "three";
+import { BackgroundView, applyHaze, tileSkyscraperUVs } from "../src/background-view";
 import { getTrack } from "../src/tracks";
 
 beforeEach(() => {
@@ -47,6 +47,22 @@ it("builds a sky dome, shapes and clouds for a track", () => {
   expect(stats.shapes).toBeGreaterThan(0);
   expect(stats.clouds).toBe(12);
 });
+
+for (const template of ["christmas-village", "christmas-midnight"]) {
+  it(`builds the festive rings for ${template}`, () => {
+    const view = new BackgroundView();
+    view.update(
+      { ...getTrack("triple-loop"), backgroundTemplate: template },
+      0,
+      0,
+      0,
+      650,
+    );
+    expect(view.stats().template).toBe(template);
+    expect(view.stats().shapes).toBeGreaterThan(10);
+    expect(meshes(view).length).toBeGreaterThan(1);
+  });
+}
 
 it("darkens clouds to storm gray in rain", () => {
   const view = new BackgroundView();
@@ -176,4 +192,32 @@ it("hazes distant colors toward the horizon", () => {
   expect(hazed.getHex()).not.toBe(0x000000);
   const nearer = applyHaze(base.clone(), new Color(0x000000), 100);
   expect(nearer.getHex()).toBeGreaterThan(hazed.getHex());
+});
+
+it("tiles skyscraper windows with building size (~0.67m cells)", () => {
+  const geo = new BoxGeometry(1, 4, 1);
+  tileSkyscraperUVs(geo, 100);
+  const uv = geo.attributes.uv as BufferAttribute;
+  const n = geo.attributes.normal as BufferAttribute;
+  let umax = 0, vmax = 0, roofmax = 0;
+  for (let i = 0; i < uv.count; i++) {
+    if (Math.abs(n.getY(i)) > 0.5) roofmax = Math.max(roofmax, uv.getX(i), uv.getY(i));
+    else { umax = Math.max(umax, uv.getX(i)); vmax = Math.max(vmax, uv.getY(i)); }
+  }
+  expect(umax).toBeCloseTo(25, 6);
+  expect(vmax).toBeCloseTo(50, 6);
+  expect(roofmax).toBeLessThanOrEqual(1);
+});
+
+it("builds tiled skyscraper UVs for city tracks", () => {
+  const view = new BackgroundView();
+  view.update(getTrack("skyline-circuit"), 0, 0, 0, 650);
+  let umax = 0;
+  view.traverse((o) => {
+    if (o instanceof Mesh && o.name !== "background-sky") {
+      const uv = (o.geometry.attributes.uv ?? {}) as Partial<BufferAttribute>;
+      for (let i = 0; uv.count !== undefined && i < uv.count; i++) umax = Math.max(umax, uv.getX!(i));
+    }
+  });
+  expect(umax).toBeGreaterThan(10);
 });

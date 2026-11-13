@@ -26,6 +26,17 @@ export const PROP_PREFAB_KINDS = [
   "snowman",
   "skull",
   "pumpkin",
+  "candy-apple",
+  "gumdrop-boulder",
+  "peppermint-barrel",
+  "chocolate-crate",
+  "cotton-candy-cart",
+  "lollipop-stand",
+  "christmas-ornament",
+  "christmas-snow-boulder",
+  "christmas-cracker-barrel",
+  "christmas-gift-crate",
+  "christmas-cocoa-cart",
 ] as const;
 export const COMIC_PREFAB_KINDS = [
   "book",
@@ -37,6 +48,7 @@ export const COMIC_PREFAB_KINDS = [
   "burner",
   "water",
   "potion",
+  "shark-pool",
 ] as const;
 /** Comic jaw traps: the chomping plate family, scalable like dinosaurs. */
 export const JAW_PREFAB_KINDS = [
@@ -75,6 +87,61 @@ export type GauntletKind = (typeof GAUNTLET_PREFAB_KINDS)[number];
 export function isGauntletMachine(kind: string): kind is GauntletKind {
   return (GAUNTLET_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Candy-land decor: solid non-lethal scenery served through the dungeon pipeline. */
+export const CANDY_PREFAB_KINDS = [
+  "candy-cane-arch",
+  "gumdrop-tree",
+  "chocolate-barrier",
+  "cotton-candy-stall",
+  "gumball-lamp",
+] as const;
+export type CandyKind = (typeof CANDY_PREFAB_KINDS)[number];
+export function isCandyDecor(kind: string): kind is CandyKind {
+  return (CANDY_PREFAB_KINDS as readonly string[]).includes(kind);
+}
+/** Candy-land lethal traps: snap-cycle insta-kill hazards served through the dungeon pipeline. */
+export const CANDY_LETHAL_PREFAB_KINDS = [
+  "jawbreaker-crusher",
+  "candy-snap-jaws",
+  "gummy-vice",
+  "peppermint-slammer",
+  "taffy-snapper",
+  "licorice-shears",
+  "sugar-chomper",
+  "caramel-crusher",
+] as const;
+export type CandyLethalKind = (typeof CANDY_LETHAL_PREFAB_KINDS)[number];
+export function isCandyLethal(kind: string): kind is CandyLethalKind {
+  return (CANDY_LETHAL_PREFAB_KINDS as readonly string[]).includes(kind);
+}
+/** Christmas decor: solid non-lethal scenery served through the dungeon pipeline. */
+export const CHRISTMAS_PREFAB_KINDS = [
+  "christmas-tree",
+  "christmas-light-arch",
+  "christmas-market-stall",
+  "christmas-lantern",
+  "christmas-gift-wall",
+  "christmas-reindeer",
+] as const;
+export type ChristmasKind = (typeof CHRISTMAS_PREFAB_KINDS)[number];
+export function isChristmasDecor(kind: string): kind is ChristmasKind {
+  return (CHRISTMAS_PREFAB_KINDS as readonly string[]).includes(kind);
+}
+/** Christmas lethal traps: snap-cycle insta-kill hazards served through the dungeon pipeline. */
+export const CHRISTMAS_LETHAL_PREFAB_KINDS = [
+  "christmas-nutcracker",
+  "christmas-ice-vice",
+  "christmas-toy-chomper",
+  "christmas-yeti-jaws",
+  "christmas-ornament-slammer",
+  "christmas-sleigh-crusher",
+  "christmas-icicle-shears",
+  "christmas-tinsel-snapper",
+] as const;
+export type ChristmasLethalKind = (typeof CHRISTMAS_LETHAL_PREFAB_KINDS)[number];
+export function isChristmasLethal(kind: string): kind is ChristmasLethalKind {
+  return (CHRISTMAS_LETHAL_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -88,11 +155,19 @@ export const DUNGEON_PREFAB_KINDS = [
   "robot",
   "guided-pipe",
   "flagpole",
+  "cacti-patch",
+  "rocker",
+  "boulder",
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
+  ...CANDY_PREFAB_KINDS,
+  ...CANDY_LETHAL_PREFAB_KINDS,
+  ...CHRISTMAS_PREFAB_KINDS,
+  ...CHRISTMAS_LETHAL_PREFAB_KINDS,
 ] as const;
 export const LOOSE_BLOCK_PREFAB_KINDS = ["loose-blocks", "glass-pane"] as const;
 export const BURNING_COALS_PREFAB_KINDS = ["burning-coals"] as const;
+export const FRAGILE_ICE_PREFAB_KINDS = ["fragile-ice"] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,
   ...COMIC_PREFAB_KINDS,
@@ -100,6 +175,7 @@ export const PREFAB_KINDS = [
   ...DUNGEON_PREFAB_KINDS,
   ...LOOSE_BLOCK_PREFAB_KINDS,
   ...BURNING_COALS_PREFAB_KINDS,
+  ...FRAGILE_ICE_PREFAB_KINDS,
   "checkpoint",
 ] as const;
 export type PrefabKind = (typeof PREFAB_KINDS)[number];

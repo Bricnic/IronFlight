@@ -1,5 +1,6 @@
 import { chromium } from "@playwright/test";
 import { mkdir, readFile } from "node:fs/promises";
+import { randomInt } from "node:crypto";
 // Level-select thumbnails: real in-game screenshots, one per official level.
 // Usage: PREVIEW_PORT=5199 node scripts/capture-level-previews.mjs [id...]
 // IDs default to the full official lineup, read live from the level-select
@@ -7,15 +8,23 @@ import { mkdir, readFile } from "node:fs/promises";
 // garage order (triple-loop -> Monster Truck, foundry-run -> Sports Car,
 // ...) at the default chase distance, with a stylized top-down minimap of
 // the level drawn as a box in the lower right of each preview.
+// Pass --random-vehicle to pick a uniform random garage vehicle per level,
+// or --vehicle <id> to pin one exact vehicle for every capture.
+
+/** Vehicle picker: garage order by default, exact id, or uniform random. */
+export function selectVehicle(vehicles, at, opts = {}) {
+  if (!vehicles.length) throw new Error("No vehicles found in garage");
+  if (opts.vehicle) {
+    if (!vehicles.includes(opts.vehicle)) {
+      throw new Error(`Unknown vehicle: ${opts.vehicle}`);
+    }
+    return opts.vehicle;
+  }
+  if (opts.random) return vehicles[randomInt(vehicles.length)];
+  return vehicles[at % vehicles.length];
+}
+
 const PORT = process.env.PREVIEW_PORT ?? "5173";
-const browser = await chromium.launch({
-  args: [
-    "--enable-webgl",
-    "--use-gl=angle",
-    "--use-angle=swiftshader",
-    "--enable-unsafe-swiftshader",
-  ],
-});
 const file = (id) => id.replace(/^custom:/, "");
 /** Draw (or redraw) the stylized minimap overlay for a track. */
 async function drawMinimap(page, trackId) {
@@ -108,95 +117,115 @@ async function drawMinimap(page, trackId) {
     dot(track.spawn.x, track.spawn.z, 3.5, "#7ee787");
   }, trackId);
 }
-try {
-  const page = await browser.newPage({
-    viewport: { width: 800, height: 450 },
-    deviceScaleFactor: 1,
-  });
-  await page.addInitScript(() => {
-    const raf = window.requestAnimationFrame.bind(window);
-    window.requestAnimationFrame = (cb) =>
-      raf((t) => {
-        if (!window.__captureFreeze) cb(t);
-      });
-  });
-  await page.goto(`http://127.0.0.1:${PORT}/`);
-  await page.waitForFunction(() => !!window.__game);
-  await page.waitForFunction(() => {
-    try {
-      return !!window.__game.track("custom:dungeon");
-    } catch {
-      return false;
-    }
-  });
-  await page.waitForFunction(
-    () =>
-      document.querySelectorAll("#level-select [data-track]").length > 0,
-  );
-  const lineup = await page
-    .locator("#level-select [data-track]")
-    .evaluateAll((cards) =>
-      cards.map((card) => ({
-        id: card.dataset.track,
-        img: card.querySelector("img")?.getAttribute("src") ?? null,
-      })),
-    );
-  const vehicles = await page
-    .locator("#vehicle-select [data-vehicle]")
-    .evaluateAll((cards) => cards.map((card) => card.dataset.vehicle));
-  if (!vehicles.length) throw new Error("No vehicles found in garage");
-  const wanted = process.argv.slice(2).filter((a) => !a.startsWith("-"));
-  const indexOf = (id) => {
-    const at = lineup.findIndex((t) => t.id === id);
-    if (at >= 0) return at;
-    return lineup.findIndex((t) => t.id === `custom:${id}`);
-  };
-  const queue = wanted.length ? wanted : lineup.map((t) => t.id);
-  await page.addStyleTag({
-    content:
-      "#app > :not(#viewport) { visibility: hidden !important; } #viewport { inset: 0 !important; }",
-  });
-  await page.evaluate(() => window.dispatchEvent(new Event("resize")));
-  await page.waitForTimeout(500);
-  await mkdir("public/tracks", { recursive: true });
-  for (const id of queue) {
-    const at = indexOf(id);
-    if (at < 0) throw new Error(`Unknown official level: ${id}`);
-    const trackId = lineup[at].id;
-    const vehicle = vehicles[at % vehicles.length];
-    await page.evaluate(
-      ({ trackId, vehicle }) => {
-        window.__captureFreeze = false;
-        window.__game.pause(false);
-        window.__game.startTrack(trackId, "easy", vehicle);
-        window.__game.advanceFrames(90, 1, {});
-      },
-      { trackId, vehicle },
-    );
-    await page.waitForTimeout(2000);
-    await drawMinimap(page, trackId);
-    const distance = await page.evaluate(
-      () => window.__game.camera().distance,
-    );
-    await page.evaluate(() => {
-      window.__game.pause(true);
-      window.__captureFreeze = true;
-      window.__game.advanceFrames(2, 1, {});
-    });
-    const img = lineup[at].img;
-    const out =
-      img?.startsWith("/tracks/") && img.endsWith(".png")
-        ? `public${img}`
-        : `public/tracks/${file(trackId)}.png`;
-    await page.locator("#viewport").screenshot({ path: out });
-    const bytes = await readFile(out);
-    const w = bytes.readUInt32BE(16),
-      h = bytes.readUInt32BE(20);
-    if (w < 640 || h < 360) throw new Error(`${out} too small: ${w}x${h}`);
-    console.log(
-      `Captured ${trackId} with ${vehicle} @ distance ${distance.toFixed(1)} ${w}x${h}`,
-    );
+
+export async function main(argv) {
+  const vIdx = argv.indexOf("--vehicle");
+  if (vIdx >= 0 && (vIdx + 1 >= argv.length || argv[vIdx + 1].startsWith("-"))) {
+    throw new Error("Usage: capture-level-previews.mjs [--vehicle <id>] requires a vehicle id");
   }
-} finally {
-  await browser.close();
+  const pinned = vIdx >= 0 ? argv[vIdx + 1] : undefined;
+  const random = argv.includes("--random-vehicle");
+  const skip = new Set(vIdx >= 0 ? [vIdx + 1] : []);
+  const wanted = argv.filter((a, i) => !a.startsWith("-") && !skip.has(i));
+  const browser = await chromium.launch({
+    args: [
+      "--enable-webgl",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--enable-unsafe-swiftshader",
+    ],
+  });
+  try {
+    const page = await browser.newPage({
+      viewport: { width: 800, height: 450 },
+      deviceScaleFactor: 1,
+    });
+    await page.addInitScript(() => {
+      const raf = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = (cb) =>
+        raf((t) => {
+          if (!window.__captureFreeze) cb(t);
+        });
+    });
+    await page.goto(`http://127.0.0.1:${PORT}/`);
+    await page.waitForFunction(() => !!window.__game);
+    await page.waitForFunction(() => {
+      try {
+        return !!window.__game.track("custom:dungeon");
+      } catch {
+        return false;
+      }
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("#level-select [data-track]").length > 0,
+    );
+    const lineup = await page
+      .locator("#level-select [data-track]")
+      .evaluateAll((cards) =>
+        cards.map((card) => ({
+          id: card.dataset.track,
+          img: card.querySelector("img")?.getAttribute("src") ?? null,
+        })),
+      );
+    const vehicles = await page
+      .locator("#vehicle-select [data-vehicle]")
+      .evaluateAll((cards) => cards.map((card) => card.dataset.vehicle));
+    if (!vehicles.length) throw new Error("No vehicles found in garage");
+    const indexOf = (id) => {
+      const at = lineup.findIndex((t) => t.id === id);
+      if (at >= 0) return at;
+      return lineup.findIndex((t) => t.id === `custom:${id}`);
+    };
+    const queue = wanted.length ? wanted : lineup.map((t) => t.id);
+    await page.addStyleTag({
+      content:
+        "#app > :not(#viewport) { visibility: hidden !important; } #viewport { inset: 0 !important; }",
+    });
+    await page.evaluate(() => window.dispatchEvent(new Event("resize")));
+    await page.waitForTimeout(500);
+    await mkdir("public/tracks", { recursive: true });
+    for (const id of queue) {
+      const at = indexOf(id);
+      if (at < 0) throw new Error(`Unknown official level: ${id}`);
+      const trackId = lineup[at].id;
+      const vehicle = selectVehicle(vehicles, at, { vehicle: pinned, random });
+      await page.evaluate(
+        ({ trackId, vehicle }) => {
+          window.__captureFreeze = false;
+          window.__game.pause(false);
+          window.__game.startTrack(trackId, "easy", vehicle);
+          window.__game.advanceFrames(90, 1, {});
+        },
+        { trackId, vehicle },
+      );
+      await page.waitForTimeout(2000);
+      await drawMinimap(page, trackId);
+      const distance = await page.evaluate(
+        () => window.__game.camera().distance,
+      );
+      await page.evaluate(() => {
+        window.__game.pause(true);
+        window.__captureFreeze = true;
+        window.__game.advanceFrames(2, 1, {});
+      });
+      const img = lineup[at].img;
+      const out =
+        img?.startsWith("/tracks/") && img.endsWith(".png")
+          ? `public${img}`
+          : `public/tracks/${file(trackId)}.png`;
+      await page.locator("#viewport").screenshot({ path: out });
+      const bytes = await readFile(out);
+      const w = bytes.readUInt32BE(16),
+        h = bytes.readUInt32BE(20);
+      if (w < 640 || h < 360) throw new Error(`${out} too small: ${w}x${h}`);
+      console.log(
+        `Captured ${trackId} with ${vehicle} @ distance ${distance.toFixed(1)} ${w}x${h}`,
+      );
+    }
+  } finally {
+    await browser.close();
+  }
 }
+
+if (process.argv[1]?.endsWith("capture-level-previews.mjs")) await main(process.argv.slice(2));

@@ -734,9 +734,13 @@ it("west ramp climbs from the ground floor to the deck", () => {
 });
 
 
-it("completes all 15 chests within the five-minute limit", () => {
-  expect(driveDungeonToCompletion()).toBeLessThanOrEqual(225);
-});
+it(
+  "completes all 15 chests within the five-minute limit",
+  { timeout: 60000 }, // full-route sim runs ~10s idle, longer under parallel load
+  () => {
+    expect(driveDungeonToCompletion()).toBeLessThanOrEqual(225);
+  },
+);
 
 it("ground trap strike zones graze the driven route", () => {
   const track = toTrack(validateCustomLevel(original));

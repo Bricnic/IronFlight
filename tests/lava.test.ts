@@ -1,4 +1,4 @@
-import { beforeAll, expect, it } from "vitest";
+import { beforeAll, expect, it, vi } from "vitest";
 import { initPhysics, Simulation } from "../src/simulation";
 import { PARTS } from "../src/damage";
 import { arenaSolids } from "../src/arena";
@@ -7,6 +7,7 @@ import { DT } from "../src/clock";
 import { TruckFireView } from "../src/truck-fire";
 import { createTruck } from "../src/truck";
 import * as T from "three";
+import { lavaMaterial } from "../src/materials";
 beforeAll(initPhysics);
 
 for (const id of ["roof", "door-left", "wheel-fl", "chassis-rear", "hood"])
@@ -151,4 +152,23 @@ it("the roof cage starts immersion before the thin roof collider and fully subme
   sim.run(2);
   expect(state.body!.translation().y + max.y).toBeLessThan(surface);
   sim.dispose();
+});
+
+it("blends a close-range detail map over the base lava flow", () => {
+  const load = vi
+    .spyOn(T.TextureLoader.prototype, "load")
+    .mockReturnValue(new T.Texture());
+  try {
+    const material = lavaMaterial();
+    const shader = {
+      uniforms: {} as Record<string, { value: unknown }>, 
+      vertexShader: "",
+      fragmentShader: "#include <map_fragment>\n#include <emissivemap_fragment>",
+    };
+    material.onBeforeCompile!(shader as never, {} as never);
+    expect(shader.uniforms.lavaDetail).toBeDefined();
+    expect(shader.fragmentShader).toContain("uniform sampler2D lavaDetail;");
+    expect(shader.fragmentShader).toContain("texture2D(lavaDetail, flowUv * 7.0)");
+    expect(shader.fragmentShader).toContain("smoothstep(25.0, 110.0, length(vViewPosition))");
+  } finally { load.mockRestore(); }
 });

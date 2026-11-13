@@ -1,5 +1,5 @@
 import type { Track } from "./tracks.ts";
-import { DUNGEON_PREFAB_KINDS, type DinosaurKind } from "./custom-level.ts";
+import { DUNGEON_PREFAB_KINDS, type CandyLethalKind, type ChristmasLethalKind, type DinosaurKind } from "./custom-level.ts";
 export type DungeonKind = (typeof DUNGEON_PREFAB_KINDS)[number];
 export type DungeonHazard = {
   id: string;
@@ -60,7 +60,7 @@ export function snapStriking(time: number) {
 }
 /** Strike-zone radius and downward slam per trap kind; the shut trap is instantly lethal. */
 export const DUNGEON_STRIKE: Record<
-  "hands" | "scissors" | "clippers" | "cup" | "clip",
+  "hands" | "scissors" | "clippers" | "cup" | "clip" | CandyLethalKind | ChristmasLethalKind,
   { radius: number; slam: number }
 > = {
   hands: { radius: 8, slam: 4 },
@@ -68,12 +68,72 @@ export const DUNGEON_STRIKE: Record<
   clippers: { radius: 7.5, slam: 5 },
   cup: { radius: 7, slam: 6 },
   clip: { radius: 7, slam: 6 },
+  "jawbreaker-crusher": { radius: 7.5, slam: 5 },
+  "candy-snap-jaws": { radius: 7.5, slam: 4 },
+  "gummy-vice": { radius: 7, slam: 0 },
+  "peppermint-slammer": { radius: 7, slam: 6 },
+  "taffy-snapper": { radius: 7, slam: 4 },
+  "licorice-shears": { radius: 7, slam: 0 },
+  "sugar-chomper": { radius: 8, slam: 4 },
+  "caramel-crusher": { radius: 7, slam: 6 },
+  "christmas-nutcracker": { radius: 7.5, slam: 5 },
+  "christmas-ice-vice": { radius: 7, slam: 0 },
+  "christmas-toy-chomper": { radius: 7.5, slam: 4 },
+  "christmas-yeti-jaws": { radius: 8, slam: 4 },
+  "christmas-ornament-slammer": { radius: 7, slam: 6 },
+  "christmas-sleigh-crusher": { radius: 7, slam: 6 },
+  "christmas-icicle-shears": { radius: 11, slam: 0 },
+  "christmas-tinsel-snapper": { radius: 11, slam: 4 },
 };
 /** Scrap-bot stomp: moderate timed damage, never instantly lethal. */
 export const ROBOT_STOMP_RADIUS = 6;
 export const ROBOT_STOMP_DAMAGE = 25;
+/** Scrap-bot sweeping laser: periodic bursts, 30%/s exposure in 100ms ticks. */
+export const ROBOT_LASER_RANGE = 18;
+export const ROBOT_LASER_HALF_ANGLE = 0.09;
+export const ROBOT_LASER_ARC = 1.1;
+export const ROBOT_LASER_PERIOD = 4;
+export const ROBOT_LASER_ON = 3;
+export const ROBOT_LASER_CYCLE = 5;
+export const ROBOT_LASER_DPS = 0.3;
+export const ROBOT_LASER_TICK = 0.1;
+export function robotLaserAngle(shifted: number) {
+  return ROBOT_LASER_ARC * Math.sin((shifted / ROBOT_LASER_PERIOD) * Math.PI * 2);
+}
+export function robotLaserFiring(shifted: number) {
+  const t = ((shifted % ROBOT_LASER_CYCLE) + ROBOT_LASER_CYCLE) % ROBOT_LASER_CYCLE;
+  return t < ROBOT_LASER_ON;
+}
 /** Cage furniture dimensions, shared by the collider builder and the artist. */
 export const CAGE = { w: 3, h: 4, d: 3 } as const;
+/** Prickly-pear mound with saguaros; solid but never lethal, like candy decor. */
+export const CACTI_PATCH = { w: 6, h: 2.5, d: 6 } as const;
+/** Seesaw deck: cars board the low entry end and rock it to drive off. Travels local +z. */
+export const ROCKER = {
+  w: 14, h: 0.6, d: 26, pivotY: 1.85, maxTilt: 0.16, restTilt: -0.16, rate: 1.0,
+} as const;
+/** Lethal rolling stone: triggers near the car, rolls along its yaw heading. */
+export const BOULDER = { radius: 2, trigger: 16, speed: 18 } as const;
+/** Candy-land decor furniture, shared by the collider builder and the artist. Solid but never lethal: candy kinds have no DUNGEON_STRIKE entry. */
+export const CANDY_ARCH = { postW: 1.6, postH: 10, postD: 1.6, postX: 6 } as const;
+export const CANDY_TRUNK = { w: 2, h: 4, d: 2 } as const;
+export const CANDY_STAND = { w: 4, h: 1.5, d: 4 } as const;
+export const CANDY_CHOCOLATE = { w: 12, h: 3, d: 1.6 } as const;
+export const CANDY_STALL = { w: 6, h: 4, d: 5 } as const;
+export const CANDY_LAMP = { w: 1.6, h: 7, d: 1.6 } as const;
+/** Candy press-trap gantry posts; cars drive between them under the moving stamp. */
+export const CANDY_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6 } as const;
+/** Christmas decor furniture, shared by the collider builder and the artist. Solid but never lethal: christmas kinds have no DUNGEON_STRIKE entry. */
+export const CHRISTMAS_ARCH = { postW: 1.6, postH: 10, postD: 1.6, postX: 6.5 } as const;
+export const CHRISTMAS_TRUNK = { w: 2, h: 4, d: 2 } as const;
+export const CHRISTMAS_STALL = { w: 6, h: 4, d: 5 } as const;
+export const CHRISTMAS_LANTERN = { w: 1.6, h: 7, d: 1.6 } as const;
+export const CHRISTMAS_GIFTS = { w: 12, h: 3, d: 1.6 } as const;
+export const CHRISTMAS_DEER = { w: 4, h: 1.5, d: 4 } as const;
+/** Wooden statue above the plinth; together they stop the truck like a wall. */
+export const CHRISTMAS_DEER_BODY = { w: 2.4, h: 4.2, d: 2.8 } as const;
+/** Christmas press-trap gantry posts; cars drive between them under the moving stamp. */
+export const CHRISTMAS_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6.5 } as const;
 /**
  * Clipper crusher furniture, shared by colliders and models. Hands and
  * scissors have no furniture: the truck drives straight through their

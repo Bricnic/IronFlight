@@ -3,8 +3,6 @@ import { Simulation } from "../src/simulation";
 import {
   DUNGEON_STRIKE,
   SNAP_CYCLE,
-  SNAP_STRIKE_START,
-  snapStriking,
 } from "../src/dungeon-hazards";
 import original from "../levels/official/Dungeon.json";
 import {
@@ -57,6 +55,7 @@ export function driveDungeonToCompletion(vehicleId?: string): number {
     sim.startTrack(track.id);
     let leg = 0,
       blockedFor = 0,
+      stateCount: Record<string, number> = {},
       reverseUntil = -1,
       legSince = 0;
     for (
@@ -117,8 +116,8 @@ export function driveDungeonToCompletion(vehicleId?: string): number {
         Math.sin(desired - heading),
         Math.cos(desired - heading),
       );
-      // Lethal traps: timed crossings only. Near any zone the current
-      // leg threads, creep to the edge, hold for the open window, dash.
+      // Lethal traps: pace to cross in open windows. Far out, cap speed;
+      // near the edge, roll only when the crossing avoids the strike.
       let hold = 0;
       let cap = 99;
       {
@@ -132,46 +131,32 @@ export function driveDungeonToCompletion(vehicleId?: string): number {
           if (Math.abs(s.position.y - ((m.h.y ?? 0) + 1.5)) > 4) continue;
           const tt = Math.max(0, Math.min(1, ((m.h.x - from.x) * sx + (m.h.z - from.z) * sz) / segLen2));
           const near = Math.hypot(m.h.x - (from.x + tt * sx), m.h.z - (from.z + tt * sz));
-          if (near > strike.radius + 22) continue;
           const gap = Math.hypot(m.h.x - s.position.x, m.h.z - s.position.z);
-          if (gap <= strike.radius || gap > strike.radius + 32) continue;
           if (ttruck > tt + 0.05) continue;
-          const pos = ((s.time + m.h.phase) % SNAP_CYCLE + SNAP_CYCLE) % SNAP_CYCLE;
-          const strikingNow = snapStriking(s.time + m.h.phase);
-          const remaining = strikingNow ? 0 : (SNAP_STRIKE_START - pos + SNAP_CYCLE) % SNAP_CYCLE;
-          if (near > strike.radius + 2) {
-            cap = Math.min(cap, 10);
-            if (gap <= strike.radius + 6 && remaining < 1.5) hold = 3;
-            continue;
+          if (gap <= strike.radius) continue; // inside: dash out
+          if (near > strike.radius + 5 && gap > strike.radius + 5) continue;
+          const edgeGap = gap - strike.radius;
+          if (edgeGap > 16) { cap = Math.min(cap, 10); continue; }
+          const chord = near >= strike.radius ? 4 : 2 * Math.sqrt(Math.max(4, strike.radius * strike.radius - near * near));
+          const phase = m.h.phase ?? 0;
+          const posNow = (((s.time + phase) % SNAP_CYCLE) + SNAP_CYCLE) % SNAP_CYCLE;
+          const rollPace = Math.max(Math.abs(s.signedSpeed), 5);
+          const tEntry = edgeGap / rollPace;
+          const crossTime = (chord + 6) / 13;
+          const entry = posNow + tEntry, exit = entry + crossTime;
+          let clash = false;
+          for (const k of [0, SNAP_CYCLE, 2 * SNAP_CYCLE]) {
+            if (Math.min(exit, 2.75 + k) > Math.max(entry, 1.6 + k)) clash = true;
           }
-          cap = Math.min(cap, 4.5);
-          const clr = Math.min(near, strike.radius);
-          const chord = 2 * Math.sqrt(Math.max(0, strike.radius * strike.radius - clr * clr));
-          const needed = (Math.max(0, gap - strike.radius) + chord + 3) / 11 + 0.5;
-          if (remaining < needed)
-            hold = Math.max(hold, gap <= strike.radius + 4 ? 3 : gap <= strike.radius + 14 ? 4 : 2);
+          if (!clash) continue; // window open: roll through
+          if (edgeGap > 9) { cap = Math.min(cap, 4); continue; } // slow roll
+          hold = 3; // wait at the edge
         }
       }
+      const stKey = hold === 3 ? "hold3" : s.signedSpeed > cap ? "brake" : "drive";
+      if (process.env.PROOF_TRACE) stateCount[`${leg}:${stKey}`] = (stateCount[`${leg}:${stKey}`] ?? 0) + 1;
       if (hold === 3) {
         sim.step({ throttle: 0, steer: 0, brake: 1 });
-        blockedFor = 0;
-        continue;
-      }
-      if (hold === 2) {
-        sim.step({
-          throttle: s.signedSpeed < 4 ? 0.4 : 0,
-          steer: Math.max(-1, Math.min(1, error * 3)),
-          brake: s.signedSpeed > 5 ? 1 : 0,
-        });
-        blockedFor = 0;
-        continue;
-      }
-      if (hold === 4) {
-        sim.step({
-          throttle: s.signedSpeed < 2 ? 0.3 : 0,
-          steer: Math.max(-1, Math.min(1, error * 3)),
-          brake: s.signedSpeed > 2.5 ? 0.8 : 0,
-        });
         blockedFor = 0;
         continue;
       }
@@ -233,9 +218,15 @@ export function driveDungeonToCompletion(vehicleId?: string): number {
         brake: s.signedSpeed > speed + 1 ? 0.35 : 0,
       });
     }
+    if (process.env.PROOF_TRACE) {
+      const per: Record<number, number> = {};
+      for (const [k, v] of Object.entries(stateCount)) { const l = Number(k.split(":")[0]); per[l] = (per[l] ?? 0) + v / 120; }
+      console.log("legsec " + Object.entries(per).map(([l, s]) => `${l}:${s.toFixed(0)}`).join(" "));
+      console.log("states " + Object.entries(stateCount).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => `${k}:${(v / 120).toFixed(0)}`).join(" "));
+    }
     expect(
       sim.trackRun?.status,
-      JSON.stringify({ run: sim.trackRun?.snapshot(), p: sim.body.translation(), leg }),
+      JSON.stringify({ run: sim.trackRun?.snapshot(), p: sim.body.translation(), leg, events: sim.damageEvents.slice(-4) }),
     ).toBe("completed");
     expect(sim.trackRun?.collected.size).toBe(15);
     expect(sim.snapshot(false).integrity).toBeGreaterThan(0.3);

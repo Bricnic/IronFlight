@@ -3,7 +3,8 @@ import { test, expect } from "@playwright/test";
 test.slow();
 
 test("N and P step through levels with wraparound", async ({ page }) => {
-  test.setTimeout(540000);
+  // 64 level switches across the full 38-level lineup need headroom.
+  test.setTimeout(960000);
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   const trackId = () =>
@@ -22,11 +23,11 @@ test("N and P step through levels with wraparound", async ({ page }) => {
     window.__game!.startTrack("sky-slide");
   });
   await expect.poll(trackId, { timeout: 15000 }).toBe("sky-slide");
-  for (const id of ["custom:fairground", "custom:dungeon", "custom:jurassic-junction", "custom:emberfall-causeway", "custom:chompworks", "custom:machine-gauntlet", "custom:amber-undertow", "custom:fireside-sonata", "custom:pumpkin-pass", "custom:booster-gap", "custom:evil-tube-run", "custom:slime-surge", "custom:ring-chase", "custom:block-party", "custom:frostfire-pass", "custom:volcano-loop", "custom:toybox-road", "triple-loop", "foundry-run"]) {
+  for (const id of ["custom:fairground", "custom:dungeon", "custom:jurassic-junction", "custom:emberfall-causeway", "custom:chompworks", "custom:machine-gauntlet", "custom:amber-undertow", "custom:fireside-sonata", "custom:pumpkin-pass", "custom:booster-gap", "custom:evil-tube-run", "custom:slime-surge", "custom:ring-chase", "custom:block-party", "custom:frostfire-pass", "custom:volcano-loop", "custom:toybox-road", "custom:gumdrop-meadows", "custom:lollipop-loop", "custom:peppermint-pass", "custom:chocolate-chasm", "custom:sugar-rush-summit", "custom:tinsel-town", "custom:mistletoe-mile", "custom:nutcracker-run", "custom:sleigh-bell-sprint", "custom:north-pole-summit", "custom:tabletop-brawl", "custom:sharkbite-run", "custom:rock-and-roll", "triple-loop", "foundry-run"]) {
     await page.keyboard.press("n");
     await expect.poll(trackId, { timeout: 15000 }).toBe(id);
   }
-  for (const id of ["triple-loop", "custom:toybox-road", "custom:volcano-loop", "custom:frostfire-pass", "custom:block-party", "custom:ring-chase", "custom:slime-surge", "custom:evil-tube-run", "custom:booster-gap", "custom:pumpkin-pass", "custom:fireside-sonata", "custom:amber-undertow", "custom:machine-gauntlet", "custom:chompworks", "custom:emberfall-causeway", "custom:jurassic-junction", "custom:dungeon", "custom:fairground", "sky-slide"]) {
+  for (const id of ["triple-loop", "custom:rock-and-roll", "custom:sharkbite-run", "custom:tabletop-brawl", "custom:north-pole-summit", "custom:sleigh-bell-sprint", "custom:nutcracker-run", "custom:mistletoe-mile", "custom:tinsel-town", "custom:sugar-rush-summit", "custom:chocolate-chasm", "custom:peppermint-pass", "custom:lollipop-loop", "custom:gumdrop-meadows", "custom:toybox-road", "custom:volcano-loop", "custom:frostfire-pass", "custom:block-party", "custom:ring-chase", "custom:slime-surge", "custom:evil-tube-run", "custom:booster-gap", "custom:pumpkin-pass", "custom:fireside-sonata", "custom:amber-undertow", "custom:machine-gauntlet", "custom:chompworks", "custom:emberfall-causeway", "custom:jurassic-junction", "custom:dungeon", "custom:fairground", "sky-slide"]) {
     await page.keyboard.press("p");
     await expect.poll(trackId, { timeout: 15000 }).toBe(id);
   }

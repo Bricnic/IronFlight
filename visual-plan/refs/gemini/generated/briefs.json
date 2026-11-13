@@ -82,5 +82,101 @@
     "name": "Street Sweeper",
     "brief": "White municipal street sweeper at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Low cab-over cab with wraparound windshield, blue stripe livery and amber light bar, cylindrical steel water tank with rivet rings, top hatch and rear equipment doors, twin yellow gutter brushes with spray bars under the nose, side exhaust pipes. Painted metal body, steel tank, rubber tires.",
     "category": "realistic"
-  }
+  },
+  {
+    "id": "hearse",
+    "name": "Hearse",
+    "brief": "Gloss midnight-black coach-built hearse at chunky monster-truck scale with four wheels on two axles and four chunky low-profile derby tires. Long wagon body with curtained side glass and silver landau scrolls, upright chrome grille with round headlamps, chrome bumpers and mirrors, roof antenna, silver side spears. Gloss painted metal, chrome trim, burgundy curtains, dark glass, rubber tires.",
+    "category": "realistic"
+  },
+{
+  "id": "fuel-tanker",
+  "name": "Fuel Tanker",
+  "brief": "Aluminum-silver fuel tanker truck at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Short cab-over cab with sun visor, stacked round headlamps and amber roof markers, long cylindrical tank with three red bands, rivet rings and flammable hazard diamonds, side hose tubes and access ladder, rear hose reel with discharge manifold and underride bar. Brushed steel tank, painted cab, rubber tires.",
+  "category": "realistic"
+},
+{
+  "id": "golf-cart",
+  "name": "Golf Cart",
+  "brief": "Cream open golf cart at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Split windshield, white canopy roof on four cream posts, quilted green bench seat with steering wheel and dash, rear bag rack holding two golf bags with clubs, small nose cowl with round headlamps, diamond-plate floor mat and side steps. Painted fiberglass body, vinyl seat, rubber tires.",
+  "category": "realistic"
+},
+{
+  "id": "bubble-tub",
+  "name": "Bubble Tub",
+  "brief": "Giant white porcelain clawfoot bathtub derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Rolled tub rim overflowing with foam bubbles, brass claw feet and faucets, chrome showerhead mounted like a spoiler on a rear riser, hanging loofah, striped bath mat side skirts, tubular bumpers with white grips. Glossy porcelain body, brass feet, chrome showerhead, rubber tires.",
+  "category": "silly"
+},
+{
+  "id": "pillow-fighter",
+  "name": "Pillow Fighter",
+  "brief": "Four-poster bed derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Carved walnut headboard with a rear wing spoiler, quilted blue comforter with diamond stitching and white sheets, stacked pillows forming the nose, four turned bedposts with brass finials, fringed blanket side skirts, brass bedside lamp on a rear-deck nightstand. Wood headboard, fabric bedding, brass lamp, rubber tires.",
+  "category": "silly"
+},
+{
+  "id": "burger-bruiser",
+  "name": "Burger Bruiser",
+  "brief": "Giant cheeseburger derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Sesame-seed bun dome roof, dripping cheese slice stripe over a beef patty, lettuce ruffle trim and tomato slice side panels, sausage bumpers with ketchup and mustard squiggles, red fry-box spoiler holding golden fries on the rear deck. Toasted bun body, glossy cheese and vegetable trim, rubber tires.",
+  "category": "silly"
+},
+{
+  "id": "lawn-mower",
+  "name": "Lawn Mower",
+  "brief": "Ride-on lawn mower derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Green tractor hood with round headlamps and vents, black steering wheel and high-back vinyl seat, wide yellow cutting deck with blade housings slung between the axles, rear grass-catcher box with mesh screen, tan sun canopy on black posts. Painted metal body, steel deck hardware, vinyl seat, rubber tires.",
+  "category": "silly"
+},
+{
+  "id": "grand-piano",
+  "name": "Grand Piano",
+  "brief": "Gloss black grand piano derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Curved lacquered case with propped lid on a brass stick, full ivory-and-ebony keyboard across the nose, three brass pedals on the front bumper, red duet bench seat over the middle, soundboard with strings and pinblock, candelabra lamps and sheet-music wing on the rear deck. Lacquered black body, ivory keys, brass fittings, rubber tires.",
+  "category": "silly"
+},
+{
+  "id": "phone-booth",
+  "name": "Phone Booth",
+  "brief": "Classic red British phone-box derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Tall glazed box body with cream window mullions and dark glass panes, domed roof with a blank cream sign band, black rotary phone on a shelf inside, hinged side door with handle and open derby window, headlamps tucked under the sills. Painted metal box, glass panes, rubber tires.",
+  "category": "silly"
+}
+,{
+  "id": "fish-tank",
+  "name": "Fish Tank",
+  "brief": "Giant glass aquarium derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Clear glass tank body with teal seams showing water, sand, coral, a treasure chest and swimming goldfish inside, chrome filter box on the nose with bubble wand, porthole side windows, anchor rear bumper and life-ring spare. Glass tank, painted base frame, chrome fittings, rubber tires.",
+  "category": "silly"
+}
+,{
+  "id": "comet-sled",
+  "name": "Comet Sled",
+  "brief": "Jet-rail sled derby car at chunky monster-truck scale that reads as a rocket test sled from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Open steel rail frame with a nose spike, centerline jet turbine pod with intake fan and glowing exhaust nozzle, tall red tail fin with dark stripes, canvas parachute pack on the fin, cockpit with windscreen and exposed plumbing. Brushed steel frame, red fin, rubber tires.",
+  "category": "wild"
+}
+,{
+  "id": "battle-tank",
+  "name": "Battle Tank",
+  "brief": "Army battle-tank derby car at chunky monster-truck scale that reads as a main battle tank from the side but rides on four wheels on two axles with four chunky block-tread derby tires tucked under armored skirts. Sloped olive hull with reactive armor blocks, rotating turret with a long cannon and muzzle brake, commander hatch with periscope, tow cables and jerry cans on the flanks, rear exhaust grilles. Painted armor steel, dark skirts, rubber tires.",
+  "category": "wild"
+}
+,{
+  "id": "bullet-train",
+  "name": "Bullet Train",
+  "brief": "Bullet-train derby car at chunky monster-truck scale that reads as a shinkansen from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Long aerodynamic nose with wraparound cab glass and headlight band, white body with a blue stripe under tinted passenger windows, roof pantograph and insulators, skirted underbody with vents, blunt tail with tail lights. Painted aluminum body, dark glass, rubber tires.",
+  "category": "wild"
+}
+,{
+  "id": "land-yacht",
+  "name": "Land Yacht",
+  "brief": "Wind-driven land-yacht derby car at chunky monster-truck scale that reads as a sail racer from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Open low orange cockpit pod with windscreen, tall aluminum mast with cream-and-blue sails and boom, rigging lines to bow and stern, side outrigger beams with skid tips, compass binnacle and wooden tiller on the aft deck. Painted orange pod, cream-and-blue fabric sails, aluminum mast and boom, rubber tires.",
+  "category": "wild"
+},
+{
+  "id": "bumper-car",
+  "name": "Bumper Car",
+  "brief": "Classic pavilion bumper-car derby machine at chunky monster-truck scale that reads as a dodgem from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Round pink pod body with a thick black rubber ring bumper, chrome grille nose with round headlamps, tall rear trolley pole with a spark shoe, checkered seat with steering wheel, underbody spark plate. Fiberglass pod, rubber ring, chrome pole, rubber tires.",
+  "category": "wild"
+}
+,{
+  "id": "soapbox-racer",
+  "name": "Soapbox Racer",
+  "brief": "Wooden soapbox gravity-racer derby car at chunky monster-truck scale that reads as a soapbox derby car from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Tapered plywood wedge body with visible screws and red trim, open cockpit with a padded headrest and rope steering, white number roundel on the nose, rear axle fairing and simple plank bumpers. Varnished plywood body, steel axles, rubber tires.",
+  "category": "wild"
+}
 ]

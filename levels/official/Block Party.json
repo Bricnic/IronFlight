@@ -24,10 +24,17 @@
       "yaw": 3.141592653589793
     },
     {
+      "name": "South straight",
+      "x": 0,
+      "y": 9.5,
+      "z": -194,
+      "yaw": 3.141592653589793
+    },
+    {
       "name": "Blockade finish",
       "x": 0,
       "y": 9.5,
-      "z": -126,
+      "z": -270,
       "yaw": 3.141592653589793
     }
   ],
@@ -36,6 +43,7 @@
       "id": "red-wyvern",
       "name": "Red wyvern",
       "kind": "ember-wyvern",
+      "scale": 2,
       "x": 10,
       "z": -6,
       "y": 9.0,
@@ -133,6 +141,7 @@
       "id": "green-raptor",
       "name": "Green raptor",
       "kind": "raptor",
+      "scale": 2,
       "x": -10,
       "z": -88,
       "y": 9.0,
@@ -256,7 +265,7 @@
       "kind": "loose-blocks",
       "x": -3,
       "z": -120,
-      "y": 12.0
+      "y": 12
     },
     {
       "id": "block-final-11",
@@ -264,7 +273,7 @@
       "kind": "loose-blocks",
       "x": -1.5,
       "z": -120,
-      "y": 12.0
+      "y": 12
     },
     {
       "id": "block-final-12",
@@ -272,7 +281,7 @@
       "kind": "loose-blocks",
       "x": 0,
       "z": -120,
-      "y": 12.0
+      "y": 12
     },
     {
       "id": "block-final-13",
@@ -280,7 +289,7 @@
       "kind": "loose-blocks",
       "x": 1.5,
       "z": -120,
-      "y": 12.0
+      "y": 12
     },
     {
       "id": "block-final-14",
@@ -288,13 +297,83 @@
       "kind": "loose-blocks",
       "x": 3,
       "z": -120,
-      "y": 12.0
+      "y": 12
+    },
+    {
+      "id": "block-south-0",
+      "kind": "loose-blocks",
+      "x": -3,
+      "y": 9.0,
+      "z": -254
+    },
+    {
+      "id": "block-south-1",
+      "kind": "loose-blocks",
+      "x": -1.5,
+      "y": 9.0,
+      "z": -254
+    },
+    {
+      "id": "block-south-2",
+      "kind": "loose-blocks",
+      "x": 0,
+      "y": 9.0,
+      "z": -254
+    },
+    {
+      "id": "block-south-3",
+      "kind": "loose-blocks",
+      "x": 1.5,
+      "y": 9.0,
+      "z": -254
+    },
+    {
+      "id": "block-south-4",
+      "kind": "loose-blocks",
+      "x": 3,
+      "y": 9.0,
+      "z": -254
+    },
+    {
+      "id": "block-south-5",
+      "kind": "loose-blocks",
+      "x": -3,
+      "y": 10.5,
+      "z": -254
+    },
+    {
+      "id": "block-south-6",
+      "kind": "loose-blocks",
+      "x": -1.5,
+      "y": 10.5,
+      "z": -254
+    },
+    {
+      "id": "block-south-7",
+      "kind": "loose-blocks",
+      "x": 0,
+      "y": 10.5,
+      "z": -254
+    },
+    {
+      "id": "block-south-8",
+      "kind": "loose-blocks",
+      "x": 1.5,
+      "y": 10.5,
+      "z": -254
+    },
+    {
+      "id": "block-south-9",
+      "kind": "loose-blocks",
+      "x": 3,
+      "y": 10.5,
+      "z": -254
     }
   ],
   "medals": {
-    "gold": 22,
-    "silver": 30,
-    "bronze": 45
+    "gold": 38,
+    "silver": 52,
+    "bronze": 72
   },
   "limit": 240,
   "solids": [
@@ -304,10 +383,10 @@
       "kind": "lava",
       "x": 0,
       "y": -1,
-      "z": -23,
+      "z": -96.5,
       "w": 900,
       "h": 1,
-      "d": 1060,
+      "d": 1207,
       "color": 16734751,
       "locked": true
     },
@@ -448,7 +527,7 @@
       "name": "Blue tile tower",
       "kind": "support",
       "x": -7,
-      "y": 12.0,
+      "y": 12,
       "z": 8,
       "w": 2,
       "h": 6,
@@ -460,7 +539,7 @@
       "name": "Blue tile tower",
       "kind": "support",
       "x": 7,
-      "y": 12.0,
+      "y": 12,
       "z": 8,
       "w": 2,
       "h": 6,
@@ -568,7 +647,7 @@
       "name": "Den wall",
       "kind": "support",
       "x": 15,
-      "y": 11.0,
+      "y": 11,
       "z": -31.5,
       "w": 12,
       "h": 4,
@@ -580,7 +659,7 @@
       "name": "Den wall",
       "kind": "support",
       "x": 15,
-      "y": 11.0,
+      "y": 11,
       "z": -18.5,
       "w": 12,
       "h": 4,
@@ -592,7 +671,7 @@
       "name": "Den wall",
       "kind": "support",
       "x": 20.5,
-      "y": 11.0,
+      "y": 11,
       "z": -25.5,
       "w": 1,
       "h": 4,
@@ -640,7 +719,7 @@
       "name": "Yellow pipe tower",
       "kind": "support",
       "x": -5,
-      "y": 12.0,
+      "y": 12,
       "z": -46,
       "w": 2.5,
       "h": 6,
@@ -652,7 +731,7 @@
       "name": "Yellow pipe tower",
       "kind": "support",
       "x": 5,
-      "y": 12.0,
+      "y": 12,
       "z": -46,
       "w": 2.5,
       "h": 6,
@@ -736,7 +815,7 @@
       "name": "Yellow pipe tower",
       "kind": "support",
       "x": -5,
-      "y": 12.0,
+      "y": 12,
       "z": -110,
       "w": 2.5,
       "h": 6,
@@ -748,7 +827,7 @@
       "name": "Yellow pipe tower",
       "kind": "support",
       "x": 5,
-      "y": 12.0,
+      "y": 12,
       "z": -110,
       "w": 2.5,
       "h": 6,
@@ -785,11 +864,107 @@
       "kind": "barrier",
       "x": 0,
       "y": 9.65,
-      "z": -128,
+      "z": -278,
       "w": 12,
       "h": 1.3,
       "d": 1,
       "color": 3618607
+    },
+    {
+      "id": "ext-road-3",
+      "name": "Extension road",
+      "kind": "road",
+      "x": 0,
+      "y": 8.4,
+      "z": -140,
+      "w": 12,
+      "h": 1.2,
+      "d": 24,
+      "color": 2303531
+    },
+    {
+      "id": "chicane-c",
+      "name": "Chicane tile",
+      "kind": "tile",
+      "x": 4,
+      "y": 8.4,
+      "z": -158,
+      "w": 12,
+      "h": 1.2,
+      "d": 12,
+      "color": 3065014
+    },
+    {
+      "id": "chicane-d",
+      "name": "Chicane tile",
+      "kind": "tile",
+      "x": -4,
+      "y": 8.4,
+      "z": -170,
+      "w": 12,
+      "h": 1.2,
+      "d": 12,
+      "color": 15105570
+    },
+    {
+      "id": "ext-road-4",
+      "name": "Extension road",
+      "kind": "road",
+      "x": 0,
+      "y": 8.4,
+      "z": -188,
+      "w": 12,
+      "h": 1.2,
+      "d": 24,
+      "color": 2303531
+    },
+    {
+      "id": "chicane-e",
+      "name": "Chicane tile",
+      "kind": "tile",
+      "x": 4,
+      "y": 8.4,
+      "z": -206,
+      "w": 12,
+      "h": 1.2,
+      "d": 12,
+      "color": 3065014
+    },
+    {
+      "id": "chicane-f",
+      "name": "Chicane tile",
+      "kind": "tile",
+      "x": -4,
+      "y": 8.4,
+      "z": -218,
+      "w": 12,
+      "h": 1.2,
+      "d": 12,
+      "color": 15105570
+    },
+    {
+      "id": "ext-road-5",
+      "name": "Extension road",
+      "kind": "road",
+      "x": 0,
+      "y": 8.4,
+      "z": -236,
+      "w": 12,
+      "h": 1.2,
+      "d": 24,
+      "color": 2303531
+    },
+    {
+      "id": "final-road-2",
+      "name": "Final road",
+      "kind": "road",
+      "x": 0,
+      "y": 8.4,
+      "z": -260,
+      "w": 12,
+      "h": 1.2,
+      "d": 24,
+      "color": 2303531
     }
   ]
 }

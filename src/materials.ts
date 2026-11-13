@@ -66,6 +66,12 @@ export function lavaMaterial() {
   const map = loader.load("/textures/custom-lava.jfif", undefined, undefined, () => {
     failures.add("/textures/custom-lava.jfif");
   });
+  const detail = loader.load("/textures/custom-lava-detail.png", undefined, undefined, () => {
+    failures.add("/textures/custom-lava-detail.png");
+  });
+  detail.wrapS = detail.wrapT = T.RepeatWrapping;
+  detail.colorSpace = T.SRGBColorSpace;
+  detail.anisotropy = 8;
   map.wrapS = map.wrapT = T.RepeatWrapping;
   map.colorSpace = T.SRGBColorSpace;
   map.anisotropy = 8;
@@ -81,10 +87,14 @@ export function lavaMaterial() {
   material.userData.time = time;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.lavaTime = time;
-    shader.fragmentShader = "uniform float lavaTime;\n" + shader.fragmentShader;
+    shader.uniforms.lavaDetail = { value: detail };
+    shader.fragmentShader =
+      "uniform float lavaTime;\nuniform sampler2D lavaDetail;\n" + shader.fragmentShader;
     const uv = `vec2 flowUv = vMapUv;
       float heat = pow(0.5 + 0.5 * sin(flowUv.x * 4.1 + sin(flowUv.y * 3.7)), 4.0);
-      flowUv += heat * 0.018 * vec2(sin(flowUv.y * 22.0 + lavaTime * 1.4), cos(flowUv.x * 19.0 - lavaTime * 1.1));`;
+      flowUv += heat * 0.018 * vec2(sin(flowUv.y * 22.0 + lavaTime * 1.4), cos(flowUv.x * 19.0 - lavaTime * 1.1));
+      vec4 lavaDetailTex = texture2D(lavaDetail, flowUv * 7.0);
+      float lavaDetailMix = (1.0 - smoothstep(25.0, 110.0, length(vViewPosition))) * 0.65;`;
     shader.fragmentShader = shader.fragmentShader
       .replace(
         "#include <map_fragment>",
@@ -93,14 +103,16 @@ export function lavaMaterial() {
           T.ShaderChunk.map_fragment.replace(
             "texture2D( map, vMapUv )",
             "texture2D( map, flowUv )",
-          ),
+          ) +
+          "\n diffuseColor.rgb = mix(diffuseColor.rgb, lavaDetailTex.rgb * (0.55 + diffuseColor.rgb), lavaDetailMix);",
       )
       .replace(
         "#include <emissivemap_fragment>",
         T.ShaderChunk.emissivemap_fragment.replace(
           "texture2D( emissiveMap, vEmissiveMapUv )",
           "texture2D( emissiveMap, flowUv )",
-        ),
+        ) +
+        "\n totalEmissiveRadiance = mix(totalEmissiveRadiance, lavaDetailTex.rgb * 1.15, lavaDetailMix);",
       );
   };
   return material;
@@ -110,8 +122,9 @@ function patternSurface(
   material: T.MeshStandardMaterial,
   pattern: string,
   uniforms: Record<string, { value: unknown }> = {},
+  emissivePattern?: string,
 ) {
-  material.customProgramCacheKey = () => pattern;
+  material.customProgramCacheKey = () => pattern + "|" + (emissivePattern ?? "");
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     const declarations = Object.keys(uniforms)
@@ -125,7 +138,36 @@ function patternSurface(
       "#include <color_fragment>",
       "#include <color_fragment>\n" + pattern,
     );
+    if (emissivePattern)
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <emissivemap_fragment>",
+        "#include <emissivemap_fragment>\n" + emissivePattern,
+      );
   };
+  return material;
+}
+
+/** Procedural crust-and-crack lava for large-scale (>100x100) lakes; drifts like slimeTime flow. */
+export function bulkLavaMaterial() {
+  const lavaTime = { value: 0 };
+  const material = patternSurface(
+    new T.MeshStandardMaterial({ color: 0x581800, emissive: 0xff4400, emissiveIntensity: 1.0, roughness: 0.85 }),
+    `vec2 p = (vSurfaceUv + lavaTime * vec2(0.009, 0.006)) * vec2(11.0, 7.0);
+      float shimmer = pow(0.5 + 0.5 * sin(p.x * 4.1 + sin(p.y * 3.7)), 4.0);
+      p += shimmer * 0.018 * vec2(sin(p.y * 22.0 + lavaTime * 1.4), cos(p.x * 19.0 - lavaTime * 1.1));
+      float eddy = sin(p.x * 1.8 + cos(p.y * 2.7)) * cos(p.y * 2.1 + sin(p.x));
+      float streak = sin(p.x * 2.7 + p.y * 3.1 + eddy * 1.9);
+      float heat = smoothstep(0.55, 0.95, streak);
+      float mottling = 0.5 + 0.5 * eddy;
+      vec3 crust = vec3(0.10, 0.015, 0.0);
+      vec3 deep = vec3(0.45, 0.08, 0.0);
+      vec3 glow = vec3(1.0, 0.45, 0.06);
+      diffuseColor.rgb = mix(mix(crust, deep, mottling * mottling), glow, heat);`,
+    { lavaTime },
+    `totalEmissiveRadiance = mix(totalEmissiveRadiance * 0.35, vec3(1.0, 0.32, 0.03) * 1.7, heat);`,
+  );
+  material.map = null;
+  material.userData.time = lavaTime;
   return material;
 }
 

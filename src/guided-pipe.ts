@@ -40,6 +40,8 @@ export const FLAGPOLE_APEX_DISTANCE = (() => {
   }
   return best;
 })();
+/** Any base touch auto-engages the ride: the pole is impossible to miss. */
+export const FLAGPOLE_BASE_RADIUS = 5;
 const RIDES = {
   "guided-pipe": { tube: PIPE_TUBE, exit: PIPE_EXIT },
   flagpole: { tube: FLAGPOLE_TUBE, exit: FLAGPOLE_EXIT },
@@ -110,6 +112,16 @@ export class GuidedPipe {
     });
   }
 
+  private findBaseTouch() {
+    const sim = this.sim;
+    const p = sim.body.translation();
+    return sim.courseTrack?.custom?.prefabs.find((pipe) => {
+      if (pipe.kind !== "flagpole") return false;
+      if (Math.abs(p.y - (pipe.y ?? 0) - 1.9) > 2.4) return false;
+      return Math.hypot(p.x - pipe.x, p.z - pipe.z) < FLAGPOLE_BASE_RADIUS;
+    });
+  }
+
   /** Schedule the next kinematic pose, then hand the chassis back with forward momentum. */
   beforeStep() {
     const s = this.sim;
@@ -118,7 +130,7 @@ export class GuidedPipe {
       return false;
     }
     if (!this.ride) {
-      const pipe = this.findInlet();
+      const pipe = this.findInlet() ?? this.findBaseTouch();
       if (!pipe) return false;
       this.ride = {
         pipe: { ...pipe }, distance: 0,

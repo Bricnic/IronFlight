@@ -33,10 +33,11 @@ test("repeated clicks cycle through occluded objects front to back and wrap", as
     );
     for (const preview of [false, true]) {
       if (preview) await page.locator("#editor-preview").click();
-      const point = await page.evaluate(() =>
-        window.__game!.editorProject({ x: 0, y: 5, z: 0 }),
-      );
       for (const id of ["front", "middle", "back", "front"]) {
+        // Recompute per click: font loading shifts the canvas mid-test.
+        const point = await page.evaluate(() =>
+          window.__game!.editorProject({ x: 0, y: 5, z: 0 }),
+        );
         await page.mouse.click(point.x, point.y);
         await expect
           .poll(() => page.evaluate(() => window.__game!.editor().selection))

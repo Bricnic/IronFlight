@@ -1,0 +1,304 @@
+{
+  "name": "Rock and Roll",
+  "backgroundTemplate": "toybox-volcano",
+  "mode": "race",
+  "spawn": {
+    "x": -140,
+    "y": 2,
+    "z": 100,
+    "yaw": 1.5707963267948966
+  },
+  "checkpoints": [
+    {
+      "name": "Screw Exit",
+      "x": -60,
+      "y": 2,
+      "z": 100
+    },
+    {
+      "name": "Rocker Exit",
+      "x": 60,
+      "y": 2,
+      "z": 100
+    },
+    {
+      "name": "Boulder Pass",
+      "x": 130,
+      "y": 2,
+      "z": 40
+    },
+    {
+      "name": "Loop Bend",
+      "x": 100,
+      "y": 2,
+      "z": 0
+    },
+    {
+      "name": "Finish",
+      "x": -140,
+      "y": 2,
+      "z": 0
+    }
+  ],
+  "solids": [
+    {
+      "id": "rr-ground",
+      "kind": "ground",
+      "x": -5,
+      "y": -0.65,
+      "z": 65,
+      "w": 330,
+      "h": 1.3,
+      "d": 220,
+      "color": 10133602,
+      "locked": true,
+      "texture": "bark_brown_01"
+    },
+    {
+      "id": "rr-road-s",
+      "kind": "road",
+      "x": -45,
+      "y": 0.015,
+      "z": 100,
+      "w": 210,
+      "h": 0.03,
+      "d": 16,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "rr-road-se",
+      "kind": "road",
+      "x": 95,
+      "y": 0.025,
+      "z": 115,
+      "w": 16,
+      "h": 0.03,
+      "d": 88,
+      "yaw": 1.1659045405098132,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "rr-road-e",
+      "kind": "road",
+      "x": 127,
+      "y": 0.035,
+      "z": 84,
+      "w": 22,
+      "h": 0.03,
+      "d": 116,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "rr-road-ne",
+      "kind": "road",
+      "x": 115,
+      "y": 0.045,
+      "z": 20,
+      "w": 20,
+      "h": 0.03,
+      "d": 54,
+      "yaw": -2.498091544796509,
+      "color": 3161673,
+      "texture": "asphalt_02"
+    },
+    {
+      "id": "rr-road-n",
+      "kind": "road",
+      "x": -20,
+      "y": 0.055,
+      "z": 0,
+      "w": 270,
+      "h": 0.03,
+      "d": 16,
+      "color": 10148488,
+      "texture": "concrete_layers_02"
+    },
+    {
+      "id": "rr-kicker",
+      "kind": "ramp",
+      "x": -36,
+      "y": 1.0,
+      "z": 100,
+      "w": 14,
+      "h": 0.4,
+      "d": 10,
+      "yaw": 1.5707963267948966,
+      "angle": -0.18,
+      "color": 9124709
+    },
+    {
+      "id": "rr-arch-post-n",
+      "kind": "barrier",
+      "x": -26,
+      "y": 5,
+      "z": 91.5,
+      "w": 1.5,
+      "h": 10,
+      "d": 1.5,
+      "color": 14285210
+    },
+    {
+      "id": "rr-arch-post-s",
+      "kind": "barrier",
+      "x": -26,
+      "y": 5,
+      "z": 108.5,
+      "w": 1.5,
+      "h": 10,
+      "d": 1.5,
+      "color": 14285210
+    },
+    {
+      "id": "rr-arch-lintel",
+      "kind": "barrier",
+      "x": -26,
+      "y": 10,
+      "z": 100,
+      "w": 1.5,
+      "h": 1.5,
+      "d": 19,
+      "color": 14285210
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "screw-start",
+      "kind": "screw-field",
+      "x": -90,
+      "y": 0.12,
+      "z": 100
+    },
+    {
+      "id": "coal-0",
+      "kind": "burning-coals",
+      "x": -26,
+      "y": 0,
+      "z": 93
+    },
+    {
+      "id": "coal-1",
+      "kind": "burning-coals",
+      "x": -26,
+      "y": 0,
+      "z": 95
+    },
+    {
+      "id": "coal-2",
+      "kind": "burning-coals",
+      "x": -26,
+      "y": 0,
+      "z": 97
+    },
+    {
+      "id": "coal-3",
+      "kind": "burning-coals",
+      "x": -26,
+      "y": 0,
+      "z": 99
+    },
+    {
+      "id": "coal-4",
+      "kind": "burning-coals",
+      "x": -26,
+      "y": 0,
+      "z": 101
+    },
+    {
+      "id": "coal-5",
+      "kind": "burning-coals",
+      "x": -26,
+      "y": 0,
+      "z": 103
+    },
+    {
+      "id": "coal-6",
+      "kind": "burning-coals",
+      "x": -26,
+      "y": 0,
+      "z": 105
+    },
+    {
+      "id": "coal-7",
+      "kind": "burning-coals",
+      "x": -26,
+      "y": 0,
+      "z": 107
+    },
+    {
+      "id": "seesaw",
+      "kind": "rocker",
+      "x": 30,
+      "y": 0,
+      "z": 100,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "boulder-1",
+      "kind": "boulder",
+      "x": 118,
+      "y": 0,
+      "z": 88,
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "boulder-2",
+      "kind": "boulder",
+      "x": 142,
+      "y": 0,
+      "z": 58,
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "dino-loop",
+      "kind": "loop",
+      "x": 105,
+      "y": 0,
+      "z": 10
+    },
+    {
+      "id": "loop-raptor",
+      "kind": "raptor",
+      "scale": 2,
+      "x": 92,
+      "z": -16,
+      "yaw": 0.46
+    },
+    {
+      "id": "barrel-1",
+      "kind": "barrel",
+      "x": 60,
+      "y": 0,
+      "z": 118
+    },
+    {
+      "id": "barrel-2",
+      "kind": "barrel",
+      "x": -120,
+      "y": 0,
+      "z": 80
+    },
+    {
+      "id": "skull-1",
+      "kind": "skull",
+      "x": -26,
+      "y": 0,
+      "z": 120
+    },
+    {
+      "id": "sign-1",
+      "kind": "sign",
+      "x": 146,
+      "y": 0,
+      "z": 110
+    }
+  ],
+  "medals": {
+    "gold": 65,
+    "silver": 100,
+    "bronze": 150
+  },
+  "limit": 240
+}

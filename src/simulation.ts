@@ -3,6 +3,7 @@ import { DungeonPhysics } from "./dungeon-physics";
 import { GuidedPipe } from "./guided-pipe";
 import { LooseBlocks } from "./loose-blocks";
 import { BurningCoals } from "./burning-coals";
+import { FragileIce } from "./fragile-ice";
 import { Fairground, CAROUSEL_OMEGA } from "./fairground";
 import { GhostSwarm } from "./ghosts";
 import { AxeArray } from "./axes";
@@ -69,6 +70,7 @@ export class Simulation {
   dungeon!: DungeonPhysics;
   looseBlocks!: LooseBlocks;
   burningCoals!: BurningCoals;
+  fragileIce!: FragileIce;
   guidedPipe!: GuidedPipe;
   fairground!: Fairground;
   ghosts!: GhostSwarm;
@@ -374,6 +376,7 @@ export class Simulation {
     this.dungeon = new DungeonPhysics(this);
     this.looseBlocks = new LooseBlocks(this);
     this.burningCoals = new BurningCoals(this);
+    this.fragileIce = new FragileIce(this);
     this.guidedPipe = new GuidedPipe(this);
     this.fairground = new Fairground(this);
     this.ghosts = new GhostSwarm(this);
@@ -875,11 +878,13 @@ export class Simulation {
     this.comic.before();
     this.ghosts.update();
     this.dungeon.gauntlet.before();
+    this.dungeon.before();
     this.world.step(this.events, this.hammerHooks);
     this.comic.after();
     const screwHit = this.dungeon.after();
     this.looseBlocks.after();
     this.burningCoals.after();
+    this.fragileIce.after();
     const fairgroundHit = this.fairground.after(before);
     this.ghosts.attack();
     if (this.courseTrack !== this.pianoKeyTrack) {
@@ -1484,6 +1489,7 @@ export class Simulation {
       dungeon: this.dungeon.snapshot(),
       looseBlocks: this.looseBlocks.snapshot(),
       burningCoals: this.burningCoals.snapshot(),
+      fragileIce: this.fragileIce.snapshot(),
       pipeRide: this.guidedPipe.snapshot(),
       fairground: this.fairground.snapshot(),
       ghosts: this.ghosts.snapshot(),
