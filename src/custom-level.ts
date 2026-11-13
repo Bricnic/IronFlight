@@ -48,6 +48,7 @@ export const COMIC_PREFAB_KINDS = [
   "burner",
   "water",
   "potion",
+  "shark-pool",
 ] as const;
 /** Comic jaw traps: the chomping plate family, scalable like dinosaurs. */
 export const JAW_PREFAB_KINDS = [
@@ -154,6 +155,7 @@ export const DUNGEON_PREFAB_KINDS = [
   "robot",
   "guided-pipe",
   "flagpole",
+  "cacti-patch",
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
   ...CANDY_PREFAB_KINDS,

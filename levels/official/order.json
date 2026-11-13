@@ -133,5 +133,15 @@
     "file": "North Pole Summit.json",
     "thumbnail": "/tracks/north-pole-summit.png",
     "description": "The midnight finale: a diagonal ascent with hills and a jump, a mountain tube ride, and six press and snap traps across the frozen summit."
+  },
+  {
+    "file": "Tabletop Brawl.json",
+    "thumbnail": "/tracks/tabletop-brawl.png",
+    "description": "Scrap across the toy table for eight scattered rings: two stunt loops, a dino launcher, cacti desert, potion tube, snapping jaws and two ghosts."
+  },
+  {
+    "file": "Sharkbite Run.json",
+    "thumbnail": "/tracks/sharkbite-run.png",
+    "description": "Smash the block wall, jump the cacti, skim the shark pool at full speed, then drive the dino mouth tunnel to the gray platform finish."
   }
 ]

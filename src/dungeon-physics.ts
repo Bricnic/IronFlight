@@ -25,6 +25,7 @@ import {
   robotLaserAngle,
   robotLaserFiring,
   CAGE,
+  CACTI_PATCH,
   CANDY_ARCH,
   CANDY_TRUNK,
   CANDY_CHOCOLATE,
@@ -129,6 +130,8 @@ export class DungeonPhysics {
       }
     } else if (h.kind === "cage") {
       solid(CAGE.w, CAGE.h, CAGE.d, 0, 0);
+    } else if (h.kind === "cacti-patch") {
+      solid(CACTI_PATCH.w, CACTI_PATCH.h, CACTI_PATCH.d, 0, 0);
     } else if (h.kind === "flagpole") {
       m.colliders.push(
         world.createCollider(

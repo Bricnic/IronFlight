@@ -106,6 +106,8 @@ export function robotLaserFiring(shifted: number) {
 }
 /** Cage furniture dimensions, shared by the collider builder and the artist. */
 export const CAGE = { w: 3, h: 4, d: 3 } as const;
+/** Prickly-pear mound with saguaros; solid but never lethal, like candy decor. */
+export const CACTI_PATCH = { w: 6, h: 2.5, d: 6 } as const;
 /** Candy-land decor furniture, shared by the collider builder and the artist. Solid but never lethal: candy kinds have no DUNGEON_STRIKE entry. */
 export const CANDY_ARCH = { postW: 1.6, postH: 10, postD: 1.6, postX: 6 } as const;
 export const CANDY_TRUNK = { w: 2, h: 4, d: 2 } as const;

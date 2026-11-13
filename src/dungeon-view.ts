@@ -749,6 +749,47 @@ function buildCageModel(h: DungeonHazard, root: T.Group): T.Group[] {
   root.add(skeleton);
   return [];
 }
+function buildCactiPatchModel(h: DungeonHazard, root: T.Group): T.Group[] {
+  const sand = standard(0xd9b98a, 0, 0.9);
+  const green = standard(0x3fa34d, 0, 0.7);
+  const rib = standard(0x2e7d3a, 0, 0.8);
+  const mound = new T.Mesh(new T.CylinderGeometry(2.4, 3, 1, 20), sand);
+  mound.position.y = 0.5;
+  mound.castShadow = true;
+  mound.receiveShadow = true;
+  root.add(mound);
+  const saguaro = (x: number, z: number, height: number, arms: number) => {
+    const trunk = new T.Mesh(
+      new T.CapsuleGeometry(0.35, height, 8, 16),
+      green,
+    );
+    trunk.position.set(x, 1 + height / 2 + 0.35, z);
+    trunk.castShadow = true;
+    trunk.receiveShadow = true;
+    root.add(trunk);
+    for (let i = 0; i < arms; i++) {
+      const side = i % 2 ? -1 : 1;
+      const arm = new T.Mesh(new T.CapsuleGeometry(0.2, 0.9, 6, 12), green);
+      arm.position.set(x + side * 0.55, 1.6 + i * 0.5, z);
+      arm.rotation.z = side * 1.1;
+      arm.castShadow = true;
+      root.add(arm);
+    }
+    for (let i = 0; i < 4; i++) {
+      const spike = new T.Mesh(new T.ConeGeometry(0.06, 0.3, 6), rib);
+      const a = (i / 4) * Math.PI * 2 + x;
+      spike.position.set(x + Math.cos(a) * 0.38, 2 + i * 0.4, z + Math.sin(a) * 0.38);
+      spike.rotation.z = -Math.cos(a) * 1.2;
+      spike.rotation.x = Math.sin(a) * 1.2;
+      root.add(spike);
+    }
+  };
+  saguaro(-1.2, 0.5, 2.2, 2);
+  saguaro(1.1, -0.8, 3, 1);
+  saguaro(0.4, 1.3, 1.6, 2);
+  void h;
+  return [];
+}
 function buildJailCellModel(h: DungeonHazard, root: T.Group): T.Group[] {
   // Bars are physics solids (see course.ts); the model holds the prisoner.
   const skeleton = buildSkeletonMesh(1);
@@ -859,6 +900,8 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     root.add(buildDungeonLabel(h, 13));
   } else if (h.kind === "cage") {
     model.pivots = buildCageModel(h, root);
+  } else if (h.kind === "cacti-patch") {
+    model.pivots = buildCactiPatchModel(h, root);
   } else if (h.kind === "candle") {
     model.pivots = buildCandleModel(h, root);
   } else if (h.kind === "lime-chomper") {

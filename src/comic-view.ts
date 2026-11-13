@@ -32,6 +32,7 @@ type Model = {
   water?: T.Mesh;
   ramp?: T.Mesh;
   jet?: T.Group;
+  fins?: T.Group;
   triangles: number;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
@@ -80,6 +81,7 @@ const labelMessages: Record<string, [string, string]> = {
   burner: ["HOT WHEELS", "JUMP THE FIRE / DRIVE AROUND"],
   water: ["SKIM OR SWIM", "ENTER >200 MPH / KEEP 180+"],
   potion: ["PICK YOUR POISON", "5 SECONDS / DO NOT MIX"],
+  "shark-pool": ["SHARK INFESTED", "SKIM FAST / SLOW SINKS"],
 };
 /** Upright billboard label anchored above the model at the given local height. */
 export function buildComicLabel(h: ComicHazard, topY: number): T.Sprite {
@@ -660,6 +662,45 @@ export function buildComicModel(h: ComicHazard): Model {
       pipe.rotation.x = Math.PI / 2;
       for (let z = -12; z <= 12; z += 2) sphere(0.16, gold, side * 6.5, 0.6, z);
     }
+  } else if (h.kind === "shark-pool") {
+    const rock = pbr("dark_rock_02", 1, { color: 0x5a6068 });
+    const sand = standard(0xd9b98a, 0, 0.9);
+    box(12, 0.6, 24, rock, 0, -4.3);
+    for (const side of [-1, 1]) box(1, 0.4, 26, rock, side * 6.5, 0.2);
+    for (const z of [-12.5, 12.5]) box(12, 4, 1, rock, 0, -2, z);
+    for (const side of [-1, 1]) box(0.6, 4, 24, rock, side * 6.3, -2, 0);
+    for (const side of [-1, 1]) box(1.4, 0.25, 26, sand, side * 6.5, 0.5, 0);
+    const geo = new T.PlaneGeometry(12, 24);
+    geo.rotateX(-Math.PI / 2);
+    const blood = new T.MeshStandardMaterial({
+      color: 0x6a1020,
+      metalness: 0.1,
+      roughness: 0.25,
+      transparent: true,
+      opacity: 0.92,
+    });
+    const surface = add(geo, blood, 0, 0.1);
+    surface.userData.animate = true;
+    const finMat = standard(0x6b7680, 0.3, 0.5);
+    const fins = new T.Group();
+    for (let i = 0; i < 3; i++) {
+      const a = (i / 3) * Math.PI * 2;
+      const fin = new T.Mesh(new T.ConeGeometry(0.55, 1.8, 4), finMat);
+      fin.position.set(Math.cos(a) * 3, 0.7, Math.sin(a) * 7);
+      fin.scale.z = 0.3;
+      fin.castShadow = true;
+      fin.userData.animate = true;
+      fins.add(fin);
+    }
+    root.add(fins);
+    model.fins = fins;
+    const boost = standard(0x22a5ca, 0.5, 0.35);
+    box(10, 0.08, 12, boost, 0, 0.04, -27);
+    for (let i = 0; i < 7; i++)
+      for (const side of [-1, 1]) {
+        const arrow = box(0.25, 0.08, 3, ivory, side * 1, 0.1, -32 + i * 1.5);
+        arrow.rotation.y = -side * 0.7;
+      }
   } else {
     box(18, 0.3, 4, metal, 0, 0.15);
     const colors = [0x27aeff, 0xb5becb, 0xa567ef, 0xf4a336];
@@ -819,6 +860,10 @@ export class ComicView extends T.Group {
         m.jet.visible = s.time - triggered < 1.8;
         m.jet.scale.y = 0.8 + Math.sin(s.time * 7) * 0.12;
       }
+      if (m.fins) {
+        m.fins.rotation.y = s.time * 0.5;
+        m.fins.position.y = Math.sin(s.time * 2) * 0.1;
+      }
     }
   }
   inspect() {
@@ -832,7 +877,7 @@ export class ComicView extends T.Group {
             angle: m.ramp.rotation.x,
           }
         : undefined,
-      animated: !!m.jaw || !!m.water || !!m.jet || !!m.flames.length,
+      animated: !!m.jaw || !!m.water || !!m.jet || !!m.fins || !!m.flames.length,
     }));
   }
 }
