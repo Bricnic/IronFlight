@@ -1,6 +1,6 @@
 import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
-import { Quaternion, Vector3 } from "three";
+import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
 import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
@@ -26,6 +26,8 @@ import {
   robotLaserFiring,
   CAGE,
   CACTI_PATCH,
+  ROCKER,
+  BOULDER,
   CANDY_ARCH,
   CANDY_TRUNK,
   CANDY_CHOCOLATE,
@@ -51,6 +53,10 @@ type Mechanism = {
   lastCycle: number;
   bite?: { started: number; turn: number; hit: boolean };
   laser?: { debt: number; lastEvent: number };
+  body?: R.RigidBody;
+  tilt?: number;
+  triggered?: boolean;
+  aboard?: boolean;
 };
 export class DungeonPhysics {
   mechanisms: Mechanism[] = [];
@@ -132,6 +138,48 @@ export class DungeonPhysics {
       solid(CAGE.w, CAGE.h, CAGE.d, 0, 0);
     } else if (h.kind === "cacti-patch") {
       solid(CACTI_PATCH.w, CACTI_PATCH.h, CACTI_PATCH.d, 0, 0);
+    } else if (h.kind === "rocker") {
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.kinematicPositionBased().setTranslation(
+          h.x,
+          (h.y ?? 0) + ROCKER.pivotY,
+          h.z,
+        ),
+      );
+      m.body = body;
+      m.tilt = ROCKER.restTilt;
+      const deck = (x: number, y: number, z: number, w: number, hgt: number, d: number) => {
+        m.colliders.push(
+          world.createCollider(
+            R.ColliderDesc.cuboid(w / 2, hgt / 2, d / 2)
+              .setTranslation(x, y, z)
+              .setFriction(0.9),
+            body,
+          ),
+        );
+      };
+      deck(0, 0, 0, ROCKER.w, ROCKER.h, ROCKER.d);
+      for (const side of [-1, 1])
+        deck(side * (ROCKER.w / 2 - 0.4), 0.9, 0, 0.8, 1.2, ROCKER.d);
+    } else if (h.kind === "boulder") {
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.dynamic()
+          .setTranslation(h.x, (h.y ?? 0) + BOULDER.radius + 0.1, h.z)
+          .setLinearDamping(0.05)
+          .setAngularDamping(0.1)
+          .setCcdEnabled(true),
+      );
+      m.body = body;
+      m.triggered = false;
+      m.colliders.push(
+        world.createCollider(
+          R.ColliderDesc.ball(BOULDER.radius)
+            .setMass(120)
+            .setFriction(0.9)
+            .setRestitution(0.1),
+          body,
+        ),
+      );
     } else if (h.kind === "flagpole") {
       m.colliders.push(
         world.createCollider(
@@ -184,6 +232,52 @@ export class DungeonPhysics {
       }
     }
   }
+  /** Pre-step kinematic updates: rocker seesaws follow the car aboard. */
+  before() {
+    const s = this.sim;
+    for (const m of this.mechanisms) {
+      if (m.h.kind !== "rocker" || !m.body) continue;
+      const yaw = m.h.yaw ?? 0;
+      const cos = Math.cos(yaw), sin = Math.sin(yaw);
+      const p = s.body.translation();
+      const dx = p.x - m.h.x, dz = p.z - m.h.z;
+      const lx = dx * cos - dz * sin, lz = dx * sin + dz * cos;
+      const py = (m.h.y ?? 0) + ROCKER.pivotY;
+      // Latching boarding: the entry edge stays pinned down until the car is
+      // committed past it, so the rising deck can never trap the nose.
+      const nearDeck =
+        Math.abs(lx) < ROCKER.w / 2 && Math.abs(p.y - py) < 4;
+      if (m.aboard) {
+        if (
+          lz > ROCKER.d / 2 + 2 ||
+          lz < -ROCKER.d / 2 - 3 ||
+          !nearDeck
+        )
+          m.aboard = false;
+      } else if (
+        lz > -ROCKER.d / 2 + 1 &&
+        lz < ROCKER.d / 2 &&
+        nearDeck
+      ) {
+        m.aboard = true;
+      }
+      let target: number = ROCKER.restTilt;
+      if (m.aboard) {
+        if (lz < -ROCKER.d / 2 + 8) target = ROCKER.restTilt;
+        else if (lz > ROCKER.d / 2 - 2) target = m.tilt ?? ROCKER.restTilt;
+        else
+          target =
+            Math.max(-1, Math.min(1, lz / (ROCKER.d / 2))) * ROCKER.maxTilt;
+      }
+      const cur = m.tilt ?? ROCKER.restTilt;
+      const step = ROCKER.rate * DT;
+      m.tilt = cur + Math.max(-step, Math.min(step, target - cur));
+      m.body.setNextKinematicTranslation({ x: m.h.x, y: py, z: m.h.z });
+      m.body.setNextKinematicRotation(
+        new Quaternion().setFromEuler(new Euler(m.tilt, yaw, 0, "YXZ")),
+      );
+    }
+  }
   /** Live editing: shift one hazard and its furniture by delta. */
   moveHazard(id: string, x: number, y: number, z: number) {
     const m = this.mechanisms.find((mm) => mm.h.id === id);
@@ -195,6 +289,11 @@ export class DungeonPhysics {
     m.h.y = y;
     m.h.z = z;
     this.gauntlet.move(id, dx, dy, dz);
+    if (m.body) {
+      const p = m.body.translation();
+      m.body.setTranslation({ x: p.x + dx, y: p.y + dy, z: p.z + dz }, true);
+      return;
+    }
     for (const c of m.colliders) {
       const p = c.translation();
       c.setTranslation({ x: p.x + dx, y: p.y + dy, z: p.z + dz });
@@ -207,6 +306,51 @@ export class DungeonPhysics {
     const [m] = this.mechanisms.splice(at, 1);
     this.gauntlet.remove(id);
     for (const c of m.colliders) this.sim.world.removeCollider(c, true);
+    if (m.body) this.sim.world.removeRigidBody(m.body);
+  }
+  /** Proximity boulder: rolls along its yaw heading once, lethal on contact. */
+  private rollBoulder(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    if (s.status !== "driving" || !m.body) return;
+    if (!m.triggered) {
+      const b = m.body.translation();
+      if (Math.hypot(p.x - b.x, p.z - b.z) > BOULDER.trigger) return;
+      m.triggered = true;
+      const yaw = m.h.yaw ?? 0;
+      const dir = new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+      m.body.setLinvel(
+        { x: dir.x * BOULDER.speed, y: 0, z: dir.z * BOULDER.speed },
+        true,
+      );
+      const axis = new Vector3(0, 1, 0).cross(dir);
+      m.body.setAngvel(
+        {
+          x: (axis.x * BOULDER.speed) / BOULDER.radius,
+          y: (axis.y * BOULDER.speed) / BOULDER.radius,
+          z: (axis.z * BOULDER.speed) / BOULDER.radius,
+        },
+        true,
+      );
+      return;
+    }
+    for (const c of m.colliders) {
+      let hit = false;
+      this.sim.world.contactPairsWith(c, (other) => {
+        if (other.parent()?.handle === s.body.handle)
+          this.sim.world.contactPair(c, other, (manifold) => {
+            if (manifold.numSolverContacts() > 0) hit = true;
+          });
+      });
+      if (hit) {
+        m.contacts++;
+        s.damage("chassis-front", 10000);
+        s.damageEvents.push({
+          source: "boulder",
+          part: "chassis-front",
+          time: s.time,
+        });
+      }
+    }
   }
   private attackWithDinosaur(m: Mechanism, kind: DinosaurKind, p: R.Vector) {
     const s = this.sim;
@@ -361,6 +505,11 @@ export class DungeonPhysics {
         }
         continue;
       }
+      if (h.kind === "boulder") {
+        this.rollBoulder(m, p);
+        continue;
+      }
+      if (h.kind === "rocker") continue;
       const strike =
         DUNGEON_STRIKE[h.kind as keyof typeof DUNGEON_STRIKE];
       if (!strike) continue;

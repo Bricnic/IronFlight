@@ -143,5 +143,10 @@
     "file": "Sharkbite Run.json",
     "thumbnail": "/tracks/sharkbite-run.png",
     "description": "Smash the block wall, jump the cacti, skim the shark pool at full speed, then drive the dino mouth tunnel to the gray platform finish."
+  },
+  {
+    "file": "Rock and Roll.json",
+    "thumbnail": "/tracks/rock-and-roll.png",
+    "description": "Cross the screw field, jump the coal flames, ride the giant seesaw, creep past two rolling boulders, thread the dino loop and race the gray straight."
   }
 ]

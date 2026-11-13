@@ -156,6 +156,8 @@ export const DUNGEON_PREFAB_KINDS = [
   "guided-pipe",
   "flagpole",
   "cacti-patch",
+  "rocker",
+  "boulder",
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
   ...CANDY_PREFAB_KINDS,

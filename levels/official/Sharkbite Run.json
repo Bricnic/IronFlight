@@ -467,9 +467,9 @@
       "id": "maw-raptor",
       "kind": "raptor",
       "scale": 2,
-      "x": -45,
-      "z": 140,
-      "yaw": 2.2
+      "x": -38,
+      "z": 146,
+      "yaw": 0.75
     },
     {
       "id": "barrel-1",

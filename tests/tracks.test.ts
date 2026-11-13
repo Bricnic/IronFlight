@@ -30,7 +30,7 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-29).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-30).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
@@ -60,6 +60,7 @@ it("steps to the next and previous level with wraparound", () => {
     "North Pole Summit",
     "Tabletop Brawl",
     "Sharkbite Run",
+    "Rock and Roll",
   ]);
   expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
   expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
@@ -121,12 +122,14 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:tabletop-brawl", -1)).toBe("custom:north-pole-summit");
   expect(stepTrackId("custom:tabletop-brawl", 1)).toBe("custom:sharkbite-run");
   expect(stepTrackId("custom:sharkbite-run", -1)).toBe("custom:tabletop-brawl");
-  expect(stepTrackId("custom:sharkbite-run", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:sharkbite-run");
+  expect(stepTrackId("custom:sharkbite-run", 1)).toBe("custom:rock-and-roll");
+  expect(stepTrackId("custom:rock-and-roll", -1)).toBe("custom:sharkbite-run");
+  expect(stepTrackId("custom:rock-and-roll", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:rock-and-roll");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:sharkbite-run");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:rock-and-roll");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:sharkbite-run");
+  expect(stepTrackId(undefined, -1)).toBe("custom:rock-and-roll");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

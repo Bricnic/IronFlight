@@ -159,6 +159,8 @@ const PREFAB_COLORS: Record<string, number> = {
   "fragile-ice": 0x9ad6ff,
   cage: 0x5a636b,
   "cacti-patch": 0x3fa34d,
+  rocker: 0xb08d57,
+  boulder: 0x8a7a5f,
   "jail-cell": 0x7a8494,
   candle: 0xffb347,
   "candy-cane-arch": 0xe23b3b,
