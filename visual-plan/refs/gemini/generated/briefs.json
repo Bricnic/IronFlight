@@ -179,4 +179,64 @@
   "brief": "Wooden soapbox gravity-racer derby car at chunky monster-truck scale that reads as a soapbox derby car from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Tapered plywood wedge body with visible screws and red trim, open cockpit with a padded headrest and rope steering, white number roundel on the nose, rear axle fairing and simple plank bumpers. Varnished plywood body, steel axles, rubber tires.",
   "category": "wild"
 }
+,{
+  "id": "mail-truck",
+  "name": "Mail Truck",
+  "brief": "White postal mail truck at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Boxy step-van body with a blue stripe and red trim, sliding side doors with track rails, split windshield, amber roof marker lights, rear roller shutter with bumper step and round red taillights. Painted metal body, steel bumpers, rubber tires.",
+  "category": "realistic"
+}
+,{
+  "id": "excavator",
+  "name": "Excavator",
+  "brief": "Yellow wheeled excavator at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Rotating operator cab with wraparound glass, roof beacon, wipers and mirrors, articulated boom with hydraulic rams folded over the right flank, steel digging bucket with teeth, engine hood with grilles, rear counterweight, front and rear stabilizing outrigger pads. Painted metal body, steel arm and bucket, rubber tires.",
+  "category": "realistic"
+}
+,{
+  "id": "motorhome",
+  "name": "Motorhome",
+  "brief": "Cream Class-A motorhome camper at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Tall boxy coach body with teal side stripes, striped fabric awning over the entry door, tinted side windows, split windshield with chrome mirrors, roof air-conditioner pod, skylight and vent, rear ladder and spare tire, front bullbar. Painted fiberglass body, fabric awning, rubber tires.",
+  "category": "realistic"
+}
+,{
+  "id": "cable-car",
+  "name": "Cable Car",
+  "brief": "Red San Francisco cable car streetcar at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Open-sided wooden bench decks at both ends, enclosed center cabin with cream window frames and clerestory roof, brass bell and headlamp on the roof, side running boards, roof destination board. Painted wood and metal body, brass bell, rubber tires.",
+  "category": "realistic"
+}
+,{
+  "id": "sneaker-speeder",
+  "name": "Sneaker Speeder",
+  "brief": "Giant red high-top sneaker derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Suede red upper with white crisscross laces through silver eyelets over a padded tongue, tall ankle collar with framed side windows, white midsole stripe with a visible air cushion, white toe cap with round headlamps and stitching, padded tongue spoiler and heel pull loop at the rear. Suede and rubber shoe body, rubber tires.",
+  "category": "silly"
+}
+,{
+  "id": "teapot-tempest",
+  "name": "Teapot Tempest",
+  "brief": "Sky-blue porcelain teapot derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Round teapot body with a curved spout nose and flared tip, loop handle over the rear deck, hinged lid with a chrome whistle cap and a wisp of steam, pink floral decals on the flanks, glossy glaze. Glazed porcelain body, chrome whistle and bullbar, rubber tires.",
+  "category": "silly"
+},
+{
+  "id": "traffic-cone",
+  "name": "Traffic Cone",
+  "brief": "Oversized orange traffic-cone derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread tires. Tall tapered cone body with two white reflective bands, heavy black rubber base skirt, amber flashing beacon on the tip, round headlamps on the base, rear work light. Molded plastic cone body, rubber base, rubber tires.",
+  "category": "silly"
+},
+{
+  "id": "flying-saucer",
+  "name": "Flying Saucer",
+  "brief": "Classic flying-saucer UFO derby car at chunky monster-truck scale with four wheels on two axles and four chunky block-tread derby tires. Flattened silver disc with a glowing cyan light band and chrome trim rings, glass bubble-dome cockpit with visible seat and controls, sensor-blister side pods with glowing portholes, tail fin and antenna mast, underbody antenna fins and a glowing belly emitter, chrome guard arcs. Brushed aluminum disc, glass dome, rubber tires.",
+  "category": "wild"
+},
+{
+  "id": "dragster",
+  "name": "Top Fuel Dragster",
+  "brief": "Top-fuel rail dragster derby car at chunky monster-truck scale that reads as a dragster from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Extra-long tube chassis with a pointed orange nose, exposed chrome V8 with zoomie headers and a triple-intake blower scoop ahead of the cockpit, tall rear wing spoiler on orange struts, driver roll cage with windscreen, twin parachute packs. Painted metal body, chrome engine, rubber tires.",
+  "category": "wild"
+},
+{
+  "id": "tuk-tuk",
+  "name": "Tuk-Tuk",
+  "brief": "Yellow-and-blue auto-rickshaw tuk-tuk derby car at chunky monster-truck scale that reads as a three-wheeler taxi from the side but rides on four wheels on two axles with four chunky block-tread derby tires. Rounded yellow front cowl with a single round headlamp and wraparound windscreen, driver saddle with handlebars and mirrors, open sides with grab rails over low panels, quilted vinyl bench seat, blue canvas canopy roof with ribs and valance, rear taxi signs and mudflaps. Painted metal cowl, vinyl seat, canvas canopy, rubber tires.",
+  "category": "wild"
+}
 ]
