@@ -708,6 +708,16 @@ kbd {
 .settings-card.selected {
   border-color: #ffa762;
 }
+.settings-card.disabled {
+  opacity: 0.45;
+}
+.settings-card.disabled:hover {
+  border-color: #ffffff20;
+  transform: none;
+}
+.settings-card.disabled .vehicle-pick {
+  cursor: not-allowed;
+}
 .vehicle-card .picked,
 .settings-card .picked {
   display: none;

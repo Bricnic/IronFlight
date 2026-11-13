@@ -12,3 +12,7 @@ export function parseWeatherFlags(value: unknown): WeatherFlags {
     rain: flags?.rain === true,
   };
 }
+/** Independent coin flip per flag, so all four atmospheres can come up. */
+export function randomWeather(rng: () => number = Math.random): WeatherFlags {
+  return { night: rng() < 0.5, rain: rng() < 0.5 };
+}
