@@ -5,22 +5,23 @@ import { officialFileTracks } from "../src/official-levels";
 import { Simulation } from "../src/simulation";
 
 const id = "custom:rock-and-roll";
+/** Driven route as [x, z, speed, reach] waypoints, shared with the coverage test. */
+export const ROCK_AND_ROLL_ROUTE = [
+  [-120, 100, 14, 6], [-100, 100, 15, 8], [-70, 100, 15, 8],
+  [-50, 100, 15, 6], [-36, 100, 15, 6], [-4, 100, 16, 8],
+  [10, 100, 14, 6], [30, 100, 12, 6], [50, 100, 14, 8],
+  [80, 108, 14, 8], [110, 122, 14, 8], [120, 120, 10, 8],
+  [130, 95, 5, 6], [130, 72, 5, 6], [130, 50, 5, 6],
+  [130, 30, 14, 8], [115, 15, 12, 8], [100, 0, 12, 6],
+  [60, 0, 16, 8], [0, 0, 16, 8], [-70, 0, 16, 8], [-140, 0, 14, 6],
+];
 /** Run Rock and Roll to the gray-straight finish. Returns elapsed sim seconds. */
 export function driveRockAndRollToCompletion(vehicleId?: string): number {
   registerCustomTrack(officialFileTracks.find((t) => t.id === id)!);
   let elapsed = 0;
   const sim = new Simulation();
   if (vehicleId !== undefined) sim.setVehicle(vehicleId);
-  const route = [
-    [-120, 100, 14, 6], [-100, 100, 15, 8], [-70, 100, 15, 8],
-    [-50, 100, 15, 6], [-36, 100, 15, 6], [-4, 100, 16, 8],
-    [10, 100, 14, 6], [30, 100, 12, 6], [50, 100, 14, 8],
-    [80, 108, 14, 8], [110, 122, 14, 8], [120, 120, 10, 8],
-    [130, 95, 5, 6], [130, 72, 5, 6],
-    [130, 50, 5, 6], [130, 30, 14, 8], [115, 15, 12, 8],
-    [100, 0, 12, 6], [60, 0, 16, 8], [0, 0, 16, 8],
-    [-70, 0, 16, 8], [-140, 0, 14, 6],
-  ];
+  const route = ROCK_AND_ROLL_ROUTE;
   let next = 0;
   let jumped = false;
   let rocked = false;

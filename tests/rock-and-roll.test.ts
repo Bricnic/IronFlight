@@ -4,7 +4,10 @@ import { initPhysics } from "../src/simulation";
 import { getBackgroundTemplate } from "../src/backgrounds";
 import { officialFileTracks } from "../src/official-levels";
 import { idealLineSeconds } from "../scripts/ideal-line.mjs";
-import { driveRockAndRollToCompletion } from "./rock-and-roll-drive";
+import {
+  ROCK_AND_ROLL_ROUTE,
+  driveRockAndRollToCompletion,
+} from "./rock-and-roll-drive";
 
 beforeAll(initPhysics);
 
@@ -16,7 +19,7 @@ type Level = {
   mode: string;
   spawn: { x: number; y: number; z: number; yaw: number };
   checkpoints: { name: string; x: number; y: number; z: number }[];
-  solids: { id: string; kind: string; x: number; y: number; z: number; w: number; h: number; d: number }[];
+  solids: { id: string; kind: string; x: number; y: number; z: number; w: number; h: number; d: number; yaw?: number }[];
   prefabs: { id: string; kind: string; x: number; z: number }[];
   medals: { gold: number; silver: number; bronze: number };
   limit: number;
@@ -67,6 +70,32 @@ it("keeps the loop raptor off the racing line", () => {
         Math.hypot(gate.x - raptor.x, gate.z - raptor.z),
         `${raptor.id} vs ${gate.name}`,
       ).toBeGreaterThanOrEqual(10);
+});
+
+it("keeps the whole driven route on road slabs with no gaps", () => {
+  const level = load();
+  const roads = level.solids.filter((s) => s.kind === "road");
+  expect(roads.length).toBeGreaterThan(0);
+  const covered = (x: number, z: number) =>
+    roads.some((s) => {
+      const yaw = s.yaw ?? 0;
+      const dx = x - s.x, dz = z - s.z;
+      const lx = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+      const lz = dx * Math.sin(yaw) + dz * Math.cos(yaw);
+      return Math.abs(lx) <= s.w / 2 && Math.abs(lz) <= s.d / 2;
+    });
+  const points: [number, number][] = [[level.spawn.x, level.spawn.z]];
+  for (const [x, z] of ROCK_AND_ROLL_ROUTE) points.push([x, z]);
+  for (let i = 1; i < points.length; i++) {
+    const [ax, az] = points[i - 1];
+    const [bx, bz] = points[i];
+    const length = Math.hypot(bx - ax, bz - az);
+    for (let d = 0; d <= length; d += 2) {
+      const t = length ? d / length : 0;
+      const x = ax + (bx - ax) * t, z = az + (bz - az) * t;
+      expect(covered(x, z), `road gap at (${x.toFixed(1)},${z.toFixed(1)})`).toBe(true);
+    }
+  }
 });
 
 it("needs at least 30 seconds on the ideal line, and gold stays achievable", () => {
