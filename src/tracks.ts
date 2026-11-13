@@ -2,7 +2,6 @@ import type { CustomCheckpoint, CustomLevel } from "./custom-level";
 import { getCustomTrack } from "./custom-level";
 export const TRACK_IDS = [
   "triple-loop",
-  "harbor-sprint",
   "foundry-run",
   "skyline-circuit",
   "scrapyard-sweep",
@@ -79,15 +78,6 @@ export function gates(path: Point[], width = 24): Checkpoint[] {
     };
   });
 }
-const harbor = points([
-  [0, -100],
-  [0, -40],
-  [15, 20],
-  [-15, 90],
-  [25, 160],
-  [10, 230],
-  [30, 300],
-]);
 const foundry = points([
   [0, -100],
   [0, -50],
@@ -269,14 +259,6 @@ export const TRACKS: OfficialTrack[] = [
     legacy: true,
   },
   race(
-    "harbor-sprint",
-    "Harbor Sprint",
-    "Sweep through the docks, cargo chicanes and checkpoint gates.",
-    0x65c8e8,
-    harbor,
-    [35, 50, 75],
-  ),
-  race(
     "foundry-run",
     "Foundry Run",
     "Launch through a working foundry. Watch the hammer and timed flames.",
@@ -360,7 +342,6 @@ export const TRACKS: OfficialTrack[] = [
 ];
 const TRACK_BACKGROUNDS: Record<TrackId, string> = {
   "triple-loop": "pastoral-hills",
-  "harbor-sprint": "harbor-docks",
   "foundry-run": "foundry-district",
   "skyline-circuit": "city-skyline",
   "scrapyard-sweep": "scrapyard-flats",

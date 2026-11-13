@@ -878,6 +878,7 @@ export class Simulation {
     this.comic.before();
     this.ghosts.update();
     this.dungeon.gauntlet.before();
+    this.dungeon.before();
     this.world.step(this.events, this.hammerHooks);
     this.comic.after();
     const screwHit = this.dungeon.after();

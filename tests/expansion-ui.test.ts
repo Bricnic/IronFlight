@@ -30,7 +30,7 @@ it("labels every mode on the menu cards", () => {
   expect(modeLabel(getTrack("haunted-hollow"))).toBe("DEMOLITION");
   expect(modeLabel(getTrack("sky-slide"))).toBe("SLIDE RUN");
   expect(modeLabel(getTrack("canyon-plunge"))).toBe("CHECKPOINT RACE");
-  expect(modeLabel(getTrack("harbor-sprint"))).toBe("CHECKPOINT RACE");
+  expect(modeLabel(getTrack("foundry-run"))).toBe("CHECKPOINT RACE");
   expect(modeLabel(getTrack("triple-loop"))).toBe("STUNT RACE");
 });
 it("tells each mode its objective", () => {
@@ -76,12 +76,12 @@ it("reports demolition and ring progress without NaN bars", () => {
   );
 });
 it("keeps existing race and arena progress intact", () => {
-  const harbor = getTrack("harbor-sprint");
+  const foundry = getTrack("foundry-run");
   expect(
-    progressCopy(harbor, run("harbor-sprint", { checkpoint: 2 }) as never),
+    progressCopy(foundry, run("foundry-run", { checkpoint: 2 }) as never),
   ).toContain("Checkpoint 2 /");
   expect(
-    progressFraction(harbor, run("harbor-sprint", { checkpoint: 2 }) as never),
+    progressFraction(foundry, run("foundry-run", { checkpoint: 2 }) as never),
   ).toBeGreaterThan(0);
   const scrap = getTrack("scrapyard-sweep");
   expect(
@@ -98,12 +98,12 @@ it("blames timeouts on the right route", () => {
   expect(timeoutCopy(getTrack("scrapyard-sweep"))).toContain(
     "collection route",
   );
-  expect(timeoutCopy(getTrack("harbor-sprint"))).toContain("racing line");
+  expect(timeoutCopy(getTrack("foundry-run"))).toContain("racing line");
   expect(timeoutCopy(getTrack("canyon-plunge"))).toContain("racing line");
   expect(timeoutCopy(getTrack("haunted-hollow"))).toContain("smashing route");
   for (const t of [
     "scrapyard-sweep",
-    "harbor-sprint",
+    "foundry-run",
     "canyon-plunge",
     "haunted-hollow",
     "sky-slide",

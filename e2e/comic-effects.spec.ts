@@ -9,7 +9,7 @@ for (const revealFrames of [0, 301])
     await page.evaluate((frames) => {
       const g = window.__game!;
       g.pause(true);
-      g.startTrack("harbor-sprint");
+      g.startTrack("skyline-circuit");
       const h = g.snapshot().comic.hazards.find((h) => h.kind === "book")!;
       g.place({ x: h.x, y: 2.1, z: h.z }, 0);
       for (let i = 0; i < 240 && g.snapshot().status !== "wrecked"; i++)
@@ -27,7 +27,7 @@ for (const revealFrames of [0, 301])
     await page.keyboard.press("r");
     const restarted = await page.evaluate(() => window.__game!.snapshot());
     expect(restarted.run?.status).toBe("running");
-    expect(restarted.run?.trackId).toBe("harbor-sprint");
+    expect(restarted.run?.trackId).toBe("skyline-circuit");
     expect(restarted.run?.elapsed).toBe(0);
     expect(restarted.integrity).toBe(1);
     await expect(page.locator("#track-result")).toBeHidden();
@@ -48,7 +48,7 @@ for (const [i, effect] of POTIONS.entries())
       ({ i }) => {
         const g = window.__game!;
         g.pause(true);
-        g.startTrack("harbor-sprint");
+        g.startTrack("foundry-run");
         const h = g.snapshot().comic.hazards.find((h) => h.kind === "potion")!;
         g.place({ x: h.x + (i - 1.5) * 4.4, y: 2, z: h.z }, 0);
         g.advanceFrames(6, 1, {});
@@ -85,7 +85,7 @@ test("destroyed car keeps shedding debris throughout delayed game-over reveal", 
   await page.evaluate(() => {
     const g = window.__game!;
     g.pause(true);
-    g.startTrack("harbor-sprint");
+    g.startTrack("skyline-circuit");
     const h = g.snapshot().comic.hazards.find((h) => h.kind === "book")!;
     g.place({ x: h.x, y: 2.1, z: h.z }, 0);
     for (let i = 0; i < 240 && g.snapshot().status !== "wrecked"; i++)

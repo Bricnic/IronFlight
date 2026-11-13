@@ -9,7 +9,8 @@ export type ComicKind =
   | "hydrant"
   | "burner"
   | "water"
-  | "potion";
+  | "potion"
+  | "shark-pool";
 export type ComicHazard = {
   id: string;
   kind: ComicKind;
@@ -48,13 +49,6 @@ export function comicHazards(track: Track): ComicHazard[] {
       };
     });
   const layouts: Partial<Record<Track["id"], [ComicKind, number, number][]>> = {
-    "harbor-sprint": [
-      ["book", 12, -65],
-      ["hydrant", -9, 15],
-      ["water", 38, 110],
-      ["flippers", -3, 218],
-      ["potion", 40, 260],
-    ],
     "foundry-run": [
       ["burner", -13, 25],
       ["teeth", 28, 78],

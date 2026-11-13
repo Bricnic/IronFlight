@@ -4,7 +4,7 @@ import { defaultTextureFor } from "../src/course-view";
 const solid = (id: string, kind: string) => ({ id, kind });
 
 it("resolves custom-level defaults", () => {
-  const track = "custom:Clone Harbor Sprint";
+  const track = "custom:Clone Skyline Circuit";
   expect(defaultTextureFor(track, solid("ground", "ground"))).toBe(
     "concrete_floor_02",
   );
@@ -34,7 +34,7 @@ it("resolves official track ground and road maps", () => {
   expect(defaultTextureFor("foundry-run", solid("g", "ground"))).toBe(
     "concrete_layers_02",
   );
-  expect(defaultTextureFor("harbor-sprint", solid("g", "ground"))).toBe(
+  expect(defaultTextureFor("skyline-circuit", solid("g", "ground"))).toBe(
     "concrete_floor_02",
   );
 });

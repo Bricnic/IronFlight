@@ -24,7 +24,7 @@ test("arrow keys navigate the responsive level grid, Space plays, and L returns"
   await expect(page.locator("#level-select")).toBeHidden();
   expect(
     await page.evaluate(() => window.__game!.snapshot().run?.trackId),
-  ).toBe("harbor-sprint");
+  ).toBe("foundry-run");
   await page.keyboard.press("l");
   await expect(page.locator("#level-select")).toBeVisible();
   await expect(cards.nth(1)).toBeFocused();

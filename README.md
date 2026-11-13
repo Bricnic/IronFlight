@@ -2,7 +2,7 @@
 
 A single-player Three.js/Rapier monster-truck game. Start at level select, choose a checkpoint race or timed collection arena, and earn bronze, silver or gold from your best completed time. Personal bests persist in this browser.
 
-**Triple Loop** preserves the original three-lane arena: Ignition, The Gauntlet and Danger Zone. A timed attempt clears a lane's jump, survives its dragon pass, physically completes its loop and crosses the exit. **Harbor Sprint**, **Foundry Run** and **Skyline Circuit** add checkpoint racing; **Scrapyard Sweep** gives 120 seconds for twelve salvage tokens, and **Inferno Vault** gives 150 seconds for ten cores. The destruction lab remains available from the menu.
+**Triple Loop** preserves the original three-lane arena: Ignition, The Gauntlet and Danger Zone. A timed attempt clears a lane's jump, survives its dragon pass, physically completes its loop and crosses the exit. **Foundry Run** and **Skyline Circuit** add checkpoint racing; **Scrapyard Sweep** gives 120 seconds for twelve salvage tokens, and **Inferno Vault** gives 150 seconds for ten cores. The destruction lab remains available from the menu.
 
 The [six-track release plan](docs/TRACK_RELEASE_PLAN.md) mirrors the Google Doc written before this expansion. [TDD log](docs/TDD_LOG.md) records each test-first commit; [release verification](docs/TRACK_VERIFICATION.md) records full-course times and arena timer headroom.
 

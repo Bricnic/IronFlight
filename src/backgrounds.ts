@@ -250,7 +250,6 @@ export function getBackgroundTemplate(name: string | undefined): BackgroundTempl
 }
 
 const HEURISTIC_RULES: [RegExp, string][] = [
-  [/harbor|dock|port/, "harbor-docks"],
   [/city|skyline|urban|metro/, "city-skyline"],
   [/canyon|desert|mesa/, "desert-mesas"],
   [/haunt|ghost|grave|hollow/, "haunted-night"],

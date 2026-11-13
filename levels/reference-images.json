@@ -88,6 +88,24 @@
                                 "filename":  "e9436e3e-77bf-49e1-a393-c5f8d9bb8e9d.jpg",
                                 "sha256":  "AFCC061196DCA88CABD6598A5F14E6B42E160820B82C7CA725B548BC44DFB3DD",
                                 "levelFile":  "Toybox Road.json"
+                            },
+                            {
+                                "filename":  "2c2b23b6-8bfd-45ac-b8ba-554c00887c45.jpg",
+                                "sha256":  "2E80584DF166E51F92BC14DC25526414D99BB0242037696464FCA7E6C6104F8A",
+                                "levelFile":  "Tabletop Brawl.json",
+                                "notes":  "Round white table crowded with Hot Wheels track toys. No start or finish markers, so built as an arena: 8 collectible rings scattered around the table, stunt loops, dino launcher raptor, potion test tube, cacti desert tile, burner cauldron, jaws, ghosts, carousel, lamps and destructibles. Toy cars, pegboard and basket omitted as background objects."
+                            },
+                            {
+                                "filename":  "c9671454-ce1a-4b57-b8c2-321e58de9a73.jpg",
+                                "sha256":  "BED963D1F6AC996D453D4357569EE23A37A52067D7769E5FD7E98D79D3E8FD8D",
+                                "levelFile":  "Sharkbite Run.json",
+                                "notes":  "Floor photo with inline instructions. Start at the letter blocks (breakable wall), potion tube on the right, kicker jump over the cacti patch, skim the shark pool at speed, drive the dino-mouth tunnel with red walls, white teeth and green roof, ramp to the gray platform finish. Sharks are a new lethal comic hazard that wrecks slow swimmers; cacti a new solid decor kind. Rug, vent, pumpkin, launcher toys and balls omitted as background objects."
+                            },
+                            {
+                                "filename":  "31bbd0b6-5b7f-4c3e-9458-39a59b02dd6a.jpg",
+                                "sha256":  "BE0D930652AC7C0F9BB94DFEDF9F5F139C559D5A9F47CC6B92DBF2F71E167CD8",
+                                "levelFile":  "Rock and Roll.json",
+                                "notes":  "Annotated photo. Start at the pegboard, cross the screw field, kicker jump over the burning-coal strip through the sandstone arch, ride the giant seesaw rocker (new dungeon prefab, tilts with the car aboard), creep past two proximity boulders (new lethal dungeon prefab, rolls along yaw when close), thread the dino loop and race the gray straight to the checkered finish. Table, boxes, blanket, slipper and basket omitted as background objects."
                             }
                         ]
 }

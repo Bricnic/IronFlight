@@ -3,10 +3,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { TRACKS, getTrack, validateTracks } from "../src/tracks";
 import { getBackgroundTemplate } from "../src/backgrounds";
 import { officialTracks, stepTrackId } from "../src/official-levels";
-it("registers Triple Loop plus eight distinct tracks", () => {
+it("registers Triple Loop plus seven distinct tracks", () => {
   expect(TRACKS.map((t) => t.name)).toEqual([
     "Triple Loop",
-    "Harbor Sprint",
     "Foundry Run",
     "Skyline Circuit",
     "Scrapyard Sweep",
@@ -17,7 +16,7 @@ it("registers Triple Loop plus eight distinct tracks", () => {
   ]);
   expect(TRACKS.filter((t) => t.mode === "arena")).toHaveLength(2);
   expect(TRACKS.filter((t) => t.mode === "demolition")).toHaveLength(1);
-  expect(new Set(TRACKS.map((t) => t.thumbnail)).size).toBe(9);
+  expect(new Set(TRACKS.map((t) => t.thumbnail)).size).toBe(8);
   expect(getTrack("triple-loop").legacy).toBe(true);
   expect(validateTracks(TRACKS)).toEqual([]);
 });
@@ -30,7 +29,7 @@ it("arena deadlines reserve at least a quarter of the timer for the completion t
   }
 });
 it("steps to the next and previous level with wraparound", () => {
-  expect(officialTracks.slice(-27).map((track) => track.name)).toEqual([
+  expect(officialTracks.slice(-30).map((track) => track.name)).toEqual([
     "Fairground",
     "Dungeon",
     "Jurassic Junction",
@@ -58,9 +57,12 @@ it("steps to the next and previous level with wraparound", () => {
     "Nutcracker Run",
     "Sleigh Bell Sprint",
     "North Pole Summit",
+    "Tabletop Brawl",
+    "Sharkbite Run",
+    "Rock and Roll",
   ]);
-  expect(stepTrackId("harbor-sprint", 1)).toBe("foundry-run");
-  expect(stepTrackId("harbor-sprint", -1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", 1)).toBe("foundry-run");
+  expect(stepTrackId("foundry-run", -1)).toBe("triple-loop");
   expect(stepTrackId("sky-slide", 1)).toBe("custom:fairground");
   expect(stepTrackId("custom:fairground", -1)).toBe("sky-slide");
   expect(stepTrackId("custom:fairground", 1)).toBe("custom:dungeon");
@@ -115,12 +117,18 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:sleigh-bell-sprint", -1)).toBe("custom:nutcracker-run");
   expect(stepTrackId("custom:sleigh-bell-sprint", 1)).toBe("custom:north-pole-summit");
   expect(stepTrackId("custom:north-pole-summit", -1)).toBe("custom:sleigh-bell-sprint");
-  expect(stepTrackId("custom:north-pole-summit", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:north-pole-summit");
+  expect(stepTrackId("custom:north-pole-summit", 1)).toBe("custom:tabletop-brawl");
+  expect(stepTrackId("custom:tabletop-brawl", -1)).toBe("custom:north-pole-summit");
+  expect(stepTrackId("custom:tabletop-brawl", 1)).toBe("custom:sharkbite-run");
+  expect(stepTrackId("custom:sharkbite-run", -1)).toBe("custom:tabletop-brawl");
+  expect(stepTrackId("custom:sharkbite-run", 1)).toBe("custom:rock-and-roll");
+  expect(stepTrackId("custom:rock-and-roll", -1)).toBe("custom:sharkbite-run");
+  expect(stepTrackId("custom:rock-and-roll", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:rock-and-roll");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:north-pole-summit");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:rock-and-roll");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:north-pole-summit");
+  expect(stepTrackId(undefined, -1)).toBe("custom:rock-and-roll");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

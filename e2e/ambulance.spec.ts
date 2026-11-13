@@ -1,16 +1,16 @@
 import { test, expect } from "@playwright/test";
 import { driveTrack } from "./course-driver";
-test("Ambulance: complete Harbor Sprint in the new vehicle", async ({
+test("Ambulance: complete Foundry Run in the new vehicle", async ({
   page,
 }, info) => {
-  const result = await driveTrack(page, "harbor-sprint", true, "ambulance");
+  const result = await driveTrack(page, "foundry-run", true, "ambulance");
   expect(result.state.vehicleId).toBe("ambulance");
   expect(result.state.run?.status, JSON.stringify(result.state.run)).toBe(
     "completed",
   );
-  expect(result.state.run?.checkpoint).toBe(6);
+  expect(result.state.run?.checkpoint).toBe(7);
   expect(result.state.integrity).toBeGreaterThan(0);
-  await page.screenshot({ path: info.outputPath("ems-harbor-finish.png") });
+  await page.screenshot({ path: info.outputPath("ems-foundry-finish.png") });
 });
 test("Ambulance: light bar flashes only above 90 mph", async ({ page }) => {
   await page.goto("/");

@@ -39,7 +39,7 @@ test("official runs start in the selected vehicle", async ({ page }) => {
     localStorage.setItem("vehicle", "orbital-rover");
     const g = window.__game!;
     g.pause(true);
-    g.startTrack("harbor-sprint");
+    g.startTrack("foundry-run");
   });
   expect(await page.evaluate(() => window.__game!.snapshot().vehicleId)).toBe(
     "orbital-rover",

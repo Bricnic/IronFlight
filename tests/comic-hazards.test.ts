@@ -7,7 +7,6 @@ test("all five new tracks have a dense mix of grounded comic hazards", () => {
   expect(covered.map((t) => t.id).sort()).toEqual([
     "canyon-plunge",
     "foundry-run",
-    "harbor-sprint",
     "inferno-vault",
     "scrapyard-sweep",
     "skyline-circuit",

@@ -109,7 +109,6 @@ it("ships a valid template for every planned landscape", () => {
   const names = listBackgroundTemplates();
   for (const name of [
     "pastoral-hills",
-    "harbor-docks",
     "foundry-district",
     "city-skyline",
     "scrapyard-flats",
@@ -147,9 +146,6 @@ it("picks backgrounds from level character", () => {
   expect(
     backgroundForLevel({ name: "Deep Delve", mode: "race", underground: true }),
   ).toBe("cavern-dark");
-  expect(backgroundForLevel({ name: "Harbor Dash", mode: "race" })).toBe(
-    "harbor-docks",
-  );
   expect(backgroundForLevel({ name: "Neon City GP", mode: "race" })).toBe(
     "city-skyline",
   );

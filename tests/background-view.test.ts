@@ -160,8 +160,8 @@ it("drifts clouds deterministically with time", () => {
 it("builds deterministically for the same template", () => {
   const a = new BackgroundView();
   const b = new BackgroundView();
-  a.update(getTrack("harbor-sprint"), 5, 0, 0, 650);
-  b.update(getTrack("harbor-sprint"), 5, 0, 0, 650);
+  a.update(getTrack("foundry-run"), 5, 0, 0, 650);
+  b.update(getTrack("foundry-run"), 5, 0, 0, 650);
   const positions = (v: BackgroundView) =>
     meshes(v).map((m) => m.position.toArray());
   expect(positions(a)).toEqual(positions(b));
@@ -169,7 +169,7 @@ it("builds deterministically for the same template", () => {
 
 it("keeps background materials out of fog and shadow maps", () => {
   const view = new BackgroundView();
-  view.update(getTrack("harbor-sprint"), 0, 0, 0, 650);
+  view.update(getTrack("foundry-run"), 0, 0, 0, 650);
   expect(meshes(view).length).toBeGreaterThan(0);
   for (const m of meshes(view)) {
     expect(m.castShadow).toBe(false);

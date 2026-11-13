@@ -4,7 +4,9 @@ Find the newest unused race reference image in the Windows Downloads folder.
 .DESCRIPTION
 Inspect the returned image using the returned interpretation rules. Build and
 verify the official level, then record the source image with -RecordImage and
--LevelFile. Use -DownloadsDirectory to override automatic discovery.
+-LevelFile. Recording validates the level's ideal-line time is at least 30
+seconds (scripts/ideal-line.mjs) and refuses short courses. Use
+-DownloadsDirectory to override automatic discovery.
 .EXAMPLE
 pwsh -File scripts/find-level-reference.ps1
 .EXAMPLE
@@ -139,6 +141,9 @@ if ($PSCmdlet.ParameterSetName -eq 'Record') {
     if ($LevelFile -notin $order.file -or !(Test-Path -LiteralPath (Join-Path $official $LevelFile) -PathType Leaf)) {
         throw 'Record an image only after adding its level to the official lineup.'
     }
+    $levelPath = Join-Path $official $LevelFile
+    $idealOut = & node (Join-Path $PSScriptRoot 'ideal-line.mjs') $levelPath --min 30 2>&1
+    if ($LASTEXITCODE -ne 0) { throw ($idealOut -join "`n") }
 
     $hash = (Get-FileHash -LiteralPath $image.FullName -Algorithm SHA256).Hash
     $lockName = 'Local\DemolitionDerby2-level-references'

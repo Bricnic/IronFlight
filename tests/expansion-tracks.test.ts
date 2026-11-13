@@ -1,10 +1,9 @@
 import { expect, it } from "vitest";
 import { existsSync } from "node:fs";
 import { TRACKS, TRACK_IDS, getTrack, validateTracks } from "../src/tracks";
-it("registers three expansion tracks alongside the original six", () => {
+it("registers three expansion tracks alongside the original five", () => {
   expect([...TRACK_IDS]).toEqual([
     "triple-loop",
-    "harbor-sprint",
     "foundry-run",
     "skyline-circuit",
     "scrapyard-sweep",
@@ -15,7 +14,6 @@ it("registers three expansion tracks alongside the original six", () => {
   ]);
   expect(TRACKS.map((t) => t.name)).toEqual([
     "Triple Loop",
-    "Harbor Sprint",
     "Foundry Run",
     "Skyline Circuit",
     "Scrapyard Sweep",
@@ -24,7 +22,7 @@ it("registers three expansion tracks alongside the original six", () => {
     "Haunted Hollow",
     "Sky Slide",
   ]);
-  expect(new Set(TRACKS.map((t) => t.thumbnail)).size).toBe(9);
+  expect(new Set(TRACKS.map((t) => t.thumbnail)).size).toBe(8);
   expect(validateTracks(TRACKS)).toEqual([]);
 });
 it("gives every expansion track a 300s limit with medals inside the window", () => {
