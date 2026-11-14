@@ -26,6 +26,7 @@ const TITLES: Record<ComicKind, string> = {
   potion: "PICK YOUR POISON",
   donut: "GLAZED MENACE",
   "shark-pool": "SHARK INFESTED",
+  ocean: "OPEN WATER",
 };
 
 let drawn: string[];
@@ -80,6 +81,22 @@ for (const kind of KINDS) {
     expect(drawn).toContain(TITLES[kind]);
   });
 }
+
+it("ocean builds an unlabeled animated surface that tiles seamlessly", () => {
+  const model = buildComicModel({
+    id: "test-ocean",
+    kind: "ocean",
+    x: 0,
+    z: 0,
+    phase: 0,
+  });
+  expect(
+    model.root.children.filter((c) => c instanceof T.Sprite),
+    "no per-tile label sprites",
+  ).toHaveLength(0);
+  expect(model.water, "animated surface").toBeTruthy();
+  expect(model.triangles).toBeGreaterThan(0);
+});
 
 it("no flat ground-plane labels remain", () => {
   for (const kind of KINDS) {

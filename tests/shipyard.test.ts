@@ -277,6 +277,21 @@ it("carries a truck parked on deck out to sea", () => {
   }
 });
 
+it("ocean sinks slow trucks with no boost, rails or walls", () => {
+  const sim = fixture("Ocean Swim", [{ id: "o", kind: "ocean", x: 0, z: 0 }]);
+  try {
+    const m = sim.comic.mechanisms.find((m) => m.h.kind === "ocean")!;
+    expect(m.sensors, "main sensor only, no boost").toHaveLength(1);
+    expect(m.colliders, "floor only, no rims or walls").toHaveLength(1);
+    sim.body.setTranslation({ x: 0, y: 2.1, z: 0 }, true);
+    sim.run(3.5);
+    expect(m.contacts).toBeGreaterThan(0);
+    expect(sim.status).toBe("wrecked");
+  } finally {
+    sim.dispose();
+  }
+});
+
 it("exposes perch, rope and departure state in snapshots", () => {
   const sim = fixture("Shipyard Snapshot", [
     { id: "p", kind: "pelican", x: 0, z: 0, seed: 3 },

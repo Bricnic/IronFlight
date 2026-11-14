@@ -752,7 +752,7 @@ export class DungeonPhysics {
         Math.hypot(hw.x - head.x, hw.y - head.y, hw.z - head.z) + ANCHOR.slack;
       let bd = Infinity;
       for (const pref of s.courseTrack?.custom?.prefabs ?? []) {
-        if (pref.kind !== "water" && pref.kind !== "shark-pool") continue;
+        if (pref.kind !== "water" && pref.kind !== "shark-pool" && pref.kind !== "ocean") continue;
         const d = Math.hypot(pref.x - m.h.x, pref.z - m.h.z);
         if (d < bd) {
           bd = d;

@@ -230,8 +230,9 @@ export function buildShip(root: T.Group) {
   const flagMat = new T.MeshBasicMaterial({ color: 0xf2772e, side: T.DoubleSide });
   const box = (w: number, h: number, d: number, mat: T.Material, at: XYZ) =>
     mesh(root, new T.BoxGeometry(w, h, d), mat, at);
-  // Hull below the deck, waterline stripe, pyramid bow.
-  box(SHIP.w, 6, SHIP.d, hullMat, [0, 1, 0]);
+  // Hull below the deck, waterline stripe, pyramid bow. The hull top sits
+  // below the deck and the deck inside the hull walls: no coplanar faces.
+  box(SHIP.w, 5.6, SHIP.d, hullMat, [0, 1, 0]);
   box(SHIP.w + 0.4, 1, SHIP.d + 0.4, stripeMat, [0, 0.2, 0]);
   const bow = mesh(root, new T.ConeGeometry(SHIP.w / 2, 10, 4), hullMat, [0, 1, SHIP.d / 2 + 4]);
   bow.rotation.x = Math.PI / 2;
@@ -244,19 +245,13 @@ export function buildShip(root: T.Group) {
         -20 + i * 8,
       ]).rotation.z = Math.PI / 2;
   // Deck, rails, wheelhouse, stack, cargo.
-  box(SHIP.w, SHIP.deckH, SHIP.d, deckMat, [0, SHIP.deckY - SHIP.deckH / 2, 0]);
+  box(SHIP.w - 0.4, SHIP.deckH, SHIP.d - 0.4, deckMat, [0, SHIP.deckY - SHIP.deckH / 2, 0]);
   for (const side of [-1, 1]) {
     box(SHIP.railT, SHIP.railH, SHIP.d, railMat, [
       side * (SHIP.w / 2 - SHIP.railT / 2),
       SHIP.deckY + SHIP.railH / 2,
       0,
     ]);
-    for (let z = -SHIP.d / 2 + 2; z <= SHIP.d / 2 - 2; z += 4)
-      mesh(root, new T.CylinderGeometry(0.12, 0.12, SHIP.railH, 6), railMat, [
-        side * (SHIP.w / 2 - SHIP.railT / 2),
-        SHIP.deckY + SHIP.railH / 2,
-        z,
-      ]);
   }
   box(SHIP.w, SHIP.railH, SHIP.railT, railMat, [
     0,
@@ -268,7 +263,7 @@ export function buildShip(root: T.Group) {
   box(cb.w + 0.2, 1, cb.d * 0.7, glassMat, [cb.x, SHIP.deckY + cb.h - 0.8, cb.z]);
   box(cb.w * 0.5, 0.4, cb.d * 0.6, stackMat, [cb.x, SHIP.deckY + cb.h + 0.2, cb.z]);
   mesh(root, new T.CylinderGeometry(1, 1.2, 4, 12), stackMat, [cb.x - 1.5, SHIP.deckY + cb.h + 2, cb.z - 0.5]);
-  mesh(root, new T.CylinderGeometry(1.05, 1.05, 0.8, 12), bandMat, [cb.x - 1.5, SHIP.deckY + cb.h + 3.2, cb.z - 0.5]);
+  mesh(root, new T.CylinderGeometry(1.18, 1.18, 0.8, 12), bandMat, [cb.x - 1.5, SHIP.deckY + cb.h + 3.2, cb.z - 0.5]);
   const cg = SHIP.cargo;
   const cargoMats = [plastic(0xc25a3a), plastic(0x3a7dc2), plastic(0x4da64d), plastic(0xd9a13b)];
   for (const side of [-1, 1])

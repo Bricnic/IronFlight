@@ -43,11 +43,11 @@ it("stages the shipyard: pelican, anchors, channel, ramp, departing ferry", () =
     "Finish",
   ]);
   const kinds = level.prefabs.map((p) => p.kind);
-  for (const kind of ["pelican", "anchor", "ship", "water"])
+  for (const kind of ["pelican", "anchor", "ship", "ocean"])
     expect(kinds, `prefab ${kind}`).toContain(kind);
   expect(level.prefabs.filter((p) => p.kind === "anchor")).toHaveLength(2);
   expect(
-    level.prefabs.filter((p) => p.kind === "water").length,
+    level.prefabs.filter((p) => p.kind === "ocean").length,
   ).toBeGreaterThanOrEqual(20);
   const ids = level.solids.map((s) => s.id);
   for (const id of ["ramp-jump", "road-dock"])

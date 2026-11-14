@@ -120,6 +120,7 @@ const PREFAB_COLORS: Record<string, number> = {
   hydrant: 0xe06a6a,
   burner: 0xff7a1f,
   water: 0x4fb8ff,
+  ocean: 0x4fb8ff,
   potion: 0x9ae06a,
   "shark-pool": 0x8a1622,
   sign: 0xe6c16a,

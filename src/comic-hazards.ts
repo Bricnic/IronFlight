@@ -10,7 +10,8 @@ export type ComicKind =
   | "burner"
   | "water"
   | "potion"
-  | "shark-pool";
+  | "shark-pool"
+  | "ocean";
 export type ComicHazard = {
   id: string;
   kind: ComicKind;
