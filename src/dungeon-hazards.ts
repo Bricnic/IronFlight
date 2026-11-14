@@ -233,6 +233,23 @@ export function shipSailed(departedAt: number | undefined, time: number) {
   return Math.min(SHIP.distance, Math.max(0, time - departedAt) * SHIP.speed);
 }
 
+/** Hollow spider: a giant sticky web; slow trucks inside get run down. */
+export const SPIDER = {
+  /** Web radius; the spider nests at the center. */
+  webRadius: 20,
+  /** Silken drag applied per second inside the web. */
+  drag: 5,
+  /** Nothing crosses silk faster than this. */
+  maxSpeed: 8,
+  /** Below this speed inside the web, the truck counts as stuck. */
+  stuckSpeed: 5,
+  /** Spider sprint; outruns the silk crawl, so only edge-grazers escape. */
+  runSpeed: 6,
+  /** Contact kill radius around the spider. */
+  kill: 3.2,
+  /** The hunt breaks off past the web plus this leash. */
+  leash: 8,
+} as const;
 /** Deterministic RNG for seeded prefabs (pelican spots in tests). */
 export function mulberry32(seed: number) {
   let a = seed >>> 0;

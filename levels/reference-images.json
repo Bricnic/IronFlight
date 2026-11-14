@@ -106,6 +106,12 @@
                                 "sha256":  "BE0D930652AC7C0F9BB94DFEDF9F5F139C559D5A9F47CC6B92DBF2F71E167CD8",
                                 "levelFile":  "Rock and Roll.json",
                                 "notes":  "Annotated photo. Start at the pegboard, cross the screw field, kicker jump over the burning-coal strip through the sandstone arch, ride the giant seesaw rocker (new dungeon prefab, tilts with the car aboard), creep past two proximity boulders (new lethal dungeon prefab, rolls along yaw when close), thread the dino loop and race the gray straight to the checkered finish. Table, boxes, blanket, slipper and basket omitted as background objects."
+                            },
+                            {
+                                "filename":  "989d3445-f29b-487e-a917-89f67a1c8252.jpg",
+                                "sha256":  "05ED3D7162F31FB85F5F93F267057C6E9BF5B0DF1C197FAF580B7DD4F002F5A6",
+                                "levelFile":  "Spider Hollow.json",
+                                "notes":  "Start marker orients the north straight past the chomp book, scale-2 raptor and tube arches; the giant spiderweb guards the east half with a west bypass; the left dummy drops to the spike pit; the three-way fork sends left to the fire pit, right to the slime pit and middle to the finish."
                             }
                         ]
 }

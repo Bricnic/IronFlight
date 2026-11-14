@@ -13,6 +13,7 @@ import {
   pelicanPose,
   SHIP,
   shipSailed,
+  SPIDER,
   DINOSAUR_COOLDOWN,
   DINOSAUR_LUNGE,
   dinosaurPose,
@@ -83,6 +84,11 @@ type Mechanism = {
     sensors: R.Collider[];
   };
   ship?: { departedAt?: number; sailed?: number };
+  spider?: {
+    pos: { x: number; z: number };
+    yaw: number;
+    hunting: boolean;
+  };
 };
 export class DungeonPhysics {
   mechanisms: Mechanism[] = [];
@@ -304,6 +310,10 @@ export class DungeonPhysics {
         target: { x: h.x, z: h.z },
         sensors,
       };
+    } else if (h.kind === "spider") {
+      // No colliders: the web is a drag zone and the spider kills by contact
+      // distance, like a dinosaur bite without the lunge.
+      m.spider = { pos: { x: h.x, z: h.z }, yaw: h.yaw ?? 0, hunting: false };
     } else if (h.kind === "ship") {
       const yaw = h.yaw ?? 0;
       // Fixed, not kinematic: raycast wheels never touch kinematic decks
@@ -795,6 +805,66 @@ export class DungeonPhysics {
       .add(new Vector3(car.x, car.y, car.z));
     return { x: w.x, y: w.y, z: w.z };
   }
+  /** Hollow spider: silk drag zones stuck trucks, then the spider runs them down. */
+  private updateSpider(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const sp = m.spider!;
+    const h = m.h;
+    const baseY = h.y ?? 0;
+    const dx = p.x - h.x, dz = p.z - h.z;
+    const inWeb =
+      Math.hypot(dx, dz) <= SPIDER.webRadius && Math.abs(p.y - baseY) <= 5;
+    const v = s.body.linvel();
+    const pace = Math.hypot(v.x, v.z);
+    if (inWeb && s.status === "driving") {
+      // Silken drag plus a hard cap: momentum dies, the crawl stays slow.
+      const damp = Math.max(0, 1 - SPIDER.drag * DT);
+      let vx = v.x * damp, vz = v.z * damp;
+      const capped = Math.hypot(vx, vz);
+      if (capped > SPIDER.maxSpeed) {
+        vx *= SPIDER.maxSpeed / capped;
+        vz *= SPIDER.maxSpeed / capped;
+      }
+      s.body.setLinvel({ x: vx, y: v.y, z: vz }, true);
+    }
+    if (s.status !== "driving") return;
+    const sdx = p.x - sp.pos.x, sdz = p.z - sp.pos.z;
+    const carDist = Math.hypot(sdx, sdz);
+    if (!sp.hunting) {
+      if (
+        inWeb &&
+        pace <= SPIDER.stuckSpeed &&
+        Math.abs(p.y - baseY) <= 5
+      )
+        sp.hunting = true;
+      else return;
+    }
+    // Give up past the leash; otherwise sprint at the truck.
+    if (
+      carDist > SPIDER.webRadius + SPIDER.leash ||
+      Math.abs(p.y - baseY) > 6
+    ) {
+      sp.hunting = false;
+      return;
+    }
+    if (carDist <= SPIDER.kill && Math.abs(p.y - baseY) <= 4) {
+      m.contacts++;
+      s.damage("chassis-front", 10000);
+      s.damageEvents.push({
+        source: "spider",
+        part: "chassis-front",
+        time: s.time,
+      });
+      sp.hunting = false;
+      return;
+    }
+    const step = SPIDER.runSpeed * DT;
+    if (carDist > 0.01) {
+      sp.pos.x += (sdx / carDist) * Math.min(step, carDist);
+      sp.pos.z += (sdz / carDist) * Math.min(step, carDist);
+      sp.yaw = Math.atan2(sdx, sdz);
+    }
+  }
   /** Oversized bite: tear off the 3 parts nearest the mouth, splash 40% everywhere else. */
   private ripWithDinosaur(
     kind: DinosaurKind, h: DungeonHazard, x: number, z: number, mouth: number, height: number,
@@ -916,6 +986,10 @@ export class DungeonPhysics {
         continue;
       }
       if (h.kind === "ship") continue;
+      if (h.kind === "spider") {
+        this.updateSpider(m, p);
+        continue;
+      }
       if (h.kind === "rocker") continue;
       const strike =
         DUNGEON_STRIKE[h.kind as keyof typeof DUNGEON_STRIKE];
@@ -980,6 +1054,7 @@ export class DungeonPhysics {
           yaw?: number;
           fired?: boolean;
           departed?: boolean;
+          hunting?: boolean;
         } = {
           id: m.h.id,
           kind: m.h.kind,
@@ -999,7 +1074,9 @@ export class DungeonPhysics {
                   : m.h.kind === "ship"
                     ? m.ship?.departedAt !== undefined &&
                       shipSailed(m.ship.departedAt, this.sim.time) < SHIP.distance
-                    : snapStriking(this.sim.time + m.h.phase)),
+                    : m.h.kind === "spider"
+                      ? !!m.spider?.hunting
+                      : snapStriking(this.sim.time + m.h.phase)),
         };
         if (m.pelican) {
           entry.perch = m.pelican.index;
@@ -1008,6 +1085,11 @@ export class DungeonPhysics {
         }
         if (m.anchor) entry.fired = m.anchor.fired;
         if (m.ship) entry.departed = m.ship.departedAt !== undefined;
+        if (m.spider) {
+          entry.x = m.spider.pos.x;
+          entry.z = m.spider.pos.z;
+          entry.hunting = m.spider.hunting;
+        }
         return entry;
       }),
     };

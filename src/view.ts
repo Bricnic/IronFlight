@@ -930,14 +930,16 @@ export class GameView {
       elapsed = Math.max(0, renderTime - this.lastCameraTime);
     this.lastCameraTime = renderTime;
     const debris = s.parts.get("chassis-front")?.body;
-    this.chase.update(
-      debris ? new T.Vector3().copy(debris.translation()) : root,
-      debris ? new T.Quaternion().copy(debris.rotation()) : q,
-      elapsed,
-      this.snapCamera || snap,
-      // Any lava sink pans the camera above the surface (was inferno-only).
-      !!s.parts.get("chassis-front")?.lava,
-    );
+    // QA overhead shots freeze the chase camera via window.__captureFreeze.
+    if (!(globalThis as Record<string, unknown>).__captureFreeze)
+      this.chase.update(
+        debris ? new T.Vector3().copy(debris.translation()) : root,
+        debris ? new T.Quaternion().copy(debris.rotation()) : q,
+        elapsed,
+        this.snapCamera || snap,
+        // Any lava sink pans the camera above the surface (was inferno-only).
+        !!s.parts.get("chassis-front")?.lava,
+      );
     if (this.overview && s.skidStrokes.length) {
       const bounds = new T.Box3();
       for (const stroke of s.skidStrokes)
