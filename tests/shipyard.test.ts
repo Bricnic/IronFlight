@@ -120,6 +120,14 @@ it("picks the same three spots for the same seed", () => {
   }
 });
 
+it("holds cargo crates clear of the white side rails", () => {
+  // Crate outer faces must stop short of the rail inner faces on both rows:
+  // flush faces depth-tie and the rail bleeds through the crates.
+  const crateOuter = SHIP.cargo.x + SHIP.cargo.w / 2;
+  const railInner = SHIP.w / 2 - SHIP.railT;
+  expect(railInner - crateOuter).toBeGreaterThan(0.15);
+});
+
 it("guards each perch 3 s then flies the rotation", () => {
   const spots = [
     { x: -30, z: 0 },
