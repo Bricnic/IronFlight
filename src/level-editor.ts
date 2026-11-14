@@ -192,6 +192,7 @@ export function createLevelEditor(
   };
   const randomCheckpoints = randomField("Checkpoints", "editor-random-checkpoints", "number", String(RANDOM_DEFAULTS.checkpoints), { min: "1", max: "20" });
   const randomLethals = randomField("Lethal prefabs", "editor-random-lethals", "number", String(RANDOM_DEFAULTS.lethals), { min: "0", max: "100" });
+  const randomBlocking = randomField("Blocking path %", "editor-random-blocking", "number", String(RANDOM_DEFAULTS.blockingPercent), { min: "0", max: "100" });
   const randomDecor = randomField("Decor prefabs", "editor-random-decor", "number", String(RANDOM_DEFAULTS.decor), { min: "0", max: "100" });
   const themeRow = el("label", { class: "prop-row" }, "Theme ");
   const randomTheme = el("select", { id: "editor-random-theme" }) as HTMLSelectElement;
@@ -768,6 +769,7 @@ export function createLevelEditor(
         const params = {
           checkpoints: readInt(randomCheckpoints, "Checkpoints", 1, 20),
           lethals: readInt(randomLethals, "Lethal prefabs", 0, 100),
+          blockingPercent: readInt(randomBlocking, "Blocking path %", 0, 100),
           decor: readInt(randomDecor, "Decor prefabs", 0, 100),
           theme,
           width: readInt(randomWidth, "Width", 150, 1000),

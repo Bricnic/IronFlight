@@ -2,6 +2,8 @@ import { beforeAll, expect, it } from "vitest";
 import { initPhysics } from "../src/simulation";
 import { validateCustomLevel } from "../src/custom-level";
 import {
+  BLOCKING_ELIGIBLE,
+  FLANK_MIN,
   GENERATOR_CLEARANCE,
   RANDOM_DEFAULTS,
   RANDOM_IDEAL_MIN,
@@ -17,6 +19,7 @@ const defaults = (): RandomLevelParams => ({
   checkpoints: RANDOM_DEFAULTS.checkpoints,
   lethals: RANDOM_DEFAULTS.lethals,
   decor: RANDOM_DEFAULTS.decor,
+  blockingPercent: RANDOM_DEFAULTS.blockingPercent,
   theme: RANDOM_DEFAULTS.theme,
   width: RANDOM_DEFAULTS.width,
   length: RANDOM_DEFAULTS.length,
@@ -159,7 +162,7 @@ it("uses each theme's own background and prefab pools", () => {
   ]).toContain(random.backgroundTemplate);
 });
 
-it("keeps every placed prefab at its clearance from the path", () => {
+it("keeps every flanked prefab at its clearance from the path", () => {
   for (const theme of ["toys", "christmas", "ice", "carnival", "dungeon"] as const) {
     const level = generateRandomLevel(
       { ...defaults(), theme, lethals: 12, decor: 12, name: `Clear ${theme}` },
@@ -168,11 +171,43 @@ it("keeps every placed prefab at its clearance from the path", () => {
     const path = pathOf(level);
     for (const p of level.prefabs) {
       const need = GENERATOR_CLEARANCE[p.kind];
-      if (need === undefined) continue;
-      expect(
-        distToPath(p, path),
-        `${theme}:${p.id} (${p.kind}) clearance`,
-      ).toBeGreaterThanOrEqual(need - 0.5);
+      if (need === undefined || p.kind === "ghost") continue;
+      const dist = distToPath(p, path);
+      if (dist < 8) {
+        expect(
+          BLOCKING_ELIGIBLE[theme],
+          `${theme}:${p.id} blocking kind ${p.kind}`,
+        ).toContain(p.kind);
+        continue;
+      }
+      const floor = p.id.startsWith("lethal-")
+        ? Math.max(need, FLANK_MIN) - 0.5
+        : need - 0.5;
+      expect(dist, `${theme}:${p.id} (${p.kind}) clearance`).toBeGreaterThanOrEqual(
+        floor,
+      );
+    }
+  }
+});
+
+it("blocks the path with the requested percentage of lethals", () => {
+  for (const [pct, seeds] of [[0, [1]], [40, [1, 2]], [100, [1]]] as const) {
+    for (const seed of seeds) {
+      const lethals = 10;
+      const level = generateRandomLevel(
+        { ...defaults(), blockingPercent: pct, lethals, name: `Block ${pct}-${seed}` },
+        seed,
+      );
+      const path = pathOf(level);
+      const blocking = level.prefabs.filter(
+        (p) =>
+          p.kind in GENERATOR_CLEARANCE &&
+          p.kind !== "ghost" &&
+          distToPath(p, path) < 8,
+      );
+      expect(blocking, `${pct}% seed ${seed}`).toHaveLength(
+        Math.round((lethals * pct) / 100),
+      );
     }
   }
 });
@@ -186,6 +221,9 @@ it("rejects bad parameters and too-short courses", () => {
       1,
     ),
   ).toThrow(/too short/);
+  expect(() =>
+    generateRandomLevel({ ...defaults(), lethals: 100, blockingPercent: 100 }, 1),
+  ).toThrow(/Too many blocking traps/);
 });
 
 it("allocates the next free numbered name", () => {
@@ -222,4 +260,17 @@ it("beats generated levels back to back across every theme", () => {
     const elapsed = driveGeneratedLevelToCompletion(level);
     expect(elapsed, `${theme} within limit`).toBeLessThan(level.limit!);
   });
+}, 180000);
+
+it("beats the 0% and 100% blocking extremes", () => {
+  const open = generateRandomLevel(
+    { ...defaults(), theme: "dungeon", blockingPercent: 0, name: "Streak open" },
+    21,
+  );
+  expect(driveGeneratedLevelToCompletion(open)).toBeLessThan(open.limit!);
+  const gauntlet = generateRandomLevel(
+    { ...defaults(), theme: "toys", blockingPercent: 100, name: "Streak gauntlet" },
+    22,
+  );
+  expect(driveGeneratedLevelToCompletion(gauntlet)).toBeLessThan(gauntlet.limit!);
 }, 120000);

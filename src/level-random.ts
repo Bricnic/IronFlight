@@ -11,6 +11,8 @@ export interface RandomLevelParams {
   checkpoints: number;
   lethals: number;
   decor: number;
+  /** Percent of lethals placed on the road to weave around (0-100). */
+  blockingPercent: number;
   theme: "toys" | "christmas" | "ice" | "carnival" | "dungeon" | "random";
   width: number;
   length: number;
@@ -21,6 +23,7 @@ export const RANDOM_DEFAULTS = {
   checkpoints: 3,
   lethals: 10,
   decor: 10,
+  blockingPercent: 40,
   theme: "random",
   width: 400,
   length: 400,
@@ -31,6 +34,8 @@ export const RANDOM_DEFAULTS = {
 const IDEAL_PACE = 12.7;
 /** Import gate: every generated level must take this long on the ideal line. */
 export const RANDOM_IDEAL_MIN = 30;
+/** Flanked threats stay at least this far off the path (beyond weave reach). */
+export const FLANK_MIN = 32;
 
 function mulberry32(seed: number) {
   let a = seed >>> 0;
@@ -50,6 +55,8 @@ type ThemeDef = {
   texture: string;
   color: number;
   lethal: LethalPick[];
+  /** Small-footprint lethals safe to block the road (weaved around). */
+  blocking: string[];
   decorSolid: DecorPick[];
   decorProp: string[];
 };
@@ -71,6 +78,7 @@ const THEMES: Record<string, ThemeDef> = {
       { kind: "flippers", clearance: 12 },
       { kind: "donut", clearance: 12 },
     ],
+    blocking: ["book", "teeth", "computer", "donut"],
     decorSolid: [{ kind: "lamp", clearance: 12 }],
     decorProp: ["sign", "trash", "barrel", "skull", "pumpkin"],
   },
@@ -85,8 +93,16 @@ const THEMES: Record<string, ThemeDef> = {
       { kind: "christmas-yeti-jaws", clearance: 12 },
       { kind: "christmas-ornament-slammer", clearance: 11 },
       { kind: "christmas-sleigh-crusher", clearance: 11 },
-      { kind: "christmas-icicle-shears", clearance: 15 },
-      { kind: "christmas-tinsel-snapper", clearance: 15 },
+      { kind: "christmas-icicle-shears", clearance: 34 },
+      { kind: "christmas-tinsel-snapper", clearance: 34 },
+    ],
+    blocking: [
+      "christmas-nutcracker",
+      "christmas-ice-vice",
+      "christmas-toy-chomper",
+      "christmas-yeti-jaws",
+      "christmas-ornament-slammer",
+      "christmas-sleigh-crusher",
     ],
     decorSolid: [
       { kind: "christmas-tree", clearance: 18 },
@@ -111,9 +127,10 @@ const THEMES: Record<string, ThemeDef> = {
     lethal: [
       { kind: "christmas-ice-vice", clearance: 11 },
       { kind: "christmas-yeti-jaws", clearance: 12 },
-      { kind: "christmas-icicle-shears", clearance: 15 },
-      { kind: "christmas-tinsel-snapper", clearance: 15 },
+      { kind: "christmas-icicle-shears", clearance: 34 },
+      { kind: "christmas-tinsel-snapper", clearance: 34 },
     ],
+    blocking: ["christmas-ice-vice", "christmas-yeti-jaws"],
     decorSolid: [
       { kind: "christmas-lantern", clearance: 18 },
       { kind: "christmas-reindeer", clearance: 18 },
@@ -127,8 +144,9 @@ const THEMES: Record<string, ThemeDef> = {
     lethal: [
       { kind: "hammer", clearance: 14 },
       { kind: "dragon", clearance: 15 },
-      { kind: "ghost", clearance: 0 },
+      { kind: "ghost", clearance: 32 },
     ],
+    blocking: ["dragon"],
     decorSolid: [
       { kind: "carousel", clearance: 35 },
       { kind: "bumper-arena", clearance: 40 },
@@ -152,6 +170,7 @@ const THEMES: Record<string, ThemeDef> = {
       { kind: "robot", clearance: 20 },
       { kind: "lime-chomper", clearance: 25 },
     ],
+    blocking: ["hands", "scissors", "clippers", "cup", "clip"],
     decorSolid: [
       { kind: "cage", clearance: 14 },
       { kind: "candle", clearance: 12 },
@@ -163,6 +182,10 @@ const THEMES: Record<string, ThemeDef> = {
 };
 
 const THEME_KEYS = ["toys", "christmas", "ice", "carnival", "dungeon"] as const;
+/** Lethal kinds allowed to block the road, per theme. */
+export const BLOCKING_ELIGIBLE: Record<string, string[]> = Object.fromEntries(
+  Object.entries(THEMES).map(([name, t]) => [name, [...t.blocking]]),
+);
 /** Minimum path distance per prefab kind, derived from the theme pools. */
 export const GENERATOR_CLEARANCE: Record<string, number> = Object.fromEntries(
   Object.values(THEMES).flatMap((t) => [
@@ -222,6 +245,12 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
     throw new Error("Lethal prefabs must be an integer from 0 to 100");
   if (!isInt(decor) || decor < 0 || decor > 100)
     throw new Error("Decor prefabs must be an integer from 0 to 100");
+  if (
+    !isInt(params.blockingPercent) ||
+    params.blockingPercent < 0 ||
+    params.blockingPercent > 100
+  )
+    throw new Error("Blocking path percent must be an integer from 0 to 100");
   if (!isInt(width) || width < 150 || width > 1000)
     throw new Error("Width must be an integer from 150 to 1000");
   if (!isInt(length) || length < 150 || length > 1000)
@@ -262,15 +291,84 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
   const apart = (p: Point, min: number) =>
     placed.every((q) => Math.hypot(p.x - q.x, p.z - q.z) >= min);
 
-  // Lethals flank the road: threatening but never on the driven line.
-  const lethalPool = [...theme.lethal];
-  for (let i = lethalPool.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [lethalPool[i], lethalPool[j]] = [lethalPool[j], lethalPool[i]];
+  const shuffle = <T>(items: T[]) => {
+    const pool = [...items];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool;
+  };
+  const clampBounds = (p: Point) => {
+    p.x = Math.max(-width / 2 + 8, Math.min(width / 2 - 8, p.x));
+    p.z = Math.max(-length / 2 + 8, Math.min(length / 2 - 8, p.z));
+    return p;
+  };
+  const offsetPoint = (leg: number, t: number, offset: number) => {
+    const a = path[leg], b = path[leg + 1];
+    const len = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+    return {
+      x: a.x + (b.x - a.x) * t + (-(b.z - a.z) / len) * offset,
+      z: a.z + (b.z - a.z) * t + ((b.x - a.x) / len) * offset,
+    };
+  };
+  // Blocking traps sit on the road so drivers weave around them. Spread per
+  // leg with room to settle: 45+ past each gate (a 90-degree corner needs
+  // ~30 to turn and rejoin the line) and 25+ before the next gate; press
+  // posts and dragon jets align with the road so the weave line stays clear
+  // of furniture.
+  const EXIT_MARGIN = 45, ENTRY_MARGIN = 25, TRAP_GAP = 25;
+  const blockingCount = Math.round((lethals * params.blockingPercent) / 100);
+  const PRESS = new Set([
+    "christmas-nutcracker",
+    "christmas-ornament-slammer",
+    "christmas-sleigh-crusher",
+  ]);
+  const blockingPool = shuffle(theme.blocking);
+  const legLens: number[] = [];
+  for (let i = 1; i < path.length; i++)
+    legLens.push(Math.hypot(path[i].x - path[i - 1].x, path[i].z - path[i - 1].z));
+  const legCap = legLens.map((len) => {
+    const usable = len - EXIT_MARGIN - ENTRY_MARGIN;
+    return usable < 0 ? 0 : 1 + Math.floor(usable / TRAP_GAP);
+  });
+  const totalCap = legCap.reduce((a, b) => a + b, 0);
+  if (blockingCount > totalCap)
+    throw new Error(
+      `Too many blocking traps for this course; enlarge the map or reduce them`,
+    );
+  const legLoad = legCap.map(() => 0);
+  for (let i = 0; i < blockingCount; i++) {
+    let leg = -1;
+    for (let l = 0; l < legs; l++)
+      if (legLoad[l] < legCap[l] && (leg < 0 || legLens[l] > legLens[leg])) leg = l;
+    legLoad[leg]++;
+    const k = legLoad[leg];
+    const frac = k / (legCap[leg] + 1);
+    const a = path[leg], b = path[leg + 1];
+    const len = legLens[leg] || 1;
+    const t = (EXIT_MARGIN + frac * (len - EXIT_MARGIN - ENTRY_MARGIN)) / len;
+    const px = a.x + (b.x - a.x) * t, pz = a.z + (b.z - a.z) * t;
+    const lateral = rand() * 10 - 5;
+    const p = clampBounds({
+      x: px + (-(b.z - a.z) / len) * lateral,
+      z: pz + ((b.x - a.x) / len) * lateral,
+    });
+    if (distToPath(p, path) > 6.5)
+      throw new Error(`Could not place blocking trap ${i + 1}; enlarge the map`);
+    placed.push(p);
+    const kind = blockingPool[i % blockingPool.length];
+    const prefab: CustomPrefab = { id: `lethal-${i}`, kind, x: p.x, z: p.z };
+    if (PRESS.has(kind) || kind === "dragon")
+      prefab.yaw = Math.atan2(-(b.z - a.z), b.x - a.x);
+    else if (isDungeonKind(kind)) prefab.yaw = rand() * Math.PI * 2;
+    prefabs.push(prefab);
   }
+  // The rest flank the road: threatening but never on the driven line.
+  const lethalPool = shuffle(theme.lethal);
   let ghosts = 0;
   let li = 0;
-  for (let i = 0; i < lethals; i++) {
+  for (let i = blockingCount; i < lethals; i++) {
     let pick = lethalPool[li++ % lethalPool.length];
     if (pick.kind === "ghost") {
       if (ghosts >= GHOST_CAP)
@@ -279,24 +377,26 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
     }
     let done = false;
     for (let attempt = 0; attempt < 20 && !done; attempt++) {
+      const side = rand() < 0.5 ? -1 : 1;
+      // Flanked threats stay beyond weave reach so dodges never cross them.
+      const offset = Math.max(pick.clearance, FLANK_MIN) + rand() * 6;
       const leg = Math.floor(rand() * legs);
       const t = 0.25 + rand() * 0.5;
       const a = path[leg], b = path[leg + 1];
-      const px = a.x + (b.x - a.x) * t, pz = a.z + (b.z - a.z) * t;
-      const len = Math.hypot(b.x - a.x, b.z - a.z) || 1;
-      const side = rand() < 0.5 ? -1 : 1;
-      const offset = pick.clearance + rand() * 8;
-      const p = {
-        x: px + (-(b.z - a.z) / len) * side * offset,
-        z: pz + ((b.x - a.x) / len) * side * offset,
-      };
-      p.x = Math.max(-width / 2 + 8, Math.min(width / 2 - 8, p.x));
-      p.z = Math.max(-length / 2 + 8, Math.min(length / 2 - 8, p.z));
-      if (distToPath(p, path) < pick.clearance || !apart(p, 6)) continue;
+      const p = clampBounds(offsetPoint(leg, t, side * offset));
+      if (distToPath(p, path) < Math.max(pick.clearance, FLANK_MIN) || !apart(p, 6)) continue;
       placed.push(p);
       const prefab: CustomPrefab = { id: `lethal-${i}`, kind: pick.kind, x: p.x, z: p.z };
-      if (isDungeonKind(pick.kind) || pick.kind === "dragon")
-        prefab.yaw = rand() * Math.PI * 2;
+      if (pick.kind === "lime-chomper" || pick.kind === "dragon") {
+        // Long zones/jets face away from the road, never across it.
+        const bx = a.x + (b.x - a.x) * t, bz = a.z + (b.z - a.z) * t;
+        const ax = p.x - bx, az = p.z - bz;
+        const len = Math.hypot(ax, az) || 1;
+        prefab.yaw =
+          pick.kind === "dragon"
+            ? Math.atan2(az / len, -(ax / len))
+            : Math.atan2(ax / len, az / len);
+      } else if (isDungeonKind(pick.kind)) prefab.yaw = rand() * Math.PI * 2;
       prefabs.push(prefab);
       done = true;
     }
@@ -306,7 +406,9 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
       );
   }
 
-  // Decor: solids stay clear of the road, props may litter it (spawn excepted).
+  // Decor: solids stay beyond weave reach like flanked lethals (a lantern
+  // beside a dodge line pins the car); small props may litter it (spawn
+  // excepted).
   const spawn = path[0];
   for (let i = 0; i < decor; i++) {
     const useSolid =
@@ -314,13 +416,14 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
       (theme.decorProp.length === 0 || rand() < 0.5);
     if (useSolid) {
       const pick = theme.decorSolid[Math.floor(rand() * theme.decorSolid.length)];
+      const floor = Math.max(pick.clearance, FLANK_MIN);
       let done = false;
       for (let attempt = 0; attempt < 200 && !done; attempt++) {
         const p = {
           x: (rand() - 0.5) * (width - 16),
           z: (rand() - 0.5) * (length - 16),
         };
-        if (distToPath(p, path) < pick.clearance || !apart(p, 6)) continue;
+        if (distToPath(p, path) < floor || !apart(p, 6)) continue;
         placed.push(p);
         const prefab: CustomPrefab = { id: `decor-${i}`, kind: pick.kind, x: p.x, z: p.z };
         if (pick.y !== undefined) prefab.y = pick.y;

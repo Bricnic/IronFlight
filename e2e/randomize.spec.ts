@@ -16,6 +16,7 @@ test("randomize modal opens with documented defaults", async ({ page }) => {
   await expect(page.locator("#editor-random-modal")).toBeVisible();
   await expect(page.locator("#editor-random-checkpoints")).toHaveValue("3");
   await expect(page.locator("#editor-random-lethals")).toHaveValue("10");
+  await expect(page.locator("#editor-random-blocking")).toHaveValue("40");
   await expect(page.locator("#editor-random-decor")).toHaveValue("10");
   await expect(page.locator("#editor-random-theme")).toHaveValue("random");
   await expect(page.locator("#editor-random-width")).toHaveValue("400");
@@ -36,6 +37,7 @@ test("randomize generates a level with requested counts", async ({ page }) => {
   );
   await page.locator("#editor-randomize").click();
   await page.locator("#editor-random-lethals").fill("2");
+  await page.locator("#editor-random-blocking").fill("100");
   await page.locator("#editor-random-decor").fill("2");
   await page.locator("#editor-random-theme").selectOption("toys");
   await page.locator("#editor-random-name").fill("e2e-random-1");
@@ -56,6 +58,13 @@ test("randomize rejects out-of-range parameters", async ({ page }) => {
   await page.locator("#editor-random-generate").click();
   await expect(page.locator("#editor-random-error")).toContainText(
     "Checkpoints must be an integer from 1 to 20",
+  );
+  await expect(page.locator("#editor-random-modal")).toBeVisible();
+  await page.locator("#editor-random-checkpoints").fill("3");
+  await page.locator("#editor-random-blocking").fill("101");
+  await page.locator("#editor-random-generate").click();
+  await expect(page.locator("#editor-random-error")).toContainText(
+    "Blocking path % must be an integer from 0 to 100",
   );
   await expect(page.locator("#editor-random-modal")).toBeVisible();
   await page.locator("#editor-random-cancel").click();
