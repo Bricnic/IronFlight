@@ -95,6 +95,19 @@ test("checkpoint banner shows ahead/behind deltas against the best", async ({
   await expect(page.locator("#confetti")).toBeHidden();
 });
 
+test("reset while confetti falls clears the burst", async ({ page }) => {
+  await startRace(page);
+  const first = await crossGate(page, 0);
+  expect(first?.checkpoint).toBe(1);
+  await page.evaluate(() => window.__game!.advanceFrames(30, 1, {}));
+  await expect(page.locator("#confetti")).toBeVisible();
+  // Retry mid-burst: the stale celebration must not freeze on screen.
+  await page.keyboard.press("r");
+  await page.evaluate(() => window.__game!.advanceFrames(2, 1, {}));
+  expect(await page.evaluate(() => window.__game!.snapshot().run?.checkpoint)).toBe(0);
+  await expect(page.locator("#confetti")).toBeHidden();
+});
+
 test("checkpoint banner hides the delta without a best time", async ({
   page,
 }) => {

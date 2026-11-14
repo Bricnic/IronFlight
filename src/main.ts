@@ -951,6 +951,7 @@ async function boot() {
   };
   let confettiPieces: ConfettiPiece[] = [];
   let confettiLast = 0;
+  let confettiRun: Simulation["trackRun"];
   const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
   function drawConfetti() {
     const canvas = $("confetti") as HTMLCanvasElement;
@@ -968,6 +969,16 @@ async function boot() {
   }
   // Confetti runs on sim time so pausing freezes the burst mid-flight.
   function stepConfetti() {
+    // A retry swaps in a fresh run object and rewinds sim time: drop the
+    // previous run's burst like the checkpoint banner does, instead of
+    // freezing it on a stale clock until the next checkpoint fires.
+    if (sim.trackRun !== confettiRun) {
+      confettiRun = sim.trackRun;
+      confettiPieces = [];
+      ($("confetti") as HTMLCanvasElement).hidden = true;
+      confettiLast = sim.time;
+      return;
+    }
     if (!confettiPieces.length) return;
     const dt = Math.min(0.05, sim.time - confettiLast);
     if (dt <= 0) return;
