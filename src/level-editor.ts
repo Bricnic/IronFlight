@@ -79,6 +79,15 @@ export function createLevelEditor(
     id: "editor-levels",
     "aria-label": "Open level",
   }) as HTMLSelectElement;
+  const refreshLevelsButton = el(
+    "button",
+    {
+      id: "editor-refresh-levels",
+      title: "Reload the level list from disk",
+      "aria-label": "Refresh levels from disk",
+    },
+    "Refresh",
+  ) as HTMLButtonElement;
   const newButton = el("button", { id: "editor-new" }, "New");
   const saveButton = el("button", { id: "editor-save" }, "Save");
   const playtestButton = el("button", { id: "editor-playtest" }, "Playtest");
@@ -113,6 +122,7 @@ export function createLevelEditor(
   top.append(
     nameInput,
     levelPicker,
+    refreshLevelsButton,
     newButton,
     saveButton,
     playtestButton,
@@ -231,10 +241,12 @@ export function createLevelEditor(
   function refreshLevels() {
     return listLevels()
       .then((names) => {
+        const selected = levelPicker.value;
         levelPicker.innerHTML = "";
         levelPicker.append(el("option", { value: "" }, "Open level…"));
         for (const name of names)
           levelPicker.append(el("option", { value: name }, name));
+        if (names.includes(selected)) levelPicker.value = selected;
       })
       .catch((e: Error) => showError(e.message));
   }
@@ -701,6 +713,7 @@ export function createLevelEditor(
   }
   store.onChange(refresh);
   nameInput.addEventListener("input", () => store.updateName(nameInput.value));
+  refreshLevelsButton.addEventListener("click", () => void refreshLevels());
   levelPicker.addEventListener("change", () => {
     const name = levelPicker.value;
     if (!name) return;
