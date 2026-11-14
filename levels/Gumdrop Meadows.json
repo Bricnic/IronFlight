@@ -1,6 +1,5 @@
 {
   "name": "Gumdrop Meadows",
-  "backgroundTemplate": "candy-meadows",
   "mode": "race",
   "spawn": {
     "x": -230,
@@ -610,6 +609,42 @@
       "y": 0,
       "z": 95,
       "yaw": 1.9
+    },
+    {
+      "id": "ghost-46",
+      "kind": "ghost",
+      "x": -193.3584797487689,
+      "z": -41.672556830070015
+    },
+    {
+      "id": "ghost-47",
+      "kind": "ghost",
+      "x": -206.23763553168038,
+      "z": -58.36670391389384
+    },
+    {
+      "id": "ghost-48",
+      "kind": "ghost",
+      "x": -187.63871192812124,
+      "z": -86.34992081837697
+    },
+    {
+      "id": "computer-47",
+      "kind": "computer",
+      "x": -165.1082479595281,
+      "z": -59.81798973536903
+    },
+    {
+      "id": "book-48",
+      "kind": "book",
+      "x": -133.34959207916734,
+      "z": -59.97524241054685
+    },
+    {
+      "id": "donut-49",
+      "kind": "donut",
+      "x": -177.8520137823149,
+      "z": -48.9070214721203
     }
   ],
   "medals": {
@@ -617,5 +652,6 @@
     "silver": 75,
     "bronze": 110
   },
-  "limit": 150
+  "limit": 150,
+  "backgroundTemplate": "candy-meadows"
 }

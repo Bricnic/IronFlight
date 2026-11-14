@@ -1,7 +1,6 @@
 {
   "name": "Frostfire Pass",
   "mode": "race",
-  "backgroundTemplate": "alpine-peaks",
   "spawn": {
     "x": -30,
     "y": 11.1,
@@ -31,161 +30,6 @@
       "yaw": 3.141592653589793
     }
   ],
-  "prefabs": [
-    {
-      "id": "frost-tome",
-      "name": "Chomp book",
-      "kind": "book",
-      "x": 36,
-      "z": 2,
-      "y": 9.0
-    },
-    {
-      "id": "block-row-0",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 27,
-      "z": -8,
-      "y": 9.0
-    },
-    {
-      "id": "block-top-0",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 27,
-      "z": -8,
-      "y": 10.5
-    },
-    {
-      "id": "coal-top-0",
-      "name": "Burning coal",
-      "kind": "burning-coals",
-      "x": 27,
-      "z": -8,
-      "y": 12.0
-    },
-    {
-      "id": "block-row-1",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 28.5,
-      "z": -8,
-      "y": 9.0
-    },
-    {
-      "id": "block-top-1",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 28.5,
-      "z": -8,
-      "y": 10.5
-    },
-    {
-      "id": "coal-top-1",
-      "name": "Burning coal",
-      "kind": "burning-coals",
-      "x": 28.5,
-      "z": -8,
-      "y": 12.0
-    },
-    {
-      "id": "block-row-2",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 30,
-      "z": -8,
-      "y": 9.0
-    },
-    {
-      "id": "block-top-2",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 30,
-      "z": -8,
-      "y": 10.5
-    },
-    {
-      "id": "coal-top-2",
-      "name": "Burning coal",
-      "kind": "burning-coals",
-      "x": 30,
-      "z": -8,
-      "y": 12.0
-    },
-    {
-      "id": "block-row-3",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 31.5,
-      "z": -8,
-      "y": 9.0
-    },
-    {
-      "id": "block-top-3",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 31.5,
-      "z": -8,
-      "y": 10.5
-    },
-    {
-      "id": "coal-top-3",
-      "name": "Burning coal",
-      "kind": "burning-coals",
-      "x": 31.5,
-      "z": -8,
-      "y": 12.0
-    },
-    {
-      "id": "block-row-4",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 33,
-      "z": -8,
-      "y": 9.0
-    },
-    {
-      "id": "block-top-4",
-      "name": "Letter block",
-      "kind": "loose-blocks",
-      "x": 33,
-      "z": -8,
-      "y": 10.5
-    },
-    {
-      "id": "coal-top-4",
-      "name": "Burning coal",
-      "kind": "burning-coals",
-      "x": 33,
-      "z": -8,
-      "y": 12.0
-    },
-    {
-      "id": "frost-raptor",
-      "name": "Large raptor",
-      "kind": "raptor",
-      "x": 42,
-      "z": -25,
-      "y": 9.0,
-      "yaw": -1.5707963267948966,
-      "scale": 2
-    },
-    {
-      "id": "big-frosty",
-      "name": "Giant snowman",
-      "kind": "snowman",
-      "x": 30,
-      "z": -45,
-      "y": 9.0,
-      "scale": 3
-    }
-  ],
-  "medals": {
-    "gold": 45,
-    "silver": 60,
-    "bronze": 90
-  },
-  "limit": 240,
   "solids": [
     {
       "id": "lava-lake",
@@ -793,7 +637,7 @@
       "name": "Checkered finish square",
       "kind": "support",
       "x": 25.5,
-      "y": 15.0,
+      "y": 15,
       "z": -64,
       "w": 3,
       "h": 1.8,
@@ -805,7 +649,7 @@
       "name": "Checkered finish square",
       "kind": "support",
       "x": 28.5,
-      "y": 15.0,
+      "y": 15,
       "z": -64,
       "w": 3,
       "h": 1.8,
@@ -817,7 +661,7 @@
       "name": "Checkered finish square",
       "kind": "support",
       "x": 31.5,
-      "y": 15.0,
+      "y": 15,
       "z": -64,
       "w": 3,
       "h": 1.8,
@@ -829,7 +673,7 @@
       "name": "Checkered finish square",
       "kind": "support",
       "x": 34.5,
-      "y": 15.0,
+      "y": 15,
       "z": -64,
       "w": 3,
       "h": 1.8,
@@ -896,5 +740,175 @@
       "d": 1,
       "color": 3618607
     }
-  ]
+  ],
+  "prefabs": [
+    {
+      "id": "frost-tome",
+      "name": "Chomp book",
+      "kind": "book",
+      "x": 36,
+      "z": 2,
+      "y": 9
+    },
+    {
+      "id": "block-row-0",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 27,
+      "z": -8,
+      "y": 9
+    },
+    {
+      "id": "block-top-0",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 27,
+      "z": -8,
+      "y": 10.5
+    },
+    {
+      "id": "coal-top-0",
+      "name": "Burning coal",
+      "kind": "burning-coals",
+      "x": 27,
+      "z": -8,
+      "y": 12
+    },
+    {
+      "id": "block-row-1",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 28.5,
+      "z": -8,
+      "y": 9
+    },
+    {
+      "id": "block-top-1",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 28.5,
+      "z": -8,
+      "y": 10.5
+    },
+    {
+      "id": "coal-top-1",
+      "name": "Burning coal",
+      "kind": "burning-coals",
+      "x": 28.5,
+      "z": -8,
+      "y": 12
+    },
+    {
+      "id": "block-row-2",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 30,
+      "z": -8,
+      "y": 9
+    },
+    {
+      "id": "block-top-2",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 30,
+      "z": -8,
+      "y": 10.5
+    },
+    {
+      "id": "coal-top-2",
+      "name": "Burning coal",
+      "kind": "burning-coals",
+      "x": 30,
+      "z": -8,
+      "y": 12
+    },
+    {
+      "id": "block-row-3",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 31.5,
+      "z": -8,
+      "y": 9
+    },
+    {
+      "id": "block-top-3",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 31.5,
+      "z": -8,
+      "y": 10.5
+    },
+    {
+      "id": "coal-top-3",
+      "name": "Burning coal",
+      "kind": "burning-coals",
+      "x": 31.5,
+      "z": -8,
+      "y": 12
+    },
+    {
+      "id": "block-row-4",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 33,
+      "z": -8,
+      "y": 9
+    },
+    {
+      "id": "block-top-4",
+      "name": "Letter block",
+      "kind": "loose-blocks",
+      "x": 33,
+      "z": -8,
+      "y": 10.5
+    },
+    {
+      "id": "coal-top-4",
+      "name": "Burning coal",
+      "kind": "burning-coals",
+      "x": 33,
+      "z": -8,
+      "y": 12
+    },
+    {
+      "id": "frost-raptor",
+      "name": "Large raptor",
+      "kind": "raptor",
+      "x": 42,
+      "z": -25,
+      "y": 9,
+      "yaw": -1.5707963267948966,
+      "scale": 2
+    },
+    {
+      "id": "big-frosty",
+      "name": "Giant snowman",
+      "kind": "snowman",
+      "x": 30,
+      "z": -45,
+      "y": 9,
+      "scale": 3
+    },
+    {
+      "id": "hammer-19",
+      "kind": "hammer",
+      "x": -29.78633488233737,
+      "z": -28.7635314183428,
+      "y": 9
+    },
+    {
+      "id": "dragon-20",
+      "kind": "dragon",
+      "x": -24.054660213608997,
+      "z": -36.931561075881035,
+      "y": 9
+    }
+  ],
+  "medals": {
+    "gold": 45,
+    "silver": 60,
+    "bronze": 90
+  },
+  "limit": 240,
+  "backgroundTemplate": "alpine-peaks"
 }

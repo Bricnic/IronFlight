@@ -1,0 +1,366 @@
+{
+  "name": "Poona",
+  "mode": "race",
+  "spawn": {
+    "x": 1.6208868614410048,
+    "y": 2.1,
+    "z": -191.99089708273198,
+    "yaw": 0
+  },
+  "checkpoints": [
+    {
+      "x": -0.16868259559647303,
+      "z": 178.90707784362024,
+      "y": 0
+    },
+    {
+      "x": -0.11088150160385268,
+      "z": 367.31334437649673
+    }
+  ],
+  "solids": [
+    {
+      "id": "ground-piece-01",
+      "kind": "ground",
+      "x": -58.6574643904097,
+      "y": -0.6,
+      "z": -0.035206812578309155,
+      "w": 85.61840893682881,
+      "h": 1.2,
+      "d": 400,
+      "color": 7176572,
+      "texture": "grass_ground",
+      "locked": true,
+      "name": "ground / piece 01",
+      "uvOffsetX": -57.19079553158559,
+      "uvOffsetZ": 0
+    },
+    {
+      "id": "ground-piece-02",
+      "kind": "ground",
+      "x": 56.3425356095903,
+      "y": -0.6,
+      "z": -0.035206812578309155,
+      "w": 84.38159106317119,
+      "h": 1.2,
+      "d": 400,
+      "color": 7176572,
+      "texture": "grass_ground",
+      "locked": true,
+      "name": "ground / piece 02",
+      "uvOffsetX": 57.80920446841441,
+      "uvOffsetZ": 0
+    },
+    {
+      "id": "ground-piece-03",
+      "kind": "ground",
+      "x": -0.8482599219952967,
+      "y": -0.6,
+      "z": -74.36084358940312,
+      "w": 30,
+      "h": 1.2,
+      "d": 251.34872644635038,
+      "color": 7176572,
+      "texture": "grass_ground",
+      "locked": true,
+      "name": "ground / piece 03",
+      "uvOffsetX": 0.6184089368288124,
+      "uvOffsetZ": -74.32563677682481
+    },
+    {
+      "id": "ground-piece-04",
+      "kind": "ground",
+      "x": -0.8482599219952967,
+      "y": -0.6,
+      "z": 132.63915641059685,
+      "w": 30,
+      "h": 1.2,
+      "d": 134.65127355364962,
+      "color": 7176572,
+      "texture": "grass_ground",
+      "locked": true,
+      "name": "ground / piece 04",
+      "uvOffsetX": 0.6184089368288124,
+      "uvOffsetZ": 132.67436322317516
+    },
+    {
+      "id": "road-1-piece-01",
+      "kind": "road",
+      "x": -0.9724847034626176,
+      "y": 0.015,
+      "z": -71.12326317908071,
+      "w": 24,
+      "h": 0.03,
+      "d": 244.8735656257055,
+      "color": 3161673,
+      "texture": "asphalt_02",
+      "locked": true,
+      "name": "road-1 / piece 01",
+      "uvOffsetX": 0,
+      "uvOffsetZ": -52.563217187147245
+    },
+    {
+      "id": "road-1-piece-02",
+      "kind": "road",
+      "x": -1.0504490709891492,
+      "y": 0.015,
+      "z": 215.49512033653104,
+      "w": 24,
+      "h": 0.03,
+      "d": 300,
+      "color": 3161673,
+      "texture": "asphalt_02",
+      "locked": false,
+      "name": "road-1 / piece 02",
+      "uvOffsetX": 0,
+      "uvOffsetZ": 129.43678281285275
+    },
+    {
+      "id": "ramp-3",
+      "kind": "ramp",
+      "x": -0.9444629664273378,
+      "y": 5.175,
+      "z": -21.028227216538195,
+      "w": 16,
+      "h": 0.35,
+      "d": 50,
+      "color": 9080726,
+      "angle": -0.224,
+      "texture": "snow_01",
+      "locked": true
+    },
+    {
+      "id": "slime-4",
+      "kind": "slime",
+      "x": -0.8482599219952967,
+      "y": -0.8,
+      "z": 58.31351963377206,
+      "w": 30,
+      "h": 1.5,
+      "d": 14,
+      "color": 8449063
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "burner-1",
+      "kind": "burner",
+      "x": 0.6990077837646906,
+      "z": -143.2327685665476
+    },
+    {
+      "id": "burner-2",
+      "kind": "burner",
+      "x": 0.07498978001812429,
+      "z": -76.39940673836392
+    },
+    {
+      "id": "cacti-patch-3",
+      "kind": "cacti-patch",
+      "x": -2.0625764743093242,
+      "z": 24.772956154569517
+    },
+    {
+      "id": "cacti-patch-4",
+      "kind": "cacti-patch",
+      "x": -1.8382197285362647,
+      "z": 12.94964916264255
+    },
+    {
+      "id": "cacti-patch-5",
+      "kind": "cacti-patch",
+      "x": 9.794950771306375,
+      "z": 25.281844678825024
+    },
+    {
+      "id": "cacti-patch-6",
+      "kind": "cacti-patch",
+      "x": 1.571909237944888,
+      "z": 34.67669069706058
+    },
+    {
+      "id": "cacti-patch-7",
+      "kind": "cacti-patch",
+      "x": 16.954963352758,
+      "z": 36.34671275883893
+    },
+    {
+      "id": "cacti-patch-8",
+      "kind": "cacti-patch",
+      "x": -10.475574044295982,
+      "z": 24.537041536867186
+    },
+    {
+      "id": "cacti-patch-9",
+      "kind": "cacti-patch",
+      "x": -11.661219594192843,
+      "z": 34.01814027855467
+    },
+    {
+      "id": "cacti-patch-10",
+      "kind": "cacti-patch",
+      "x": -0.3396689485505875,
+      "z": 84.43404252762289
+    },
+    {
+      "id": "cacti-patch-11",
+      "kind": "cacti-patch",
+      "x": 10.469848194367676,
+      "z": 110.32147805560933
+    },
+    {
+      "id": "cacti-patch-12",
+      "kind": "cacti-patch",
+      "x": -10.592310192300287,
+      "z": 109.53370432465258
+    },
+    {
+      "id": "cacti-patch-13",
+      "kind": "cacti-patch",
+      "x": 0.9733606206692986,
+      "z": 132.27434308715542
+    },
+    {
+      "id": "peppermint-slammer-14",
+      "kind": "peppermint-slammer",
+      "x": -20.030857797484273,
+      "z": -56.01622954634375
+    },
+    {
+      "id": "peppermint-slammer-15",
+      "kind": "peppermint-slammer",
+      "x": 27.057087181998302,
+      "z": -56.55615054355449
+    },
+    {
+      "id": "peppermint-slammer-16",
+      "kind": "peppermint-slammer",
+      "x": 28.30156715664508,
+      "z": 79.87473325777572
+    },
+    {
+      "id": "peppermint-slammer-17",
+      "kind": "peppermint-slammer",
+      "x": -25.72325144144329,
+      "z": 81.61771598854799
+    },
+    {
+      "id": "christmas-gift-wall-18",
+      "kind": "christmas-gift-wall",
+      "x": 14.979447652618433,
+      "z": -46.42380453389835
+    },
+    {
+      "id": "christmas-gift-wall-19",
+      "kind": "christmas-gift-wall",
+      "x": -16.328387495476992,
+      "z": -46.759788753536
+    },
+    {
+      "id": "caramel-crusher-20",
+      "kind": "caramel-crusher",
+      "x": -13.961039740951707,
+      "z": 147.17196291929406
+    },
+    {
+      "id": "caramel-crusher-21",
+      "kind": "caramel-crusher",
+      "x": 13.584189849330967,
+      "z": 145.45863001311415
+    },
+    {
+      "id": "pterosaur-22",
+      "kind": "pterosaur",
+      "x": 0.5332078538671923,
+      "z": -108.22173865834294
+    },
+    {
+      "id": "pterosaur-23",
+      "kind": "pterosaur",
+      "x": 13.897161463331175,
+      "z": -161.02728295868215,
+      "yaw": 1
+    },
+    {
+      "id": "pterosaur-24",
+      "kind": "pterosaur",
+      "x": -10.058340901803874,
+      "z": -159.0590262766549,
+      "yaw": 2
+    },
+    {
+      "id": "pterosaur-25",
+      "kind": "pterosaur",
+      "x": 0.168249247888967,
+      "z": -175.900921266551,
+      "yaw": 3
+    },
+    {
+      "id": "sugar-chomper-26",
+      "kind": "sugar-chomper",
+      "x": 0.5484880394440859,
+      "z": 146.17517073916525
+    },
+    {
+      "id": "sugar-chomper-27",
+      "kind": "sugar-chomper",
+      "x": 7.406843979933252,
+      "z": 145.62368236602293
+    },
+    {
+      "id": "sugar-chomper-28",
+      "kind": "sugar-chomper",
+      "x": -6.564610038526877,
+      "z": 145.9087823367032
+    },
+    {
+      "id": "drill-tank-29",
+      "kind": "drill-tank",
+      "x": -40.275501427052895,
+      "z": 28.518122220835096
+    },
+    {
+      "id": "drill-tank-30",
+      "kind": "drill-tank",
+      "x": 45.47003419438986,
+      "z": 27.7015763948838
+    },
+    {
+      "id": "dragon-31",
+      "kind": "dragon",
+      "x": 8.917259277974063,
+      "z": 202.12027724452463
+    },
+    {
+      "id": "dragon-32",
+      "kind": "dragon",
+      "x": 10.598508548066713,
+      "z": 250.8084285119744
+    },
+    {
+      "id": "dragon-33",
+      "kind": "dragon",
+      "x": 9.01652888616402,
+      "z": 295.8534091427981
+    },
+    {
+      "id": "dragon-34",
+      "kind": "dragon",
+      "x": 8.233233575018568,
+      "z": 335.72186819543816
+    },
+    {
+      "id": "guided-pipe-35",
+      "kind": "guided-pipe",
+      "x": -1.0068315957398792,
+      "z": 7.394631189258416,
+      "y": 9
+    }
+  ],
+  "medals": {
+    "gold": 30,
+    "silver": 45,
+    "bronze": 60
+  },
+  "backgroundTemplate": "pastoral-hills"
+}
