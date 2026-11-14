@@ -870,6 +870,50 @@ kbd {
   font-size: 13px;
   font-weight: 600;
 }
+#checkpoint-banner {
+  position: fixed;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  text-align: center;
+  pointer-events: none;
+}
+
+#checkpoint-banner strong {
+  display: block;
+  font:
+    italic 800 64px/1 "Barlow Condensed",
+    Impact,
+    sans-serif;
+  letter-spacing: 3px;
+  color: #f6edde;
+  text-shadow:
+    0 3px 0 #7a3c14,
+    0 8px 26px #000;
+}
+#checkpoint-delta {
+  display: block;
+  margin-top: 6px;
+  font:
+    700 30px/1.2 "Barlow Condensed",
+    Impact,
+    sans-serif;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 10px #000;
+}
+#checkpoint-delta.ahead {
+  color: #8be28b;
+}
+#checkpoint-delta.behind {
+  color: #ff8a7a;
+}
+#confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
 #track-result {
   position: fixed;
   inset: 84px 0 0;

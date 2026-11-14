@@ -44,6 +44,8 @@ export class TrackRun {
   reason: "timeout" | "wrecked" | null = null;
   elapsed = 0;
   checkpoint = 0;
+  /** Elapsed time at each checkpoint crossing, one entry per checkpoint. */
+  splits: number[] = [];
   collected = new Set<string>();
   destroyed = new Set<string>();
   bounced = false;
@@ -135,7 +137,10 @@ export class TrackRun {
           )
         )
           break;
+        // Truncate first: live gate edits can rewind the checkpoint count.
+        this.splits.length = Math.min(this.splits.length, this.checkpoint);
         this.checkpoint++;
+        this.splits.push(this.elapsed);
       }
       if (
         this.checkpoint === this.track.checkpoints.length &&
@@ -162,6 +167,7 @@ export class TrackRun {
       elapsed: this.elapsed,
       checkpoint: this.checkpoint,
       checkpointCount: this.track.checkpoints.length,
+      splits: [...this.splits],
       collected: [...this.collected],
       collectibleCount: this.track.collectibles.length,
       destroyed: [...this.destroyed],

@@ -56,7 +56,7 @@ import { GameView } from "./view";
 import "./harness";
 import type { CameraSample } from "./harness";
 import { drivingInput } from "./controls";
-import { objectiveCopy, progressCopy, progressFraction } from "./run-copy";
+import { formatDelta, objectiveCopy, progressCopy, progressFraction } from "./run-copy";
 
 import { createDebugMenu } from "./debug-menu";
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -65,6 +65,7 @@ app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON
 <section id="lab" hidden><div class="eyebrow">SURGICAL DAMAGE TOOLS</div><label for="target">Target part</label><select id="target">${PARTS.map((p) => `<option value="${p.id}">${p.id}</option>`).join("")}</select><div class="tool-grid"><button id="dent">Dent panel</button><button id="destroy">Destroy part</button><button id="sever">Sever chassis</button><button id="restore">Restore truck</button></div><p>Each tool applies real damage. Detached pieces keep their momentum.</p></section></aside>
 <div id="status"><span id="state-label">READY TO SEND IT</span><strong id="state-copy">Build speed. Hold your line.</strong><div id="run-progress" hidden></div><div class="progress"><i id="progress"></i></div></div>
 <section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span></div></section>
+<div id="checkpoint-banner" hidden><strong>CHECKPOINT!</strong><span id="checkpoint-delta" hidden></span></div><canvas id="confetti" hidden></canvas>
 <footer><div class="controls"><span><kbd>W / UP</kbd> GAS</span><span><kbd>S / DOWN</kbd> BRAKE / REV</span><span><kbd>A/D / LEFT/RIGHT</kbd> <span id="steer-label">STEER</span></span><span><kbd>R</kbd> RESTART</span><span><kbd>L</kbd> LEVEL SELECT</span><span><kbd>SPACE</kbd> HANDBRAKE</span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
 async function boot() {
   // Navigation occupies the header, not the 3D viewport. Only lab tools use a drawer.
@@ -107,6 +108,10 @@ async function boot() {
   }
   let recordedRun: Simulation["trackRun"];
   let resultStartedAt = 0;
+  let bannerRun: Simulation["trackRun"];
+  let bannerCheckpoint = 0;
+  let bannerFiredAt = 0;
+  let bannerUntil = 0;
   const scores = new BestTimes({
     getItem: (key) => localStorage.getItem(key),
     setItem: (key, value) => localStorage.setItem(key, value),
@@ -939,7 +944,98 @@ async function boot() {
     }
     if (point) void commitPlacement(point);
   });
+  type ConfettiPiece = {
+    x: number; y: number; vx: number; vy: number;
+    w: number; h: number; rot: number; vr: number;
+    color: string; life: number;
+  };
+  let confettiPieces: ConfettiPiece[] = [];
+  let confettiLast = 0;
+  const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function drawConfetti() {
+    const canvas = $("confetti") as HTMLCanvasElement;
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of confettiPieces) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life / 0.6));
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+  }
+  // Confetti runs on sim time so pausing freezes the burst mid-flight.
+  function stepConfetti() {
+    if (!confettiPieces.length) return;
+    const dt = Math.min(0.05, sim.time - confettiLast);
+    if (dt <= 0) return;
+    confettiLast = sim.time;
+    confettiPieces = confettiPieces.filter((p) => p.life > 0);
+    for (const p of confettiPieces) {
+      p.vy += 900 * dt;
+      p.vx *= 1 - 1.6 * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+      p.life -= dt;
+    }
+    if (confettiPieces.length) drawConfetti();
+    else ($("confetti") as HTMLCanvasElement).hidden = true;
+  }
+  function fireConfetti() {
+    if (REDUCED_MOTION) return;
+    const canvas = $("confetti") as HTMLCanvasElement;
+    canvas.hidden = false;
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+    canvas.dataset.bursts = String(Number(canvas.dataset.bursts ?? 0) + 1);
+    const colors = ["#ffa762", "#f6edde", "#f0ca69", "#ff8a7a", "#8be28b", "#7ec8e3"];
+    const cx = canvas.width / 2;
+    for (let i = 0; i < 140; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const speed = 180 + Math.random() * 420;
+      confettiPieces.push({
+        x: cx + (Math.random() - 0.5) * 120,
+        y: canvas.height * 0.2,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed - 260,
+        w: 5 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 18,
+        color: colors[(Math.random() * colors.length) | 0],
+        life: 1.6 + Math.random() * 0.9,
+      });
+    }
+    confettiLast = sim.time;
+    drawConfetti();
+  }
+  function showCheckpointBanner(
+    run: NonNullable<ReturnType<Simulation["snapshot"]>["run"]>,
+  ) {
+    const banner = $("checkpoint-banner");
+    const delta = $("checkpoint-delta");
+    banner.hidden = false;
+    bannerFiredAt = sim.time;
+    bannerUntil = sim.time + 2.5;
+    banner.style.transform = "";
+    banner.style.opacity = "";
+    const best = scores.best(run.trackId, sim.trackRun?.variant ?? "default");
+    const split = best?.splits[run.checkpoint - 1];
+    if (split === undefined) {
+      delta.hidden = true;
+    } else {
+      const d = run.elapsed - split;
+      delta.hidden = false;
+      delta.textContent = formatDelta(d);
+      delta.className = d <= 0 ? "ahead" : "behind";
+    }
+    fireConfetti();
+  }
   function hud() {
+    stepConfetti();
     placementBar.hidden = !(
       surface === "play" && !!sim.courseTrack?.custom
     );
@@ -1019,6 +1115,38 @@ async function boot() {
         keys.clear();
         screens.showResult(s.run, pb);
         if (s.run.status === "failed") screens.reveal(0);
+      }
+      // Celebrate intermediate gates; the final gate gets the result screen.
+      const banner = $("checkpoint-banner");
+      if (sim.trackRun !== bannerRun) {
+        bannerRun = sim.trackRun;
+        bannerCheckpoint = s.run.checkpoint;
+        banner.hidden = true;
+      } else if (s.run.status === "running") {
+        if (s.run.checkpoint > bannerCheckpoint) {
+          bannerCheckpoint = s.run.checkpoint;
+          showCheckpointBanner(s.run);
+        }
+        // Pop and fade on sim time so pausing freezes the celebration
+        // mid-show (and headless captures catch it at full opacity).
+        if (!banner.hidden) {
+          const remaining = bannerUntil - sim.time;
+          if (remaining <= 0) banner.hidden = true;
+          else if (!REDUCED_MOTION) {
+            const age = sim.time - bannerFiredAt;
+            const scale =
+              age < 0.21
+                ? 0.6 + (age / 0.21) * 0.48
+                : age < 0.35
+                  ? 1.08 - ((age - 0.21) / 0.14) * 0.08
+                  : 1;
+            banner.style.transform = `translateX(-50%) scale(${scale.toFixed(3)})`;
+            banner.style.opacity =
+              remaining < 0.5 ? String(Math.max(0, remaining / 0.5)) : "1";
+          }
+        }
+      } else {
+        banner.hidden = true;
       }
     }
     if (surface === "result" && s.run?.status === "failed")

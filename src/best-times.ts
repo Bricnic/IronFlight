@@ -12,8 +12,15 @@ function validKey(key: string) {
       : variant === "default")
   );
 }
+type StoredRecord = { time: number; splits: number[] };
+function validSplits(value: unknown): value is number[] {
+  return (
+    Array.isArray(value) &&
+    value.every((s) => typeof s === "number" && Number.isFinite(s) && s >= 0)
+  );
+}
 export class BestTimes {
-  private records: Record<string, number> = {};
+  private records: Record<string, StoredRecord> = {};
   constructor(private storage: ScoreStorage) {
     try {
       const saved = JSON.parse(storage.getItem(KEY) ?? "null");
@@ -22,23 +29,37 @@ export class BestTimes {
         saved.records &&
         typeof saved.records === "object"
       )
-        for (const [key, value] of Object.entries(saved.records))
-          if (
-            validKey(key) &&
-            typeof value === "number" &&
-            Number.isFinite(value) &&
-            value > 0
+        for (const [key, value] of Object.entries(saved.records)) {
+          if (!validKey(key)) continue;
+          // Plain numbers are pre-split records; they carry no splits.
+          if (typeof value === "number" && Number.isFinite(value) && value > 0)
+            this.records[key] = { time: value, splits: [] };
+          else if (
+            typeof value === "object" &&
+            value !== null &&
+            typeof (value as StoredRecord).time === "number" &&
+            Number.isFinite((value as StoredRecord).time) &&
+            (value as StoredRecord).time > 0 &&
+            validSplits((value as StoredRecord).splits)
           )
-            this.records[key] = value;
+            this.records[key] = {
+              time: (value as StoredRecord).time,
+              splits: [...(value as StoredRecord).splits],
+            };
+        }
     } catch {
       /* Private browsing or corrupt records must not prevent playing. */
     }
   }
   best(id: TrackId | CustomTrackId, variant = id === "triple-loop" ? "easy" : "default") {
-    const time = this.records[`${id}:${variant}`];
-    return time === undefined
+    const record = this.records[`${id}:${variant}`];
+    return record === undefined
       ? null
-      : { time, medal: medalFor(time, getTrack(id).medals) };
+      : {
+          time: record.time,
+          medal: medalFor(record.time, getTrack(id).medals),
+          splits: [...record.splits],
+        };
   }
   record(run: ReturnType<TrackRun["snapshot"]>) {
     const key = `${run.trackId}:${run.variant}`;
@@ -49,9 +70,9 @@ export class BestTimes {
       run.elapsed <= 0
     )
       return false;
-    if (this.records[key] !== undefined && this.records[key] <= run.elapsed)
+    if (this.records[key] !== undefined && this.records[key].time <= run.elapsed)
       return false;
-    this.records[key] = run.elapsed;
+    this.records[key] = { time: run.elapsed, splits: [...run.splits] };
     try {
       this.storage.setItem(
         KEY,

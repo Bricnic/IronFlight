@@ -21,6 +21,11 @@ export function objectiveCopy(track: Track) {
     return "Clear the jump, complete the loop, then cross the exit.";
   return "Follow every checkpoint. Cross the final gate.";
 }
+/** Signed tenths for checkpoint deltas: current split minus best split. */
+export function formatDelta(delta: number) {
+  const tenths = Math.abs(delta).toFixed(1);
+  return `${delta < 0 && tenths !== "0.0" ? "-" : "+"}${tenths}`;
+}
 export function progressCopy(track: Track, run: RunSnapshot) {
   if (track.mode === "arena")
     return `${run.collected.length} / ${run.collectibleCount} collected · ${Math.ceil(run.remaining ?? 0)}s remaining`;
