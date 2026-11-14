@@ -9,6 +9,7 @@ import {
   DUNGEON_PREFAB_KINDS,
   COLLECTIBLE_KINDS,
   SOLID_KINDS,
+  customTrackIds,
   toTrack,
   validateCustomLevel,
   type CustomLevel,
@@ -19,6 +20,13 @@ import {
   saveLevel,
   loadLevel,
 } from "./level-store";
+import { officialFileTracks } from "./official-levels";
+import {
+  RANDOM_DEFAULTS,
+  generateRandomLevel,
+  nextAvailableName,
+  type RandomLevelParams,
+} from "./level-random";
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   attrs: Record<string, string> = {},
@@ -74,6 +82,7 @@ export function createLevelEditor(
   const newButton = el("button", { id: "editor-new" }, "New");
   const saveButton = el("button", { id: "editor-save" }, "Save");
   const playtestButton = el("button", { id: "editor-playtest" }, "Playtest");
+  const randomButton = el("button", { id: "editor-randomize" }, "Randomize");
   const undoButton = el("button", { id: "editor-undo" }, "Undo");
   const redoButton = el("button", { id: "editor-redo" }, "Redo");
   undoButton.addEventListener("click", () => store.undo());
@@ -107,6 +116,7 @@ export function createLevelEditor(
     newButton,
     saveButton,
     playtestButton,
+    randomButton,
     undoButton,
     redoButton,
     backButton,
@@ -164,7 +174,50 @@ export function createLevelEditor(
     el("button", { id: "editor-unsaved-cancel" }, "Cancel"),
   );
   unsaved.append(unsavedBox);
-  screen.append(top, body, unsaved);
+  const randomModal = el("div", { id: "editor-random-modal", class: "editor-modal" });
+  randomModal.hidden = true;
+  const randomBox = el("div", { class: "editor-modal-box column" });
+  const randomField = (
+    label: string,
+    id: string,
+    type: string,
+    value: string,
+    extra: Record<string, string> = {},
+  ) => {
+    const row = el("label", { class: "prop-row" }, `${label} `);
+    const input = el("input", { id, type, value, ...extra }) as HTMLInputElement;
+    row.append(input);
+    randomBox.append(row);
+    return input;
+  };
+  const randomCheckpoints = randomField("Checkpoints", "editor-random-checkpoints", "number", String(RANDOM_DEFAULTS.checkpoints), { min: "1", max: "20" });
+  const randomLethals = randomField("Lethal prefabs", "editor-random-lethals", "number", String(RANDOM_DEFAULTS.lethals), { min: "0", max: "100" });
+  const randomDecor = randomField("Decor prefabs", "editor-random-decor", "number", String(RANDOM_DEFAULTS.decor), { min: "0", max: "100" });
+  const themeRow = el("label", { class: "prop-row" }, "Theme ");
+  const randomTheme = el("select", { id: "editor-random-theme" }) as HTMLSelectElement;
+  for (const [value, label] of [
+    ["random", "Random"],
+    ["toys", "Toys"],
+    ["christmas", "Christmas"],
+    ["ice", "Ice"],
+    ["carnival", "Carnival"],
+    ["dungeon", "Dungeon"],
+  ])
+    randomTheme.append(el("option", { value }, label));
+  randomTheme.value = RANDOM_DEFAULTS.theme;
+  themeRow.append(randomTheme);
+  randomBox.append(themeRow);
+  const randomWidth = randomField("Width", "editor-random-width", "number", String(RANDOM_DEFAULTS.width), { min: "150", max: "1000" });
+  const randomLength = randomField("Length", "editor-random-length", "number", String(RANDOM_DEFAULTS.length), { min: "150", max: "1000" });
+  const randomName = randomField("Name", "editor-random-name", "text", RANDOM_DEFAULTS.name, { maxlength: "64" });
+  const randomError = el("span", { id: "editor-random-error", role: "alert" });
+  const randomActions = el("div", { class: "editor-modal-actions" });
+  const randomGenerate = el("button", { id: "editor-random-generate" }, "Generate");
+  const randomCancel = el("button", { id: "editor-random-cancel" }, "Cancel");
+  randomActions.append(randomGenerate, randomCancel);
+  randomBox.append(randomError, randomActions);
+  randomModal.append(randomBox);
+  screen.append(top, body, unsaved, randomModal);
   host.append(screen);
   const viewport = createEditorViewport(viewportHost, store);
   const showError = (message: string) => {
@@ -625,7 +678,7 @@ export function createLevelEditor(
     objects.append(...rows.map((row) => row.li));
   }
   function refresh() {
-    for (const button of [saveButton, playtestButton, addSolid, addPrefab, addCheckpoint, addTarget, addRing, duplicateButton, removeButton, spawnButton]) button.disabled = !!store.clip;
+    for (const button of [saveButton, playtestButton, randomButton, addSolid, addPrefab, addCheckpoint, addTarget, addRing, duplicateButton, removeButton, spawnButton]) button.disabled = !!store.clip;
     nameInput.disabled = !!store.clip;
     if (document.activeElement !== nameInput) nameInput.value = store.level.name;
     if (!store.dirty) unsaved.hidden = true;
@@ -681,6 +734,62 @@ export function createLevelEditor(
     }
   }
   saveButton.addEventListener("click", () => doSave(() => {}));
+  async function takenNamesAndIds() {
+    const names = await listLevels().catch(() => [] as string[]);
+    const ids = [...officialFileTracks.map((t) => t.id), ...customTrackIds()];
+    return { names, ids };
+  }
+  randomButton.addEventListener("click", () => {
+    randomError.textContent = "";
+    randomModal.hidden = false;
+    takenNamesAndIds()
+      .then(({ names, ids }) => {
+        randomName.value = nextAvailableName(RANDOM_DEFAULTS.name, names, ids);
+      })
+      .catch(() => {
+        randomName.value = RANDOM_DEFAULTS.name;
+      });
+  });
+  randomCancel.addEventListener("click", () => {
+    randomModal.hidden = true;
+  });
+  randomGenerate.addEventListener("click", () => {
+    const readInt = (input: HTMLInputElement, label: string, min: number, max: number) => {
+      const n = Number(input.value);
+      if (!Number.isInteger(n) || n < min || n > max)
+        throw new Error(`${label} must be an integer from ${min} to ${max}`);
+      return n;
+    };
+    (async () => {
+      try {
+        const theme = randomTheme.value as RandomLevelParams["theme"];
+        if (!["toys", "christmas", "ice", "carnival", "dungeon", "random"].includes(theme))
+          throw new Error("Unknown theme");
+        const params = {
+          checkpoints: readInt(randomCheckpoints, "Checkpoints", 1, 20),
+          lethals: readInt(randomLethals, "Lethal prefabs", 0, 100),
+          decor: readInt(randomDecor, "Decor prefabs", 0, 100),
+          theme,
+          width: readInt(randomWidth, "Width", 150, 1000),
+          length: readInt(randomLength, "Length", 150, 1000),
+          name: randomName.value.trim() || RANDOM_DEFAULTS.name,
+        };
+        const { names, ids } = await takenNamesAndIds();
+        const name = nextAvailableName(params.name, names, ids);
+        const level = generateRandomLevel(
+          { ...params, name },
+          (Math.random() * 0x7fffffff) | 0,
+        );
+        store.openLevel(level);
+        viewport.frameSpawn(store.level);
+        randomModal.hidden = true;
+        showStatus(`Generated ${name}`);
+      } catch (e) {
+        randomError.textContent =
+          e instanceof Error ? e.message : "Invalid parameters";
+      }
+    })();
+  });
   playtestButton.addEventListener("click", () => {
     let valid: CustomLevel;
     try {
