@@ -49,7 +49,7 @@ test("night lights checkpoint gates and lamp posts", async ({ page }) => {
       const course = window.__game!.stats().officialCourse;
       return { gateGlow: course.gateGlow, lampGlow: course.lampGlow };
     });
-  await page.evaluate(() => window.__game!.startTrack("harbor-sprint"));
+  await page.evaluate(() => window.__game!.startTrack("foundry-run"));
   await expect.poll(glow, { timeout: 30000 }).toMatchObject({ gateGlow: 0, lampGlow: 0 });
   await page.getByRole("button", { name: "Settings" }).click();
   await page.locator('[data-weather="night"] button').click();

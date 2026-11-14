@@ -74,12 +74,15 @@ for (const kind of kinds)
       contentType: "application/json",
     });
     // Ordinary throttle bypass around the actual footprint; no collision/damage toggles.
-    const safe = await page.evaluate((h) => {
+    // Foundry's container row sits in the usual left lane, so its hydrant
+    // bypasses on the right instead.
+    const bypassX = kind === "hydrant" ? h.x + 15 : h.x - 15;
+    const safe = await page.evaluate(({ h, bypassX }) => {
       const g = window.__game!;
-      g.place({ x: h.x - 15, y: 2.1, z: h.z - 18 }, 0);
+      g.place({ x: bypassX, y: 2.1, z: h.z - 18 }, 0);
       g.advanceFrames(120, 1, { throttle: 1 });
       return g.snapshot();
-    }, h);
+    }, { h, bypassX });
     expect(safe.status).not.toBe("wrecked");
     expect(safe.position.z).toBeGreaterThan(h.z + 8);
     if (kind === "burner") {
@@ -146,7 +149,7 @@ test("water boost pad enables a genuine 200 MPH skim; braking below 180 sinks", 
   const result = await page.evaluate(() => {
     const g = window.__game!;
     g.pause(true);
-    g.startTrack("harbor-sprint");
+    g.startTrack("inferno-vault");
     const h = g.snapshot().comic.hazards.find((h) => h.kind === "water")!;
     g.place({ x: h.x, y: 2.1, z: h.z - 30 }, 0);
     g.setVelocity({ x: 0, y: 0, z: 25 });
@@ -163,7 +166,7 @@ test("water boost pad enables a genuine 200 MPH skim; braking below 180 sinks", 
       false,
     );
     const fast = g.snapshot();
-    g.startTrack("harbor-sprint");
+    g.startTrack("inferno-vault");
     g.place({ x: h.x, y: 2.1, z: h.z }, 0);
     g.setVelocity({ x: 0, y: 0, z: 58 });
     g.advanceFrames(1, 1, { throttle: 1 });

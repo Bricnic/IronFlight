@@ -93,7 +93,7 @@ it("Canyon has several truck lengths of supported space behind spawn and ten ram
   expect(sim.body.translation().y).toBeGreaterThan(82);
   sim.setTuning({ topSpeed: 2, canyonTopSpeed: 3 });
   expect(sim.effectiveTopSpeed).toBe(6);
-  sim.startTrack("harbor-sprint");
+  sim.startTrack("foundry-run");
   expect(sim.effectiveTopSpeed).toBe(2);
   sim.dispose();
 });

@@ -33,6 +33,14 @@ test("normal startup shows the illustrated official lineup and keeps the simulat
     "Peppermint Pass",
     "Chocolate Chasm",
     "Sugar Rush Summit",
+    "Tinsel Town",
+    "Mistletoe Mile",
+    "Nutcracker Run",
+    "Sleigh Bell Sprint",
+    "North Pole Summit",
+    "Tabletop Brawl",
+    "Sharkbite Run",
+    "Rock and Roll",
   ]);
   for (const t of TRACKS) {
     await expect(
@@ -66,13 +74,13 @@ test("selecting a track starts its real attempt; restart and menu preserve playe
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await page
-    .getByRole("button", { name: "Play Harbor Sprint", exact: true })
+    .getByRole("button", { name: "Play Foundry Run", exact: true })
     .click();
   await expect(page.locator("#level-select")).toBeHidden();
   await expect(page.locator("#run-progress")).toContainText("Checkpoint");
   expect(
     await page.evaluate(() => window.__game!.snapshot().run?.trackId),
-  ).toBe("harbor-sprint");
+  ).toBe("foundry-run");
   await page.evaluate(() => {
     window.__game!.pause(true);
     window.__game!.setTuning({ turningPower: 0.6 });
@@ -95,9 +103,9 @@ test("a completed UI-selected course awards a medal and reloads its best time", 
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await page
-    .getByRole("button", { name: "Play Harbor Sprint", exact: true })
+    .getByRole("button", { name: "Play Foundry Run", exact: true })
     .click();
-  const result = await driveTrack(page, "harbor-sprint", false);
+  const result = await driveTrack(page, "foundry-run", false);
   expect(result.state.run?.status).toBe("completed");
   await expect(
     page.getByRole("heading", { name: "Track complete!", exact: true }),
@@ -108,7 +116,7 @@ test("a completed UI-selected course awards a medal and reloads its best time", 
   await expect(page.locator("#personal-best")).toHaveText("NEW PERSONAL BEST");
   await page.screenshot({ path: info.outputPath("medal-result.png") });
   await page.locator("#result-level-select").click();
-  const card = page.locator('[data-track="harbor-sprint"]');
+  const card = page.locator('[data-track="foundry-run"]');
   await expect(card.locator(".best-time")).not.toHaveText("NO TIME SET");
   await page.reload();
   await page.waitForFunction(() => !!window.__game);
@@ -134,7 +142,7 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(31);
+  await expect(page.locator(".track-card")).toHaveCount(38);
   expect(
     await page
       .locator("#level-select")
@@ -158,12 +166,12 @@ test("keyboard Space starts a focused track and arrow controls then drive it", a
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await page
-    .getByRole("button", { name: "Play Harbor Sprint", exact: true })
+    .getByRole("button", { name: "Play Foundry Run", exact: true })
     .focus();
   await page.keyboard.press("Space");
   await expect
     .poll(() => page.evaluate(() => window.__game!.snapshot().run?.trackId))
-    .toBe("harbor-sprint");
+    .toBe("foundry-run");
   await page.evaluate(() => window.__game!.pause(true));
   await page.keyboard.down("ArrowUp");
   await page.evaluate(() => window.__game!.advanceFrames(90, 1));

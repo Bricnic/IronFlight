@@ -5,7 +5,7 @@ beforeAll(initPhysics);
 for (const [i, effect] of POTIONS.entries())
   test(`potion ${effect} contact lasts five seconds then resets`, () => {
     const s = new Simulation();
-    s.startTrack("harbor-sprint");
+    s.startTrack("foundry-run");
     const h = s.comic.mechanisms.find((m) => m.h.kind === "potion")!.h;
     s.body.setTranslation({ x: h.x + (i - 1.5) * 4.4, y: 2, z: h.z }, true);
     s.run(0.1);
@@ -18,7 +18,7 @@ for (const [i, effect] of POTIONS.entries())
   });
 test("mixing active potions destroys the car", () => {
   const s = new Simulation();
-  s.startTrack("harbor-sprint");
+  s.startTrack("foundry-run");
   const h = s.comic.mechanisms.find((m) => m.h.kind === "potion")!.h;
   for (const i of [0, 1]) {
     s.body.setTranslation({ x: h.x + (i - 1.5) * 4.4, y: 2, z: h.z }, true);
@@ -29,7 +29,7 @@ test("mixing active potions destroys the car", () => {
 });
 test("water boosts, skims and slows a fast truck; a slow truck actually sinks", () => {
   const s = new Simulation();
-  s.startTrack("harbor-sprint");
+  s.startTrack("inferno-vault");
   const h = s.comic.mechanisms.find((m) => m.h.kind === "water")!;
   const tops = h.colliders.map((c) => {
     const p = c.translation(),
@@ -49,7 +49,7 @@ test("water boosts, skims and slows a fast truck; a slow truck actually sinks", 
   expect(peak).toBeGreaterThan(200);
   expect(skim).toBe(true);
   expect(s.status).not.toBe("wrecked");
-  s.reset("harbor-sprint");
+  s.reset("inferno-vault");
   const slow = s.comic.mechanisms.find((m) => m.h.kind === "water")!;
   s.body.setTranslation({ x: slow.h.x, y: 2.1, z: slow.h.z }, true);
   s.run(3);
@@ -62,7 +62,7 @@ test("nitro increases actual speed and scaled wheels match suspension geometry",
   const speeds: number[] = [];
   for (const boosted of [false, true]) {
     const s = new Simulation();
-    s.startTrack("harbor-sprint");
+    s.startTrack("foundry-run");
     if (boosted) {
       const h = s.comic.mechanisms.find((m) => m.h.kind === "potion")!.h;
       s.body.setTranslation({ x: h.x - 6.6, y: 2, z: h.z }, true);
@@ -77,7 +77,7 @@ test("nitro increases actual speed and scaled wheels match suspension geometry",
   }
   expect(speeds[1]).toBeGreaterThan(speeds[0] * 1.6);
   const s = new Simulation();
-  s.startTrack("harbor-sprint");
+  s.startTrack("foundry-run");
   const h = s.comic.mechanisms.find((m) => m.h.kind === "potion")!.h;
   s.body.setTranslation({ x: h.x + 2.2, y: 2, z: h.z }, true);
   s.run(0.1);

@@ -42,7 +42,7 @@ test("rain glosses fairground roads and ground", async ({ page }) => {
 test("rain kicks up spray behind a rolling truck", async ({ page }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await page.evaluate(() => window.__game!.startTrack("harbor-sprint"));
+  await page.evaluate(() => window.__game!.startTrack("foundry-run"));
   const spray = () =>
     page.evaluate(() => window.__game!.stats().spray.active);
   await expect.poll(spray, { timeout: 15000 }).toBe(false);

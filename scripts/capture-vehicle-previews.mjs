@@ -12,7 +12,7 @@ const ATTEMPTS = 3;
 async function capturePose(page, id) {
   await page.evaluate((vid) => {
     const g = window.__game;
-    g.startTrack("harbor-sprint", "easy", vid);
+    g.startTrack("foundry-run", "easy", vid);
     g.place({ x: 0, y: 2.1, z: -95 }, 0);
     g.advanceFrames(45, 1, {});
   }, id);

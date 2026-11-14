@@ -1,12 +1,9 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getTrack } from "./tracks";
-import { courseSolids, courseProps } from "./course";
-import { comicHazards } from "./comic-hazards";
 import { ROUTES, routeSolids } from "./routes";
 import { LOOP, loopSolids } from "./loop";
 import {
-  COMIC_PREFAB_KINDS,
   validateCustomLevel,
   type CustomLevel,
   type CustomPrefab,
@@ -15,54 +12,6 @@ import {
 } from "./custom-level";
 /** Committed clone levels live under public/, twin to the gitignored levels/. */
 export const SHOWCASE_DIR = "showcase";
-/** Harbor Sprint translates losslessly: same solids, props, gates, medals. */
-export function cloneHarborSprint(): CustomLevel {
-  const track = getTrack("harbor-sprint");
-  const solids: CustomSolid[] = courseSolids(track).map((s) => ({
-    id: s.id,
-    kind: s.kind as SolidKind,
-    x: s.x,
-    y: s.y,
-    z: s.z,
-    w: s.w,
-    h: s.h,
-    d: s.d,
-    ...(s.yaw === undefined ? {} : { yaw: s.yaw }),
-    ...(s.angle === undefined ? {} : { angle: s.angle }),
-    ...(s.roll === undefined ? {} : { roll: s.roll }),
-    ...(s.footprint === undefined ? {} : { footprint: s.footprint }),
-    color: s.color,
-  }));
-  const prefabs: CustomPrefab[] = [
-    ...courseProps(track).map((p) => ({
-      id: p.id,
-      kind: p.kind,
-      x: p.x,
-      z: p.z,
-      ...(p.ground ? { y: p.ground } : {}),
-    })),
-    ...comicHazards(track)
-      .filter((h) =>
-        (COMIC_PREFAB_KINDS as readonly string[]).includes(h.kind),
-      )
-      .map((h) => ({
-        id: h.id,
-        kind: h.kind,
-        x: h.x,
-        z: h.z,
-        ...(h.y === undefined ? {} : { y: h.y }),
-      })),
-  ];
-  return validateCustomLevel({
-    name: "Clone Harbor Sprint",
-    mode: "race",
-    spawn: { ...track.spawn },
-    checkpoints: track.path.slice(1).map((p) => ({ x: p.x, z: p.z })),
-    solids,
-    prefabs,
-    medals: { ...track.medals },
-  });
-}
 /**
  * Triple Loop translates the easy route: route solids plus the loop beds,
  * one loop prefab, four dragon statues, and a lava pit under the jump gap.
@@ -165,10 +114,6 @@ export function cloneTripleLoop(): CustomLevel {
 export function writeShowcaseClones(publicDir: string) {
   const dir = join(publicDir, SHOWCASE_DIR);
   mkdirSync(dir, { recursive: true });
-  writeFileSync(
-    join(dir, "clone-harbor-sprint.json"),
-    JSON.stringify(cloneHarborSprint(), null, 2) + "\n",
-  );
   writeFileSync(
     join(dir, "clone-triple-loop.json"),
     JSON.stringify(cloneTripleLoop(), null, 2) + "\n",

@@ -118,7 +118,7 @@ test("randomize atmosphere grays out manual toggles and rerolls on retry", async
   await page.evaluate(() => {
     Math.random = () => 0.1;
   });
-  await page.evaluate(() => window.__game!.startTrack("harbor-sprint"));
+  await page.evaluate(() => window.__game!.startTrack("foundry-run"));
   await expect.poll(weather, { timeout: 15000 }).toEqual({ night: true, rain: true });
   await expect(page.locator("#weather-night")).toBeVisible();
   await expect(page.locator("#weather-rain")).toBeVisible();

@@ -135,14 +135,14 @@ test("debug menu shows the fully qualified path of the current level", async ({
   await page.waitForFunction(() => !!window.__game);
   await page.evaluate(() => {
     window.__game!.pause(true);
-    window.__game!.startTrack("harbor-sprint", "easy");
+    window.__game!.startTrack("foundry-run", "easy");
   });
   await page.keyboard.press("Backquote");
   const path = page.locator("#debug-level-path");
   await expect(path).toBeVisible();
   const builtin = await path.textContent();
   expect(builtin).toMatch(/^([A-Za-z]:|\/|\\)/);
-  expect(builtin).toMatch(/[/\\]src[/\\]tracks\.ts:harbor-sprint$/);
+  expect(builtin).toMatch(/[/\\]src[/\\]tracks\.ts:foundry-run$/);
   expect(builtin).not.toContain("http");
   await page.keyboard.press("Backquote");
   await page.evaluate(() =>
