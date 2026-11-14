@@ -224,7 +224,9 @@ export const SHIP = {
   /** Wheelhouse, offset to port so starboard stays a straight lane to the finish. */
   cabin: { x: -7, w: 8, h: 4, d: 6, z: 19 },
   /** Container rows flanking the lane, shared by colliders and models. */
-  cargo: { x: 9.5, w: 5, h: 3, d: 40, z: -4 },
+  // Crate outer faces (x + w/2 = 11) stop 0.2 short of the rail inner faces
+  // (w/2 - railT = 11.2): flush faces z-fight with the white side rails.
+  cargo: { x: 8.5, w: 5, h: 3, d: 40, z: -4 },
 } as const;
 export function shipSailed(departedAt: number | undefined, time: number) {
   if (departedAt === undefined) return 0;

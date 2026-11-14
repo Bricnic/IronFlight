@@ -1,17 +1,14 @@
-#!/usr/bin/env node
 /**
- * Pipeline: generate a fleet of new vehicles with Gemini concept art,
- * implement them on the standard chassis, prove each one on every level,
- * and push.
+ * Pipeline: generate NEW vehicles with Gemini concept art, implement them on
+ * the standard chassis, prove each one, and push.
  *
  * Usage:
  *   node scripts/generate-vehicles.mjs [--dry-run] [--config PATH]
  *     [--count N] [--only <id>] [--no-push]
  *
  * Config (default config/vehicle-gen.json):
- *   count            TOTAL fleet size the run converges to (top-up semantics:
- *                    a count=1 pilot followed by count=10 ends with 10 total,
- *                    keeping the pilot car). Default 10.
+ *   count            How many NEW vehicles this run creates, appended to the
+ *                    fleet. Default 10.
  *   keyFile          Gemini API key file. Read by THIS script into the
  *                    GEMINI_API_KEY env var for child runs; never printed,
  *                    never committed. Default C:\Code\gemini_api_key.txt.
@@ -25,10 +22,14 @@
  *   knownFailures    Unit-test names allowed to fail (pre-existing reds).
  *                    Anything else failing blocks the push.
  *
- * Phases: ideation (one muse run: ideas + Gemini art) -> one build run per
- * vehicle (code + ledger + preview + validation) -> gates (tsc, full unit
- * suite vs the allowlist, vite build) -> commit + push. Resuming is safe:
- * complete ideas are skipped, partial ones are finished by their build run.
+ * Phases: ideation (one muse run: append `count` new ideas + Gemini art)
+ * -> one build run per unfinished vehicle (code + ledger + preview +
+ * validation) -> gates (tsc, full unit suite vs the allowlist, vite build)
+ * -> commit + push. Resuming is safe: complete ideas are skipped, partial
+ * ones are finished by their build run, and no new ideas are added until
+ * every tracked idea is complete. ideas.json is the work queue; the fleet
+ * manifest is the ledger (artDir/briefs.json) plus
+ * src/generated-vehicles.ts.
  */
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
@@ -75,7 +76,7 @@ async function exists(path) {
   }
 }
 
-function parseArgs(argv) {
+export function parseArgs(argv) {
   const args = {
     dryRun: false,
     config: DEFAULT_CONFIG,
@@ -135,12 +136,23 @@ async function currentFleet(artDir) {
 
 async function dryRun(config, args) {
   const fleet = await currentFleet(config.artDir);
+  const ideas = await readIdeas();
+  const invalid = ideas.filter((idea) => !validIdea(idea));
+  const completeIds = new Set();
+  for (const idea of ideas) {
+    if (await ideaComplete(idea, config.artDir)) completeIds.add(idea.id);
+  }
+  const batch = planBatch(
+    ideas.map((idea) => idea.id),
+    completeIds,
+    config.count,
+  );
   const keyOk = await exists(config.keyFile);
   const styleOk = await exists(join(ROOT, config.styleReference));
-  const need = Math.max(0, config.count - fleet.length);
   console.log("generate-vehicles --dry-run (no side effects)");
   console.log(`  config:  ${args.config}`);
-  console.log(`  fleet:   target ${config.count}, implemented ${fleet.length}, to add ~${need}`);
+  console.log(`  fleet:   ${fleet.length} implemented (ledger), ${ideas.length} tracked ideas (${completeIds.size} complete, ${ideas.length - completeIds.size} unfinished, ${invalid.length} invalid)`);
+  console.log(`  batch:   finish ${batch.finish.length} unfinished, add ${batch.add} new -> ${batch.builds} build run(s)`);
   console.log(`  key:     ${config.keyFile} (${keyOk ? "present" : "MISSING"})`);
   console.log(`  style:   ${config.styleReference} (${styleOk ? "present" : "MISSING"})`);
   console.log(`  art:     ${config.artDir}/<id>.jpg + briefs.json`);
@@ -151,8 +163,10 @@ async function dryRun(config, args) {
   console.log(`  per-run: timeout ${config.timeoutMinutes} min, env GEMINI_API_KEY=<redacted> CAPTURE_URL=<server> PLAYWRIGHT_GEN_CONFIG=<file>`);
   console.log(`  gates:   tsc, full unit suite (allowlist: ${config.knownFailures.length} known), vite build`);
   console.log(`  push:    ${config.push && args.push ? `origin HEAD:${config.pushTarget}` : "disabled"} (explicit vehicle paths only, never --force)`);
-  console.log(`  steps:   1 ideation run + ${need} build run(s) sequential, stop after 2 consecutive build failures`);
+  console.log(`  steps:   ${batch.add > 0 ? `1 ideation run (appends ${batch.add}) + ` : "ideation skipped (unfinished work pending) + "}${batch.builds} build run(s) sequential, stop after 2 consecutive build failures`);
   if (!keyOk || !styleOk) fail("dry-run: resolve the MISSING inputs above");
+  if (invalid.length > 0)
+    fail(`dry-run: ${IDEAS} has ${invalid.length} invalid ${invalid.length === 1 ? "entry" : "entries"}; fix or remove them and rerun`);
 }
 
 function quote(arg) {
@@ -330,16 +344,16 @@ async function readResult(path, kind) {
   return result;
 }
 
-function ideationPrompt({ count, styleReference, artDir, keyFile }) {
+function ideationPrompt({ count, styleReference, artDir, keyFile, existing }) {
   return [
     `You are the vehicle designer for DemolitionDerby, a stylized 3D demolition-derby browser game.`,
     `Your working directory is the repo root; all paths below are relative to it.`,
     ``,
-    `GOAL: plan a fleet of exactly ${count} NEW vehicles. artifacts/vehicle-gen/ideas.json may already list some: keep those entries and add more until there are ${count} total. Never duplicate an id, name, or concept already in ideas.json, src/generated-vehicles.ts, src/vehicles.ts, src/concept-vehicles.ts, src/themed-vehicles.ts, visual-plan/refs/gemini/themed/briefs.json, or visual-plan/refs/gemini/generated/briefs.json.`,
+    `GOAL: add exactly ${count} NEW vehicle ideas to artifacts/vehicle-gen/ideas.json, which currently lists ${existing} (keep every existing entry; append the new ones). Never duplicate an id, name, or concept already in ideas.json, src/generated-vehicles.ts, src/vehicles.ts, src/concept-vehicles.ts, src/themed-vehicles.ts, visual-plan/refs/gemini/themed/briefs.json, or visual-plan/refs/gemini/generated/briefs.json.`,
     ``,
     `STEPS:`,
     `1. Survey the existing garage: read the ids, names, and blurbs in src/vehicles.ts (VEHICLES), src/concept-vehicles.ts, src/themed-vehicles.ts, and src/generated-vehicles.ts, plus both briefs.json ledgers. Note the established tone and which shapes already exist so your ideas are novel.`,
-    `2. Design the new ideas across THREE categories, as evenly as possible:`,
+    `2. Design ${count} new ideas across THREE categories, as evenly as possible:`,
     `   - realistic, serious models (invent fresh ones; do not copy existing cars),`,
     `   - silly, offbeat ideas,`,
     `   - wild shapes: F1-style open-wheeler, motorcycle-with-sidecar look, tricycle, jet-sled, and similar. NOTE: wild shapes are BODYWORK over the standard 4-wheel derby chassis (the builder keeps four treaded wheels under every body), so brief them as "reads as an F1 car / trike / sled from the side, but with four chunky derby wheels".`,
@@ -349,13 +363,14 @@ function ideationPrompt({ count, styleReference, artDir, keyFile }) {
     `   - The API key is already in the GEMINI_API_KEY environment variable. NEVER print, log, or transmit it; never read ${keyFile}; never commit anything containing it.`,
     `   - The brief MUST describe four wheels on two axles, a chunky monster-truck-scale derby build, and the theme's key shapes and materials. Say "four wheels" explicitly; the model needs the reminder.`,
     `   - PowerShell quoting: prefer single-quoted briefs; if a brief contains quotes, write it to a temp file first and build the command carefully. Verify each .jpg exists and exceeds 20KB; retry once with a tweaked brief on failure.`,
-    `4. Write artifacts/vehicle-gen/ideas.json: the FULL array of all ${count} ideas (existing entries preserved, new ones appended), each {id, name, blurb, category, theme, palette, brief, art} where art is "${artDir}/<id>.jpg".`,
-    `5. Write artifacts/vehicle-gen/result-ideation.json: {ok: true, count: ${count}, added: [<new ids>], ideas: [<all ${count} ids>]}. On any failure write {ok: false, error: "<what failed>"} instead and stop.`,
+    `4. Read artifacts/vehicle-gen/ideas.json (or start from [] if it is missing). Repair any entry that lacks {id, name, blurb, category, theme, palette, brief, art} in place, keep the rest untouched, and append your ${count} new ideas, each {id, name, blurb, category, theme, palette, brief, art} where art is "${artDir}/<id>.jpg". Write the FULL array back.`,
+    `5. Write artifacts/vehicle-gen/result-ideation.json: {ok: true, added: [<new ids>], ideas: [<all ids>]}. On any failure write {ok: false, error: "<what failed>"} instead and stop.`,
     ``,
     `RULES:`,
-    `- Do NOT edit src/, tests/, levels/, e2e/, or public/. Write only concept .jpgs under ${artDir}/, artifacts/vehicle-gen/ideas.json, and the result file.`,
+    `- Do NOT edit src/, tests/, levels/, e2e/, or public/. Write only the ${count} new concept .jpgs under ${artDir}/, artifacts/vehicle-gen/ideas.json, and the result file.`,
     `- Do NOT commit or push; the pipeline owns git.`,
-    `- Keep going until ALL ${count} ideas have art; report per-idea status in the result file.`,
+    `- Do NOT modify or remove existing ideas.json entries except repairing invalid ones; do not regenerate existing concept art.`,
+    `- Keep going until ALL ${count} new ideas have art; report per-idea status in the result file.`,
     ``,
   ].join("\n");
 }
@@ -410,8 +425,8 @@ async function readIdeas() {
   }
 }
 
-function validIdea(idea) {
-  return (
+export function validIdea(idea) {
+  return !!(
     idea &&
     ID_RE.test(idea.id ?? "") &&
     typeof idea.name === "string" &&
@@ -420,6 +435,14 @@ function validIdea(idea) {
     typeof idea.brief === "string" &&
     Array.isArray(idea.palette)
   );
+}
+
+export function planBatch(ideaIds, completeIds, count) {
+  const finish = ideaIds.filter((id) => !completeIds.has(id));
+  // Additive, resume-aware: a run with unfinished work finishes it and adds
+  // nothing; a caught-up run appends a full new batch of `count` ideas.
+  const add = finish.length === 0 ? count : 0;
+  return { add, finish, builds: finish.length + add };
 }
 
 async function ideaComplete(idea, artDir) {
@@ -438,7 +461,9 @@ async function runGates(config) {
 
   console.log("generate-vehicles: gate 2/3: full unit suite");
   const suite = await runCapture("npx", ["vitest", "run", "--reporter=json"], {
-    timeoutMs: 25 * 60 * 1000,
+    // Grows with the fleet (every car adds matrix + proof rows); 25 min went
+    // marginal at 40 cars.
+    timeoutMs: 40 * 60 * 1000,
   });
   let report;
   try {
@@ -453,20 +478,24 @@ async function runGates(config) {
     for (const t of file.assertionResults ?? []) {
       if (t.status === "failed") {
         const name = [...(t.ancestorTitles ?? []), t.title].join(" > ");
-        failed.push(`${file.name} > ${name}`);
+        failed.push({ name: `${file.name} > ${name}`, messages: t.failureMessages ?? [] });
       }
     }
   }
   const known = [], fresh = [];
   for (const f of failed) {
-    if (config.knownFailures.some((k) => f.includes(k))) known.push(f);
+    if (config.knownFailures.some((k) => f.name.includes(k))) known.push(f);
     else fresh.push(f);
   }
   console.log(`generate-vehicles: suite: ${report.numPassedTests ?? "?"} passed, ${failed.length} failed (${known.length} known, ${fresh.length} new)`);
-  for (const f of known) console.log(`  known: ${f}`);
-  for (const f of fresh) console.log(`  NEW FAILURE: ${f}`);
+  for (const f of known) console.log(`  known: ${f.name}`);
+  for (const f of fresh) {
+    console.log(`  NEW FAILURE: ${f.name}`);
+    const first = (f.messages[0] ?? "").split("\n").slice(0, 6).join("\n    ");
+    if (first) console.log(`    ${first}`);
+  }
   for (const k of config.knownFailures) {
-    if (!failed.some((f) => f.includes(k)))
+    if (!failed.some((f) => f.name.includes(k)))
       console.log(`  note: allowlisted "${k}" now passes - remove it from config`);
   }
   if (fresh.length > 0) fail("unit suite has failures outside the allowlist");
@@ -524,38 +553,61 @@ async function main() {
   await mkdir(join(ROOT, config.artDir), { recursive: true });
 
   let ideas = await readIdeas();
-  if (!args.only && ideas.length > config.count)
-    fail(`${IDEAS} lists ${ideas.length} ideas but count is ${config.count}; trim it or raise count`);
   if (args.only) {
     ideas = ideas.filter((idea) => idea.id === args.only);
     if (ideas.length === 0) fail(`--only ${args.only}: no such idea in ${IDEAS} (run ideation first)`);
-  } else if (ideas.length !== config.count || ideas.some((idea) => !validIdea(idea))) {
-    await runMuse({
-      name: "ideate",
-      prompt: ideationPrompt({
-        count: config.count,
-        styleReference: config.styleReference,
-        artDir: config.artDir,
-        keyFile: config.keyFile,
-      }),
-      images: [styleAbs],
-      key,
-      serverUrl: null,
-      modelSteps: config.modelSteps,
-      timeoutMinutes: config.timeoutMinutes,
-    });
-    await readResult(join(ART, "result-ideation.json"), "ideation");
-    ideas = await readIdeas();
-    if (ideas.length !== config.count || ideas.some((idea) => !validIdea(idea)))
-      fail(`ideation must leave exactly ${config.count} valid ideas in ${IDEAS}`);
-    const arts = [];
+  }
+  const invalid = ideas.filter((idea) => !validIdea(idea));
+  if (invalid.length > 0)
+    fail(`${IDEAS} has ${invalid.length} invalid ${invalid.length === 1 ? "entry" : "entries"}; fix or remove them and rerun`);
+  if (!args.only) {
+    const completeIds = new Set();
     for (const idea of ideas) {
-      const art = join(ROOT, config.artDir, `${idea.id}.jpg`);
-      if (!(await exists(art))) arts.push(idea.id);
+      if (await ideaComplete(idea, config.artDir)) completeIds.add(idea.id);
     }
-    if (arts.length > 0) fail(`ideation missing concept art for: ${arts.join(", ")}`);
-  } else {
-    console.log(`generate-vehicles: reusing ${ideas.length} ideas from ${IDEAS}`);
+    const batch = planBatch(
+      ideas.map((idea) => idea.id),
+      completeIds,
+      config.count,
+    );
+    if (batch.finish.length > 0) {
+      console.log(
+        `generate-vehicles: finishing ${batch.finish.length} unfinished idea(s), adding none this run (${batch.finish.join(", ")})`,
+      );
+    }
+    if (batch.add > 0) {
+      const before = ideas.length;
+      await runMuse({
+        name: "ideate",
+        prompt: ideationPrompt({
+          count: batch.add,
+          styleReference: config.styleReference,
+          artDir: config.artDir,
+          keyFile: config.keyFile,
+          existing: before,
+        }),
+        images: [styleAbs],
+        key,
+        serverUrl: null,
+        modelSteps: config.modelSteps,
+        timeoutMinutes: config.timeoutMinutes,
+      });
+      const result = await readResult(join(ART, "result-ideation.json"), "ideation");
+      ideas = await readIdeas();
+      if (ideas.length !== before + batch.add)
+        fail(`ideation must append exactly ${batch.add} ideas (had ${before}, now ${ideas.length})`);
+      if (ideas.some((idea) => !validIdea(idea))) fail(`ideation left invalid ideas in ${IDEAS}`);
+      const added = result.added ?? [];
+      if (added.length !== batch.add || !added.every((id) => ideas.some((idea) => idea.id === id)))
+        fail(`ideation result must list the ${batch.add} new idea ids in "added"`);
+      const missingArt = [];
+      for (const id of added) {
+        if (!(await exists(join(ROOT, config.artDir, `${id}.jpg`)))) missingArt.push(id);
+      }
+      if (missingArt.length > 0) fail(`ideation missing concept art for: ${missingArt.join(", ")}`);
+    } else {
+      console.log(`generate-vehicles: reusing ${ideas.length} ideas from ${IDEAS}`);
+    }
   }
 
   let server = null;
@@ -564,6 +616,7 @@ async function main() {
     await writePlaywrightConfig(server.url);
     let consecutiveFailures = 0;
     const built = [];
+    const fresh = [];
     for (const idea of ideas) {
       if (await ideaComplete(idea, config.artDir)) {
         console.log(`generate-vehicles: ${idea.id} already complete, skipping`);
@@ -592,21 +645,28 @@ async function main() {
         fail(`build ${idea.id}: result ok but files incomplete`);
       console.log(`generate-vehicles: ${idea.id} complete`);
       built.push(idea.id);
+      fresh.push(idea.id);
       consecutiveFailures = 0;
     }
     const failed = ideas.map((i) => i.id).filter((id) => !built.includes(id));
     if (failed.length > 0) fail(`builds failed for: ${failed.join(", ")}; not pushing`);
     await runGates(config);
     await commitAndPush(config, built);
-    console.log(`generate-vehicles: done. Fleet: ${built.join(", ")}`);
+    console.log(
+      `generate-vehicles: done. Built this run (${fresh.length}): ${fresh.join(", ") || "none"}; already complete: ${built.length - fresh.length}`,
+    );
   } finally {
     await stopServer(server);
   }
 }
 
-try {
-  await main();
-} catch (error) {
-  console.error(`generate-vehicles: ${error.message}`);
-  process.exitCode = 1;
+// Import-safe for tests (see scripts/generate-vehicles.d.mts): only auto-run
+// when invoked as a script, matching the gemini-image.mjs convention.
+if (process.argv[1]?.endsWith("generate-vehicles.mjs")) {
+  try {
+    await main();
+  } catch (error) {
+    console.error(`generate-vehicles: ${error.message}`);
+    process.exitCode = 1;
+  }
 }

@@ -39,10 +39,30 @@
       "texture": "asphalt_02"
     }
   ],
-  "prefabs": [],
+  "prefabs": [
+    {
+      "id": "taffy-snapper-1",
+      "kind": "taffy-snapper",
+      "x": 25.71791840278985,
+      "z": -9.297293783515528
+    },
+    {
+      "id": "peppermint-slammer-2",
+      "kind": "peppermint-slammer",
+      "x": -27.728363742019734,
+      "z": 21.48975947231957
+    },
+    {
+      "id": "christmas-icicle-shears-3",
+      "kind": "christmas-icicle-shears",
+      "x": 0,
+      "z": 0
+    }
+  ],
   "medals": {
     "gold": 30,
     "silver": 45,
     "bronze": 60
-  }
+  },
+  "backgroundTemplate": "pastoral-hills"
 }
