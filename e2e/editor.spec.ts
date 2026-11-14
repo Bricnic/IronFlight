@@ -608,3 +608,54 @@ test("back prompts on unsaved changes", async ({ page }) => {
     "e2e-back",
   );
 });
+test("refresh button reloads the level list from disk", async ({ page }) => {
+  await openEditor(page);
+  const name = "e2e-refresh";
+  await page.evaluate(
+    (n) => window.__game!.customLevels.remove(n).catch(() => {}),
+    name,
+  );
+  const levels = () =>
+    page.evaluate(() => window.__game!.editor().levels as string[]);
+  await expect.poll(levels, { timeout: 15000 }).not.toContain(name);
+  await page.evaluate(
+    (n) =>
+      window.__game!.customLevels.save({
+        name: n,
+        mode: "race",
+        spawn: { x: 0, y: 2.1, z: -40, yaw: 0 },
+        checkpoints: [{ x: 0, z: 40 }],
+        solids: [
+          {
+            id: "ground",
+            kind: "ground",
+            x: 0,
+            y: -0.6,
+            z: 0,
+            w: 200,
+            h: 1.2,
+            d: 200,
+            color: 0x6d817c,
+          },
+        ],
+        prefabs: [],
+        medals: { gold: 30, silver: 45, bronze: 60 },
+      }),
+    name,
+  );
+  // The picker stays stale until refreshed: no reload involved.
+  expect(await levels()).not.toContain(name);
+  await page.locator("#editor-refresh-levels").click();
+  await expect.poll(levels, { timeout: 15000 }).toContain(name);
+  // A refreshed entry opens like any listed level.
+  await page.locator("#editor-levels").selectOption(name);
+  await expect(page.locator("#editor-status")).toContainText(`Opened ${name}`);
+  // Removals refresh away too.
+  await page.evaluate(
+    (n) => window.__game!.customLevels.remove(n),
+    name,
+  );
+  expect(await levels()).toContain(name);
+  await page.locator("#editor-refresh-levels").click();
+  await expect.poll(levels, { timeout: 15000 }).not.toContain(name);
+});
