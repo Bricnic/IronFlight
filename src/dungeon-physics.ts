@@ -6,7 +6,13 @@ import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDin
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import {
+  ANCHOR,
   DINOSAUR_BITE,
+  mulberry32,
+  PELICAN,
+  pelicanPose,
+  SHIP,
+  shipSailed,
   DINOSAUR_COOLDOWN,
   DINOSAUR_LUNGE,
   dinosaurPose,
@@ -57,6 +63,26 @@ type Mechanism = {
   tilt?: number;
   triggered?: boolean;
   aboard?: boolean;
+  pelican?: {
+    spots: { x: number; z: number }[];
+    index: number;
+    phase: "guard" | "takeoff" | "fly" | "land";
+    phaseT: number;
+    flyFrom: { x: number; z: number };
+    flyDist: number;
+    pos: { x: number; y: number; z: number };
+    yaw: number;
+    bite?: { started: number; turn: number; hit: boolean };
+  };
+  anchor?: {
+    fired: boolean;
+    firedAt: number;
+    hookLocal: { x: number; y: number; z: number };
+    ropeLen: number;
+    target: { x: number; z: number };
+    sensors: R.Collider[];
+  };
+  ship?: { departedAt?: number; sailed?: number };
 };
 export class DungeonPhysics {
   mechanisms: Mechanism[] = [];
@@ -216,6 +242,117 @@ export class DungeonPhysics {
           CHRISTMAS_DEER.h,
         );
       }
+    } else if (h.kind === "pelican") {
+      // Three course spots, random start; explicit spots pin the rotation.
+      const rng = h.seed !== undefined ? mulberry32(h.seed) : Math.random;
+      const gates = this.sim.courseTrack?.checkpoints ?? [];
+      let spots = h.spots ?? [];
+      if (spots.length !== 3) {
+        spots = Array.from({ length: 3 }, () => {
+          if (!gates.length) return { x: h.x, z: h.z };
+          const g = gates[Math.floor(rng() * gates.length) % gates.length];
+          return { x: g.x, z: g.z };
+        });
+      }
+      const index = Math.floor(rng() * 3) % 3;
+      m.pelican = {
+        spots,
+        index,
+        phase: "guard",
+        phaseT: this.sim.time,
+        flyFrom: { x: spots[index].x, z: spots[index].z },
+        flyDist: 1,
+        pos: { x: spots[index].x, y: h.y ?? 0, z: spots[index].z },
+        yaw: h.yaw ?? 0,
+      };
+    } else if (h.kind === "anchor") {
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.kinematicPositionBased().setTranslation(
+          h.x,
+          h.y ?? 0,
+          h.z,
+        ),
+      );
+      m.body = body;
+      const yaw = h.yaw ?? 0;
+      // Solid shank the truck can bump; the touch fires the hook.
+      m.colliders.push(
+        world.createCollider(
+          R.ColliderDesc.cuboid(0.5, 2, 0.5)
+            .setTranslation(0, 2, 0)
+            .setFriction(0.8),
+          body,
+        ),
+      );
+      const sensors: R.Collider[] = [];
+      const sensor = (lx: number, y: number, lz: number, r: number) => {
+        const c = world.createCollider(
+          R.ColliderDesc.ball(r).setTranslation(lx, y, lz).setSensor(true),
+          body,
+        );
+        sensors.push(c);
+        m.colliders.push(c);
+      };
+      sensor(0, 2, 0, 2.5);
+      for (const d of [3, 6, 9, 12])
+        sensor(Math.sin(yaw) * d, 0.6, Math.cos(yaw) * d, 1.7);
+      m.anchor = {
+        fired: false,
+        firedAt: 0,
+        hookLocal: { x: 0, y: 0, z: 0 },
+        ropeLen: 0,
+        target: { x: h.x, z: h.z },
+        sensors,
+      };
+    } else if (h.kind === "ship") {
+      const yaw = h.yaw ?? 0;
+      // Fixed, not kinematic: raycast wheels never touch kinematic decks
+      // (proven on the rocker), so the ship steps a fixed hull and carries
+      // aboard trucks explicitly in before().
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.fixed()
+          .setTranslation(h.x, h.y ?? 0, h.z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), yaw),
+          ),
+      );
+      m.body = body;
+      const deck = (
+        x: number, y: number, z: number, w: number, hgt: number, d: number, friction: number,
+      ) => {
+        m.colliders.push(
+          world.createCollider(
+            R.ColliderDesc.cuboid(w / 2, hgt / 2, d / 2)
+              .setTranslation(x, y, z)
+              .setFriction(friction),
+            body,
+          ),
+        );
+      };
+      // Deep slab, not the plank shell: jump landings spear through thin
+      // kinematic plates and wedge. Top stays exactly at deck level.
+      deck(0, SHIP.deckY - 1.5, 0, SHIP.w, 3, SHIP.d, 1.2);
+      // Rails port, starboard and bow; the stern stays open for the landing.
+      for (const side of [-1, 1])
+        deck(
+          side * (SHIP.w / 2 - SHIP.railT / 2), SHIP.deckY + SHIP.railH / 2, 0,
+          SHIP.railT, SHIP.railH, SHIP.d, 0.6,
+        );
+      deck(
+        0, SHIP.deckY + SHIP.railH / 2, SHIP.d / 2 - SHIP.railT / 2,
+        SHIP.w, SHIP.railH, SHIP.railT, 0.6,
+      );
+      // Wheelhouse and container rows: solid deck furniture.
+      deck(
+        SHIP.cabin.x, SHIP.deckY + SHIP.cabin.h / 2, SHIP.cabin.z,
+        SHIP.cabin.w, SHIP.cabin.h, SHIP.cabin.d, 0.6,
+      );
+      for (const side of [-1, 1])
+        deck(
+          side * SHIP.cargo.x, SHIP.deckY + SHIP.cargo.h / 2, SHIP.cargo.z,
+          SHIP.cargo.w, SHIP.cargo.h, SHIP.cargo.d, 0.6,
+        );
+      m.ship = {};
     } else if (isCandyDecor(h.kind)) {
       // Bumpable scenery only: candy kinds have no strike entry, so after() never fires.
       if (h.kind === "candy-cane-arch") {
@@ -232,10 +369,83 @@ export class DungeonPhysics {
       }
     }
   }
-  /** Pre-step kinematic updates: rocker seesaws follow the car aboard. */
+  /** Pre-step kinematic updates: rockers, anchors and the departing ship. */
   before() {
     const s = this.sim;
     for (const m of this.mechanisms) {
+      if (m.h.kind === "ship" && m.body && m.ship) {
+        const need =
+          m.h.trigger ??
+          Math.max(1, (s.courseTrack?.checkpoints.length ?? 2) - 1);
+        const run = s.trackRun;
+        if (
+          m.ship.departedAt === undefined &&
+          run &&
+          run.status === "running" &&
+          run.checkpoint >= need
+        )
+          m.ship.departedAt = s.time;
+        const sailed = shipSailed(m.ship.departedAt, s.time);
+        if (sailed === m.ship.sailed) continue;
+        const prev = m.ship.sailed ?? 0;
+        m.ship.sailed = sailed;
+        const yaw = m.h.yaw ?? 0;
+        const nx = m.h.x + Math.sin(yaw) * sailed;
+        const nz = m.h.z + Math.cos(yaw) * sailed;
+        const step = sailed - prev;
+        m.body.setTranslation({ x: nx, y: m.h.y ?? 0, z: nz }, true);
+        // Carry an aboard truck with the hull; fixed decks keep full traction.
+        const p = s.body.translation();
+        const dx = p.x - nx, dz = p.z - nz;
+        const cos = Math.cos(yaw), sin = Math.sin(yaw);
+        const lx = dx * cos - dz * sin, lz = dx * sin + dz * cos;
+        const deckTop = (m.h.y ?? 0) + SHIP.deckY;
+        if (
+          Math.abs(lx) < SHIP.w / 2 + 1 &&
+          Math.abs(lz) < SHIP.d / 2 + 1 &&
+          p.y > deckTop - 1.5 &&
+          p.y < deckTop + 4
+        )
+          s.body.setTranslation(
+            { x: p.x + Math.sin(yaw) * step, y: p.y, z: p.z + Math.cos(yaw) * step },
+            true,
+          );
+        continue;
+      }
+      if (m.h.kind === "anchor" && m.body && m.anchor?.fired) {
+        const a = m.anchor;
+        const t = s.time - a.firedAt;
+        const baseY = m.h.y ?? 0;
+        const ease = (k: number) => {
+          k = Math.max(0, Math.min(1, k));
+          return k * k * (3 - 2 * k);
+        };
+        let x = m.h.x, y = baseY, z = m.h.z;
+        if (t < ANCHOR.rise) {
+          y = baseY + ANCHOR.cruiseHeight * ease(t / ANCHOR.rise);
+        } else if (t < ANCHOR.flight) {
+          const k = ease(
+            (t - ANCHOR.rise) / (ANCHOR.flight - ANCHOR.rise),
+          );
+          x = m.h.x + (a.target.x - m.h.x) * k;
+          z = m.h.z + (a.target.z - m.h.z) * k;
+          y = baseY + ANCHOR.cruiseHeight;
+        } else if (t < ANCHOR.plunge) {
+          const k = (t - ANCHOR.flight) / (ANCHOR.plunge - ANCHOR.flight);
+          x = a.target.x;
+          z = a.target.z;
+          y =
+            baseY +
+            ANCHOR.cruiseHeight +
+            (ANCHOR.sinkDepth - ANCHOR.cruiseHeight) * k * k;
+        } else {
+          x = a.target.x;
+          z = a.target.z;
+          y = ANCHOR.sinkDepth;
+        }
+        m.body.setNextKinematicTranslation({ x, y, z });
+        continue;
+      }
       if (m.h.kind !== "rocker" || !m.body) continue;
       const yaw = m.h.yaw ?? 0;
       const cos = Math.cos(yaw), sin = Math.sin(yaw);
@@ -397,6 +607,194 @@ export class DungeonPhysics {
       s.damageEvents.push({ source: kind, part: "chassis-front", time: s.time });
     }
   }
+  /** Giant pelican: guards each perch 3 s, flies the rotation, bills trucks in range. */
+  private updatePelican(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const pel = m.pelican!;
+    const baseY = m.h.y ?? 0;
+    const next = (pel.index + 1) % pel.spots.length;
+    if (pel.phase === "guard") {
+      const spot = pel.spots[pel.index];
+      pel.pos = { x: spot.x, y: baseY, z: spot.z };
+      if (s.time - pel.phaseT >= PELICAN.guard) {
+        pel.phase = "takeoff";
+        pel.phaseT = s.time;
+        pel.bite = undefined;
+      }
+    } else if (pel.phase === "takeoff") {
+      const k = Math.min(1, (s.time - pel.phaseT) / PELICAN.takeoff);
+      pel.pos.y = baseY + PELICAN.flyHeight * k * k;
+      const spot = pel.spots[next];
+      pel.yaw = Math.atan2(spot.x - pel.pos.x, spot.z - pel.pos.z);
+      if (k >= 1) {
+        pel.phase = "fly";
+        pel.phaseT = s.time;
+        pel.flyFrom = { x: pel.pos.x, z: pel.pos.z };
+        pel.flyDist = Math.max(
+          0.01,
+          Math.hypot(spot.x - pel.pos.x, spot.z - pel.pos.z),
+        );
+      }
+    } else if (pel.phase === "fly") {
+      const k = Math.min(
+        1,
+        ((s.time - pel.phaseT) * PELICAN.flySpeed) / pel.flyDist,
+      );
+      const spot = pel.spots[next];
+      pel.pos = {
+        x: pel.flyFrom.x + (spot.x - pel.flyFrom.x) * k,
+        y: baseY + PELICAN.flyHeight,
+        z: pel.flyFrom.z + (spot.z - pel.flyFrom.z) * k,
+      };
+      if (k >= 1) {
+        pel.phase = "land";
+        pel.phaseT = s.time;
+      }
+    } else {
+      const k = Math.min(1, (s.time - pel.phaseT) / PELICAN.land);
+      const spot = pel.spots[next];
+      pel.pos = {
+        x: spot.x,
+        y: baseY + PELICAN.flyHeight * (1 - k),
+        z: spot.z,
+      };
+      if (k >= 1) {
+        pel.phase = "guard";
+        pel.phaseT = s.time;
+        pel.index = next;
+      }
+    }
+    if (s.status !== "driving" || pel.phase !== "guard") return;
+    // Grounded attack: turn on the truck and overlap it with the bill.
+    const dx = p.x - pel.pos.x, dz = p.z - pel.pos.z;
+    const dy = p.y - (pel.pos.y + PELICAN.height);
+    if (
+      s.time - (pel.bite?.started ?? -Infinity) >= PELICAN.cooldown &&
+      !pel.bite
+    ) {
+      const aim = Math.atan2(dx, dz) - pel.yaw;
+      const turn = Math.atan2(Math.sin(aim), Math.cos(aim));
+      if (
+        Math.abs(turn) <= 1.4 &&
+        Math.abs(dy) <= 4.5 &&
+        Math.hypot(dx, dz) <= PELICAN.range
+      )
+        pel.bite = { started: s.time, turn, hit: false };
+    }
+    const bite = pel.bite;
+    if (!bite || bite.hit) return;
+    if (s.time - bite.started > 1.2) {
+      pel.bite = undefined;
+      return;
+    }
+    const pose = pelicanPose(s.time - bite.started);
+    if (!pose.striking || Math.abs(dy) > 4.5) return;
+    const angle = pel.yaw + bite.turn * pose.turn;
+    const mx = pel.pos.x + Math.sin(angle) * PELICAN.reach;
+    const mz = pel.pos.z + Math.cos(angle) * PELICAN.reach;
+    if (Math.hypot(p.x - mx, p.z - mz) > PELICAN.kill) return;
+    bite.hit = true;
+    m.contacts++;
+    s.damage("chassis-front", 10000);
+    s.damageEvents.push({
+      source: "pelican",
+      part: "chassis-front",
+      time: s.time,
+    });
+  }
+  /** Deck anchor: touch it or its chain and it hooks the truck, then dunks it. */
+  private updateAnchor(m: Mechanism) {
+    const s = this.sim;
+    if (s.status !== "driving" || !m.body) return;
+    const a = m.anchor!;
+    const tip = () => {
+      const t = m.body!.translation();
+      return { x: t.x, y: t.y + 4, z: t.z };
+    };
+    if (!a.fired) {
+      let touch = false;
+      for (const c of m.colliders) {
+        if (c.isSensor()) continue;
+        this.sim.world.contactPairsWith(c, (other) => {
+          if (other.parent()?.handle !== s.body.handle) return;
+          this.sim.world.contactPair(c, other, (manifold) => {
+            if (manifold.numSolverContacts() > 0) touch = true;
+          });
+        });
+        if (touch) break;
+      }
+      if (!touch)
+        for (const sensor of a.sensors) {
+          for (const state of s.parts.values()) {
+            if (
+              state.collider &&
+              s.world.intersectionPair(sensor, state.collider)
+            ) {
+              touch = true;
+              break;
+            }
+          }
+          if (touch) break;
+        }
+      if (!touch) return;
+      a.fired = true;
+      a.firedAt = s.time;
+      // Hook the chassis edge facing the anchor; the rope pulls from there.
+      const car = s.body.translation();
+      const head = tip();
+      const dx = head.x - car.x, dz = head.z - car.z;
+      const len = Math.hypot(dx, dz) || 1;
+      const q = new Quaternion().copy(s.body.rotation()).invert();
+      const local = new Vector3((dx / len) * 2, 0, (dz / len) * 2).applyQuaternion(q);
+      a.hookLocal = { x: local.x, y: local.y, z: local.z };
+      const hw = this.hookWorld(m);
+      a.ropeLen =
+        Math.hypot(hw.x - head.x, hw.y - head.y, hw.z - head.z) + ANCHOR.slack;
+      let bd = Infinity;
+      for (const pref of s.courseTrack?.custom?.prefabs ?? []) {
+        if (pref.kind !== "water" && pref.kind !== "shark-pool") continue;
+        const d = Math.hypot(pref.x - m.h.x, pref.z - m.h.z);
+        if (d < bd) {
+          bd = d;
+          a.target = { x: pref.x, z: pref.z };
+        }
+      }
+      if (bd === Infinity) {
+        const yaw = m.h.yaw ?? 0;
+        a.target = { x: m.h.x + Math.sin(yaw) * 30, z: m.h.z + Math.cos(yaw) * 30 };
+      }
+      m.contacts++;
+      s.damage("chassis-front", 5);
+      s.damageEvents.push({
+        source: "anchor",
+        part: "chassis-front",
+        time: s.time,
+      });
+      return;
+    }
+    // The winch reels the truck all the way into the dunk point.
+    a.ropeLen = Math.max(2, a.ropeLen - ANCHOR.reel * DT);
+    // Taut rope overrules the engine: drag the truck to the dunk point.
+    const hook = this.hookWorld(m);
+    const head = tip();
+    const dx = head.x - hook.x, dy = head.y - hook.y, dz = head.z - hook.z;
+    const d = Math.hypot(dx, dy, dz) || 1;
+    if (d > a.ropeLen) {
+      const v = ANCHOR.dragSpeed / d;
+      s.body.setLinvel({ x: dx * v, y: dy * v, z: dz * v }, true);
+    }
+  }
+  /** Current world position of a hooked truck's chain point. */
+  hookWorld(m: Mechanism) {
+    const s = this.sim;
+    const a = m.anchor!;
+    const car = s.body.translation();
+    const q = new Quaternion().copy(s.body.rotation());
+    const w = new Vector3(a.hookLocal.x, a.hookLocal.y, a.hookLocal.z)
+      .applyQuaternion(q)
+      .add(new Vector3(car.x, car.y, car.z));
+    return { x: w.x, y: w.y, z: w.z };
+  }
   /** Oversized bite: tear off the 3 parts nearest the mouth, splash 40% everywhere else. */
   private ripWithDinosaur(
     kind: DinosaurKind, h: DungeonHazard, x: number, z: number, mouth: number, height: number,
@@ -509,6 +907,15 @@ export class DungeonPhysics {
         this.rollBoulder(m, p);
         continue;
       }
+      if (h.kind === "pelican") {
+        this.updatePelican(m, p);
+        continue;
+      }
+      if (h.kind === "anchor") {
+        this.updateAnchor(m);
+        continue;
+      }
+      if (h.kind === "ship") continue;
       if (h.kind === "rocker") continue;
       const strike =
         DUNGEON_STRIKE[h.kind as keyof typeof DUNGEON_STRIKE];
@@ -556,19 +963,52 @@ export class DungeonPhysics {
     return {
       hazards: this.mechanisms.map((m) => {
         const machine = this.gauntlet.inspect(m.h.id);
-        return {
+        const bodyPos =
+          m.h.kind === "anchor" || m.h.kind === "ship"
+            ? m.body?.translation()
+            : undefined;
+        const entry: {
+          id: string;
+          kind: string;
+          x: number;
+          z: number;
+          colliders: number;
+          contacts: number;
+          striking: boolean;
+          perch?: number;
+          flying?: boolean;
+          yaw?: number;
+          fired?: boolean;
+          departed?: boolean;
+        } = {
           id: m.h.id,
           kind: m.h.kind,
-          x: machine?.x ?? m.h.x,
-          z: machine?.z ?? m.h.z,
+          x: machine?.x ?? bodyPos?.x ?? m.pelican?.pos.x ?? m.h.x,
+          z: machine?.z ?? bodyPos?.z ?? m.pelican?.pos.z ?? m.h.z,
           colliders: m.colliders.length + (machine?.colliders ?? 0),
           contacts: machine?.contacts ?? m.contacts,
           striking: machine?.striking ?? (m.h.kind === "lime-chomper"
             ? limeJawPose(this.sim.time + m.h.phase).striking
             : isDinosaur(m.h.kind)
               ? !!m.bite && dinosaurPose(this.sim.time - m.bite.started).striking
-              : snapStriking(this.sim.time + m.h.phase)),
+              : m.h.kind === "pelican"
+                ? !!m.pelican?.bite &&
+                  pelicanPose(this.sim.time - m.pelican.bite.started).striking
+                : m.h.kind === "anchor"
+                  ? !!m.anchor?.fired
+                  : m.h.kind === "ship"
+                    ? m.ship?.departedAt !== undefined &&
+                      shipSailed(m.ship.departedAt, this.sim.time) < SHIP.distance
+                    : snapStriking(this.sim.time + m.h.phase)),
         };
+        if (m.pelican) {
+          entry.perch = m.pelican.index;
+          entry.flying = m.pelican.phase !== "guard";
+          entry.yaw = m.pelican.yaw;
+        }
+        if (m.anchor) entry.fired = m.anchor.fired;
+        if (m.ship) entry.departed = m.ship.departedAt !== undefined;
+        return entry;
       }),
     };
   }

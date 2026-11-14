@@ -10,6 +10,9 @@ export type DungeonHazard = {
   y?: number;
   yaw?: number;
   scale?: number;
+  spots?: { x: number; z: number }[];
+  seed?: number;
+  trigger?: number;
 };
 /** Custom levels serve whatever dungeon prefabs the author placed. */
 export function dungeonHazards(track?: Track): DungeonHazard[] {
@@ -28,6 +31,9 @@ export function dungeonHazards(track?: Track): DungeonHazard[] {
       ...(p.y === undefined ? {} : { y: p.y }),
       ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
       ...(p.scale === undefined ? {} : { scale: p.scale }),
+      ...(p.spots === undefined ? {} : { spots: p.spots.map((s) => ({ ...s })) }),
+      ...(p.seed === undefined ? {} : { seed: p.seed }),
+      ...(p.trigger === undefined ? {} : { trigger: p.trigger }),
     }));
 }
 /** Open crossing window, violent 0.2 s slam, shut hold, quick reopen. 3.2-second cycle. */
@@ -162,6 +168,78 @@ export function limeJawPose(time: number) {
   return {
     openness: rise * rise * (3 - 2 * rise) * (1 - snap ** 2),
     striking: t < 0.48 || t >= 4.17,
+  };
+}
+
+/** Giant pelican: twice the truck, guards each perch 3 s, then flies the rotation. */
+export const PELICAN = {
+  guard: 3,
+  takeoff: 0.8,
+  land: 0.8,
+  flyHeight: 12,
+  flySpeed: 22,
+  /** Aggro range, about one car length from the perch. */
+  range: 5.5,
+  /** Bill tip reach from the perch when the strike lands. */
+  reach: 7,
+  /** Kill radius around the bill tip. */
+  kill: 3.5,
+  cooldown: 2.2,
+  /** Head height above the perch while guarding. */
+  height: 5,
+} as const;
+/** Pelican bite: 1.1 s lunge, bill overlaps the truck through the strike window. */
+export function pelicanPose(elapsed: number) {
+  const open = Math.max(0, Math.min(1, elapsed / 0.28, (0.72 - elapsed) / 0.18));
+  const lunge = Math.max(0, Math.min(1, (elapsed - 0.25) / 0.2, (0.95 - elapsed) / 0.3));
+  const turn = Math.max(0, Math.min(1, elapsed / 0.25, (1.1 - elapsed) / 0.3));
+  return { open, lunge, turn, striking: elapsed >= 0.45 && elapsed <= 0.6 };
+}
+/** Deck anchor: touch it or its chain and it hooks the truck, then dunks it. */
+export const ANCHOR = {
+  /** Ground chain reach toward the road. */
+  chain: 12,
+  /** Rope slack past the hook distance. */
+  slack: 5,
+  /** Winch rate reeling the truck in once hooked. */
+  reel: 4,
+  /** Drag velocity while the rope is taut; the engine cannot beat a velocity set. */
+  dragSpeed: 16,
+  rise: 0.7,
+  flight: 2.2,
+  plunge: 3.0,
+  cruiseHeight: 14,
+  sinkDepth: -4,
+} as const;
+/** Departing ship: sails the channel on its checkpoint trigger, then holds. */
+export const SHIP = {
+  w: 24,
+  deckY: 4,
+  deckH: 1.2,
+  d: 56,
+  railH: 1.1,
+  railT: 0.8,
+  speed: 3.5,
+  distance: 70,
+  /** Wheelhouse, offset to port so starboard stays a straight lane to the finish. */
+  cabin: { x: -7, w: 8, h: 4, d: 6, z: 19 },
+  /** Container rows flanking the lane, shared by colliders and models. */
+  cargo: { x: 9.5, w: 5, h: 3, d: 40, z: -4 },
+} as const;
+export function shipSailed(departedAt: number | undefined, time: number) {
+  if (departedAt === undefined) return 0;
+  return Math.min(SHIP.distance, Math.max(0, time - departedAt) * SHIP.speed);
+}
+
+/** Deterministic RNG for seeded prefabs (pelican spots in tests). */
+export function mulberry32(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
 

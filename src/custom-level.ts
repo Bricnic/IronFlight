@@ -142,6 +142,12 @@ export type ChristmasLethalKind = (typeof CHRISTMAS_LETHAL_PREFAB_KINDS)[number]
 export function isChristmasLethal(kind: string): kind is ChristmasLethalKind {
   return (CHRISTMAS_LETHAL_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Shipyard prefabs: the roaming pelican, the dragging anchor, the departing ship. */
+export const SHIPYARD_PREFAB_KINDS = ["pelican", "anchor", "ship"] as const;
+export type ShipyardKind = (typeof SHIPYARD_PREFAB_KINDS)[number];
+export function isShipyard(kind: string): kind is ShipyardKind {
+  return (SHIPYARD_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -158,6 +164,7 @@ export const DUNGEON_PREFAB_KINDS = [
   "cacti-patch",
   "rocker",
   "boulder",
+  ...SHIPYARD_PREFAB_KINDS,
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
   ...CANDY_PREFAB_KINDS,
@@ -227,6 +234,12 @@ export interface CustomPrefab {
   roll?: number;
   /** Body scale for dinosaurs and jaw traps; oversized dinosaurs bite much harder. */
   scale?: number;
+  /** Pelican perch rotation: exactly 3 course spots. Omitted, it picks 3 random checkpoints. */
+  spots?: { x: number; z: number }[];
+  /** Pelican RNG seed for deterministic spots in tests. Omitted, fully random. */
+  seed?: number;
+  /** Ship departure: checkpoint count that launches it down the channel. */
+  trigger?: number;
 }
 export const COLLECTIBLE_KINDS = ["ring", "chest"] as const;
 export type CollectibleKind = (typeof COLLECTIBLE_KINDS)[number];
@@ -514,6 +527,26 @@ export function validateCustomLevel(input: unknown): CustomLevel {
         (JAW_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
         p?.kind === "snowman",
       `prefab ${p?.id ?? i} scale is only supported on dinosaurs, jaw traps and snowmen`,
+    );
+    check(
+      errors,
+      p?.spots === undefined ||
+        (p?.kind === "pelican" &&
+          Array.isArray(p.spots) &&
+          p.spots.length === 3 &&
+          p.spots.every((s) => finite(s?.x) && finite(s?.z))),
+      `prefab ${p?.id ?? i} spots must be exactly 3 finite x/z points on a pelican`,
+    );
+    check(
+      errors,
+      p?.seed === undefined || (p?.kind === "pelican" && finite(p.seed)),
+      `prefab ${p?.id ?? i} seed is only supported on pelicans`,
+    );
+    check(
+      errors,
+      p?.trigger === undefined ||
+        (p?.kind === "ship" && Number.isInteger(p.trigger) && p.trigger >= 1),
+      `prefab ${p?.id ?? i} trigger must be a positive integer on a ship`,
     );
   }
   for (const [i, item] of [spawn, ...solids, ...prefabs, ...checkpoints, ...collectibles, ...demolish, ...rings].entries()) {

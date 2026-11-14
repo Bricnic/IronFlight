@@ -148,5 +148,10 @@
     "file": "Rock and Roll.json",
     "thumbnail": "/tracks/rock-and-roll.png",
     "description": "Cross the screw field, jump the coal flames, ride the giant seesaw, creep past two rolling boulders, thread the dino loop and race the gray straight."
+  },
+  {
+    "file": "Shipyard.json",
+    "thumbnail": "/tracks/shipyard.png",
+    "description": "Dodge the harbour pelican, shun the dunking anchors, then jump the channel onto the departing ferry and race its deck to the finish."
   }
 ]

@@ -2,9 +2,11 @@ import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { pbr } from "./materials";
 import {
+  ANCHOR,
   DINOSAUR_BITE,
   snapOpenness,
   limeJawPose,
+  PELICAN,
   ROBOT_LASER_RANGE,
   robotLaserAngle,
   robotLaserFiring,
@@ -15,6 +17,7 @@ import {
 import { dungeonHazards } from "./dungeon-hazards";
 import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine } from "./custom-level";
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
+import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
@@ -36,6 +39,8 @@ type Model = {
   dinosaur?: ReturnType<typeof buildDinosaur>;
   machine?: ReturnType<typeof buildGauntletMachine>;
   laser?: T.Group;
+  pelican?: ReturnType<typeof buildPelican>;
+  anchor?: ReturnType<typeof buildAnchor>;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
 function consolidate(root: T.Group) {
@@ -83,6 +88,9 @@ const labelMessages: Record<string, [string, string]> = {
   robot: ["SCRAP BOT", "SWEEPING LASER / TIME THE STOMP"],
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
   boulder: ["BOULDER DASH", "ROLLS WHEN CLOSE / SLOW OR DODGE"],
+  pelican: ["HARBOUR PELICAN", "GUARDS 3 PERCHES / MIND THE BILL"],
+  anchor: ["DECK ANCHOR", "HOOKS TRUCKS / DUNKS THEM"],
+  ship: ["DEPARTING FERRY", "SAILS ON THE GATES / CATCH IT"],
   "jawbreaker-crusher": ["JAWBREAKER CRUSHER", "TIMED CRUSH / DRIVE BETWEEN"],
   "candy-snap-jaws": ["CANDY SNAP JAWS", "TIMED BITE / DRIVE BETWEEN"],
   "gummy-vice": ["GUMMY VICE", "TIMED SQUEEZE / DRIVE BETWEEN"],
@@ -1006,6 +1014,15 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     root.scale.setScalar(h.scale ?? 1);
     model.dinosaur = buildDinosaur(root, h.kind);
     poseDinosaur(model.dinosaur, 0, 0);
+  } else if (h.kind === "pelican") {
+    model.pelican = buildPelican(root);
+    root.add(buildDungeonLabel(h, 9.5));
+  } else if (h.kind === "anchor") {
+    model.anchor = buildAnchor(root);
+    root.add(buildDungeonLabel(h, 8));
+  } else if (h.kind === "ship") {
+    buildShip(root);
+    root.add(buildDungeonLabel(h, 16));
   } else {
     model.pivots = buildJailCellModel(h, root);
   }
@@ -1038,6 +1055,17 @@ export class DungeonView extends T.Group {
   moveModel(id: string, dx: number, dy: number, dz: number) {
     const m = this.models.find((m) => m.h.id === id);
     if (m) m.root.position.add(new T.Vector3(dx, dy, dz));
+  }
+  /** Bill inspection for tests: bill tip world position plus bill openness. */
+  inspectPelican(id: string) {
+    const m = this.models.find((m) => m.h.id === id && m.pelican);
+    if (!m?.pelican) return undefined;
+    m.root.updateMatrixWorld(true);
+    const tip = m.pelican.billTip.getWorldPosition(new T.Vector3());
+    return {
+      tip: { x: tip.x, y: tip.y, z: tip.z },
+      billOpen: m.pelican.billLower.rotation.x,
+    };
   }
   /** Strike inspection for tests: head world position plus jaw openness. */
   inspectDinosaur(id: string) {
@@ -1170,6 +1198,55 @@ export class DungeonView extends T.Group {
         }
         continue;
       }
+      if (m.h.kind === "pelican" && m.pelican) {
+        const pel = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.pelican;
+        if (pel) {
+          let aim = 0;
+          if (pel.bite) {
+            const car = s.body.translation();
+            aim = dinosaurAimPitch(
+              pel.pos.y + PELICAN.height,
+              car.y,
+              Math.hypot(car.x - pel.pos.x, car.z - pel.pos.z),
+            );
+          }
+          posePelican(m.pelican, m.root, pel, s.time, aim);
+        }
+        continue;
+      }
+      if (m.h.kind === "anchor" && m.anchor) {
+        const mech = s.dungeon.mechanisms.find(({ h }) => h.id === m.h.id);
+        const body = mech?.body;
+        if (body && mech?.anchor) {
+          const t = body.translation();
+          m.root.position.set(t.x, t.y, t.z);
+          m.root.rotation.y = 0;
+          const a = mech.anchor;
+          const yaw = m.h.yaw ?? 0;
+          const far = a.fired
+            ? s.dungeon.hookWorld(mech)
+            : {
+                x: m.h.x + Math.sin(yaw) * ANCHOR.chain,
+                y: (m.h.y ?? 0) + 0.5,
+                z: m.h.z + Math.cos(yaw) * ANCHOR.chain,
+              };
+          layAnchorChain(
+            m.anchor,
+            [0, 4.6, 0],
+            [far.x - t.x, far.y - t.y, far.z - t.z],
+          );
+        }
+        continue;
+      }
+      if (m.h.kind === "ship") {
+        const body = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.body;
+        if (body) m.root.position.copy(body.translation());
+        continue;
+      }
       if (m.h.kind === "lime-chomper") {
         m.pivots[0].rotation.x = -0.82 * limeJawPose(s.time + m.h.phase).openness;
         continue;
@@ -1252,7 +1329,7 @@ export class DungeonView extends T.Group {
       id: m.h.id,
       kind: m.h.kind,
       triangles: m.triangles,
-      animated: m.pivots.length > 0 || !!m.dinosaur || (!!m.machine && m.h.kind !== "start-gate"),
+      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || m.h.kind === "ship" || (!!m.machine && m.h.kind !== "start-gate"),
     }));
   }
 }
