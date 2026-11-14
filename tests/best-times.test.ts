@@ -26,7 +26,7 @@ it("retains gold times for the JSON-authored Fairground through reload", () => {
   const track = toTrack(validateCustomLevel(fairground)); registerCustomTrack(track);
   const storage = memory(), scores = new BestTimes(storage);
   expect(scores.record({ ...new TrackRun(track).snapshot(), status: "completed", elapsed: 164.63 })).toBe(true);
-  expect(new BestTimes(storage).best(track.id)).toEqual({ time: 164.63, medal: "gold" });
+  expect(new BestTimes(storage).best(track.id)).toEqual({ time: 164.63, medal: "gold", splits: [] });
 });
 it("keeps only faster completed times and reloads medals", () => {
   const storage = memory(),
@@ -48,6 +48,29 @@ it("isolates Triple Loop lane records", () => {
   expect(scores.best("triple-loop", "easy")?.time).toBe(30);
   expect(scores.best("triple-loop", "hard")?.time).toBe(50);
   expect(scores.best("triple-loop", "medium")).toBeNull();
+});
+it("stores checkpoint splits with the best and reloads them", () => {
+  const storage = memory(), scores = new BestTimes(storage);
+  expect(
+    scores.record({ ...result(85), splits: [30.5, 60.25, 85] }),
+  ).toBe(true);
+  expect(new BestTimes(storage).best("foundry-run")).toEqual({
+    time: 85,
+    medal: "bronze",
+    splits: [30.5, 60.25, 85],
+  });
+});
+it("loads pre-split number records with empty splits", () => {
+  const storage = memory();
+  storage.setItem(
+    "iron-flight-best-times-v1",
+    JSON.stringify({ version: 1, records: { "foundry-run:default": 85 } }),
+  );
+  expect(new BestTimes(storage).best("foundry-run")).toEqual({
+    time: 85,
+    medal: "bronze",
+    splits: [],
+  });
 });
 it("handles corrupt/blocked storage and refuses invalid times", () => {
   for (const storage of [

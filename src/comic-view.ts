@@ -82,7 +82,50 @@ const labelMessages: Record<string, [string, string]> = {
   water: ["SKIM OR SWIM", "ENTER >200 MPH / KEEP 180+"],
   potion: ["PICK YOUR POISON", "5 SECONDS / DO NOT MIX"],
   "shark-pool": ["SHARK INFESTED", "SKIM FAST / SLOW SINKS"],
+  ocean: ["OPEN WATER", "DEEP SEA / SLOW SINKS"],
 };
+/** Animated open-water surface; seas tile it at lower density than crossings. */
+function addWaterSurface(
+  add: (
+    geo: T.BufferGeometry,
+    mat: T.Material,
+    x?: number,
+    y?: number,
+    z?: number,
+    parent?: T.Group,
+  ) => T.Mesh,
+  segments: number,
+) {
+  const geo = new T.PlaneGeometry(12, 24, segments, segments);
+  geo.rotateX(-Math.PI / 2);
+  const water = new T.MeshPhysicalMaterial({
+    color: 0x207c9f,
+    metalness: 0.25,
+    roughness: 0.12,
+    transparent: true,
+    opacity: 0.78,
+    clearcoat: 1,
+  });
+  const mesh = add(geo, water, 0, 0.1);
+  mesh.userData.animate = true;
+  water.onBeforeCompile = (shader) => {
+    shader.uniforms.waterTime = { value: 0 };
+    water.userData.shader = shader;
+    shader.fragmentShader =
+      "uniform float waterTime; varying vec2 poolUv;\n" +
+      shader.fragmentShader.replace(
+        "#include <color_fragment>",
+        "#include <color_fragment>\nfloat ripple=sin(poolUv.x*4.0+sin(poolUv.y*2.0+waterTime))*sin(poolUv.y*3.2-waterTime*1.5); diffuseColor.rgb += vec3(.12,.22,.26)*pow(abs(ripple),12.0);",
+      );
+    shader.vertexShader =
+      "uniform float waterTime; varying vec2 poolUv;\n" +
+      shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        "#include <begin_vertex>\npoolUv=position.xz; transformed.y += sin(position.x*2.0+waterTime*2.0)*.06+sin(position.z*1.4-waterTime*2.5)*.04;",
+      );
+  };
+  return mesh;
+}
 /** Upright billboard label anchored above the model at the given local height. */
 export function buildComicLabel(h: ComicHazard, topY: number): T.Sprite {
   const canvas = document.createElement("canvas");
@@ -620,35 +663,7 @@ export function buildComicModel(h: ComicHazard): Model {
       box(12, 4, 1, basin, 0, -2, z);
     }
     for (const side of [-1, 1]) box(0.6, 4, 24, basin, side * 6.3, -2, 0);
-    const geo = new T.PlaneGeometry(12, 24, 224, 224);
-    geo.rotateX(-Math.PI / 2);
-    const water = new T.MeshPhysicalMaterial({
-      color: 0x207c9f,
-      metalness: 0.25,
-      roughness: 0.12,
-      transparent: true,
-      opacity: 0.78,
-      clearcoat: 1,
-    });
-    const mesh = add(geo, water, 0, 0.1);
-    mesh.userData.animate = true;
-    model.water = mesh;
-    water.onBeforeCompile = (shader) => {
-      shader.uniforms.waterTime = { value: 0 };
-      water.userData.shader = shader;
-      shader.fragmentShader =
-        "uniform float waterTime; varying vec2 poolUv;\n" +
-        shader.fragmentShader.replace(
-          "#include <color_fragment>",
-          "#include <color_fragment>\nfloat ripple=sin(poolUv.x*4.0+sin(poolUv.y*2.0+waterTime))*sin(poolUv.y*3.2-waterTime*1.5); diffuseColor.rgb += vec3(.12,.22,.26)*pow(abs(ripple),12.0);",
-        );
-      shader.vertexShader =
-        "uniform float waterTime; varying vec2 poolUv;\n" +
-        shader.vertexShader.replace(
-          "#include <begin_vertex>",
-          "#include <begin_vertex>\npoolUv=position.xz; transformed.y += sin(position.x*2.0+waterTime*2.0)*.06+sin(position.z*1.4-waterTime*2.5)*.04;",
-        );
-    };
+    model.water = addWaterSurface(add, 224);
     const boost = standard(0x22a5ca, 0.5, 0.35);
     box(10, 0.08, 12, boost, 0, 0.04, -27);
     for (let i = 0; i < 7; i++)
@@ -662,6 +677,11 @@ export function buildComicModel(h: ComicHazard): Model {
       pipe.rotation.x = Math.PI / 2;
       for (let z = -12; z <= 12; z += 2) sphere(0.16, gold, side * 6.5, 0.6, z);
     }
+  } else if (h.kind === "ocean") {
+    // Open sea: the water surface alone, no basin, rails or boost pad, so
+    // tiled prefabs read as one continuous body. Lower mesh density: seas
+    // tile dozens of these.
+    model.water = addWaterSurface(add, 56);
   } else if (h.kind === "shark-pool") {
     const rock = pbr("dark_rock_02", 1, { color: 0x5a6068 });
     const sand = standard(0xd9b98a, 0, 0.9);
@@ -754,7 +774,8 @@ export function buildComicModel(h: ComicHazard): Model {
   consolidate(root);
   const top = new T.Box3().setFromObject(root);
   const topY = top.isEmpty() ? 4 : top.max.y - root.position.y + 1.2;
-  root.add(buildComicLabel(h, topY));
+  // No per-tile labels on the ocean: thirty floating signs would chop up the sea.
+  if (h.kind !== "ocean") root.add(buildComicLabel(h, topY));
   root.traverse((o) => {
     if (o instanceof T.Mesh)
       model.triangles +=

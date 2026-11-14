@@ -30,6 +30,24 @@ it("requires swept ordered checkpoints and a directional finish", () => {
   run.step(10, p(21), p(50), 1);
   expect(run.elapsed).toBe(time);
 });
+it("records a split at every checkpoint crossing", () => {
+  const run = new TrackRun(race);
+  run.step(1, p(5), p(15), 1);
+  expect(run.checkpoint).toBe(1);
+  expect(run.snapshot().splits).toEqual([1]);
+  run.step(2, p(15), p(25), 1);
+  expect(run.checkpoint).toBe(2);
+  expect(run.snapshot().splits).toEqual([1, 3]);
+});
+it("drops stale splits when live edits rewind checkpoints", () => {
+  const run = new TrackRun(race);
+  run.step(1, p(5), p(15), 1);
+  expect(run.snapshot().splits).toEqual([1]);
+  run.checkpoint = 0;
+  run.step(1, p(5), p(15), 1);
+  expect(run.checkpoint).toBe(1);
+  expect(run.snapshot().splits).toEqual([2]);
+});
 it("collects each token once using swept proximity and succeeds at the deadline", () => {
   const track = {
     ...getTrack("scrapyard-sweep"),

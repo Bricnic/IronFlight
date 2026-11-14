@@ -158,6 +158,11 @@ export class ComicPhysics {
         }
         for (const side of [-1, 1]) box(side * 6.3, -2, 0, 0.6, 4, 24);
         box(0, 2, -27, 10, 4, 12, true); // boost sensor, physically on approach
+      } else if (h.kind === "ocean") {
+        // Open sea: same deadly water, no rails, walls or approach boost, so
+        // tiled prefabs read as one continuous body.
+        box(0, -4.3, 0, 12, 0.6, 24);
+        box(0, -1.8, 0, 12, 9, 24, true);
       } else {
         box(0, 0.15, 0, 18, 0.3, 4);
         for (let i = 0; i < 4; i++) {
@@ -333,11 +338,12 @@ export class ComicPhysics {
             });
           }
         }
-      } else if (h.kind === "water" || h.kind === "shark-pool") {
+      } else if (h.kind === "water" || h.kind === "shark-pool" || h.kind === "ocean") {
         // Shark pools share the skim-or-sink crossing, but slow swimmers meet
-        // the sharks: triple damage rate and a much faster wreck.
+        // the sharks: triple damage rate and a much faster wreck. Oceans have
+        // no approach boost sensor.
         const sharks = h.kind === "shark-pool";
-        if (this.intersects(m.sensors[1])) {
+        if (m.sensors[1] && this.intersects(m.sensors[1])) {
           const f = new Vector3(0, 0, 1).applyQuaternion(
             new Quaternion().copy(s.body.rotation()),
           );
