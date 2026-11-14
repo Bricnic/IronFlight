@@ -153,5 +153,10 @@
     "file": "Shipyard.json",
     "thumbnail": "/tracks/shipyard.png",
     "description": "Dodge the harbour pelican, shun the dunking anchors, then jump the channel onto the departing ferry and race its deck to the finish."
+  },
+  {
+    "file": "Spider Hollow.json",
+    "thumbnail": "/tracks/spider-hollow.png",
+    "description": "Dodge the chomp book and raptor, skirt the giant spiderweb, thread the fork past spike, fire and slime pits to the finish."
   }
 ]

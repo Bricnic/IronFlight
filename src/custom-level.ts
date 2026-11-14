@@ -149,6 +149,12 @@ export type ShipyardKind = (typeof SHIPYARD_PREFAB_KINDS)[number];
 export function isShipyard(kind: string): kind is ShipyardKind {
   return (SHIPYARD_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Hollow prefabs: the web-spinning spider that runs down stuck trucks. */
+export const HOLLOW_PREFAB_KINDS = ["spider"] as const;
+export type HollowKind = (typeof HOLLOW_PREFAB_KINDS)[number];
+export function isHollow(kind: string): kind is HollowKind {
+  return (HOLLOW_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -166,6 +172,7 @@ export const DUNGEON_PREFAB_KINDS = [
   "rocker",
   "boulder",
   ...SHIPYARD_PREFAB_KINDS,
+  ...HOLLOW_PREFAB_KINDS,
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
   ...CANDY_PREFAB_KINDS,

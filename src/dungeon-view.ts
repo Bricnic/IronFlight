@@ -18,6 +18,7 @@ import { dungeonHazards } from "./dungeon-hazards";
 import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine } from "./custom-level";
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
+import { buildSpider, poseSpider } from "./hollow-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
@@ -41,6 +42,7 @@ type Model = {
   laser?: T.Group;
   pelican?: ReturnType<typeof buildPelican>;
   anchor?: ReturnType<typeof buildAnchor>;
+  spider?: ReturnType<typeof buildSpider>;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
 function consolidate(root: T.Group) {
@@ -88,6 +90,7 @@ const labelMessages: Record<string, [string, string]> = {
   robot: ["SCRAP BOT", "SWEEPING LASER / TIME THE STOMP"],
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
   boulder: ["BOULDER DASH", "ROLLS WHEN CLOSE / SLOW OR DODGE"],
+  spider: ["WEB SPINNER", "STICKY SILK / RUNS YOU DOWN"],
   pelican: ["HARBOUR PELICAN", "GUARDS 3 PERCHES / MIND THE BILL"],
   anchor: ["DECK ANCHOR", "HOOKS TRUCKS / DUNKS THEM"],
   ship: ["DEPARTING FERRY", "SAILS ON THE GATES / CATCH IT"],
@@ -1023,6 +1026,9 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "ship") {
     buildShip(root);
     root.add(buildDungeonLabel(h, 16));
+  } else if (h.kind === "spider") {
+    model.spider = buildSpider(root);
+    root.add(buildDungeonLabel(h, 7));
   } else {
     model.pivots = buildJailCellModel(h, root);
   }
@@ -1247,6 +1253,13 @@ export class DungeonView extends T.Group {
         if (body) m.root.position.copy(body.translation());
         continue;
       }
+      if (m.h.kind === "spider" && m.spider) {
+        const sp = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.spider;
+        if (sp) poseSpider(m.spider, m.root, m.h.x, m.h.z, sp, s.time);
+        continue;
+      }
       if (m.h.kind === "lime-chomper") {
         m.pivots[0].rotation.x = -0.82 * limeJawPose(s.time + m.h.phase).openness;
         continue;
@@ -1329,7 +1342,7 @@ export class DungeonView extends T.Group {
       id: m.h.id,
       kind: m.h.kind,
       triangles: m.triangles,
-      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || m.h.kind === "ship" || (!!m.machine && m.h.kind !== "start-gate"),
+      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || !!m.spider || m.h.kind === "ship" || (!!m.machine && m.h.kind !== "start-gate"),
     }));
   }
 }
