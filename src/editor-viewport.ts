@@ -6,6 +6,7 @@ import {
   isGauntletMachine,
   isHollow,
   isShipyard,
+  isToybox,
   type CustomLevel,
   type CustomSolid,
 } from "./custom-level";
@@ -129,6 +130,7 @@ const PREFAB_COLORS: Record<string, number> = {
   barrel: 0xc25a3a,
   gravestone: 0x9aa2a8,
   snowman: 0xdfe8ff,
+  snowball: 0xdfe8ff,
   hammer: 0xb08d57,
   axe: 0x9aa2a8,
   carousel: 0xff6bcb,
@@ -473,7 +475,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         );
         const isDragon = current.item.kind === "dragon";
         const canYaw = isProp || isDragon || isDinosaur(current.item.kind) ||
-          isGauntletMachine(current.item.kind) || isShipyard(current.item.kind) || isHollow(current.item.kind) || current.item.kind === "lime-chomper" || current.item.kind === "guided-pipe";
+          isGauntletMachine(current.item.kind) || isShipyard(current.item.kind) || isHollow(current.item.kind) || isToybox(current.item.kind) || current.item.kind === "lime-chomper" || current.item.kind === "guided-pipe";
         if (rotateAxis === "yaw" && canYaw)
           store.updateSelected({ yaw: (current.item.yaw ?? 0) + dx * 0.01 });
         else if (rotateAxis === "pitch" && isProp)
@@ -646,7 +648,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         group.add(gate);
       }
       for (const p of level.prefabs) {
-        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || isShipyard(p.kind) || isHollow(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe" || p.kind === "flagpole")) {
+        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || isShipyard(p.kind) || isHollow(p.kind) || isToybox(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe" || p.kind === "flagpole")) {
           const { root } = buildDungeonModel({ ...p, kind: p.kind, phase: 0 });
           root.userData.pick = { kind: "prefab", id: p.id };
           root.userData.locked = !!p.locked;

@@ -880,7 +880,9 @@ export class GameView {
         g = this.meshes.get(def.id)!;
       g.userData.detached = !!state.body;
       g.visible = !state.lava || state.lava.progress < 1;
-      g.scale.copy(state.body ? new T.Vector3(1, 1, 1) : shape);
+      g.scale
+        .copy(state.body ? new T.Vector3(1, 1, 1) : shape)
+        .multiplyScalar(this.simulation.dungeon.mailboxShrink);
       if (state.body) {
         g.position.copy(state.body.translation());
         g.quaternion.copy(state.body.rotation());

@@ -516,6 +516,8 @@ export class Simulation {
     input = this.fairground.controls(input);
     if (guided) input = {};
     else if (this.dungeon.gauntlet.holding) input = { brake: 1 };
+    else if (this.dungeon.mailboxHolding || this.dungeon.speedTubeHolding)
+      input = {};
     this.previousPosition.copy(this.body.translation());
     this.previousRotation.copy(this.body.rotation());
     this.inFlames = false;

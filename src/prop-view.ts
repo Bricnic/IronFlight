@@ -55,7 +55,11 @@ export class PropView extends T.Group {
     for (const prop of source.props)
       if (!this.models.has(prop)) this.build(prop);
     for (const [prop, model] of this.models) {
-      model.root.visible = !(prop.definition.kind === "snowman" && prop.broken);
+      model.root.visible = !(
+        (prop.definition.kind === "snowman" ||
+          prop.definition.kind === "snowball") &&
+        prop.broken
+      );
       model.root.position.copy(prop.body.translation());
       model.root.quaternion.copy(prop.body.rotation());
       const lid = model.root.getObjectByName("trash-lid");
@@ -151,6 +155,14 @@ export class PropView extends T.Group {
         arm.rotation.z = side * 1.1;
         arm.position.set(side * 1.1, 1.1, 0);
       }
+    } else if (prop.definition.kind === "snowball") {
+      const snow = new T.MeshStandardMaterial({
+        color: 0xf3fbff,
+        roughness: 0.75,
+      });
+      mesh(new T.SphereGeometry(3.6, 24, 18), snow).position.y = -0.2;
+      mesh(new T.SphereGeometry(1.1, 14, 10), snow).position.set(2.2, 2.6, 1.4);
+      mesh(new T.SphereGeometry(0.9, 14, 10), snow).position.set(-2.4, 2.2, -1.2);
     } else if (prop.definition.kind === "sign") {
       const pole = mesh(
         new T.BoxGeometry(0.13, 3.2, 0.13),

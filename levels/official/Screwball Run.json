@@ -1,0 +1,46 @@
+{
+  "name": "Screwball Run",
+  "mode": "race",
+  "spawn": { "x": 0, "y": 2.1, "z": 460, "yaw": 3.141592653589793 },
+  "checkpoints": [
+    { "name": "Snow Gate", "x": 0, "z": 350 },
+    { "name": "Teeter Exit", "x": 0, "z": 250 },
+    { "name": "Screw Pass", "x": 0, "z": 180 },
+    { "name": "Finish", "x": 0, "z": 40 }
+  ],
+  "solids": [
+    { "id": "ground-north", "kind": "ground", "x": 0, "y": -0.6, "z": 398.5, "w": 120, "h": 1.2, "d": 163, "color": 7763574, "texture": "brown_mud_leaves_01" },
+    { "id": "ground-pit-west", "kind": "ground", "x": -36, "y": -0.6, "z": 300, "w": 48, "h": 1.2, "d": 34, "color": 7763574, "texture": "brown_mud_leaves_01" },
+    { "id": "ground-pit-east", "kind": "ground", "x": 36, "y": -0.6, "z": 300, "w": 48, "h": 1.2, "d": 34, "color": 7763574, "texture": "brown_mud_leaves_01" },
+    { "id": "ground-south", "kind": "ground", "x": 0, "y": -0.6, "z": 141.5, "w": 120, "h": 1.2, "d": 283, "color": 7763574, "texture": "brown_mud_leaves_01" },
+    { "id": "pit-floor", "kind": "ground", "x": 0, "y": -8.05, "z": 300, "w": 26, "h": 1, "d": 36, "color": 2039583 },
+    { "id": "pit-wall-w", "kind": "ground", "x": -12, "y": -4.05, "z": 300, "w": 2, "h": 8, "d": 34, "color": 2039583 },
+    { "id": "pit-wall-e", "kind": "ground", "x": 12, "y": -4.05, "z": 300, "w": 2, "h": 8, "d": 34, "color": 2039583 },
+    { "id": "pit-wall-n", "kind": "ground", "x": 0, "y": -4.05, "z": 317, "w": 22, "h": 8, "d": 2, "color": 2039583 },
+    { "id": "pit-wall-s", "kind": "ground", "x": 0, "y": -4.05, "z": 283, "w": 22, "h": 8, "d": 2, "color": 2039583 },
+    { "id": "road-a", "kind": "road", "x": 0, "y": 0.015, "z": 405, "w": 24, "h": 0.03, "d": 110, "yaw": 3.141592653589793, "color": 3158345, "texture": "asphalt_02" },
+    { "id": "road-b", "kind": "road", "x": 0, "y": 0.027, "z": 333.5, "w": 24, "h": 0.03, "d": 33, "yaw": 3.141592653589793, "color": 3158345, "texture": "asphalt_02" },
+    { "id": "road-c", "kind": "road", "x": 0, "y": 0.039, "z": 266.5, "w": 24, "h": 0.03, "d": 33, "yaw": 3.141592653589793, "color": 3158345, "texture": "asphalt_02" },
+    { "id": "road-d", "kind": "road", "x": 0, "y": 0.051, "z": 215, "w": 24, "h": 0.03, "d": 70, "yaw": 3.141592653589793, "color": 3158345, "texture": "asphalt_02" },
+    { "id": "road-e", "kind": "road", "x": 0, "y": 0.063, "z": 110, "w": 24, "h": 0.03, "d": 140, "yaw": 3.141592653589793, "color": 3158345, "texture": "asphalt_02" },
+    { "id": "box-1", "kind": "container", "x": 25, "y": 2, "z": 430, "w": 6, "h": 4, "d": 8, "yaw": 0.2, "color": 12713978 },
+    { "id": "box-2", "kind": "container", "x": -25, "y": 2, "z": 380, "w": 6, "h": 4, "d": 8, "yaw": -0.3, "color": 3850946 },
+    { "id": "box-3", "kind": "container", "x": 25, "y": 2, "z": 330, "w": 6, "h": 4, "d": 8, "yaw": 0.4, "color": 5074797 },
+    { "id": "box-4", "kind": "container", "x": -25, "y": 2, "z": 260, "w": 6, "h": 4, "d": 8, "yaw": -0.2, "color": 14221371 },
+    { "id": "box-5", "kind": "container", "x": 25, "y": 2, "z": 150, "w": 6, "h": 4, "d": 8, "yaw": 0.1, "color": 12713978 },
+    { "id": "box-6", "kind": "container", "x": -25, "y": 2, "z": 100, "w": 6, "h": 4, "d": 8, "yaw": 0.3, "color": 3850946 }
+  ],
+  "prefabs": [
+    { "id": "tube-1", "kind": "speed-tube", "x": 0, "z": 410, "yaw": 3.141592653589793 },
+    { "id": "snowball-1", "kind": "snowball", "x": 0, "z": 382 },
+    { "id": "teeter-1", "kind": "teeter-totter", "x": 0, "z": 300 },
+    { "id": "mailbox-1", "kind": "mailbox", "x": 0, "y": -8, "z": 300 },
+    { "id": "screw-1", "kind": "screw-field", "x": 0, "y": 0.12, "z": 225 },
+    { "id": "screw-2", "kind": "screw-field", "x": 0, "y": 0.12, "z": 80 },
+    { "id": "barrel-1", "kind": "barrel", "x": 8, "z": 330 },
+    { "id": "barrel-2", "kind": "barrel", "x": -8, "z": 200 }
+  ],
+  "medals": { "gold": 50, "silver": 75, "bronze": 110 },
+  "limit": 240,
+  "backgroundTemplate": "toybox-volcano"
+}
