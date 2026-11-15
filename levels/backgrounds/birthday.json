@@ -1,0 +1,52 @@
+{
+  "name": "birthday",
+  "sky": { "top": 4033232, "horizon": 12574960 },
+  "fog": { "color": 12574960, "near": 140, "far": 600 },
+  "sun": { "color": 16769967, "intensity": 3.5 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 2 },
+  "env": 0.7,
+  "shapes": [
+    {
+      "kind": "hill",
+      "texture": "grass_ground",
+      "count": 10,
+      "radius": 340,
+      "y": 0,
+      "size": [40, 90],
+      "seed": 501
+    },
+    {
+      "kind": "balloon",
+      "count": 8,
+      "radius": 280,
+      "y": 35,
+      "size": [8, 14],
+      "seed": 502
+    },
+    {
+      "kind": "party-flag",
+      "count": 10,
+      "radius": 250,
+      "y": 0,
+      "size": [8, 14],
+      "seed": 503
+    },
+    {
+      "kind": "streamer",
+      "count": 10,
+      "radius": 220,
+      "y": 0,
+      "size": [6, 12],
+      "seed": 504
+    }
+  ],
+  "clouds": {
+    "count": 14,
+    "y": [90, 150],
+    "radius": [240, 480],
+    "color": 16777215,
+    "opacity": 0.9,
+    "drift": 1,
+    "seed": 505
+  }
+}

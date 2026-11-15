@@ -163,5 +163,20 @@
     "file": "Screwball Run.json",
     "thumbnail": "/tracks/screwball-run.png",
     "description": "Blast the speed tube, smash the giant snowball, ride the teeter-totter over the killer mailbox and thread twin screwfields to the finish."
+  },
+  {
+    "file": "Birthday Cake Circuit.json",
+    "thumbnail": "/tracks/birthday-cake-circuit.png",
+    "description": "Lap the giant birthday cake ring past toppling candles, car-napping balloons and a jumping card. Gold in two minutes."
+  },
+  {
+    "file": "Birthday Table Loop.json",
+    "thumbnail": "/tracks/birthday-table-loop.png",
+    "description": "Race the 500 by 300 birthday table rectangle, corner to corner, past gift boxes, candles and hungry balloons."
+  },
+  {
+    "file": "Bouncy House.json",
+    "thumbnail": "/tracks/bouncy-house.png",
+    "description": "Thread narrow planks high above the bouncy floor: every fall bounces back up but shakes a car part loose."
   }
 ]

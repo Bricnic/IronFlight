@@ -245,6 +245,7 @@ const PHYSICS_EXEMPT = new Map<string, string>([
   ["ghost", "NO_COLLIDERS: homing chase plus radial drain; model lookAts the truck"],
   ["hot-air-balloon", "NO_COLLIDERS: bananas drop at the balloon position; radial drift"],
   ["spider", "NO_COLLIDERS: radial web plus homing chase; model carries yaw"],
+  ["helium-balloon", "NO_COLLIDERS: radial hook zone plus vertical haul; model carries yaw"],
   ["start-gate", "NO_COLLIDERS: visual gate with no behavior"],
   ["candle", "NO_COLLIDERS: decorative flames with no strike entry"],
   ["hands", "NO_COLLIDERS: radial snap-strike zone; model carries yaw"],

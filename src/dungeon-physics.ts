@@ -7,6 +7,16 @@ import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import {
   ANCHOR,
+  BALLOON,
+  BIRTHDAY_CANDLE,
+  BIRTHDAY_CARD,
+  BOUNCY_CASTLE,
+  birthdayCardCycle,
+  birthdayCardDestination,
+  birthdayCardLocal,
+  birthdayCardSeed,
+  birthdayCardStriking,
+  birthdayCardTelegraphing,
   DINOSAUR_BITE,
   MAILBOX,
   mulberry32,
@@ -97,6 +107,33 @@ type Mechanism = {
     started?: number;
     exploded: boolean;
     carFrom: { x: number; y: number; z: number };
+  };
+  candle?: {
+    debt: number;
+    tipped: boolean;
+    burned: number;
+    broken: number;
+    lastEvent: number;
+  };
+  balloon?: {
+    hooked: boolean;
+    hookLocal: { x: number; y: number; z: number };
+    partId: string;
+    hookY: number;
+    ropeLen: number;
+    popped: boolean;
+    popAt: number;
+  };
+  card?: {
+    home: { x: number; z: number };
+    pos: { x: number; z: number };
+    done: number;
+    jumps: number;
+    next?: { x: number; z: number };
+  };
+  bouncy?: {
+    bounces: number;
+    lastBounce: number;
   };
 };
 export class DungeonPhysics {
@@ -378,6 +415,96 @@ export class DungeonPhysics {
         exploded: false,
         carFrom: { x: 0, y: 0, z: 0 },
       };
+    } else if (h.kind === "birthday-candle") {
+      // Standing decor on a light dynamic body; the truck knocks it over.
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.dynamic()
+          .setTranslation(h.x, (h.y ?? 0) + BIRTHDAY_CANDLE.height / 2, h.z)
+          .setRotation(yawQuat())
+          .setLinearDamping(0.1)
+          .setAngularDamping(0.4)
+          .setCcdEnabled(true),
+      );
+      m.body = body;
+      m.colliders.push(
+        world.createCollider(
+          R.ColliderDesc.cylinder(
+            BIRTHDAY_CANDLE.height / 2,
+            BIRTHDAY_CANDLE.radius,
+          )
+            .setMass(12)
+            .setFriction(0.6)
+            .setRestitution(0.1),
+          body,
+        ),
+      );
+      m.candle = { debt: 0, tipped: false, burned: 0, broken: 0, lastEvent: -100 };
+    } else if (h.kind === "helium-balloon") {
+      // Pure zone math like the spider: the kinematic body just carries the visual.
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.kinematicPositionBased().setTranslation(
+          h.x,
+          (h.y ?? 0) + BALLOON.floatHeight,
+          h.z,
+        ),
+      );
+      m.body = body;
+      m.balloon = {
+        hooked: false,
+        hookLocal: { x: 0, y: 0, z: 0 },
+        partId: "",
+        hookY: 0,
+        ropeLen: 0,
+        popped: false,
+        popAt: 0,
+      };
+    } else if (h.kind === "birthday-card") {
+      // Fixed, not kinematic: raycast wheels never touch kinematic decks
+      // (proven on the rocker), so the jumping card steps a fixed plate
+      // riders can board, like the ship and the teeter-totter.
+      const sc = h.scale ?? 1;
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.fixed()
+          .setTranslation(h.x, h.y ?? 0, h.z)
+          .setRotation(yawQuat()),
+      );
+      m.body = body;
+      m.colliders.push(
+        world.createCollider(
+          R.ColliderDesc.cuboid(
+            (BIRTHDAY_CARD.w * sc) / 2,
+            BIRTHDAY_CARD.baseH / 2,
+            (BIRTHDAY_CARD.d * sc) / 2,
+          )
+            .setTranslation(0, BIRTHDAY_CARD.baseH / 2, 0)
+            .setFriction(0.9),
+          body,
+        ),
+      );
+      m.card = {
+        home: { x: h.x, z: h.z },
+        pos: { x: h.x, z: h.z },
+        done: -1,
+        jumps: 0,
+      };
+    } else if (h.kind === "bouncy-castle") {
+      // Sensor pad like the slide trampolines: cuboid(5, 2, 5) at +2.5,
+      // stretched by scale so authors can tile a bouncy floor.
+      const sc = h.scale ?? 1;
+      const half = (BOUNCY_CASTLE.size * sc) / 2;
+      m.colliders.push(
+        world.createCollider(
+          R.ColliderDesc.cuboid(half, BOUNCY_CASTLE.halfH, half)
+            .setTranslation(
+              h.x,
+              (h.y ?? 0) + BOUNCY_CASTLE.halfH + 0.5,
+              h.z,
+            )
+            .setRotation(yawQuat())
+            .setSensor(true),
+        ),
+      );
+      m.bouncy = { bounces: 0, lastBounce: -100 };
     } else if (h.kind === "ship") {
       const yaw = h.yaw ?? 0;
       // Fixed, not kinematic: raycast wheels never touch kinematic decks
@@ -534,6 +661,26 @@ export class DungeonPhysics {
         );
         continue;
       }
+      if (m.h.kind === "helium-balloon" && m.body && m.balloon) {
+        const b = m.balloon;
+        if (b.hooked && !b.popped) {
+          // Rise ahead of the haul so the string stays taut.
+          const t = m.body.translation();
+          m.body.setNextKinematicTranslation({
+            x: t.x,
+            y: t.y + BALLOON.dragSpeed * 1.15 * DT,
+            z: t.z,
+          });
+        } else if (!b.hooked) {
+          m.body.setNextKinematicTranslation({
+            x: m.h.x,
+            y: (m.h.y ?? 0) + BALLOON.floatHeight +
+              Math.sin(s.time * 1.5 + m.h.phase) * 0.6,
+            z: m.h.z,
+          });
+        }
+        continue;
+      }
       if (m.h.kind !== "rocker" || !m.body) continue;
       const yaw = m.h.yaw ?? 0;
       const cos = Math.cos(yaw), sin = Math.sin(yaw);
@@ -585,6 +732,14 @@ export class DungeonPhysics {
   get speedTubeHolding() {
     return this.mechanisms.some((m) => m.tube?.inside ?? false);
   }
+  /** Balloon pop tumble (input override). */
+  get balloonHolding() {
+    return this.mechanisms.some(
+      (m) =>
+        m.balloon?.popped === true &&
+        this.sim.time - m.balloon.popAt < BALLOON.tumble,
+    );
+  }
   /** Truck render scale during a mailbox abduction (1 when idle). */
   get mailboxShrink() {
     const mb = this.mechanisms.find((m) => m.mailbox)?.mailbox;
@@ -607,6 +762,12 @@ export class DungeonPhysics {
     m.h.y = y;
     m.h.z = z;
     this.gauntlet.move(id, dx, dy, dz);
+    if (m.card) {
+      m.card.home.x += dx;
+      m.card.home.z += dz;
+      m.card.pos.x += dx;
+      m.card.pos.z += dz;
+    }
     if (m.body) {
       const p = m.body.translation();
       m.body.setTranslation({ x: p.x + dx, y: p.y + dy, z: p.z + dz }, true);
@@ -1104,6 +1265,261 @@ export class DungeonPhysics {
       );
     }
   }
+  /** Birthday candle: standing decor; knocked over, its tip burns like dragon fire. */
+  private updateBirthdayCandle(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const body = m.body;
+    const cd = m.candle!;
+    if (!body) return;
+    const t = body.translation();
+    const up = new Vector3(0, 1, 0).applyQuaternion(
+      new Quaternion().copy(body.rotation()),
+    );
+    const tipped =
+      up.y < BIRTHDAY_CANDLE.tiltCos ||
+      Math.hypot(t.x - m.h.x, t.z - m.h.z) > BIRTHDAY_CANDLE.displace;
+    cd.tipped = tipped;
+    if (!tipped) return;
+    // Burning tip in world space, past the end of the fallen stick.
+    const tip = new Vector3(0, BIRTHDAY_CANDLE.height / 2 + 0.4, 0)
+      .applyQuaternion(new Quaternion().copy(body.rotation()))
+      .add(new Vector3(t.x, t.y, t.z));
+    if (
+      Math.hypot(p.x - tip.x, p.z - tip.z) > BIRTHDAY_CANDLE.tipRadius ||
+      Math.abs(p.y - tip.y) > BIRTHDAY_CANDLE.tipDy
+    )
+      return;
+    // Same scorch path as dragon fire: per-part max-HP damage through
+    // fireDamage in 50 ms ticks, plus a part break every 20% burned.
+    cd.debt += DT;
+    while (cd.debt >= BIRTHDAY_CANDLE.tick) {
+      cd.debt -= BIRTHDAY_CANDLE.tick;
+      s.inFlames = true;
+      const f0 = s.fireDamageTaken;
+      for (const part of s.partDefs) {
+        const st = s.parts.get(part.id)!;
+        if (st.body || st.health <= 0) continue;
+        s.fireDamage(
+          part.id,
+          part.hp * BIRTHDAY_CANDLE.dps * BIRTHDAY_CANDLE.tick,
+        );
+      }
+      cd.burned += s.fireDamageTaken - f0;
+      m.contacts++;
+      if (s.time - cd.lastEvent > 0.15) {
+        cd.lastEvent = s.time;
+        s.damageEvents.push({
+          source: "birthday-candle",
+          part: "chassis-front",
+          time: s.time,
+        });
+      }
+      while (
+        cd.burned >=
+        (cd.broken + 1) * BIRTHDAY_CANDLE.breakStep - 1e-9
+      ) {
+        cd.broken++;
+        s.breakRandomPart("birthday-candle");
+      }
+    }
+  }
+  /** Helium balloon: string-hooks a random part, hauls the car up, pops, tumbles it. */
+  private updateBalloon(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    if (s.status !== "driving" || !m.body) return;
+    const b = m.balloon!;
+    const head = m.body.translation();
+    if (!b.hooked) {
+      if (
+        Math.hypot(p.x - head.x, p.z - head.z) > BALLOON.hookRadius ||
+        p.y > head.y
+      )
+        return;
+      const attached = s.partDefs.filter((d) => {
+        const st = s.parts.get(d.id)!;
+        return st.health > 0 && !st.body;
+      });
+      if (!attached.length) return;
+      const def = attached[Math.floor(Math.random() * attached.length)];
+      b.partId = def.id;
+      b.hookLocal = { x: def.pos[0], y: def.pos[1], z: def.pos[2] };
+      b.hooked = true;
+      b.hookY = p.y;
+      const hw = this.balloonHookWorld(m);
+      b.ropeLen =
+        Math.hypot(hw.x - head.x, hw.y - head.y, hw.z - head.z) +
+        BALLOON.slack;
+      m.contacts++;
+      s.damage("chassis-front", 5);
+      s.damageEvents.push({
+        source: "helium-balloon",
+        part: def.id,
+        time: s.time,
+      });
+      return;
+    }
+    if (b.popped) return;
+    if (p.y >= b.hookY + BALLOON.popHeight) {
+      b.popped = true;
+      b.popAt = s.time;
+      // Pop: checked fall plus a hard spin; the tumble reads as rapid rotation.
+      const v = s.body.linvel();
+      s.body.setLinvel({ x: v.x * 0.25, y: 6, z: v.z * 0.25 }, true);
+      s.body.setAngvel(
+        { x: BALLOON.spin, y: BALLOON.spin * 0.35, z: -BALLOON.spin * 0.6 },
+        true,
+      );
+      m.contacts++;
+      s.damageEvents.push({
+        source: "helium-balloon-pop",
+        part: b.partId,
+        time: s.time,
+      });
+      return;
+    }
+    // Taut string overrules the engine: haul the truck up to the balloon.
+    const hook = this.balloonHookWorld(m);
+    const dx = head.x - hook.x, dy = head.y - hook.y, dz = head.z - hook.z;
+    const d = Math.hypot(dx, dy, dz) || 1;
+    if (d > b.ropeLen) {
+      const v = BALLOON.dragSpeed / d;
+      s.body.setLinvel({ x: dx * v, y: dy * v, z: dz * v }, true);
+    }
+  }
+  /** Current world position of a balloon-hooked part. */
+  balloonHookWorld(m: Mechanism) {
+    const s = this.sim;
+    const b = m.balloon!;
+    const car = s.body.translation();
+    const q = new Quaternion().copy(s.body.rotation());
+    const w = new Vector3(b.hookLocal.x, b.hookLocal.y, b.hookLocal.z)
+      .applyQuaternion(q)
+      .add(new Vector3(car.x, car.y, car.z));
+    return { x: w.x, y: w.y, z: w.z };
+  }
+  /** Bouncy castle: trampoline launch plus exactly one shaken-loose part per
+   * bounce. Same arm gate (falling/stalled) and cooldown as slide trampolines. */
+  private updateBouncyCastle(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    if (s.status !== "driving") return;
+    const b = m.bouncy!;
+    const sensor = m.colliders[0];
+    if (!sensor) return;
+    let touch = false;
+    for (const state of s.parts.values()) {
+      if (
+        state.collider &&
+        this.sim.world.intersectionPair(sensor, state.collider)
+      ) {
+        touch = true;
+        break;
+      }
+    }
+    if (!touch) return;
+    m.contacts++;
+    void p;
+    const v = s.body.linvel();
+    if (v.y < BOUNCY_CASTLE.armVy && s.time - b.lastBounce > BOUNCY_CASTLE.cooldown) {
+      b.lastBounce = s.time;
+      b.bounces++;
+      s.body.setLinvel({ x: v.x, y: BOUNCY_CASTLE.bounce, z: v.z }, true);
+      s.bounced = true;
+      s.breakRandomPart("bouncy-castle");
+    }
+  }
+  /** Birthday card: snap shut on overlap, telegraph, jump, squash the landing.
+   * Riders who boarded the closed card launch skyward instead of jumping. */
+  private updateBirthdayCard(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const c = m.card!;
+    const h = m.h;
+    const sc = h.scale ?? 1;
+    const baseY = h.y ?? 0;
+    const seed = birthdayCardSeed(
+      s.courseTrack?.custom?.name ?? s.courseTrack?.id ?? "",
+      h.id,
+    );
+    const shifted = s.time + h.phase;
+    const cycle = birthdayCardCycle(shifted);
+    if (birthdayCardLocal(shifted) >= BIRTHDAY_CARD.jumpAt && c.done !== cycle) {
+      c.done = cycle;
+      c.jumps++;
+      const dest = birthdayCardDestination(c.home.x, c.home.z, seed, cycle);
+      // Riders stand on the closed card in its yaw frame when the jump fires.
+      let launched = false;
+      if (s.status === "driving") {
+        const yaw = h.yaw ?? 0;
+        const dx = p.x - c.pos.x, dz = p.z - c.pos.z;
+        const across = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+        const forward = dx * Math.sin(yaw) + dz * Math.cos(yaw);
+        const half = BIRTHDAY_CARD.rideHalf * sc;
+        const dy = p.y - baseY;
+        if (
+          Math.abs(across) <= half &&
+          Math.abs(forward) <= half &&
+          dy >= 0 &&
+          dy <= BIRTHDAY_CARD.rideTop
+        ) {
+          const v = s.body.linvel();
+          s.body.setLinvel({ x: v.x, y: BIRTHDAY_CARD.launch, z: v.z }, true);
+          launched = true;
+          m.contacts++;
+          s.damageEvents.push({
+            source: "birthday-card-launch",
+            part: "chassis-front",
+            time: s.time,
+          });
+        }
+      }
+      c.pos = dest;
+      if (m.body)
+        m.body.setTranslation({ x: dest.x, y: baseY, z: dest.z }, true);
+      // The landing squashes ground-level overlap; the launched rider is exempt.
+      if (!launched && s.status === "driving") {
+        const dx = p.x - dest.x, dz = p.z - dest.z;
+        const kill = BIRTHDAY_CARD.kill * sc;
+        if (
+          dx * dx + dz * dz <= kill * kill &&
+          Math.abs(p.y - (baseY + 1.5 * sc)) <= BIRTHDAY_CARD.landDy * sc
+        ) {
+          m.contacts++;
+          s.damage("chassis-front", 10000);
+          s.damageEvents.push({
+            source: "birthday-card",
+            part: "chassis-front",
+            time: s.time,
+          });
+        }
+      }
+    }
+    // Closed dwell telegraphs the upcoming landing spot for the view.
+    c.next =
+      birthdayCardTelegraphing(shifted) && c.done !== cycle
+        ? birthdayCardDestination(c.home.x, c.home.z, seed, cycle)
+        : undefined;
+    // The snap shut squashes ground-level overlap, once per cycle.
+    if (
+      s.status === "driving" &&
+      birthdayCardStriking(shifted) &&
+      m.lastCycle !== cycle
+    ) {
+      const dx = p.x - c.pos.x, dz = p.z - c.pos.z;
+      const kill = BIRTHDAY_CARD.kill * sc;
+      if (
+        dx * dx + dz * dz <= kill * kill &&
+        Math.abs(p.y - (baseY + 1.5 * sc)) <= BIRTHDAY_CARD.landDy * sc
+      ) {
+        m.lastCycle = cycle;
+        m.contacts++;
+        s.damage("chassis-front", 10000);
+        s.damageEvents.push({
+          source: "birthday-card",
+          part: "chassis-front",
+          time: s.time,
+        });
+      }
+    }
+  }
   /** Oversized bite: tear off the 3 parts nearest the mouth, splash 40% everywhere else. */
   private ripWithDinosaur(
     kind: DinosaurKind, h: DungeonHazard, x: number, z: number, mouth: number, height: number,
@@ -1229,6 +1645,22 @@ export class DungeonPhysics {
         this.updateSpider(m, p);
         continue;
       }
+      if (h.kind === "birthday-candle") {
+        this.updateBirthdayCandle(m, p);
+        continue;
+      }
+      if (h.kind === "helium-balloon") {
+        this.updateBalloon(m, p);
+        continue;
+      }
+      if (h.kind === "birthday-card") {
+        this.updateBirthdayCard(m, p);
+        continue;
+      }
+      if (h.kind === "bouncy-castle") {
+        this.updateBouncyCastle(m, p);
+        continue;
+      }
       if (h.kind === "speed-tube") {
         this.updateSpeedTube(m, p);
         continue;
@@ -1306,12 +1738,18 @@ export class DungeonPhysics {
           tubed?: boolean;
           posted?: boolean;
           exploded?: boolean;
+          tipped?: boolean;
+          hooked?: boolean;
+          popped?: boolean;
+          bounces?: number;
+          jumps?: number;
+          telegraphing?: boolean;
           tilt?: number;
         } = {
           id: m.h.id,
           kind: m.h.kind,
-          x: machine?.x ?? bodyPos?.x ?? m.pelican?.pos.x ?? m.h.x,
-          z: machine?.z ?? bodyPos?.z ?? m.pelican?.pos.z ?? m.h.z,
+          x: machine?.x ?? bodyPos?.x ?? m.pelican?.pos.x ?? m.card?.pos.x ?? m.h.x,
+          z: machine?.z ?? bodyPos?.z ?? m.pelican?.pos.z ?? m.card?.pos.z ?? m.h.z,
           colliders: m.colliders.length + (machine?.colliders ?? 0),
           contacts: machine?.contacts ?? m.contacts,
           striking: machine?.striking ?? (m.h.kind === "lime-chomper"
@@ -1328,7 +1766,13 @@ export class DungeonPhysics {
                       shipSailed(m.ship.departedAt, this.sim.time) < SHIP.distance
                     : m.h.kind === "spider"
                       ? !!m.spider?.hunting
-                      : m.h.kind === "speed-tube"
+                      : m.h.kind === "birthday-candle"
+                        ? !!m.candle?.tipped
+                        : m.h.kind === "helium-balloon"
+                          ? !!m.balloon?.hooked && !m.balloon.popped
+                        : m.h.kind === "birthday-card"
+                          ? birthdayCardStriking(this.sim.time + m.h.phase)
+                          : m.h.kind === "speed-tube"
                         ? !!m.tube?.inside
                         : m.h.kind === "mailbox"
                           ? m.mailbox?.started !== undefined && !m.mailbox.exploded
@@ -1352,6 +1796,16 @@ export class DungeonPhysics {
         if (m.mailbox) {
           entry.posted = m.mailbox.started !== undefined;
           entry.exploded = m.mailbox.exploded;
+        }
+        if (m.candle) entry.tipped = m.candle.tipped;
+        if (m.balloon) {
+          entry.hooked = m.balloon.hooked;
+          entry.popped = m.balloon.popped;
+        }
+        if (m.bouncy) entry.bounces = m.bouncy.bounces;
+        if (m.card) {
+          entry.jumps = m.card.jumps;
+          entry.telegraphing = m.card.next !== undefined;
         }
         if (m.h.kind === "teeter-totter")
           entry.tilt =

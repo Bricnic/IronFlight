@@ -73,6 +73,7 @@ const KIND_TEXTURE: Partial<Record<string, string>> = {
 
 const FOLIAGE_GREENS = [0x3f7a3a, 0x4d8a3f, 0x2f6b35];
 const TOY_COLORS = [0xd94f3d, 0xe08a2d, 0xe8c53a, 0x4da64d, 0x3d7ad9, 0x8a4fd9];
+const PARTY_COLORS = [0xd94f3d, 0x3d7ad9, 0xe8c53a, 0x4da64d, 0xd94fb0, 0x4fd9c8];
 
 function canvasTexture(
   width: number,
@@ -741,6 +742,75 @@ export class BackgroundView extends T.Group {
         put(new T.BoxGeometry(0.14, 0.3, 0.04), 0, 0.15, 0.3, this.flatMat(0x4a2c14));
         put(new T.BoxGeometry(0.1, 0.26, 0.1), 0.26, 0.72, -0.1, this.flatMat(0x6e4a3a));
         put(new T.BoxGeometry(0.13, 0.05, 0.13), 0.26, 0.87, -0.1, snow);
+        break;
+      }
+      case "balloon": {
+        const envelope = this.flatMat(
+          PARTY_COLORS[Math.floor(variant * PARTY_COLORS.length) % PARTY_COLORS.length],
+        );
+        push(
+          place(new T.CylinderGeometry(0.02, 0.02, 1.6, 5), slot.x, y + size * 0.8, slot.z, size),
+          this.flatMat(0x6e5a4a),
+        );
+        push(
+          place(new T.ConeGeometry(0.09, 0.18, 6), slot.x, y + size * 1.65, slot.z, size),
+          envelope,
+        );
+        const egg = new T.SphereGeometry(0.55, 14, 12);
+        egg.scale(1, 1.2, 1);
+        push(place(egg, slot.x, y + size * 2.2, slot.z, size), envelope);
+        push(
+          place(
+            new T.SphereGeometry(0.12, 8, 6),
+            slot.x - size * 0.2,
+            y + size * 2.35,
+            slot.z - size * 0.2,
+            size,
+          ),
+          this.flatMat(0xffffff),
+        );
+        break;
+      }
+      case "party-flag": {
+        push(
+          place(new T.CylinderGeometry(0.04, 0.05, 2.2, 6), slot.x, y + size * 1.1, slot.z, size),
+          this.flatMat(0xf2ede2),
+        );
+        push(
+          place(new T.SphereGeometry(0.09, 8, 6), slot.x, y + size * 2.25, slot.z, size),
+          this.flatMat(0xd8a83a),
+        );
+        const pennant = new T.ConeGeometry(0.45, 1.1, 4);
+        pennant.rotateZ(Math.PI / 2);
+        pennant.scale(1, 1, 0.18);
+        push(
+          place(pennant, slot.x, y + size * 1.9, slot.z, size, slot.angle),
+          this.flatMat(
+            PARTY_COLORS[Math.floor(variant * PARTY_COLORS.length) % PARTY_COLORS.length],
+          ),
+        );
+        break;
+      }
+      case "streamer": {
+        push(
+          place(new T.CylinderGeometry(0.05, 0.07, 2.4, 6), slot.x, y + size * 1.2, slot.z, size),
+          this.flatMat(0xf2ede2),
+        );
+        push(
+          place(new T.SphereGeometry(0.12, 8, 6), slot.x, y + size * 2.45, slot.z, size),
+          this.glowMat(0xffd23b, 0xffc95a, 1.2),
+        );
+        const offset = Math.floor(variant * PARTY_COLORS.length);
+        for (let i = 0; i < 5; i++) {
+          const ribbon = new T.BoxGeometry(0.09, 1.3, 0.02);
+          ribbon.translate(0, -0.65, 0);
+          ribbon.rotateX(0.5);
+          ribbon.rotateY((i / 5) * Math.PI * 2 + variant * 3);
+          push(
+            place(ribbon, slot.x, y + size * 2.3, slot.z, size),
+            this.flatMat(PARTY_COLORS[(offset + i) % PARTY_COLORS.length]),
+          );
+        }
         break;
       }
       case "moon": {

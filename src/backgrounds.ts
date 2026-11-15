@@ -20,6 +20,9 @@ export const SHAPE_KINDS = [
   "christmas-tree",
   "gift-pile",
   "village-house",
+  "streamer",
+  "balloon",
+  "party-flag",
 ] as const;
 export type ShapeKind = (typeof SHAPE_KINDS)[number];
 
@@ -257,6 +260,7 @@ const HEURISTIC_RULES: [RegExp, string][] = [
   [/volcano|lava|inferno|magma/, "volcanic-fields"],
   [/sky|snow|alpine|slide|cloud/, "alpine-peaks"],
   [/fair|carousel|circus/, "fairground-park"],
+  [/birthday|party/, "birthday"],
   [/foundry|factory|forge|industrial/, "foundry-district"],
   [/dungeon|cave|cavern|crypt/, "cavern-dark"],
   [/dino|jurassic|raptor|jungle/, "toybox-volcano"],

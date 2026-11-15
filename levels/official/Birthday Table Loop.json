@@ -1,0 +1,335 @@
+{
+  "name": "Birthday Table Loop",
+  "mode": "race",
+  "spawn": {
+    "x": -250,
+    "y": 2.1,
+    "z": 0,
+    "yaw": 3.141592653589793
+  },
+  "checkpoints": [
+    {
+      "name": "Northwest Corner",
+      "x": -240,
+      "z": -140
+    },
+    {
+      "name": "Northeast Corner",
+      "x": 240,
+      "z": -140
+    },
+    {
+      "name": "Southeast Corner",
+      "x": 240,
+      "z": 140
+    },
+    {
+      "name": "Southwest Corner",
+      "x": -240,
+      "z": 140
+    },
+    {
+      "name": "Finish",
+      "x": -250,
+      "z": 0
+    }
+  ],
+  "solids": [
+    {
+      "id": "ground",
+      "kind": "ground",
+      "x": 0,
+      "y": -0.6,
+      "z": 0,
+      "w": 620,
+      "h": 1.2,
+      "d": 420,
+      "color": 14241628
+    },
+    {
+      "id": "cake-1",
+      "kind": "ground",
+      "x": 0,
+      "y": 4,
+      "z": 0,
+      "w": 100,
+      "h": 8,
+      "d": 60,
+      "color": 16184042
+    },
+    {
+      "id": "cake-2",
+      "kind": "ground",
+      "x": 0,
+      "y": 12,
+      "z": 0,
+      "w": 60,
+      "h": 8,
+      "d": 36,
+      "color": 16752331
+    },
+    {
+      "id": "road-w",
+      "x": -250,
+      "z": 0,
+      "w": 24,
+      "d": 324,
+      "kind": "road",
+      "y": 0.015,
+      "h": 0.03,
+      "color": 15919317
+    },
+    {
+      "id": "road-n",
+      "x": 0,
+      "z": -150,
+      "w": 524,
+      "d": 24,
+      "kind": "road",
+      "y": 0.027,
+      "h": 0.03,
+      "color": 15919317
+    },
+    {
+      "id": "road-e",
+      "x": 250,
+      "z": 0,
+      "w": 24,
+      "d": 324,
+      "kind": "road",
+      "y": 0.039,
+      "h": 0.03,
+      "color": 15919317
+    },
+    {
+      "id": "road-s",
+      "x": 0,
+      "z": 150,
+      "w": 524,
+      "d": 24,
+      "kind": "road",
+      "y": 0.051000000000000004,
+      "h": 0.03,
+      "color": 15919317
+    },
+    {
+      "id": "gift-1",
+      "kind": "container",
+      "x": -285,
+      "y": 3,
+      "z": -185,
+      "w": 10,
+      "h": 6,
+      "d": 10,
+      "color": 5220607
+    },
+    {
+      "id": "gift-2",
+      "kind": "container",
+      "x": 285,
+      "y": 3,
+      "z": -185,
+      "w": 10,
+      "h": 6,
+      "d": 10,
+      "color": 7331962
+    },
+    {
+      "id": "gift-3",
+      "kind": "container",
+      "x": 285,
+      "y": 3,
+      "z": 185,
+      "w": 10,
+      "h": 6,
+      "d": 10,
+      "color": 15250746
+    },
+    {
+      "id": "gift-4",
+      "kind": "container",
+      "x": -285,
+      "y": 3,
+      "z": 185,
+      "w": 10,
+      "h": 6,
+      "d": 10,
+      "color": 16736143
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "balloon-1",
+      "kind": "helium-balloon",
+      "x": 0,
+      "z": -150
+    },
+    {
+      "id": "balloon-2",
+      "kind": "helium-balloon",
+      "x": 0,
+      "z": 150
+    },
+    {
+      "id": "card-1",
+      "kind": "birthday-card",
+      "x": 0,
+      "y": 16,
+      "z": 0
+    },
+    {
+      "id": "cake-candle",
+      "kind": "birthday-candle",
+      "x": 0,
+      "y": 16,
+      "z": 0
+    },
+    {
+      "id": "candle-1",
+      "kind": "birthday-candle",
+      "x": -236,
+      "y": 0.3,
+      "z": -75
+    },
+    {
+      "id": "candle-2",
+      "kind": "birthday-candle",
+      "x": -236,
+      "y": 0.3,
+      "z": 75
+    },
+    {
+      "id": "candle-3",
+      "kind": "birthday-candle",
+      "x": -125,
+      "y": 0.3,
+      "z": -136
+    },
+    {
+      "id": "candle-4",
+      "kind": "birthday-candle",
+      "x": 125,
+      "y": 0.3,
+      "z": -136
+    },
+    {
+      "id": "candle-5",
+      "kind": "birthday-candle",
+      "x": 236,
+      "y": 0.3,
+      "z": -75
+    },
+    {
+      "id": "candle-6",
+      "kind": "birthday-candle",
+      "x": 236,
+      "y": 0.3,
+      "z": 75
+    },
+    {
+      "id": "candle-7",
+      "kind": "birthday-candle",
+      "x": -125,
+      "y": 0.3,
+      "z": 136
+    },
+    {
+      "id": "candle-8",
+      "kind": "birthday-candle",
+      "x": 125,
+      "y": 0.3,
+      "z": 136
+    },
+    {
+      "id": "food-1",
+      "kind": "cookie",
+      "x": -250,
+      "y": 0.5,
+      "z": -75
+    },
+    {
+      "id": "food-2",
+      "kind": "cracker",
+      "x": -250,
+      "y": 0.5,
+      "z": 75
+    },
+    {
+      "id": "food-3",
+      "kind": "fruit",
+      "x": -125,
+      "y": 0.5,
+      "z": -150
+    },
+    {
+      "id": "food-4",
+      "kind": "cookie",
+      "x": 125,
+      "y": 0.5,
+      "z": -150
+    },
+    {
+      "id": "food-5",
+      "kind": "cracker",
+      "x": 250,
+      "y": 0.5,
+      "z": -75
+    },
+    {
+      "id": "food-6",
+      "kind": "fruit",
+      "x": 250,
+      "y": 0.5,
+      "z": 75
+    },
+    {
+      "id": "food-7",
+      "kind": "cookie",
+      "x": -125,
+      "y": 0.5,
+      "z": 150
+    },
+    {
+      "id": "food-8",
+      "kind": "cracker",
+      "x": 125,
+      "y": 0.5,
+      "z": 150
+    },
+    {
+      "id": "food-9",
+      "kind": "fruit",
+      "x": -250,
+      "y": 0.5,
+      "z": 0
+    },
+    {
+      "id": "food-10",
+      "kind": "cookie",
+      "x": 250,
+      "y": 0.5,
+      "z": 0
+    },
+    {
+      "id": "food-11",
+      "kind": "cracker",
+      "x": 0,
+      "y": 0.5,
+      "z": -150
+    },
+    {
+      "id": "food-12",
+      "kind": "fruit",
+      "x": 0,
+      "y": 0.5,
+      "z": 150
+    }
+  ],
+  "medals": {
+    "gold": 160,
+    "silver": 215,
+    "bronze": 280
+  },
+  "limit": 360,
+  "backgroundTemplate": "birthday"
+}

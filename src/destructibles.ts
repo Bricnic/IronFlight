@@ -21,7 +21,10 @@ export type PropKind =
   | "christmas-snow-boulder"
   | "christmas-cracker-barrel"
   | "christmas-gift-crate"
-  | "christmas-cocoa-cart";
+  | "christmas-cocoa-cart"
+  | "cookie"
+  | "cracker"
+  | "fruit";
 export type PropDefinition = {
   id: string;
   kind: PropKind;
@@ -81,6 +84,9 @@ function propHeight(kind: string) {
   if (kind === "christmas-cracker-barrel") return 0.7;
   if (kind === "christmas-gift-crate") return 0.9;
   if (kind === "christmas-cocoa-cart") return 0.9;
+  if (kind === "cookie") return 0.35;
+  if (kind === "cracker") return 0.35;
+  if (kind === "fruit") return 0.55;
   return 0.7;
 }
 export class Destructibles {
@@ -292,6 +298,36 @@ export class Destructibles {
             body,
           ),
         );
+      else if (kind === "cookie")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cylinder(0.18, 0.45)
+              .setMass(4)
+              .setFriction(0.6)
+              .setRestitution(0.15),
+            body,
+          ),
+        );
+      else if (kind === "cracker")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cuboid(0.45, 0.12, 0.45)
+              .setMass(4)
+              .setFriction(0.6)
+              .setRestitution(0.15),
+            body,
+          ),
+        );
+      else if (kind === "fruit")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.ball(0.55)
+              .setMass(6)
+              .setFriction(0.5)
+              .setRestitution(0.35),
+            body,
+          ),
+        );
       else
         colliders.push(
           world.createCollider(
@@ -456,7 +492,9 @@ export class Destructibles {
         if (
           (prop.definition.kind === "gravestone" ||
             prop.definition.kind === "chocolate-crate" ||
-            prop.definition.kind === "christmas-gift-crate") &&
+            prop.definition.kind === "christmas-gift-crate" ||
+            prop.definition.kind === "cookie" ||
+            prop.definition.kind === "cracker") &&
           !prop.broken &&
           closing > 2.5
         ) {
@@ -598,7 +636,11 @@ export class Destructibles {
               ? [0x4a2c14, 0x6b4423, 0xd5a869, 0x8a5a2b][i]
               : prop.definition.kind === "christmas-gift-crate"
                 ? [0xc81f2e, 0x1f6b3a, 0xd8a83a, 0x6e4a26][i]
-                : [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
+              : prop.definition.kind === "cookie"
+                ? [0x8a5a2b, 0x6e4a26, 0xd9a066, 0x4a2c14][i]
+                : prop.definition.kind === "cracker"
+                  ? [0xe2c98a, 0xd9b06a, 0xc9a05a, 0xb08a4a][i]
+                  : [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
       });
     }
   }

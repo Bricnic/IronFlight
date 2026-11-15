@@ -1,0 +1,656 @@
+{
+  "name": "Bouncy House",
+  "mode": "race",
+  "spawn": {
+    "x": 0,
+    "y": 16,
+    "z": 2,
+    "yaw": 0
+  },
+  "checkpoints": [
+    {
+      "name": "First Climb",
+      "x": 0,
+      "z": 120
+    },
+    {
+      "name": "High Turn",
+      "x": 24,
+      "z": 120
+    },
+    {
+      "name": "Drop Back",
+      "x": 24,
+      "z": 0
+    },
+    {
+      "name": "Low Turn",
+      "x": 48,
+      "z": 0
+    },
+    {
+      "name": "Second Climb",
+      "x": 48,
+      "z": 120
+    },
+    {
+      "name": "Last Turn",
+      "x": 72,
+      "z": 120
+    },
+    {
+      "name": "Finish",
+      "x": 72,
+      "z": 0
+    }
+  ],
+  "solids": [
+    {
+      "id": "ground",
+      "kind": "ground",
+      "x": 36,
+      "y": -0.6,
+      "z": 60,
+      "w": 200,
+      "h": 1.2,
+      "d": 220,
+      "color": 8832511
+    },
+    {
+      "id": "wall-w",
+      "kind": "barrier",
+      "x": -24,
+      "y": 25,
+      "z": 60,
+      "w": 4,
+      "h": 50,
+      "d": 138,
+      "color": 16736143
+    },
+    {
+      "id": "wall-e",
+      "kind": "barrier",
+      "x": 96,
+      "y": 25,
+      "z": 60,
+      "w": 4,
+      "h": 50,
+      "d": 138,
+      "color": 5220607
+    },
+    {
+      "id": "wall-n",
+      "kind": "barrier",
+      "x": 36,
+      "y": 25,
+      "z": -11,
+      "w": 124,
+      "h": 50,
+      "d": 4,
+      "color": 15250746
+    },
+    {
+      "id": "wall-s",
+      "kind": "barrier",
+      "x": 36,
+      "y": 25,
+      "z": 131,
+      "w": 124,
+      "h": 50,
+      "d": 4,
+      "color": 7331962
+    },
+    {
+      "id": "leg-0",
+      "kind": "ground",
+      "x": 0,
+      "y": 13.5,
+      "z": 60,
+      "w": 3.5,
+      "h": 1,
+      "d": 128,
+      "color": 9067051
+    },
+    {
+      "id": "leg-1",
+      "kind": "ground",
+      "x": 24,
+      "y": 13.512,
+      "z": 60,
+      "w": 3.5,
+      "h": 1,
+      "d": 128,
+      "color": 9067051
+    },
+    {
+      "id": "leg-2",
+      "kind": "ground",
+      "x": 48,
+      "y": 13.524,
+      "z": 60,
+      "w": 3.5,
+      "h": 1,
+      "d": 128,
+      "color": 9067051
+    },
+    {
+      "id": "leg-3",
+      "kind": "ground",
+      "x": 72,
+      "y": 13.536,
+      "z": 60,
+      "w": 3.5,
+      "h": 1,
+      "d": 128,
+      "color": 9067051
+    },
+    {
+      "id": "link-0",
+      "kind": "ground",
+      "x": 12,
+      "y": 13.548,
+      "z": 120,
+      "w": 27.5,
+      "h": 1,
+      "d": 3.5,
+      "color": 9067051
+    },
+    {
+      "id": "link-1",
+      "kind": "ground",
+      "x": 36,
+      "y": 13.56,
+      "z": 0,
+      "w": 27.5,
+      "h": 1,
+      "d": 3.5,
+      "color": 9067051
+    },
+    {
+      "id": "link-2",
+      "kind": "ground",
+      "x": 60,
+      "y": 13.572,
+      "z": 120,
+      "w": 27.5,
+      "h": 1,
+      "d": 3.5,
+      "color": 9067051
+    },
+    {
+      "id": "post-0-0",
+      "kind": "support",
+      "x": 0,
+      "y": 6.5,
+      "z": 0,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-0-30",
+      "kind": "support",
+      "x": 0,
+      "y": 6.5,
+      "z": 30,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-0-60",
+      "kind": "support",
+      "x": 0,
+      "y": 6.5,
+      "z": 60,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-0-90",
+      "kind": "support",
+      "x": 0,
+      "y": 6.5,
+      "z": 90,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-0-120",
+      "kind": "support",
+      "x": 0,
+      "y": 6.5,
+      "z": 120,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-24-0",
+      "kind": "support",
+      "x": 24,
+      "y": 6.5,
+      "z": 0,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-24-30",
+      "kind": "support",
+      "x": 24,
+      "y": 6.5,
+      "z": 30,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-24-60",
+      "kind": "support",
+      "x": 24,
+      "y": 6.5,
+      "z": 60,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-24-90",
+      "kind": "support",
+      "x": 24,
+      "y": 6.5,
+      "z": 90,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-24-120",
+      "kind": "support",
+      "x": 24,
+      "y": 6.5,
+      "z": 120,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-48-0",
+      "kind": "support",
+      "x": 48,
+      "y": 6.5,
+      "z": 0,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-48-30",
+      "kind": "support",
+      "x": 48,
+      "y": 6.5,
+      "z": 30,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-48-60",
+      "kind": "support",
+      "x": 48,
+      "y": 6.5,
+      "z": 60,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-48-90",
+      "kind": "support",
+      "x": 48,
+      "y": 6.5,
+      "z": 90,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-48-120",
+      "kind": "support",
+      "x": 48,
+      "y": 6.5,
+      "z": 120,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-72-0",
+      "kind": "support",
+      "x": 72,
+      "y": 6.5,
+      "z": 0,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-72-30",
+      "kind": "support",
+      "x": 72,
+      "y": 6.5,
+      "z": 30,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-72-60",
+      "kind": "support",
+      "x": 72,
+      "y": 6.5,
+      "z": 60,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-72-90",
+      "kind": "support",
+      "x": 72,
+      "y": 6.5,
+      "z": 90,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    },
+    {
+      "id": "post-72-120",
+      "kind": "support",
+      "x": 72,
+      "y": 6.5,
+      "z": 120,
+      "w": 1.5,
+      "h": 13,
+      "d": 1.5,
+      "color": 5594208
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "pad-0",
+      "kind": "bouncy-castle",
+      "x": 0,
+      "y": 0,
+      "z": 15,
+      "scale": 4
+    },
+    {
+      "id": "pad-1",
+      "kind": "bouncy-castle",
+      "x": 0,
+      "y": 0.05,
+      "z": 45,
+      "scale": 4
+    },
+    {
+      "id": "pad-2",
+      "kind": "bouncy-castle",
+      "x": 0,
+      "y": 0.1,
+      "z": 75,
+      "scale": 4
+    },
+    {
+      "id": "pad-3",
+      "kind": "bouncy-castle",
+      "x": 0,
+      "y": 0.15000000000000002,
+      "z": 105,
+      "scale": 4
+    },
+    {
+      "id": "pad-4",
+      "kind": "bouncy-castle",
+      "x": 24,
+      "y": 0.2,
+      "z": 15,
+      "scale": 4
+    },
+    {
+      "id": "pad-5",
+      "kind": "bouncy-castle",
+      "x": 24,
+      "y": 0.25,
+      "z": 45,
+      "scale": 4
+    },
+    {
+      "id": "pad-6",
+      "kind": "bouncy-castle",
+      "x": 24,
+      "y": 0.30000000000000004,
+      "z": 75,
+      "scale": 4
+    },
+    {
+      "id": "pad-7",
+      "kind": "bouncy-castle",
+      "x": 24,
+      "y": 0.35000000000000003,
+      "z": 105,
+      "scale": 4
+    },
+    {
+      "id": "pad-8",
+      "kind": "bouncy-castle",
+      "x": 48,
+      "y": 0.4,
+      "z": 15,
+      "scale": 4
+    },
+    {
+      "id": "pad-9",
+      "kind": "bouncy-castle",
+      "x": 48,
+      "y": 0.45,
+      "z": 45,
+      "scale": 4
+    },
+    {
+      "id": "pad-10",
+      "kind": "bouncy-castle",
+      "x": 48,
+      "y": 0.5,
+      "z": 75,
+      "scale": 4
+    },
+    {
+      "id": "pad-11",
+      "kind": "bouncy-castle",
+      "x": 48,
+      "y": 0.55,
+      "z": 105,
+      "scale": 4
+    },
+    {
+      "id": "pad-12",
+      "kind": "bouncy-castle",
+      "x": 72,
+      "y": 0.6000000000000001,
+      "z": 15,
+      "scale": 4
+    },
+    {
+      "id": "pad-13",
+      "kind": "bouncy-castle",
+      "x": 72,
+      "y": 0.65,
+      "z": 45,
+      "scale": 4
+    },
+    {
+      "id": "pad-14",
+      "kind": "bouncy-castle",
+      "x": 72,
+      "y": 0.7000000000000001,
+      "z": 75,
+      "scale": 4
+    },
+    {
+      "id": "pad-15",
+      "kind": "bouncy-castle",
+      "x": 72,
+      "y": 0.75,
+      "z": 105,
+      "scale": 4
+    },
+    {
+      "id": "candle-1",
+      "kind": "birthday-candle",
+      "x": -14,
+      "y": 0,
+      "z": 2
+    },
+    {
+      "id": "candle-2",
+      "kind": "birthday-candle",
+      "x": -14,
+      "y": 0,
+      "z": 118
+    },
+    {
+      "id": "candle-3",
+      "kind": "birthday-candle",
+      "x": 86,
+      "y": 0,
+      "z": 2
+    },
+    {
+      "id": "candle-4",
+      "kind": "birthday-candle",
+      "x": 86,
+      "y": 0,
+      "z": 118
+    },
+    {
+      "id": "food-0",
+      "kind": "cookie",
+      "x": 0,
+      "y": 14.6,
+      "z": 30
+    },
+    {
+      "id": "food-1",
+      "kind": "cracker",
+      "x": 0,
+      "y": 14.6,
+      "z": 60
+    },
+    {
+      "id": "food-2",
+      "kind": "fruit",
+      "x": 0,
+      "y": 14.6,
+      "z": 90
+    },
+    {
+      "id": "food-3",
+      "kind": "cookie",
+      "x": 24,
+      "y": 14.6,
+      "z": 30
+    },
+    {
+      "id": "food-4",
+      "kind": "cracker",
+      "x": 24,
+      "y": 14.6,
+      "z": 60
+    },
+    {
+      "id": "food-5",
+      "kind": "fruit",
+      "x": 24,
+      "y": 14.6,
+      "z": 90
+    },
+    {
+      "id": "food-6",
+      "kind": "cookie",
+      "x": 48,
+      "y": 14.6,
+      "z": 30
+    },
+    {
+      "id": "food-7",
+      "kind": "cracker",
+      "x": 48,
+      "y": 14.6,
+      "z": 60
+    },
+    {
+      "id": "food-8",
+      "kind": "fruit",
+      "x": 48,
+      "y": 14.6,
+      "z": 90
+    },
+    {
+      "id": "food-9",
+      "kind": "cookie",
+      "x": 72,
+      "y": 14.6,
+      "z": 30
+    },
+    {
+      "id": "food-10",
+      "kind": "cracker",
+      "x": 72,
+      "y": 14.6,
+      "z": 60
+    },
+    {
+      "id": "food-11",
+      "kind": "fruit",
+      "x": 72,
+      "y": 14.6,
+      "z": 90
+    },
+    {
+      "id": "balloon-1",
+      "kind": "helium-balloon",
+      "x": 36,
+      "z": 60
+    }
+  ],
+  "medals": {
+    "gold": 60,
+    "silver": 85,
+    "bronze": 120
+  },
+  "limit": 180,
+  "backgroundTemplate": "birthday"
+}

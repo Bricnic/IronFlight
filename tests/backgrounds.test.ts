@@ -95,6 +95,9 @@ it("exposes the documented shape kinds", () => {
       "christmas-tree",
       "gift-pile",
       "village-house",
+      "streamer",
+      "balloon",
+      "party-flag",
     ].sort(),
   );
 });

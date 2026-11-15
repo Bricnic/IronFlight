@@ -254,6 +254,126 @@ export const TEETER = {
   amp: 0.45,
   period: 12,
 } as const;
+/** Birthday candle: standing decor; knocked over, its tip burns like dragon fire. */
+export const BIRTHDAY_CANDLE = {
+  height: 2.4,
+  radius: 0.35,
+  /** Flame damage rate: 100% of max integrity per second, like a dragon jet. */
+  dps: 1,
+  /** Damage ticks, matching the 50 ms dragon-flame sampling. */
+  tick: 0.05,
+  /** Ignition reach around the fallen tip. */
+  tipRadius: 2.6,
+  tipDy: 3,
+  /** Tipped past ~45 degrees counts as knocked over. */
+  tiltCos: Math.SQRT1_2,
+  /** Shoved this far from its base also counts as knocked over. */
+  displace: 1.5,
+  /** Every 20% of integrity lost to candle fire breaks another car part. */
+  breakStep: 0.2,
+} as const;
+/** Helium balloon: hooks a random part, hauls the car up, pops, tumbles it. */
+export const BALLOON = {
+  floatHeight: 12,
+  hookRadius: 3.2,
+  /** Rope slack past the hook distance. */
+  slack: 2,
+  /** Haul rate; a velocity set the engine cannot beat, like the anchor winch. */
+  dragSpeed: 26,
+  /** Pop once the car rises this far above the hook point. */
+  popHeight: 25,
+  /** Control-loss tumble after the pop. */
+  tumble: 1.4,
+  /** Tumble spin; reads as rapid rotation against unit angular damping. */
+  spin: 11,
+} as const;
+/** Birthday card: a chomp-book-style greeting card that jumps as it reopens.
+ * 6 s cycle mirrored from the comic jaw traps: open dwell, 0.8 s snap shut,
+ * closed dwell (the jump telegraph), reopen at the new spot. Every opening
+ * first jumps to a uniform-disc random spot within 100 units of home. */
+export const BIRTHDAY_CARD = {
+  cycle: 6,
+  /** Snap-shut window: overlap at ground level here is squashed. */
+  shutStart: 2,
+  shutEnd: 2.8,
+  /** Jump moment: reopening starts from the new spot. */
+  jumpAt: 3.6,
+  openAt: 4.6,
+  /** Base plate footprint; the lid is visual only so riders can board. */
+  w: 12,
+  d: 12,
+  baseH: 0.5,
+  lidH: 0.6,
+  /** Jump disc radius around the starting location. */
+  jumpRadius: 100,
+  /** Landing and close squash radius around the card center. */
+  kill: 7,
+  /** Boarding box half-size: driving onto the closed card arms the launch. */
+  rideHalf: 6.5,
+  /** Riders sit this high above the base; higher is flying over, not riding. */
+  rideTop: 3.5,
+  /** Landing squash vertical gate around base + 1.5. */
+  landDy: 2.5,
+  /** Launch upward velocity; horizontal momentum is kept. */
+  launch: 30,
+} as const;
+/** Cycle position within the 6 s card rhythm. */
+export function birthdayCardLocal(shifted: number) {
+  return ((shifted % BIRTHDAY_CARD.cycle) + BIRTHDAY_CARD.cycle) % BIRTHDAY_CARD.cycle;
+}
+/** Jump/destination index for the current cycle. */
+export function birthdayCardCycle(shifted: number) {
+  return Math.floor(shifted / BIRTHDAY_CARD.cycle);
+}
+/** 1 while fully open, 0 while fully shut; same easing as the comic jaw. */
+export function birthdayCardOpenness(shifted: number) {
+  const t = birthdayCardLocal(shifted);
+  const smooth = (v: number) => {
+    v = Math.max(0, Math.min(1, v));
+    return v * v * (3 - 2 * v);
+  };
+  if (t < BIRTHDAY_CARD.shutStart) return 1;
+  if (t < BIRTHDAY_CARD.shutEnd) return 1 - smooth((t - BIRTHDAY_CARD.shutStart) / 0.8);
+  if (t < BIRTHDAY_CARD.jumpAt) return 0;
+  if (t < BIRTHDAY_CARD.openAt) return smooth(t - BIRTHDAY_CARD.jumpAt);
+  return 1;
+}
+/** True while the lid snaps shut: it squashes ground-level overlap. */
+export function birthdayCardStriking(shifted: number) {
+  const t = birthdayCardLocal(shifted);
+  return t >= BIRTHDAY_CARD.shutStart && t < BIRTHDAY_CARD.shutEnd;
+}
+/** True during the closed dwell: the next landing spot telegraphs. */
+export function birthdayCardTelegraphing(shifted: number) {
+  const t = birthdayCardLocal(shifted);
+  return t >= BIRTHDAY_CARD.shutEnd && t < BIRTHDAY_CARD.jumpAt;
+}
+/** Deterministic per-level seed: same level and prefab id, same jumps. */
+export function birthdayCardSeed(level: string, id: string) {
+  let h = 2166136261 >>> 0;
+  for (const c of `${level}${id}`) {
+    h ^= c.charCodeAt(0);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+/** Uniform-disc landing spot within 100 units of home for one jump. */
+export function birthdayCardDestination(homeX: number, homeZ: number, seed: number, cycle: number) {
+  const rng = mulberry32((seed ^ Math.imul(cycle + 0x9e37, 0x85ebca6b)) >>> 0);
+  const r = Math.sqrt(rng()) * BIRTHDAY_CARD.jumpRadius;
+  const a = rng() * Math.PI * 2;
+  return { x: homeX + Math.cos(a) * r, z: homeZ + Math.sin(a) * r };
+}
+/** Bouncy castle: a trampoline pad that also shakes one car part loose per
+ * bounce. Same 30 u/s launch, 5 u/s arm gate and 1 s cooldown as the slide
+ * trampolines; scale stretches the 10x10 footprint to tile a bouncy floor. */
+export const BOUNCY_CASTLE = {
+  size: 10,
+  halfH: 2,
+  bounce: 30,
+  armVy: 5,
+  cooldown: 1,
+} as const;
 /** Killer mailbox: shrink, parcel, post, wait, explode. Timeline in seconds. */
 export const MAILBOX = {
   sensorR: 18,

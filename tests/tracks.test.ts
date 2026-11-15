@@ -63,6 +63,9 @@ it("steps to the next and previous level with wraparound", () => {
     "Shipyard",
     "Spider Hollow",
     "Screwball Run",
+    "Birthday Cake Circuit",
+    "Birthday Table Loop",
+    "Bouncy House",
   ]);
   expect(stepTrackId("triple-loop", 1)).toBe("foundry-run");
   expect(stepTrackId("foundry-run", -1)).toBe("triple-loop");
@@ -132,12 +135,18 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:spider-hollow", -1)).toBe("custom:shipyard");
   expect(stepTrackId("custom:spider-hollow", 1)).toBe("custom:screwball-run");
   expect(stepTrackId("custom:screwball-run", -1)).toBe("custom:spider-hollow");
-  expect(stepTrackId("custom:screwball-run", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:screwball-run");
+  expect(stepTrackId("custom:screwball-run", 1)).toBe("custom:birthday-cake-circuit");
+  expect(stepTrackId("custom:birthday-cake-circuit", -1)).toBe("custom:screwball-run");
+  expect(stepTrackId("custom:birthday-cake-circuit", 1)).toBe("custom:birthday-table-loop");
+  expect(stepTrackId("custom:birthday-table-loop", -1)).toBe("custom:birthday-cake-circuit");
+  expect(stepTrackId("custom:birthday-table-loop", 1)).toBe("custom:bouncy-house");
+  expect(stepTrackId("custom:bouncy-house", -1)).toBe("custom:birthday-table-loop");
+  expect(stepTrackId("custom:bouncy-house", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:bouncy-house");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:screwball-run");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:bouncy-house");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:screwball-run");
+  expect(stepTrackId(undefined, -1)).toBe("custom:bouncy-house");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

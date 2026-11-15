@@ -2,6 +2,7 @@ import * as T from "three";
 import {
   PROP_PREFAB_KINDS,
   CHECKPOINT_WIDTHS,
+  isBirthday,
   isDinosaur,
   isGauntletMachine,
   isHollow,
@@ -158,6 +159,9 @@ const PREFAB_COLORS: Record<string, number> = {
   "peppermint-barrel": 0xe23b3b,
   "chocolate-crate": 0x6b4423,
   "cotton-candy-cart": 0xff9ecb,
+  cookie: 0x8a5a2b,
+  cracker: 0xe2c98a,
+  fruit: 0xc81f2e,
   hands: 0xff5a3c,
   scissors: 0xc7ccd2,
   clippers: 0x9fb8cc,
@@ -209,6 +213,10 @@ const PREFAB_COLORS: Record<string, number> = {
   "christmas-icicle-shears": 0xbfe8ff,
   "christmas-tinsel-snapper": 0xd8b93a,
   "boost-pad": 0x35f0d0,
+  "birthday-candle": 0xff7ab8,
+  "helium-balloon": 0xff4f6d,
+  "birthday-card": 0xff9ec6,
+  "bouncy-castle": 0xf2e85a,
 };
 /** Minimal orbit: drag rotates, wheel zooms, shift-drag pans. */
 function attachOrbit(
@@ -675,7 +683,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         group.add(gate);
       }
       for (const p of level.prefabs) {
-        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || isShipyard(p.kind) || isHollow(p.kind) || isToybox(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe" || p.kind === "flagpole")) {
+        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || isShipyard(p.kind) || isHollow(p.kind) || isToybox(p.kind) || isBirthday(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe" || p.kind === "flagpole")) {
           const { root } = buildDungeonModel({ ...p, kind: p.kind, phase: 0 });
           root.userData.pick = { kind: "prefab", id: p.id };
           root.userData.locked = !!p.locked;

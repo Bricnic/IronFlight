@@ -269,6 +269,12 @@ export class PropView extends T.Group {
       tilt.add(buildChristmasGiftCrateMesh());
     } else if (prop.definition.kind === "christmas-cocoa-cart") {
       tilt.add(buildChristmasCocoaCartMesh());
+    } else if (prop.definition.kind === "cookie") {
+      tilt.add(buildCookieMesh());
+    } else if (prop.definition.kind === "cracker") {
+      tilt.add(buildCrackerMesh());
+    } else if (prop.definition.kind === "fruit") {
+      tilt.add(buildFruitMesh());
     } else if (prop.definition.kind === "skull") {
       tilt.add(buildSkullMesh(1));
     } else {
@@ -918,6 +924,121 @@ export function buildChristmasCocoaCartMesh() {
     0.5,
     0.4,
   );
+  return group;
+}
+
+/** Chocolate-chip cookie (gravestone precedent: breaks, rubble). */
+export function buildCookieMesh() {
+  const group = new T.Group();
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.45, 0.45, 0.36, 20),
+    new T.MeshStandardMaterial({ color: 0xd9a066, roughness: 0.85 }),
+  );
+  const chip = new T.MeshStandardMaterial({ color: 0x3d2312, roughness: 0.5 });
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    candyPart(
+      group,
+      new T.SphereGeometry(0.07, 8, 6),
+      chip,
+      Math.cos(a) * 0.28,
+      0.18,
+      Math.sin(a) * 0.28,
+    );
+  }
+  candyPart(group, new T.SphereGeometry(0.08, 8, 6), chip, 0, 0.18, 0);
+  return group;
+}
+
+/** Salted cracker with docked holes (gravestone precedent: breaks, rubble). */
+export function buildCrackerMesh() {
+  const group = new T.Group();
+  candyPart(
+    group,
+    new T.BoxGeometry(0.9, 0.24, 0.9),
+    new T.MeshStandardMaterial({ color: 0xe2c98a, roughness: 0.85 }),
+  );
+  const hole = new T.MeshStandardMaterial({ color: 0xb08a4a, roughness: 1 });
+  for (let ix = -1; ix <= 1; ix++)
+    for (let iz = -1; iz <= 1; iz++)
+      candyPart(
+        group,
+        new T.CylinderGeometry(0.05, 0.05, 0.03, 8),
+        hole,
+        ix * 0.25,
+        0.12,
+        iz * 0.25,
+      );
+  const salt = new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.4;
+    candyPart(
+      group,
+      new T.BoxGeometry(0.06, 0.04, 0.06),
+      salt,
+      Math.cos(a) * 0.32,
+      0.13,
+      Math.sin(a) * 0.32,
+    );
+  }
+  return group;
+}
+
+/** Shiny red apple (candy-apple precedent: light roller). */
+export function buildFruitMesh() {
+  const group = new T.Group();
+  candyPart(
+    group,
+    new T.SphereGeometry(0.55, 22, 16),
+    new T.MeshStandardMaterial({ color: 0xc81f2e, roughness: 0.3 }),
+  );
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.05, 0.06, 0.4, 8),
+    new T.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.9 }),
+    0,
+    0.65,
+    0,
+  );
+  const leaf = candyPart(
+    group,
+    new T.SphereGeometry(0.14, 10, 8),
+    new T.MeshStandardMaterial({ color: 0x3fa34d, roughness: 0.7 }),
+    0.16,
+    0.78,
+    0,
+  );
+  leaf.scale.set(1.4, 0.4, 0.7);
+  candyPart(
+    group,
+    new T.CylinderGeometry(0.09, 0.11, 0.08, 8),
+    new T.MeshStandardMaterial({ color: 0x5a1a20, roughness: 0.8 }),
+    0,
+    -0.52,
+    0,
+  );
+  const shine = new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15 });
+  candyPart(
+    group,
+    new T.SphereGeometry(0.1, 8, 6),
+    shine,
+    -0.3,
+    0.25,
+    -0.38,
+  );
+  const blush = new T.MeshStandardMaterial({ color: 0xe86a5a, roughness: 0.5 });
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 + 0.2;
+    candyPart(
+      group,
+      new T.SphereGeometry(0.06, 8, 6),
+      blush,
+      Math.cos(a) * 0.5,
+      -0.1 + (i % 2) * 0.25,
+      Math.sin(a) * 0.5,
+    );
+  }
   return group;
 }
 

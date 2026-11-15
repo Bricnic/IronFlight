@@ -171,7 +171,7 @@ it("mailbox interior panel sits proud of the body (no z-fighting)", () => {
     return found[0];
   };
   const frontZ = (m: Mesh) => {
-    const d = (m.geometry as { parameters: { depth: number } }).parameters.depth;
+    const d = (m.geometry as unknown as { parameters: { depth: number } }).parameters.depth;
     return new Vector3(0, 0, d / 2).applyMatrix4(m.matrixWorld).z;
   };
   const body = box(3, 2.6, 4.4);

@@ -38,6 +38,9 @@ export const PROP_PREFAB_KINDS = [
   "christmas-cracker-barrel",
   "christmas-gift-crate",
   "christmas-cocoa-cart",
+  "cookie",
+  "cracker",
+  "fruit",
 ] as const;
 export const COMIC_PREFAB_KINDS = [
   "book",
@@ -156,6 +159,12 @@ export type ToyboxKind = (typeof TOYBOX_PREFAB_KINDS)[number];
 export function isToybox(kind: string): kind is ToyboxKind {
   return (TOYBOX_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Birthday prefabs: the toppling candle, the car-napping balloon, the jumping card, the part-shaking bouncy castle. */
+export const BIRTHDAY_PREFAB_KINDS = ["birthday-candle", "helium-balloon", "birthday-card", "bouncy-castle"] as const;
+export type BirthdayKind = (typeof BIRTHDAY_PREFAB_KINDS)[number];
+export function isBirthday(kind: string): kind is BirthdayKind {
+  return (BIRTHDAY_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 /** Hollow prefabs: the web-spinning spider that runs down stuck trucks. */
 export const HOLLOW_PREFAB_KINDS = ["spider"] as const;
 export type HollowKind = (typeof HOLLOW_PREFAB_KINDS)[number];
@@ -181,6 +190,7 @@ export const DUNGEON_PREFAB_KINDS = [
   ...SHIPYARD_PREFAB_KINDS,
   ...HOLLOW_PREFAB_KINDS,
   ...TOYBOX_PREFAB_KINDS,
+  ...BIRTHDAY_PREFAB_KINDS,
   ...GAUNTLET_PREFAB_KINDS,
   ...DINOSAUR_PREFAB_KINDS,
   ...CANDY_PREFAB_KINDS,
@@ -533,8 +543,10 @@ export function validateCustomLevel(input: unknown): CustomLevel {
       p?.scale === undefined ||
         (DINOSAUR_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
         (JAW_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
-        p?.kind === "snowman",
-      `prefab ${p?.id ?? i} scale is only supported on dinosaurs, jaw traps and snowmen`,
+        p?.kind === "snowman" ||
+        p?.kind === "birthday-card" ||
+        p?.kind === "bouncy-castle",
+      `prefab ${p?.id ?? i} scale is only supported on dinosaurs, jaw traps, snowmen, birthday cards and bouncy castles`,
     );
     check(
       errors,

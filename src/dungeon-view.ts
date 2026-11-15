@@ -20,6 +20,7 @@ import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
 import { buildSpider, poseSpider } from "./hollow-view";
 import { buildMailbox, buildSpeedTube, buildTeeterTotter, poseMailbox } from "./screwball-view";
+import { buildBalloon, buildBirthdayCandle, buildBirthdayCard, buildBouncyCastle, poseBalloon, poseBirthdayCard } from "./birthday-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
@@ -45,6 +46,8 @@ type Model = {
   anchor?: ReturnType<typeof buildAnchor>;
   spider?: ReturnType<typeof buildSpider>;
   mailbox?: ReturnType<typeof buildMailbox>;
+  balloon?: ReturnType<typeof buildBalloon>;
+  card?: ReturnType<typeof buildBirthdayCard>;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
 function consolidate(root: T.Group) {
@@ -96,6 +99,10 @@ const labelMessages: Record<string, [string, string]> = {
   "speed-tube": ["SPEED TUBE", "NO STEERING / 1.5X OUT"],
   "teeter-totter": ["TEETER-TOTTER", "TIMED CROSSING / MIND THE GAP"],
   mailbox: ["EVIL MAILBOX", "DO NOT TOUCH / SERIOUSLY"],
+  "birthday-candle": ["BIRTHDAY CANDLE", "KNOCK IT OVER / MIND THE FLAME"],
+  "helium-balloon": ["HELIUM BALLOON", "HOOKS A PART / HOLD ON TIGHT"],
+  "birthday-card": ["BIRTHDAY CARD", "JUMPS WHEN IT OPENS / RIDE IT TO FLY"],
+  "bouncy-castle": ["BOUNCY CASTLE", "TRAMPOLINE LAUNCH / COSTS A PART"],
   pelican: ["HARBOUR PELICAN", "GUARDS 3 PERCHES / MIND THE BILL"],
   anchor: ["DECK ANCHOR", "HOOKS TRUCKS / DUNKS THEM"],
   ship: ["DEPARTING FERRY", "SAILS ON THE GATES / CATCH IT"],
@@ -1043,6 +1050,18 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "mailbox") {
     model.mailbox = buildMailbox(root);
     root.add(buildDungeonLabel(h, 9));
+  } else if (h.kind === "birthday-candle") {
+    model.pivots = buildBirthdayCandle(root);
+    root.add(buildDungeonLabel(h, 6));
+  } else if (h.kind === "helium-balloon") {
+    model.balloon = buildBalloon(root);
+    root.add(buildDungeonLabel(h, 7));
+  } else if (h.kind === "birthday-card") {
+    model.card = buildBirthdayCard(root);
+    root.add(buildDungeonLabel(h, 13));
+  } else if (h.kind === "bouncy-castle") {
+    buildBouncyCastle(root, h.scale ?? 1);
+    root.add(buildDungeonLabel(h, 8));
   } else {
     model.pivots = buildJailCellModel(h, root);
   }
@@ -1289,6 +1308,34 @@ export class DungeonView extends T.Group {
         poseMailbox(m.mailbox, m.root, m.h, mb, s.time);
         continue;
       }
+      if (m.h.kind === "birthday-candle") {
+        const body = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.body;
+        if (body) {
+          m.root.position.copy(body.translation());
+          m.root.quaternion.copy(body.rotation());
+        }
+        m.pivots.forEach((f, i) => {
+          const base = (f.userData.base as number | undefined) ?? 1;
+          const w =
+            1 +
+            0.12 * Math.sin(s.time * 13 + m.h.phase + i * 2.1) +
+            0.06 * Math.sin(s.time * 29 + i * 1.3);
+          f.scale.set(base * w, base * (1 + (w - 1) * 1.6), base * w);
+        });
+        continue;
+      }
+      if (m.h.kind === "helium-balloon" && m.balloon) {
+        const mech = s.dungeon.mechanisms.find(({ h }) => h.id === m.h.id);
+        poseBalloon(m.balloon, m.root, mech, s, s.time);
+        continue;
+      }
+      if (m.h.kind === "birthday-card" && m.card) {
+        const mech = s.dungeon.mechanisms.find(({ h }) => h.id === m.h.id);
+        poseBirthdayCard(m.card, m.root, mech, m.h, s);
+        continue;
+      }
       if (m.h.kind === "lime-chomper") {
         m.pivots[0].rotation.x = -0.82 * limeJawPose(s.time + m.h.phase).openness;
         continue;
@@ -1371,7 +1418,7 @@ export class DungeonView extends T.Group {
       id: m.h.id,
       kind: m.h.kind,
       triangles: m.triangles,
-      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || !!m.spider || !!m.mailbox || m.h.kind === "ship" || m.h.kind === "teeter-totter" || (!!m.machine && m.h.kind !== "start-gate"),
+      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || !!m.spider || !!m.mailbox || !!m.balloon || !!m.card || m.h.kind === "ship" || m.h.kind === "teeter-totter" || (!!m.machine && m.h.kind !== "start-gate"),
     }));
   }
 }
