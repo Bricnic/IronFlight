@@ -241,12 +241,17 @@ export function createLevelEditor(
   function refreshLevels() {
     return listLevels()
       .then((names) => {
+        // Picker order is its own concern: the store union is disk-first,
+        // the dropdown reads a-z like the object list.
+        const sorted = [...names].sort((a, b) =>
+          a.localeCompare(b, undefined, { sensitivity: "base", numeric: true }),
+        );
         const selected = levelPicker.value;
         levelPicker.innerHTML = "";
         levelPicker.append(el("option", { value: "" }, "Open level…"));
-        for (const name of names)
+        for (const name of sorted)
           levelPicker.append(el("option", { value: name }, name));
-        if (names.includes(selected)) levelPicker.value = selected;
+        if (sorted.includes(selected)) levelPicker.value = selected;
       })
       .catch((e: Error) => showError(e.message));
   }
