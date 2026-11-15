@@ -1,5 +1,6 @@
-import { Quaternion, Vector3 } from "three";
+import { Group, Mesh, Quaternion, Vector3 } from "three";
 import { beforeAll, beforeEach, expect, it, vi } from "vitest";
+import { buildMailbox } from "../src/screwball-view";
 import { Simulation, initPhysics } from "../src/simulation";
 import {
   blankLevel,
@@ -152,6 +153,31 @@ it("teeter-totter rocks on its motor and carries coasting trucks", () => {
   } finally {
     sim.dispose();
   }
+});
+
+it("mailbox interior panel sits proud of the body (no z-fighting)", () => {
+  const root = new Group();
+  buildMailbox(root);
+  root.updateMatrixWorld(true);
+  const box = (w: number, h: number, d: number) => {
+    const found: Mesh[] = [];
+    root.traverse((o) => {
+      if (!(o instanceof Mesh)) return;
+      const p = (o.geometry as { parameters?: { width?: number; height?: number; depth?: number } })
+        .parameters;
+      if (p?.width === w && p?.height === h && p?.depth === d) found.push(o);
+    });
+    expect(found).toHaveLength(1);
+    return found[0];
+  };
+  const frontZ = (m: Mesh) => {
+    const d = (m.geometry as { parameters: { depth: number } }).parameters.depth;
+    return new Vector3(0, 0, d / 2).applyMatrix4(m.matrixWorld).z;
+  };
+  const body = box(3, 2.6, 4.4);
+  const dark = box(2.4, 2.0, 0.1);
+  // Coplanar fronts shimmer; a hair of separation kills the fight.
+  expect(frontZ(dark) - frontZ(body)).toBeGreaterThan(0.005);
 });
 
 it("teeter-totter lifts its end high enough to drive underneath", () => {

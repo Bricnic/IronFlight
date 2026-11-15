@@ -108,7 +108,9 @@ export function buildMailbox(root: T.Group) {
   const door = mesh(doorPivot, new T.BoxGeometry(2.6, 2.2, 0.18), bodyMat, [0, 1.1, 0]);
   door.name = "mailbox-door";
   doorPivot.rotation.x = 1.5;
-  mesh(intact, new T.BoxGeometry(2.4, 2.0, 0.1), darkMat, [0, 3.2, 2.15]);
+  // Dark opening faked on the solid front; sits 0.02 proud so the faces
+  // never z-fight.
+  mesh(intact, new T.BoxGeometry(2.4, 2.0, 0.1), darkMat, [0, 3.2, 2.17]);
   mesh(intact, new T.BoxGeometry(1.1, 0.5, 0.3), flagMat, [0, 5.6, 1.2]);
   // Parcel prop: brown box with tape cross, scaled in around the shrink victim.
   const parcel = new T.Group();
