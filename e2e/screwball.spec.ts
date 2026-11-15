@@ -38,6 +38,57 @@ test("speed tube locks, boosts and shoots", async ({ page }) => {
   await page.screenshot({ path: "test-results/screwball-tube.png" });
 });
 
+test("teeter-totter lifts for a drive-under mailbox visit", async ({ page }) => {
+  await startRun(page);
+  await page.evaluate(() => {
+    window.__game!.place({ x: 0, y: 2, z: 326 }, Math.PI);
+  });
+  await page.waitForTimeout(900);
+  // Parked shot of the deck at full lift.
+  await page.evaluate(() => {
+    const g = window.__game!;
+    for (let f = 0; f < 300; f++) {
+      g.advanceFrames(6, 1, { brake: 1 });
+      const tilt = g.snapshot().dungeon.hazards.find((h) => h.id === "teeter-1")!.tilt!;
+      if (tilt < -0.43) break;
+    }
+  });
+  await page.screenshot({ path: "test-results/screwball-teeter-raised.png" });
+  // Punch under the rising end, then roll off the edge into the pit.
+  const visit = await page.evaluate(() => {
+    const g = window.__game!;
+    const tilt = () =>
+      g.snapshot().dungeon.hazards.find((h) => h.id === "teeter-1")!.tilt!;
+    let prev = tilt();
+    for (let f = 0; f < 500; f++) {
+      if (g.snapshot().position.z < 315) break;
+      const t = tilt();
+      const rate = (t - prev) / (6 / 120);
+      prev = t;
+      // Rising edge toward the high peak: punch. Otherwise hold.
+      g.advanceFrames(6, 1, t < -0.1 && rate < -0.02 ? { throttle: 1 } : { brake: 1 });
+    }
+    for (let f = 0; f < 200; f++) {
+      g.advanceFrames(6, 1, { throttle: 1 });
+      if (g.snapshot().position.z < 312) break;
+    }
+    return { z: g.snapshot().position.z };
+  });
+  expect(visit.z).toBeLessThan(312);
+  await page.screenshot({ path: "test-results/screwball-underpass.png" });
+  // The fall into the pit triggers the abduction.
+  const posted = await page.evaluate(() => {
+    const g = window.__game!;
+    for (let f = 0; f < 200; f++) {
+      g.advanceFrames(6, 1, {});
+      if (g.snapshot().dungeon.hazards.find((h) => h.id === "mailbox-1")?.posted)
+        break;
+    }
+    return g.snapshot().dungeon.hazards.find((h) => h.id === "mailbox-1")?.posted;
+  });
+  expect(posted).toBe(true);
+});
+
 test("mailbox posts touching trucks and explodes", async ({ page }) => {
   await startRun(page);
   // Park beside the mailbox for a calm establishing shot. The sim has not

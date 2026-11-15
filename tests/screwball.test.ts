@@ -1,3 +1,4 @@
+import { Quaternion, Vector3 } from "three";
 import { beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { Simulation, initPhysics } from "../src/simulation";
 import {
@@ -120,18 +121,73 @@ it("teeter-totter rocks on its motor and carries coasting trucks", () => {
       return Math.asin(Math.max(-1, Math.min(1, 2 * (q.w * q.x + q.y * q.z))));
     };
     const tilts = new Set<string>();
-    for (let i = 0; i < 720; i++) {
+    for (let i = 0; i < 1440; i++) {
       sim.step({ brake: 1 });
       if (i % 60 === 0) tilts.add(pitch() > 0 ? "+" : "-");
     }
     expect(tilts.has("+") && tilts.has("-")).toBe(true);
     expect(Math.abs(pitch())).toBeLessThanOrEqual(TEETER.amp + 0.01);
-    // Drive on from flat ground with entry pace; the far side is 30 units on.
-    sim.body.setTranslation({ x: 0, y: 2, z: 82 }, true);
+    // Timed crossing: hold at the lip for a low near end, drop in, ride the
+    // sweep up, and exit as the far end settles back to flat.
+    const endBottomNorth = () => {
+      const q = body().rotation();
+      const end = new Vector3(0, -TEETER.h / 2, TEETER.d / 2).applyQuaternion(
+        new Quaternion(q.x, q.y, q.z, q.w),
+      );
+      return body().translation().y + end.y;
+    };
+    sim.body.setTranslation({ x: 0, y: 2, z: 79 }, true);
     sim.body.setRotation({ x: 0, y: 1, z: 0, w: 0 }, true);
+    sim.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    let waited = 0;
+    for (; waited < 1080; waited++) {
+      sim.step({ brake: 1 });
+      if (endBottomNorth() < -2) break;
+    }
+    expect(waited).toBeLessThan(1080);
     sim.body.setLinvel({ x: 0, y: 0, z: -14 }, true);
     for (let i = 0; i < 600; i++) sim.step({ throttle: 1 });
     expect(sim.body.translation().z).toBeLessThan(45);
+    expect(sim.status).toBe("driving");
+  } finally {
+    sim.dispose();
+  }
+});
+
+it("teeter-totter lifts its end high enough to drive underneath", () => {
+  const sim = fixture("Teeter Underpass", [
+    { id: "tt", kind: "teeter-totter", x: 0, z: 60 },
+  ]);
+  try {
+    const mech = () =>
+      sim.dungeon.mechanisms.find((m) => m.h.kind === "teeter-totter")!;
+    // Pin the motor so the north end starts at max lift.
+    mech().h.phase = -TEETER.period / 4;
+    const body = () => mech().body!;
+    const endBottomNorth = () => {
+      const q = body().rotation();
+      const end = new Vector3(0, -TEETER.h / 2, TEETER.d / 2).applyQuaternion(
+        new Quaternion(q.x, q.y, q.z, q.w),
+      );
+      return body().translation().y + end.y;
+    };
+    sim.step({ brake: 1 });
+    expect(endBottomNorth()).toBeGreaterThan(5);
+    // Drive at the raised end; the truck passes under it, never climbs it.
+    sim.body.setTranslation({ x: 0, y: 2, z: 82 }, true);
+    sim.body.setRotation({ x: 0, y: 1, z: 0, w: 0 }, true);
+    sim.body.setLinvel({ x: 0, y: 0, z: -14 }, true);
+    let clearance = 0;
+    let i = 0;
+    for (; i < 300; i++) {
+      sim.step({ throttle: 1 });
+      if (sim.body.translation().z < 75) {
+        clearance = endBottomNorth();
+        break;
+      }
+    }
+    expect(i).toBeLessThan(300);
+    expect(clearance).toBeGreaterThan(4.5);
     expect(sim.status).toBe("driving");
   } finally {
     sim.dispose();

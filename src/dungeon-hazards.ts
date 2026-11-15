@@ -248,8 +248,11 @@ export const TEETER = {
   d: 30,
   pivotY: -0.2,
   restTilt: 0,
-  amp: 0.08,
-  period: 6,
+  // ±26°: the raised end bottom clears 5.9, so a truck (~4 tall) fits
+  // underneath to visit the mailbox; the low end still clears the pit floor.
+  // The 12 s period keeps the sweep gentle: enter at low, ride up, exit flat.
+  amp: 0.45,
+  period: 12,
 } as const;
 /** Killer mailbox: shrink, parcel, post, wait, explode. Timeline in seconds. */
 export const MAILBOX = {

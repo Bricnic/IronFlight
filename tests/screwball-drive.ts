@@ -1,6 +1,8 @@
+import { Quaternion, Vector3 } from "three";
 import { expect } from "vitest";
 import { DT } from "../src/clock";
 import { registerCustomTrack } from "../src/custom-level";
+import { TEETER } from "../src/dungeon-hazards";
 import { officialFileTracks } from "../src/official-levels";
 import { Simulation } from "../src/simulation";
 
@@ -19,6 +21,8 @@ export function driveScrewballToCompletion(): number {
   const sim = new Simulation();
   const route = SCREWBALL_ROUTE;
   let next = 0;
+  let ebPrev: number | undefined;
+  let releaseStreak = 0;
   try {
     sim.startTrack(id);
     const trail: string[] = [];
@@ -46,10 +50,32 @@ export function driveScrewballToCompletion(): number {
       const v = sim.body.linvel();
       const pace = Math.hypot(v.x, v.z);
       const cap = Math.abs(error) > 0.58 ? Math.min(6, speed) : speed;
+      // Timed crossing: the stepped deck gives no traction while it sweeps,
+      // so the truck stops back at z 340+, then releases for a max-drop
+      // entry at ~13: it lands past the scoop zone near the pivot, rides
+      // out, and launches off the far end onto the road. Release falling
+      // off the high peak; the ~4.9 s run-up lands arrival at deep low.
+      let hold = false;
+      if (next >= 5 && next <= 7 && p.z > 340) {
+        const mech = sim.dungeon.mechanisms.find(
+          (m) => m.h.kind === "teeter-totter",
+        );
+        if (mech?.body) {
+          const bq = mech.body.rotation();
+          const end = new Vector3(0, -TEETER.h / 2, TEETER.d / 2)
+            .applyQuaternion(new Quaternion(bq.x, bq.y, bq.z, bq.w));
+          const eb = mech.body.translation().y + end.y;
+          const rate = ebPrev === undefined ? 0 : (eb - ebPrev) / DT;
+          ebPrev = eb;
+          releaseStreak =
+            eb > 4 && rate < -1 && pace < 3 ? releaseStreak + 1 : 0;
+          hold = releaseStreak < 3;
+        }
+      }
       sim.step({
         steer: Math.max(-1, Math.min(1, error * 2.5)),
-        throttle: pace < cap ? 1 : 0,
-        brake: pace > cap + 0.65 ? 0.65 : 0,
+        throttle: hold ? 0 : pace < cap ? 1 : 0,
+        brake: hold ? 1 : pace > cap + 0.65 ? 0.65 : 0,
       });
     }
     expect(

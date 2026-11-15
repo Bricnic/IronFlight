@@ -1289,6 +1289,7 @@ export class DungeonPhysics {
           tubed?: boolean;
           posted?: boolean;
           exploded?: boolean;
+          tilt?: number;
         } = {
           id: m.h.id,
           kind: m.h.kind,
@@ -1335,6 +1336,13 @@ export class DungeonPhysics {
           entry.posted = m.mailbox.started !== undefined;
           entry.exploded = m.mailbox.exploded;
         }
+        if (m.h.kind === "teeter-totter")
+          entry.tilt =
+            TEETER.restTilt +
+            TEETER.amp *
+              Math.sin(
+                ((this.sim.time + m.h.phase) / TEETER.period) * Math.PI * 2,
+              );
         return entry;
       }),
     };
