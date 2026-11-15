@@ -8,6 +8,7 @@ export type PropKind =
   | "barrel"
   | "gravestone"
   | "snowman"
+  | "snowball"
   | "skull"
   | "pumpkin"
   | "candy-apple"
@@ -64,6 +65,7 @@ export function propDefinitions(lab = false): PropDefinition[] {
 function propHeight(kind: string) {
   if (kind === "sign") return 1.6;
   if (kind === "snowman") return 1.4;
+  if (kind === "snowball") return 4;
   if (kind === "gravestone") return 0.9;
   if (kind === "trash") return 0.65;
   if (kind === "skull") return 0.45;
@@ -112,7 +114,7 @@ export class Destructibles {
         scale = kind === "snowman" ? (definition.scale ?? 1) : 1,
         height = propHeight(kind) * (kind === "snowman" ? scale : 1);
       const body = world.createRigidBody(
-        (kind === "snowman"
+        (kind === "snowman" || kind === "snowball"
           ? RAPIER.RigidBodyDesc.fixed()
           : RAPIER.RigidBodyDesc.dynamic()
         )
@@ -205,6 +207,13 @@ export class Destructibles {
         colliders.push(
           world.createCollider(
             RAPIER.ColliderDesc.ball(1.3 * scale).setSensor(true),
+            body,
+          ),
+        );
+      else if (kind === "snowball")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.ball(4).setSensor(true),
             body,
           ),
         );
@@ -353,13 +362,18 @@ export class Destructibles {
     for (const prop of this.props) {
       const position = new Vector3().copy(prop.body.translation());
       if (
-        (prop.definition.kind === "snowman" && prop.broken) ||
+        ((prop.definition.kind === "snowman" ||
+          prop.definition.kind === "snowball") &&
+          prop.broken) ||
         position.distanceToSquared(root) > 64
       )
         continue;
       let contact = false;
       for (const collider of prop.colliders) {
-        if (prop.definition.kind === "snowman")
+        if (
+          prop.definition.kind === "snowman" ||
+          prop.definition.kind === "snowball"
+        )
           for (const state of parts.values())
             if (
               state.collider &&
@@ -428,7 +442,11 @@ export class Destructibles {
           prop.spilled = true;
           this.spill(prop, time);
         }
-        if (prop.definition.kind === "snowman" && !prop.broken) {
+        if (
+          (prop.definition.kind === "snowman" ||
+            prop.definition.kind === "snowball") &&
+          !prop.broken
+        ) {
           prop.broken = true;
           this.rubble(prop);
           for (const c of prop.colliders) this.world.removeCollider(c, true);
@@ -526,10 +544,19 @@ export class Destructibles {
     const sc =
       prop.definition.kind === "snowman"
         ? (prop.definition.scale ?? 1)
-        : 1;
+        : prop.definition.kind === "snowball"
+          ? 3
+          : 1;
     const position = prop.body.translation(),
       velocity = prop.body.linvel();
-    for (let i = 0; i < (prop.definition.kind === "snowman" ? 12 : 4); i++) {
+    for (
+      let i = 0;
+      i <
+      (prop.definition.kind === "snowman" || prop.definition.kind === "snowball"
+        ? 12
+        : 4);
+      i++
+    ) {
       const a = i * 1.5708 + 0.4,
         size = [
           (0.3 + (i % 2) * 0.15) * sc,
@@ -563,8 +590,10 @@ export class Destructibles {
         body,
         size,
         color:
-          prop.definition.kind === "snowman"
-            ? [0xffffff, 0xdeefff, 0xff8b28, 0x202830][i % 4]
+          prop.definition.kind === "snowball"
+            ? [0xffffff, 0xdeefff, 0xf3fbff, 0xcfe8ff][i % 4]
+            : prop.definition.kind === "snowman"
+              ? [0xffffff, 0xdeefff, 0xff8b28, 0x202830][i % 4]
             : prop.definition.kind === "chocolate-crate"
               ? [0x4a2c14, 0x6b4423, 0xd5a869, 0x8a5a2b][i]
               : prop.definition.kind === "christmas-gift-crate"

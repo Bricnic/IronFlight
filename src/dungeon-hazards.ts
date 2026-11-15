@@ -233,6 +233,37 @@ export function shipSailed(departedAt: number | undefined, time: number) {
   return Math.min(SHIP.distance, Math.max(0, time - departedAt) * SHIP.speed);
 }
 
+/** Straight speed tube: no steering inside, 1.5x cruise, shot out the end. */
+export const SPEED_TUBE = {
+  length: 40,
+  radius: 4,
+  boost: 1.5,
+  minCruise: 15,
+  exitBurst: 25,
+} as const;
+/** Automated teeter-totter: motorized sine rocking over the mailbox pit. */
+export const TEETER = {
+  w: 16,
+  h: 0.8,
+  d: 30,
+  pivotY: -0.2,
+  restTilt: 0,
+  // ±26°: the raised end bottom clears 5.9, so a truck (~4 tall) fits
+  // underneath to visit the mailbox; the low end still clears the pit floor.
+  // The 12 s period keeps the sweep gentle: enter at low, ride up, exit flat.
+  amp: 0.45,
+  period: 12,
+} as const;
+/** Killer mailbox: shrink, parcel, post, wait, explode. Timeline in seconds. */
+export const MAILBOX = {
+  sensorR: 18,
+  sensorBase: 0,
+  sensorTop: 2.5,
+  shrink: 0.9,
+  fly: 1.5,
+  explode: 2.5,
+  burst: 10,
+} as const;
 /** Hollow spider: a giant sticky web; slow trucks inside get run down. */
 export const SPIDER = {
   /** Web radius; the spider nests at the center. */

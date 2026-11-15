@@ -19,6 +19,7 @@ import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDin
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
 import { buildSpider, poseSpider } from "./hollow-view";
+import { buildMailbox, buildSpeedTube, buildTeeterTotter, poseMailbox } from "./screwball-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
@@ -43,6 +44,7 @@ type Model = {
   pelican?: ReturnType<typeof buildPelican>;
   anchor?: ReturnType<typeof buildAnchor>;
   spider?: ReturnType<typeof buildSpider>;
+  mailbox?: ReturnType<typeof buildMailbox>;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
 function consolidate(root: T.Group) {
@@ -91,6 +93,9 @@ const labelMessages: Record<string, [string, string]> = {
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
   boulder: ["BOULDER DASH", "ROLLS WHEN CLOSE / SLOW OR DODGE"],
   spider: ["WEB SPINNER", "STICKY SILK / RUNS YOU DOWN"],
+  "speed-tube": ["SPEED TUBE", "NO STEERING / 1.5X OUT"],
+  "teeter-totter": ["TEETER-TOTTER", "TIMED CROSSING / MIND THE GAP"],
+  mailbox: ["EVIL MAILBOX", "DO NOT TOUCH / SERIOUSLY"],
   pelican: ["HARBOUR PELICAN", "GUARDS 3 PERCHES / MIND THE BILL"],
   anchor: ["DECK ANCHOR", "HOOKS TRUCKS / DUNKS THEM"],
   ship: ["DEPARTING FERRY", "SAILS ON THE GATES / CATCH IT"],
@@ -1029,6 +1034,15 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "spider") {
     model.spider = buildSpider(root);
     root.add(buildDungeonLabel(h, 7));
+  } else if (h.kind === "speed-tube") {
+    buildSpeedTube(root);
+    root.add(buildDungeonLabel(h, 8));
+  } else if (h.kind === "teeter-totter") {
+    buildTeeterTotter(root);
+    root.add(buildDungeonLabel(h, 5));
+  } else if (h.kind === "mailbox") {
+    model.mailbox = buildMailbox(root);
+    root.add(buildDungeonLabel(h, 9));
   } else {
     model.pivots = buildJailCellModel(h, root);
   }
@@ -1258,6 +1272,23 @@ export class DungeonView extends T.Group {
         if (sp) poseSpider(m.spider, m.root, m.h.x, m.h.z, sp, s.time);
         continue;
       }
+      if (m.h.kind === "teeter-totter") {
+        const body = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.body;
+        if (body) {
+          m.root.position.copy(body.translation());
+          m.root.quaternion.copy(body.rotation());
+        }
+        continue;
+      }
+      if (m.h.kind === "mailbox" && m.mailbox) {
+        const mb = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.mailbox;
+        poseMailbox(m.mailbox, m.root, m.h, mb, s.time);
+        continue;
+      }
       if (m.h.kind === "lime-chomper") {
         m.pivots[0].rotation.x = -0.82 * limeJawPose(s.time + m.h.phase).openness;
         continue;
@@ -1340,7 +1371,7 @@ export class DungeonView extends T.Group {
       id: m.h.id,
       kind: m.h.kind,
       triangles: m.triangles,
-      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || !!m.spider || m.h.kind === "ship" || (!!m.machine && m.h.kind !== "start-gate"),
+      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || !!m.spider || !!m.mailbox || m.h.kind === "ship" || m.h.kind === "teeter-totter" || (!!m.machine && m.h.kind !== "start-gate"),
     }));
   }
 }

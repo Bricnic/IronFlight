@@ -6,6 +6,7 @@ import {
   isGauntletMachine,
   isHollow,
   isShipyard,
+  isToybox,
   type CustomLevel,
   type CustomSolid,
 } from "./custom-level";
@@ -136,6 +137,7 @@ const PREFAB_COLORS: Record<string, number> = {
   barrel: 0xc25a3a,
   gravestone: 0x9aa2a8,
   snowman: 0xdfe8ff,
+  snowball: 0xdfe8ff,
   hammer: 0xb08d57,
   axe: 0x9aa2a8,
   carousel: 0xff6bcb,
@@ -673,7 +675,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         group.add(gate);
       }
       for (const p of level.prefabs) {
-        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || isShipyard(p.kind) || isHollow(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe" || p.kind === "flagpole")) {
+        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || isShipyard(p.kind) || isHollow(p.kind) || isToybox(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe" || p.kind === "flagpole")) {
           const { root } = buildDungeonModel({ ...p, kind: p.kind, phase: 0 });
           root.userData.pick = { kind: "prefab", id: p.id };
           root.userData.locked = !!p.locked;

@@ -8,12 +8,15 @@ import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import {
   ANCHOR,
   DINOSAUR_BITE,
+  MAILBOX,
   mulberry32,
   PELICAN,
   pelicanPose,
   SHIP,
   shipSailed,
+  SPEED_TUBE,
   SPIDER,
+  TEETER,
   DINOSAUR_COOLDOWN,
   DINOSAUR_LUNGE,
   dinosaurPose,
@@ -88,6 +91,12 @@ type Mechanism = {
     pos: { x: number; z: number };
     yaw: number;
     hunting: boolean;
+  };
+  tube?: { inside: boolean; cruise: number };
+  mailbox?: {
+    started?: number;
+    exploded: boolean;
+    carFrom: { x: number; y: number; z: number };
   };
 };
 export class DungeonPhysics {
@@ -324,6 +333,51 @@ export class DungeonPhysics {
       // No colliders: the web is a drag zone and the spider kills by contact
       // distance, like a dinosaur bite without the lunge.
       m.spider = { pos: { x: h.x, z: h.z }, yaw: h.yaw ?? 0, hunting: false };
+    } else if (h.kind === "speed-tube") {
+      // Pure zone math: no colliders, the shell is visual only.
+      m.tube = { inside: false, cruise: 0 };
+    } else if (h.kind === "teeter-totter") {
+      const yaw = h.yaw ?? 0;
+      // Fixed, stepped rotation like the ship: raycast wheels never touch
+      // kinematic decks, so the motor re-aims a fixed deck trucks can drive.
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.fixed()
+          .setTranslation(h.x, (h.y ?? 0) + TEETER.pivotY, h.z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), yaw),
+          ),
+      );
+      m.body = body;
+      m.colliders.push(
+        world.createCollider(
+          R.ColliderDesc.cuboid(TEETER.w / 2, TEETER.h / 2, TEETER.d / 2).setFriction(0.9),
+          body,
+        ),
+      );
+    } else if (h.kind === "mailbox") {
+      // Small solid body; the abduction zone around it fires first.
+      const body = world.createRigidBody(
+        R.RigidBodyDesc.fixed()
+          .setTranslation(h.x, (h.y ?? 0) + 2, h.z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 1, 0),
+              h.yaw ?? 0,
+            ),
+          ),
+      );
+      m.body = body;
+      m.colliders.push(
+        world.createCollider(
+          R.ColliderDesc.cuboid(1.5, 2, 1.5).setFriction(0.6),
+          body,
+        ),
+      );
+      m.mailbox = {
+        started: undefined,
+        exploded: false,
+        carFrom: { x: 0, y: 0, z: 0 },
+      };
     } else if (h.kind === "ship") {
       const yaw = h.yaw ?? 0;
       // Fixed, not kinematic: raycast wheels never touch kinematic decks
@@ -466,6 +520,20 @@ export class DungeonPhysics {
         m.body.setNextKinematicTranslation({ x, y, z });
         continue;
       }
+      if (m.h.kind === "teeter-totter" && m.body) {
+        const yaw = m.h.yaw ?? 0;
+        const tilt =
+          TEETER.restTilt +
+          TEETER.amp *
+            Math.sin(((s.time + m.h.phase) / TEETER.period) * Math.PI * 2);
+        m.body.setRotation(
+          new Quaternion()
+            .setFromAxisAngle(new Vector3(0, 1, 0), yaw)
+            .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), tilt)),
+          true,
+        );
+        continue;
+      }
       if (m.h.kind !== "rocker" || !m.body) continue;
       const yaw = m.h.yaw ?? 0;
       const cos = Math.cos(yaw), sin = Math.sin(yaw);
@@ -507,6 +575,26 @@ export class DungeonPhysics {
         new Quaternion().setFromEuler(new Euler(m.tilt, yaw, 0, "YXZ")),
       );
     }
+  }
+  /** Any active mailbox abduction (input override) or tube ride. */
+  get mailboxHolding() {
+    return this.mechanisms.some(
+      (m) => m.mailbox && m.mailbox.started !== undefined && !m.mailbox.exploded,
+    );
+  }
+  get speedTubeHolding() {
+    return this.mechanisms.some((m) => m.tube?.inside ?? false);
+  }
+  /** Truck render scale during a mailbox abduction (1 when idle). */
+  get mailboxShrink() {
+    const mb = this.mechanisms.find((m) => m.mailbox)?.mailbox;
+    if (!mb || mb.started === undefined) return 1;
+    // The burst debris stays small: the truck never un-shrinks.
+    if (mb.exploded) return 0.3;
+    const t = this.sim.time - mb.started;
+    if (t >= MAILBOX.shrink) return 0.01;
+    const k = Math.max(0, t / MAILBOX.shrink);
+    return 1 - (1 - 0.01) * (k * k * (3 - 2 * k));
   }
   /** Live editing: shift one hazard and its furniture by delta. */
   moveHazard(id: string, x: number, y: number, z: number) {
@@ -875,6 +963,147 @@ export class DungeonPhysics {
       sp.yaw = Math.atan2(sdx, sdz);
     }
   }
+  /** Straight speed tube: locked ride at 1.5x entry pace, shot out the end. */
+  private updateSpeedTube(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const tube = m.tube!;
+    const yaw = m.h.yaw ?? 0;
+    const ax = Math.sin(yaw), az = Math.cos(yaw);
+    const dx = p.x - m.h.x, dz = p.z - m.h.z;
+    const along = dx * ax + dz * az;
+    // Local x follows the same yaw frame as the solid() helper.
+    const lateral = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+    const dy = p.y - (m.h.y ?? 0);
+    const inside =
+      Math.abs(along) < SPEED_TUBE.length / 2 &&
+      Math.abs(lateral) < SPEED_TUBE.radius &&
+      Math.abs(dy) < SPEED_TUBE.radius;
+    if (!inside) {
+      if (tube.inside && along >= SPEED_TUBE.length / 2 && s.status === "driving") {
+        // Out the end: shot onward, steering back immediately.
+        const v = s.body.linvel();
+        const pace = Math.hypot(v.x, v.z);
+        const shot = Math.max(pace, tube.cruise, SPEED_TUBE.exitBurst);
+        s.body.setLinvel({ x: ax * shot, y: v.y, z: az * shot }, true);
+        s.damageEvents.push({
+          source: "speed-tube",
+          part: "chassis-front",
+          time: s.time,
+        });
+      }
+      tube.inside = false;
+      return;
+    }
+    if (s.status !== "driving") return;
+    const v = s.body.linvel();
+    if (!tube.inside) {
+      tube.inside = true;
+      tube.cruise = Math.max(
+        Math.hypot(v.x, v.z) * SPEED_TUBE.boost,
+        SPEED_TUBE.minCruise,
+      );
+    }
+    // Locked to the axis at cruise; lateral drift bleeds away.
+    const alongV = v.x * ax + v.z * az;
+    const latX = v.x - alongV * ax, latZ = v.z - alongV * az;
+    const damp = Math.max(0, 1 - 8 * DT);
+    s.body.setLinvel(
+      {
+        x: ax * tube.cruise + latX * damp,
+        y: v.y,
+        z: az * tube.cruise + latZ * damp,
+      },
+      true,
+    );
+  }
+  /** Killer mailbox: shrink, parcel, post, wait, then a smoking burst. */
+  private updateMailbox(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const mb = m.mailbox!;
+    const baseY = m.h.y ?? 0;
+    if (mb.started === undefined) {
+      if (s.status !== "driving") return;
+      const dx = p.x - m.h.x, dz = p.z - m.h.z;
+      const dy = p.y - baseY;
+      if (
+        Math.hypot(dx, dz) > MAILBOX.sensorR ||
+        dy < MAILBOX.sensorBase ||
+        dy > MAILBOX.sensorTop
+      )
+        return;
+      mb.started = s.time;
+      mb.carFrom = { x: p.x, y: p.y, z: p.z };
+      // Freeze the truck for the show; the script drives from here.
+      s.body.setBodyType(R.RigidBodyType.KinematicPositionBased, true);
+      s.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      s.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      m.contacts++;
+      s.damageEvents.push({
+        source: "mailbox",
+        part: "chassis-front",
+        time: s.time,
+      });
+      return;
+    }
+    if (mb.exploded) return;
+    const t = s.time - mb.started;
+    if (t >= MAILBOX.explode) {
+      mb.exploded = true;
+      // Scorched burst: every part detaches blackened and smoking, then the
+      // chassis goes and the run wrecks like any cooked truck.
+      const victims = [...s.parts.entries()].filter(
+        ([id, part]) => !id.startsWith("chassis") && part.health > 0,
+      );
+      victims.forEach(([id, part], i) => {
+        s.fireDamage(id, part.health);
+        const body = s.parts.get(id)!.body!;
+        const a = i * 2.4;
+        const dir = new Vector3(Math.cos(a), 1.0, Math.sin(a)).normalize();
+        const impulse = MAILBOX.burst * body.mass();
+        body.applyImpulse(
+          { x: dir.x * impulse, y: dir.y * impulse, z: dir.z * impulse },
+          true,
+        );
+      });
+      s.damage("chassis-front", 10000);
+      s.damageEvents.push({
+        source: "mailbox",
+        part: "chassis-front",
+        time: s.time,
+      });
+      return;
+    }
+    if (t >= MAILBOX.shrink) {
+      // Parcel arc into the slot: freeze point, over the rim, down the slot.
+      const k = Math.max(0, Math.min(1, (t - MAILBOX.shrink) / (MAILBOX.fly - MAILBOX.shrink)));
+      const e = k * k * (3 - 2 * k);
+      const from = mb.carFrom;
+      const to = { x: m.h.x, y: baseY + 3.5, z: m.h.z };
+      const mid = {
+        x: (from.x + to.x) / 2,
+        y: Math.max(from.y, to.y) + 4,
+        z: (from.z + to.z) / 2,
+      };
+      const a = {
+        x: from.x + (mid.x - from.x) * e,
+        y: from.y + (mid.y - from.y) * e,
+        z: from.z + (mid.z - from.z) * e,
+      };
+      const b = {
+        x: mid.x + (to.x - mid.x) * e,
+        y: mid.y + (to.y - mid.y) * e,
+        z: mid.z + (to.z - mid.z) * e,
+      };
+      s.body.setTranslation(
+        {
+          x: a.x + (b.x - a.x) * e,
+          y: a.y + (b.y - a.y) * e,
+          z: a.z + (b.z - a.z) * e,
+        },
+        true,
+      );
+    }
+  }
   /** Oversized bite: tear off the 3 parts nearest the mouth, splash 40% everywhere else. */
   private ripWithDinosaur(
     kind: DinosaurKind, h: DungeonHazard, x: number, z: number, mouth: number, height: number,
@@ -1000,6 +1229,15 @@ export class DungeonPhysics {
         this.updateSpider(m, p);
         continue;
       }
+      if (h.kind === "speed-tube") {
+        this.updateSpeedTube(m, p);
+        continue;
+      }
+      if (h.kind === "mailbox") {
+        this.updateMailbox(m, p);
+        continue;
+      }
+      if (h.kind === "teeter-totter") continue;
       if (h.kind === "rocker") continue;
       const strike =
         DUNGEON_STRIKE[h.kind as keyof typeof DUNGEON_STRIKE];
@@ -1065,6 +1303,10 @@ export class DungeonPhysics {
           fired?: boolean;
           departed?: boolean;
           hunting?: boolean;
+          tubed?: boolean;
+          posted?: boolean;
+          exploded?: boolean;
+          tilt?: number;
         } = {
           id: m.h.id,
           kind: m.h.kind,
@@ -1086,7 +1328,13 @@ export class DungeonPhysics {
                       shipSailed(m.ship.departedAt, this.sim.time) < SHIP.distance
                     : m.h.kind === "spider"
                       ? !!m.spider?.hunting
-                      : snapStriking(this.sim.time + m.h.phase)),
+                      : m.h.kind === "speed-tube"
+                        ? !!m.tube?.inside
+                        : m.h.kind === "mailbox"
+                          ? m.mailbox?.started !== undefined && !m.mailbox.exploded
+                          : m.h.kind === "teeter-totter"
+                            ? false
+                            : snapStriking(this.sim.time + m.h.phase)),
         };
         if (m.pelican) {
           entry.perch = m.pelican.index;
@@ -1100,6 +1348,18 @@ export class DungeonPhysics {
           entry.z = m.spider.pos.z;
           entry.hunting = m.spider.hunting;
         }
+        if (m.tube) entry.tubed = m.tube.inside;
+        if (m.mailbox) {
+          entry.posted = m.mailbox.started !== undefined;
+          entry.exploded = m.mailbox.exploded;
+        }
+        if (m.h.kind === "teeter-totter")
+          entry.tilt =
+            TEETER.restTilt +
+            TEETER.amp *
+              Math.sin(
+                ((this.sim.time + m.h.phase) / TEETER.period) * Math.PI * 2,
+              );
         return entry;
       }),
     };

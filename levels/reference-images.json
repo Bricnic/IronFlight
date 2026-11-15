@@ -112,6 +112,12 @@
                                 "sha256":  "05ED3D7162F31FB85F5F93F267057C6E9BF5B0DF1C197FAF580B7DD4F002F5A6",
                                 "levelFile":  "Spider Hollow.json",
                                 "notes":  "Start marker orients the north straight past the chomp book, scale-2 raptor and tube arches; the giant spiderweb guards the east half with a west bypass; the left dummy drops to the spike pit; the three-way fork sends left to the fire pit, right to the slime pit and middle to the finish."
+                            },
+                            {
+                                "filename":  "e683b298-f5c4-455a-86d9-5daf38272d83.jpg",
+                                "sha256":  "DCF7B636F84DE5751244CEEDA60351937D9DCDA87F7C09353A82F4C287D160B2",
+                                "levelFile":  "Screwball Run.json",
+                                "notes":  "Line of toy cars is the start. Clear tube is a 1.5x speed tube; white pom at its end is a giant snowball (snowman-like). Black/white striped road is an automated teeter-totter over a killer mailbox pit. Blue pegboard is the screwfield; finish sits right after the final screwfield."
                             }
                         ]
 }

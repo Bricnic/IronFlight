@@ -62,6 +62,7 @@ it("steps to the next and previous level with wraparound", () => {
     "Rock and Roll",
     "Shipyard",
     "Spider Hollow",
+    "Screwball Run",
   ]);
   expect(stepTrackId("triple-loop", 1)).toBe("foundry-run");
   expect(stepTrackId("foundry-run", -1)).toBe("triple-loop");
@@ -129,12 +130,14 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:shipyard", -1)).toBe("custom:rock-and-roll");
   expect(stepTrackId("custom:shipyard", 1)).toBe("custom:spider-hollow");
   expect(stepTrackId("custom:spider-hollow", -1)).toBe("custom:shipyard");
-  expect(stepTrackId("custom:spider-hollow", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:spider-hollow");
+  expect(stepTrackId("custom:spider-hollow", 1)).toBe("custom:screwball-run");
+  expect(stepTrackId("custom:screwball-run", -1)).toBe("custom:spider-hollow");
+  expect(stepTrackId("custom:screwball-run", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:screwball-run");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe("custom:spider-hollow");
+  expect(stepTrackId("custom:my-level", -1)).toBe("custom:screwball-run");
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:spider-hollow");
+  expect(stepTrackId(undefined, -1)).toBe("custom:screwball-run");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

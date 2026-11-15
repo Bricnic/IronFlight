@@ -241,6 +241,7 @@ const PHYSICS_EXEMPT = new Map<string, string>([
   ["guided-pipe", "CODE: ride path rotates with yaw (guided-pipe pose)"],
   ["crusher-claw", "CODE: catch zone evaluated in the yawed local frame"],
   ["spike-gates", "CODE: spike zones evaluated in the yawed local frame"],
+  ["speed-tube", "CODE: ride axis and exit shot computed in the yawed frame; shell is visual only"],
   ["ghost", "NO_COLLIDERS: homing chase plus radial drain; model lookAts the truck"],
   ["hot-air-balloon", "NO_COLLIDERS: bananas drop at the balloon position; radial drift"],
   ["spider", "NO_COLLIDERS: radial web plus homing chase; model carries yaw"],

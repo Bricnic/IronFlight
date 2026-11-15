@@ -158,5 +158,10 @@
     "file": "Spider Hollow.json",
     "thumbnail": "/tracks/spider-hollow.png",
     "description": "Dodge the chomp book and raptor, skirt the giant spiderweb, thread the fork past spike, fire and slime pits to the finish."
+  },
+  {
+    "file": "Screwball Run.json",
+    "thumbnail": "/tracks/screwball-run.png",
+    "description": "Blast the speed tube, smash the giant snowball, ride the teeter-totter over the killer mailbox and thread twin screwfields to the finish."
   }
 ]
