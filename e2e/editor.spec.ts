@@ -659,3 +659,70 @@ test("refresh button reloads the level list from disk", async ({ page }) => {
   await page.locator("#editor-refresh-levels").click();
   await expect.poll(levels, { timeout: 15000 }).not.toContain(name);
 });
+test("level picker lists levels a-z", async ({ page }) => {
+  await openEditor(page);
+  // Disk-first union order would list zebra (on disk) before apple
+  // (local-only); the picker must sort them instead.
+  const disk = "e2e-sort-zebra";
+  const local = "e2e-sort-apple";
+  await page.evaluate(
+    (n) =>
+      window.__game!.customLevels.save({
+        name: n,
+        mode: "race",
+        spawn: { x: 0, y: 2.1, z: -40, yaw: 0 },
+        checkpoints: [{ x: 0, z: 40 }],
+        solids: [
+          {
+            id: "ground",
+            kind: "ground",
+            x: 0,
+            y: -0.6,
+            z: 0,
+            w: 200,
+            h: 1.2,
+            d: 200,
+            color: 0x6d817c,
+          },
+        ],
+        prefabs: [],
+        medals: { gold: 30, silver: 45, bronze: 60 },
+      }),
+    disk,
+  );
+  await page.evaluate((n) => {
+    const key = "iron-flight-custom-levels-v1";
+    const names = JSON.parse(
+      localStorage.getItem(key) ?? "[]",
+    ) as string[];
+    if (!names.includes(n))
+      localStorage.setItem(key, JSON.stringify([...names, n]));
+  }, local);
+  const levels = () =>
+    page.evaluate(() => window.__game!.editor().levels as string[]);
+  try {
+    await page.locator("#editor-refresh-levels").click();
+    await expect.poll(levels, { timeout: 15000 }).toContain(disk);
+    await expect.poll(levels, { timeout: 15000 }).toContain(local);
+    const grown = await levels();
+    const zebra = grown.indexOf(disk);
+    const apple = grown.indexOf(local);
+    expect(apple).toBeLessThan(zebra);
+  } finally {
+    await page.evaluate(
+      (n) => window.__game!.customLevels.remove(n).catch(() => {}),
+      disk,
+    );
+    await page.evaluate((n) => {
+      const key = "iron-flight-custom-levels-v1";
+      localStorage.setItem(
+        key,
+        JSON.stringify(
+          (JSON.parse(localStorage.getItem(key) ?? "[]") as string[]).filter(
+            (x) => x !== n,
+          ),
+        ),
+      );
+    }, local);
+  }
+});
