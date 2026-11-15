@@ -1,5 +1,5 @@
 import R from "@dimforge/rapier3d-compat";
-import { Vector3 } from "three";
+import { Quaternion, Vector3 } from "three";
 import type { Track } from "./tracks";
 import type { Simulation } from "./simulation";
 
@@ -31,6 +31,7 @@ export type LooseBlock = {
   x: number;
   z: number;
   y?: number;
+  yaw?: number;
 };
 
 /** Custom levels serve whatever loose blocks the author placed. */
@@ -44,6 +45,7 @@ export function looseBlockHazards(track?: Track): LooseBlock[] {
       x: p.x,
       z: p.z,
       ...(p.y === undefined ? {} : { y: p.y }),
+      ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
     }));
 }
 
@@ -77,6 +79,12 @@ export class LooseBlocks {
     const body = world.createRigidBody(
       R.RigidBodyDesc.dynamic()
         .setTranslation(h.x, (h.y ?? 0) + hy, h.z)
+        .setRotation(
+          new Quaternion().setFromAxisAngle(
+            new Vector3(0, 1, 0),
+            h.yaw ?? 0,
+          ),
+        )
         .setLinearDamping(0.15)
         .setAngularDamping(0.4)
         .setCcdEnabled(true),

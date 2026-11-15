@@ -440,7 +440,9 @@ export class FairgroundView extends T.Group {
       this.bananaModels.clear();
       for (const c of sim.fairground.carousels) {
         const model = buildCarousel();
+        model.name = c.p.id;
         model.position.set(c.p.x, c.p.y ?? 0, c.p.z);
+        model.rotation.y = (c.p.yaw ?? 0) + c.angle;
         this.add(model);
         this.carouselModels.set(c.p.id, model);
       }
@@ -448,7 +450,9 @@ export class FairgroundView extends T.Group {
         if (p.kind === "bumper-arena" || p.kind === "bumper-arena-xl") {
           const model =
             p.kind === "bumper-arena-xl" ? buildArenaXL() : buildArena();
+          model.name = p.id;
           model.position.set(p.x, p.y ?? 0, p.z);
+          model.rotation.y = p.yaw ?? 0;
           this.add(model);
         }
       sim.fairground.bumpers.forEach((car, i) => {
@@ -458,13 +462,15 @@ export class FairgroundView extends T.Group {
       });
       for (const b of sim.fairground.balloons) {
         const model = buildBalloon();
+        model.name = b.p.id;
+        model.rotation.y = b.p.yaw ?? 0;
         this.add(model);
         this.balloonModels.set(b.p.id, model);
       }
     }
     for (const c of sim.fairground.carousels) {
       const model = this.carouselModels.get(c.p.id)!;
-      model.rotation.y = c.angle;
+      model.rotation.y = (c.p.yaw ?? 0) + c.angle;
       for (const trap of c.traps) {
         const burst = model.getObjectByName(`burst-${trap.slot}`)!;
         const age = sim.time - trap.exploded;

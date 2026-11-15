@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { resolveViewportPick, resolveViewportStack, ViewportPickCycle, planeHit } from "../src/editor-viewport";
+import { lookYaw, resolveViewportPick, resolveViewportStack, ViewportPickCycle, planeHit } from "../src/editor-viewport";
 
 const tagged = (pick: unknown, parent: unknown = null) => ({
   userData: { pick },
@@ -80,6 +80,13 @@ it("ignores untagged hits and empty rays", () => {
       { object: tagged({ kind: "solid", id: "ground" }) },
     ]),
   ).toEqual({ kind: "solid", id: "ground" });
+});
+it("faces a prefab toward the cursor point", () => {
+  const from = { x: 10, z: -4 };
+  expect(lookYaw(from, { x: 10, z: 6 })).toBeCloseTo(0, 9);
+  expect(lookYaw(from, { x: 20, z: -4 })).toBeCloseTo(Math.PI / 2, 9);
+  expect(lookYaw(from, { x: 10, z: -14 })).toBeCloseTo(Math.PI, 9);
+  expect(lookYaw(from, { x: 0, z: -4 })).toBeCloseTo(-Math.PI / 2, 9);
 });
 it("intersects drag rays with the grab-height plane", () => {
   expect(

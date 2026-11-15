@@ -168,7 +168,8 @@ export class DungeonPhysics {
       if (h.kind === "screw-field") solid(SCREW_FIELD_SIZE, 1.2, SCREW_FIELD_SIZE, 0, 0, -1.2);
       if (h.kind === "volcano")
         m.colliders.push(world.createCollider(R.ColliderDesc.cone(3.5, 6.7)
-          .setTranslation(h.x, (h.y ?? 0) + 3.5, h.z)));
+          .setTranslation(h.x, (h.y ?? 0) + 3.5, h.z)
+          .setRotation(yawQuat())));
       if (h.kind === "window-gate") {
         solid(WINDOW_GATE.postW, WINDOW_GATE.postH, WINDOW_GATE.gateD, -WINDOW_GATE.postX, 0);
         solid(WINDOW_GATE.postW, WINDOW_GATE.postH, WINDOW_GATE.gateD, WINDOW_GATE.postX, 0);
@@ -181,11 +182,14 @@ export class DungeonPhysics {
       solid(CACTI_PATCH.w, CACTI_PATCH.h, CACTI_PATCH.d, 0, 0);
     } else if (h.kind === "rocker") {
       const body = world.createRigidBody(
-        R.RigidBodyDesc.kinematicPositionBased().setTranslation(
-          h.x,
-          (h.y ?? 0) + ROCKER.pivotY,
-          h.z,
-        ),
+        R.RigidBodyDesc.kinematicPositionBased()
+          .setTranslation(h.x, (h.y ?? 0) + ROCKER.pivotY, h.z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 1, 0),
+              h.yaw ?? 0,
+            ),
+          ),
       );
       m.body = body;
       m.tilt = ROCKER.restTilt;
@@ -206,6 +210,12 @@ export class DungeonPhysics {
       const body = world.createRigidBody(
         R.RigidBodyDesc.dynamic()
           .setTranslation(h.x, (h.y ?? 0) + BOULDER.radius + 0.1, h.z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 1, 0),
+              h.yaw ?? 0,
+            ),
+          )
           .setLinearDamping(0.05)
           .setAngularDamping(0.1)
           .setCcdEnabled(true),
@@ -347,7 +357,14 @@ export class DungeonPhysics {
     } else if (h.kind === "mailbox") {
       // Small solid body; the abduction zone around it fires first.
       const body = world.createRigidBody(
-        R.RigidBodyDesc.fixed().setTranslation(h.x, (h.y ?? 0) + 2, h.z),
+        R.RigidBodyDesc.fixed()
+          .setTranslation(h.x, (h.y ?? 0) + 2, h.z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 1, 0),
+              h.yaw ?? 0,
+            ),
+          ),
       );
       m.body = body;
       m.colliders.push(

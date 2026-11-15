@@ -549,6 +549,7 @@ export class CourseView extends T.Group {
               const g =
                 s.kind === "lamp" ? buildLampPost() : buildGrandstand();
               g.position.set(s.x, s.y, s.z);
+              g.rotation.y = s.yaw ?? 0;
               this.add(g);
               if (s.kind === "lamp") this.lampModels.push(g);
               else this.grandstandModels.push(g);
@@ -575,7 +576,9 @@ export class CourseView extends T.Group {
         }
         for (const h of courseHazards(track)) {
           const root = new T.Group();
+          root.name = h.id;
           root.position.set(h.x, h.y, h.z);
+          root.rotation.y = h.yaw ?? 0;
           this.add(root);
           const material = new T.MeshStandardMaterial({
             color: 0x52615a,
@@ -660,7 +663,9 @@ export class CourseView extends T.Group {
         }
         for (const a of sim.axes.snapshot().axes) {
           const root = new T.Group();
+          root.name = a.id;
           root.position.set(a.x, a.y, a.z);
+          root.rotation.y = a.yaw;
           const rotor = new T.Group();
           rotor.add(buildAxeMesh());
           root.add(rotor);
@@ -683,14 +688,18 @@ export class CourseView extends T.Group {
         }
         for (const t of track.trampolines ?? []) {
           const tramp = buildTrampolineMesh();
+          if (t.id !== undefined) tramp.name = t.id;
           tramp.position.set(t.x, t.y - 0.5, t.z);
+          tramp.rotation.y = t.yaw ?? 0;
           this.add(tramp);
           this.trampolineModels.push(tramp);
         }
         for (const p of track.custom?.prefabs ?? []) {
           if (p.kind !== "boost-pad") continue;
           const pad = buildBoostPadMesh();
+          pad.name = p.id;
           pad.position.set(p.x, p.y ?? 0, p.z);
+          pad.rotation.y = p.yaw ?? 0;
           this.add(pad);
           this.boostPadModels.push(pad);
         }

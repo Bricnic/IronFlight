@@ -86,7 +86,7 @@ const tile = (id: string, x: number, z: number): CustomPrefab => ({ id, kind: "f
 const TILE_X = 30;
 const STRADDLE_X = 32.5;
 
-it("registers fragile-ice as a rotation-free 5x5 prefab kind", () => {
+it("registers fragile-ice as a 5x5 prefab kind with yaw", () => {
   expect(FRAGILE_ICE_PREFAB_KINDS).toContain("fragile-ice");
   expect(PREFAB_KINDS).toContain("fragile-ice");
   expect(FRAGILE_ICE_SIZE).toBe(5);
@@ -96,7 +96,7 @@ it("registers fragile-ice as a rotation-free 5x5 prefab kind", () => {
   expect(() => validateCustomLevel(level)).not.toThrow();
   const yawed = blankLevel("Fragile Ice Yawed");
   yawed.prefabs = [{ ...tile("ice-1", 10, 10), yaw: 0.5 }];
-  expect(() => validateCustomLevel(yawed)).toThrow();
+  expect(() => validateCustomLevel(yawed)).not.toThrow();
   const sim = fixture([tile("ice-1", TILE_X, 0)]);
   try {
     expect(fragileIceHazards(sim.courseTrack)).toHaveLength(1);

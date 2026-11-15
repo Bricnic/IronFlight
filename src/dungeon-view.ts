@@ -1242,7 +1242,8 @@ export class DungeonView extends T.Group {
         if (body && mech?.anchor) {
           const t = body.translation();
           m.root.position.set(t.x, t.y, t.z);
-          m.root.rotation.y = 0;
+          m.root.rotation.y = m.h.yaw ?? 0;
+          m.root.updateMatrixWorld(true);
           const a = mech.anchor;
           const yaw = m.h.yaw ?? 0;
           const far = a.fired
@@ -1252,11 +1253,8 @@ export class DungeonView extends T.Group {
                 y: (m.h.y ?? 0) + 0.5,
                 z: m.h.z + Math.cos(yaw) * ANCHOR.chain,
               };
-          layAnchorChain(
-            m.anchor,
-            [0, 4.6, 0],
-            [far.x - t.x, far.y - t.y, far.z - t.z],
-          );
+          const local = m.root.worldToLocal(new T.Vector3(far.x, far.y, far.z));
+          layAnchorChain(m.anchor, [0, 4.6, 0], [local.x, local.y, local.z]);
         }
         continue;
       }

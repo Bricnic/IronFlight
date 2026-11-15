@@ -1,4 +1,5 @@
 import R from "@dimforge/rapier3d-compat";
+import { Quaternion, Vector3 } from "three";
 import type { Track } from "./tracks";
 import type { Simulation } from "./simulation";
 
@@ -16,6 +17,7 @@ export type BurningCoal = {
   x: number;
   z: number;
   y?: number;
+  yaw?: number;
 };
 
 /** Custom levels serve whatever coals the author perched on the blocks. */
@@ -28,6 +30,7 @@ export function burningCoalHazards(track?: Track): BurningCoal[] {
       x: p.x,
       z: p.z,
       ...(p.y === undefined ? {} : { y: p.y }),
+      ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
     }));
 }
 
@@ -51,6 +54,12 @@ export class BurningCoals {
     const body = world.createRigidBody(
       R.RigidBodyDesc.dynamic()
         .setTranslation(h.x, (h.y ?? 0) + half, h.z)
+        .setRotation(
+          new Quaternion().setFromAxisAngle(
+            new Vector3(0, 1, 0),
+            h.yaw ?? 0,
+          ),
+        )
         .setLinearDamping(0.1)
         .setAngularDamping(0.3)
         .setCcdEnabled(true),

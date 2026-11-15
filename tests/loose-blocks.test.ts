@@ -82,13 +82,13 @@ function lab() {
   return sim;
 }
 
-it("registers loose-blocks as a rotation-free prefab kind", () => {
+it("registers loose-blocks as a prefab kind with yaw", () => {
   expect(LOOSE_BLOCK_PREFAB_KINDS).toContain("loose-blocks");
   expect(PREFAB_KINDS).toContain("loose-blocks");
   expect(() => validateCustomLevel(withBlocks())).not.toThrow();
   const yawed = withBlocks();
   yawed.prefabs[0].yaw = 0.5;
-  expect(() => validateCustomLevel(yawed)).toThrow();
+  expect(() => validateCustomLevel(yawed)).not.toThrow();
 });
 
 it("stacks foam-light cubes that settle without damage", () => {

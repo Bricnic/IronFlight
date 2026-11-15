@@ -503,14 +503,6 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     );
     check(
       errors,
-      p?.yaw === undefined ||
-        (PROP_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
-        (DUNGEON_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
-        p?.kind === "dragon",
-      `prefab ${p?.id ?? i} yaw is only supported on prop, dungeon and dragon kinds`,
-    );
-    check(
-      errors,
       p?.angle === undefined || finite(p.angle),
       `prefab ${p?.id ?? i} needs a finite pitch angle`,
     );
@@ -606,7 +598,9 @@ function hashColor(name: string) {
 export function toTrack(level: CustomLevel): Track {
   const gatePoints: CustomCheckpoint[] = [
     ...level.checkpoints,
-    ...level.prefabs.filter((p) => p.kind === "checkpoint").map(({ x, y, z }) => ({ x, y, z })),
+    ...level.prefabs
+      .filter((p) => p.kind === "checkpoint")
+      .map(({ x, y, z, yaw }) => ({ x, y, z, yaw })),
   ];
   const path = [
     { x: level.spawn.x, z: level.spawn.z },
@@ -623,7 +617,13 @@ export function toTrack(level: CustomLevel): Track {
   });
   const trampolines = level.prefabs
     .filter((p) => p.kind === "trampoline")
-    .map((p) => ({ x: p.x, y: p.y ?? 0, z: p.z }));
+    .map((p) => ({
+      id: p.id,
+      x: p.x,
+      y: p.y ?? 0,
+      z: p.z,
+      ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
+    }));
   const base = {
     id: `custom:${customSlug(level.name)}` as CustomTrackId,
     name: level.name,

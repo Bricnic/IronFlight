@@ -16,7 +16,7 @@ export type FlowBox = {
   dirx: number;
   dirz: number;
 };
-export type TrampDef = { x: number; y: number; z: number };
+export type TrampDef = { x: number; y: number; z: number; yaw?: number };
 export type SlideDef = { flows: FlowBox[]; trampolines: TrampDef[] };
 export function slideDefs(track?: Track): SlideDef {
   if (track?.custom) return { flows: [], trampolines: track.trampolines ?? [] };
@@ -71,6 +71,12 @@ export class SlideSystems {
       const collider = sim.world.createCollider(
         RAPIER.ColliderDesc.cuboid(5, 2, 5)
           .setTranslation(t.x, t.y + 2.5, t.z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 1, 0),
+              t.yaw ?? 0,
+            ),
+          )
           .setSensor(true),
       );
       this.sensors.push({

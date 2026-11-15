@@ -12,6 +12,8 @@ import {
   courseSolids,
   courseHazards,
   courseProps,
+  onBoostPad,
+  yawOffset,
   type CourseSolid,
 } from "./course";
 import { getTrack, type CustomTrackId, type TrackId } from "./tracks";
@@ -22,7 +24,6 @@ import { Quaternion, Vector3 } from "three";
 import { solidQuaternion } from "./euler";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
-import { BOOST_PAD } from "./custom-level";
 import { DEFAULT_WEATHER, type WeatherFlags } from "./weather";
 /** Wet-asphalt grip multiplier: softer yaw bite, longer slides. */
 export const RAIN_GRIP_SCALE = 0.55;
@@ -386,11 +387,14 @@ export class Simulation {
       for (const h of this.activeHazards) {
         if (h.kind === "hammer") {
           const b = this.world.createRigidBody(
-            RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(
-              h.x,
-              h.y,
-              h.z,
-            ),
+            RAPIER.RigidBodyDesc.kinematicPositionBased()
+              .setTranslation(h.x, h.y, h.z)
+              .setRotation(
+                new Quaternion().setFromAxisAngle(
+                  new Vector3(0, 1, 0),
+                  h.yaw ?? 0,
+                ),
+              ),
           );
           this.hazardBodies.set(h.id, b);
           this.world.createCollider(
@@ -539,10 +543,16 @@ export class Simulation {
     const routeX = customLoop?.x ?? officialRouteX;
     const loopZ = customLoop?.z ?? LOOP.z;
     const position = this.body.translation();
+    // Loop assist runs in the loop's yawed frame (lateral x, along-entry z).
+    const loopFrame = yawOffset(
+      position.x - (routeX ?? position.x),
+      position.z - loopZ,
+      -(customLoop?.yaw ?? 0),
+    );
     const onApproach =
-      routeX !== undefined && Math.abs(position.x - routeX) < 6;
+      routeX !== undefined && Math.abs(loopFrame.x) < 6;
     const loopSuspension =
-      routeX !== undefined && position.z > loopZ - LOOP.radius - 5;
+      routeX !== undefined && loopFrame.z > -LOOP.radius - 5;
     this.body.setAngularDamping(strafeMode ? 8 : loopSuspension ? 0.25 : 1.2);
     for (let i = 0; i < 4; i++) {
       if (this.parts.get(this.partDefs[i + 2].id)!.body) continue;
@@ -556,8 +566,8 @@ export class Simulation {
       onApproach &&
       position.y < 4 &&
       position.y > 0 &&
-      position.z >= loopZ - (LOOP.z - LOOP.boostStart) &&
-      position.z <= loopZ - (LOOP.z - LOOP.boostEnd) &&
+      loopFrame.z >= LOOP.boostStart - LOOP.z &&
+      loopFrame.z <= LOOP.boostEnd - LOOP.z &&
       this.wheelPositions().filter((_, i) => this.vehicle.wheelIsInContact(i))
         .length >= 2 &&
       this.parts.get("chassis-front")!.health > 0 &&
@@ -575,12 +585,8 @@ export class Simulation {
     }
     for (const p of this.courseTrack?.custom?.prefabs ?? []) {
       if (p.kind !== "boost-pad") continue;
-      const padY = p.y ?? 0;
       if (
-        Math.abs(position.x - p.x) < BOOST_PAD.w / 2 &&
-        Math.abs(position.z - p.z) < BOOST_PAD.d / 2 &&
-        position.y > padY &&
-        position.y < padY + 4 &&
+        onBoostPad(position, p) &&
         this.wheelPositions().filter((_, i) => this.vehicle.wheelIsInContact(i))
           .length >= 2 &&
         this.parts.get("chassis-front")!.health > 0 &&
@@ -623,9 +629,9 @@ export class Simulation {
       }
     const onLoop =
       routeX !== undefined &&
-      Math.abs(position.x - routeX - 6) < 14 &&
+      Math.abs(loopFrame.x - 6) < 14 &&
       position.y > 3 &&
-      Math.abs(position.z - loopZ) < LOOP.radius + 5;
+      Math.abs(loopFrame.z) < LOOP.radius + 5;
     if (
       onLoop &&
       position.y > LOOP.radius * 1.8 &&
@@ -640,7 +646,7 @@ export class Simulation {
       this.loopApex &&
       position.y < 3 &&
       longitudinal > 0 &&
-      position.z > loopZ - 8 &&
+      loopFrame.z > -8 &&
       this.wheelPositions().filter((_, i) => this.vehicle.wheelIsInContact(i))
         .length >= 2
     )
@@ -856,13 +862,20 @@ export class Simulation {
           RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
       );
     this.hammerPhase += hammerAngle(DT) * this.tuning.hammerSpeed;
-    for (const b of this.hazardBodies.values())
+    for (const [id, b] of this.hazardBodies) {
+      const yaw =
+        this.activeHazards.find((h) => h.id === id)?.yaw ?? 0;
       b.setNextKinematicRotation(
-        new Quaternion().setFromAxisAngle(
-          new Vector3(0, 0, 1),
-          this.hammerPhase,
-        ),
+        new Quaternion()
+          .setFromAxisAngle(new Vector3(0, 1, 0), yaw)
+          .multiply(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 0, 1),
+              this.hammerPhase,
+            ),
+          ),
       );
+    }
     this.axes.update();
     this.fairground.before();
     const before = new Vector3().copy(this.body.linvel());

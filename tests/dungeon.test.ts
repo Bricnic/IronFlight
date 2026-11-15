@@ -158,6 +158,40 @@ it("dungeon hazards and decor accept yaw but not pitch or roll", () => {
   }
 });
 
+it("swings the lime-chomper strike box with prefab yaw", () => {
+  const level = minimal([
+    { id: "lime-1", kind: "lime-chomper", x: 0, z: 0, yaw: Math.PI / 2 },
+  ]);
+  const track = toTrack(validateCustomLevel(level));
+  registerCustomTrack(track);
+  // Strike box faces +x now: park inside it.
+  const sim = new Simulation();
+  try {
+    sim.startTrack(track.id);
+    sim.body.setTranslation({ x: 16, y: 2, z: 0 }, true);
+    for (let i = 0; i < 1200 && sim.status === "driving"; i++)
+      sim.step({ brake: 1 });
+    expect(
+      sim.damageEvents.some((e) => e.source === "lime-chomper"),
+    ).toBe(true);
+  } finally {
+    sim.dispose();
+  }
+  // Behind the yawed jaw stays safe.
+  const safe = new Simulation();
+  try {
+    safe.startTrack(track.id);
+    safe.body.setTranslation({ x: 0, y: 2, z: 16 }, true);
+    for (let i = 0; i < 1200 && safe.status === "driving"; i++)
+      safe.step({ brake: 1 });
+    expect(
+      safe.damageEvents.some((e) => e.source === "lime-chomper"),
+    ).toBe(false);
+  } finally {
+    safe.dispose();
+  }
+});
+
 it("maps the underground flag onto tracks", () => {
   expect(toTrack(validateCustomLevel(minimal())).underground).toBeUndefined();
   const track = toTrack(
