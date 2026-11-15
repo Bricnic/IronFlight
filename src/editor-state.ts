@@ -17,7 +17,7 @@ export type EditorSelection =
   | { kind: "ring"; index: number }
   | { kind: "spawn" }
   | null;
-export type EditorTool = "select" | "pan" | "eyedropper" | "rotator" | "clip";
+export type EditorTool = "select" | "pan" | "eyedropper" | "rotator" | "clip" | "look";
 type Snapshot = { level: CustomLevel; selection: EditorSelection; solidSelection: string[] };
 /**
  * The editor store may adopt a live session's level only when it has no

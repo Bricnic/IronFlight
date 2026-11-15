@@ -271,7 +271,7 @@ it("validates roll and prop-prefab yaw", () => {
   expect(() => validateCustomLevel(badRoll)).toThrow(/roll/);
   const comicYaw = blankLevel("Comic Yaw");
   comicYaw.prefabs.push({ id: "b-1", kind: "book", x: 0, z: 0, yaw: 1 });
-  expect(() => validateCustomLevel(comicYaw)).toThrow(/yaw/);
+  expect(() => validateCustomLevel(comicYaw)).not.toThrow();
 });
 it("launches the truck off pitched walls", () => {
   const level = blankLevel("Pitch Launch");

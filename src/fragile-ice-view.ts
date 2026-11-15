@@ -16,8 +16,10 @@ const SHARD_COUNT = 6;
 const _m = new T.Matrix4();
 const _p = new T.Vector3();
 const _q = new T.Quaternion();
+const _qy = new T.Quaternion();
 const _s = new T.Vector3();
 const _e = new T.Euler();
+const _up = new T.Vector3(0, 1, 0);
 const ZERO = new T.Vector3(0, 0, 0);
 const ONE = new T.Vector3(1, 1, 1);
 
@@ -34,6 +36,7 @@ export class FragileIceView extends T.Group {
   private key = "";
   private order: string[] = [];
   private base: { x: number; y: number; z: number }[] = [];
+  private yaws: number[] = [];
   private shattered: boolean[] = [];
   sheets?: T.InstancedMesh;
   waters?: T.InstancedMesh;
@@ -69,6 +72,7 @@ export class FragileIceView extends T.Group {
     this.source = source;
     this.order = source.tiles.map((t) => t.h.id);
     this.base = source.tiles.map((t) => ({ x: t.h.x, y: t.h.y ?? 0, z: t.h.z }));
+    this.yaws = source.tiles.map((t) => t.h.yaw ?? 0);
     this.shattered = source.tiles.map((t) => t.shattered);
     this.key = this.order.join(",");
     const n = this.order.length;
@@ -135,13 +139,15 @@ export class FragileIceView extends T.Group {
   }
   private writeSheet(i: number, visible: boolean) {
     const b = this.base[i];
+    const yaw = this.yaws[i] ?? 0;
     _p.set(b.x, b.y + SHEET_Y, b.z);
-    _q.identity();
+    _e.set(0, yaw, 0);
+    _q.setFromEuler(_e);
     _m.compose(_p, _q, visible ? ONE : ZERO);
     this.sheets!.setMatrixAt(i, _m);
     for (let k = 0; k < 3; k++) {
       _p.set(b.x, b.y + CRACK_Y, b.z);
-      _e.set(0, CRACK_TILTS[k], 0);
+      _e.set(0, yaw + CRACK_TILTS[k], 0);
       _q.setFromEuler(_e);
       _s.set(CRACK_LENS[k], 1, 1);
       if (!visible) _s.set(0, 0, 0);
@@ -158,17 +164,25 @@ export class FragileIceView extends T.Group {
       b.y + FRAGILE_ICE_WATER_Y + Math.sin(time * 2 + b.x * 0.7 + b.z) * 0.04,
       b.z,
     );
-    _q.identity();
+    _e.set(0, this.yaws[i] ?? 0, 0);
+    _q.setFromEuler(_e);
     _m.compose(_p, _q, ONE);
     this.waters!.setMatrixAt(i, _m);
   }
   private writeShards(i: number, visible: boolean) {
     const b = this.base[i];
+    const yaw = this.yaws[i] ?? 0;
     const half = FRAGILE_ICE_SIZE / 2;
+    const c = Math.cos(yaw),
+      s = Math.sin(yaw);
     for (let k = 0; k < SHARD_COUNT; k++) {
       const { pos, rot } = shardLocal(k, half);
-      _p.set(b.x + pos.x, b.y + pos.y, b.z + pos.z);
-      _q.setFromEuler(rot);
+      _p.set(
+        b.x + pos.x * c + pos.z * s,
+        b.y + pos.y,
+        b.z - pos.x * s + pos.z * c,
+      );
+      _q.setFromEuler(rot).premultiply(_qy.setFromAxisAngle(_up, yaw));
       _m.compose(_p, _q, visible ? ONE : ZERO);
       this.shards!.setMatrixAt(i * SHARD_COUNT + k, _m);
     }

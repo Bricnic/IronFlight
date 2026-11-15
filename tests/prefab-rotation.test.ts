@@ -10,6 +10,7 @@ import { courseProps } from "../src/course";
 import { CourseView } from "../src/course-view";
 import { DRAGON_FLAME_LENGTH, dragonAim } from "../src/loop";
 import {
+  PREFAB_KINDS,
   toTrack,
   registerCustomTrack,
   validateCustomLevel,
@@ -85,15 +86,31 @@ it("dragon prefabs accept yaw but not pitch or roll", () => {
   ).toThrow(/roll/);
 });
 
-it("loop, hammer and comic prefabs reject rotation", () => {
-  for (const kind of ["loop", "hammer", "book", "lamp", "grandstand"]) {
+it("every prefab kind accepts yaw, including future kinds", () => {
+  // Sweeps the live kind list: a newly introduced prefab inherits yaw.
+  expect(PREFAB_KINDS.length).toBeGreaterThan(0);
+  for (const kind of PREFAB_KINDS) {
     expect(
       () =>
         validateCustomLevel(
           minimal([{ id: "p-1", kind, x: 0, z: 0, yaw: 1 }]),
         ),
       kind,
-    ).toThrow(/yaw/);
+    ).not.toThrow();
+  }
+});
+
+it("non-prop prefabs still reject pitch and roll", () => {
+  for (const kind of ["loop", "hammer", "book", "lamp", "grandstand"]) {
+    for (const patch of [{ angle: 0.1 }, { roll: 0.1 }]) {
+      expect(
+        () =>
+          validateCustomLevel(
+            minimal([{ id: "p-1", kind, x: 0, z: 0, ...patch }]),
+          ),
+        `${kind} ${Object.keys(patch)[0]}`,
+      ).toThrow(/pitch|roll/);
+    }
   }
 });
 

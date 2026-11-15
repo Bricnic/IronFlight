@@ -1,7 +1,8 @@
 import R from "@dimforge/rapier3d-compat";
-import { Quaternion, Vector3 } from "three";
+import { Euler, Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import type { Simulation } from "./simulation";
+import { yawOffset } from "./course";
 import { getVehicle } from "./vehicles";
 import {
   comicHazards,
@@ -53,6 +54,12 @@ export class ComicPhysics {
         contacts: 0,
       };
       this.mechanisms.push(m);
+      const yaw = h.yaw ?? 0;
+      const yawQ = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), yaw);
+      const at = (x: number, z: number) => {
+        const o = yawOffset(x, z, yaw);
+        return { x: h.x + o.x, z: h.z + o.z };
+      };
       const box = (
         x: number,
         y: number,
@@ -63,13 +70,16 @@ export class ComicPhysics {
         sensor = false,
         body?: R.RigidBody,
       ) => {
+        // Body-attached shapes stay in body space; the body carries the yaw.
+        const p = body ? { x, z } : at(x, z);
         const c = world.createCollider(
           R.ColliderDesc.cuboid(w / 2, height / 2, d / 2)
             .setTranslation(
-              body ? x : h.x + x,
+              p.x,
               y + (body ? 0 : (h.y ?? 0)),
-              body ? z : h.z + z,
+              p.z,
             )
+            .setRotation(body ? new Quaternion() : yawQ.clone())
             .setSensor(sensor)
             .setFriction(0.75),
           body,
@@ -77,21 +87,23 @@ export class ComicPhysics {
         (sensor ? m.sensors : m.colliders).push(c);
         return c;
       };
+      const pitchQ = (angle: number) =>
+        yawQ
+          .clone()
+          .multiply(
+            new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), angle),
+          );
       if (["book", "teeth", "computer", "flippers", "donut"].includes(h.kind)) {
         const s = h.scale ?? 1;
         const baseY = h.y ?? 0;
         box(0, 0.25 * s, 0, 12 * s, 0.5 * s, 12 * s);
         if (h.kind === "flippers") box(0, 1.3 * s, 0, 10 * s, 2 * s, 10 * s, true);
         for (const side of [-1, 1]) box(side * 6.4 * s, 1.5 * s, 4.8 * s, 0.65 * s, 3 * s, 2 * s);
+        const hinge = at(0, 5 * s);
         const b = world.createRigidBody(
           R.RigidBodyDesc.kinematicPositionBased()
-            .setTranslation(h.x, baseY + 1.2 * s, h.z + 5 * s)
-            .setRotation(
-              new Quaternion().setFromAxisAngle(
-                new Vector3(1, 0, 0),
-                mechanismAngle(h, 0),
-              ),
-            ),
+            .setTranslation(hinge.x, baseY + 1.2 * s, hinge.z)
+            .setRotation(pitchQ(mechanismAngle(h, 0))),
         );
         m.bodies.push(b);
         box(0, 0, -5 * s, 12 * s, 1.6 * s, 12 * s, false, b);
@@ -114,11 +126,9 @@ export class ComicPhysics {
       } else if (h.kind === "hydrant") {
         box(0, 0.15, 0, 5, 0.3, 5);
         const c = world.createCollider(
-          R.ColliderDesc.cylinder(1.35, 0.85).setTranslation(
-            h.x,
-            (h.y ?? 0) + 1.5,
-            h.z,
-          ),
+          R.ColliderDesc.cylinder(1.35, 0.85)
+            .setTranslation(h.x, (h.y ?? 0) + 1.5, h.z)
+            .setRotation(yawQ.clone()),
         );
         m.colliders.push(c);
         box(0, 3.5, 0, 5, 7, 5, true);
@@ -127,12 +137,11 @@ export class ComicPhysics {
         box(0, 2.5, 0, 12, 5, 10, true);
         // A real ramp, visibly and physically aligned with the burning section.
         const r = BURNER_RAMP;
+        const rampAt = at(r.x, r.z);
         const ramp = world.createCollider(
           R.ColliderDesc.cuboid(r.w / 2, r.h / 2, r.d / 2)
-            .setTranslation(h.x + r.x, r.y, h.z + r.z)
-            .setRotation(
-              new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), r.angle),
-            ),
+            .setTranslation(rampAt.x, r.y, rampAt.z)
+            .setRotation(pitchQ(r.angle)),
         );
         m.colliders.push(ramp);
         m.ramp = ramp;
@@ -140,15 +149,19 @@ export class ComicPhysics {
           box(side * 6.5, 0.8, 0, 0.6, 1.6, 12);
         }
         for (const s of BURNER_SUPPORTS) box(s.x, s.y, s.z, s.w, s.h, s.d);
-        for (const x of BURNER_DRUM.x)
+        for (const x of BURNER_DRUM.x) {
+          const drumAt = at(x, 0);
           m.colliders.push(
             world.createCollider(
               R.ColliderDesc.cylinder(
                 BURNER_DRUM.height / 2,
                 BURNER_DRUM.radius,
-              ).setTranslation(h.x + x, BURNER_DRUM.y, h.z),
+              )
+                .setTranslation(drumAt.x, BURNER_DRUM.y, drumAt.z)
+                .setRotation(yawQ.clone()),
             ),
           );
+        }
       } else if (h.kind === "water" || h.kind === "shark-pool") {
         box(0, -4.3, 0, 12, 0.6, 24);
         box(0, -1.8, 0, 12, 9, 24, true);
@@ -166,9 +179,10 @@ export class ComicPhysics {
       } else {
         box(0, 0.15, 0, 18, 0.3, 4);
         for (let i = 0; i < 4; i++) {
+          const ballAt = at((i - 1.5) * 4.4, 0);
           const c = world.createCollider(
             R.ColliderDesc.ball(0.5)
-              .setTranslation(h.x + (i - 1.5) * 4.4, 1.7, h.z)
+              .setTranslation(ballAt.x, 1.7, ballAt.z)
               .setSensor(true),
           );
           m.sensors.push(c);
@@ -256,9 +270,18 @@ export class ComicPhysics {
       const angle = mechanismAngle(m.h, s.time, m.triggered);
       for (const b of m.bodies) {
         const js = m.h.scale ?? 1;
-        b.setNextKinematicTranslation({ x: m.h.x, y: (m.h.y ?? 0) + 1.2 * js, z: m.h.z + 5 * js });
+        const hinge = yawOffset(0, 5 * js, m.h.yaw ?? 0);
+        b.setNextKinematicTranslation({
+          x: m.h.x + hinge.x,
+          y: (m.h.y ?? 0) + 1.2 * js,
+          z: m.h.z + hinge.z,
+        });
         b.setNextKinematicRotation(
-          new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), angle),
+          new Quaternion()
+            .setFromAxisAngle(new Vector3(0, 1, 0), m.h.yaw ?? 0)
+            .multiply(
+              new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), angle),
+            ),
         );
       }
     }
@@ -311,8 +334,13 @@ export class ComicPhysics {
         ) {
           m.triggered = s.time;
           m.contacts++;
+          const shove = yawOffset(0, 5, h.yaw ?? 0);
           s.body.applyImpulse(
-            { x: 0, y: s.body.mass() * 32, z: s.body.mass() * 5 },
+            {
+              x: s.body.mass() * shove.x,
+              y: s.body.mass() * 32,
+              z: s.body.mass() * shove.z,
+            },
             true,
           );
           if (this.incomingSpeed > 90) s.damage("chassis-front", 10000);
@@ -424,7 +452,10 @@ export class ComicPhysics {
         ramp: m.ramp
           ? {
               position: { ...m.ramp.translation() },
-              angle: 2 * Math.atan2(m.ramp.rotation().x, m.ramp.rotation().w),
+              angle: new Euler().setFromQuaternion(
+                new Quaternion().copy(m.ramp.rotation()),
+                "YXZ",
+              ).x,
             }
           : undefined,
         triggered: m.triggered,

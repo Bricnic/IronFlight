@@ -17,6 +17,7 @@ export type AxeDef = {
   y: number;
   z: number;
   phase: number;
+  yaw?: number;
 };
 export function axeDefs(track?: Track): AxeDef[] {
   if (track?.custom)
@@ -28,6 +29,7 @@ export function axeDefs(track?: Track): AxeDef[] {
         y: (p.y ?? 0) + 9,
         z: p.z,
         phase: 0,
+        ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
       }));
   if (track?.id !== "canyon-plunge") return [];
   return [950, 1050, 1400, 1600, 1800, 2000].map((z, i) => ({
@@ -66,11 +68,14 @@ export class AxeArray {
     this.swingTime = this.lastTime = sim.time;
     for (const def of axeDefs(track)) {
       const body = sim.world.createRigidBody(
-        RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(
-          def.x,
-          def.y,
-          def.z,
-        ),
+        RAPIER.RigidBodyDesc.kinematicPositionBased()
+          .setTranslation(def.x, def.y, def.z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 1, 0),
+              def.yaw ?? 0,
+            ),
+          ),
       );
       sim.world.createCollider(
         RAPIER.ColliderDesc.cuboid(0.25, 4, 0.25).setTranslation(0, -4, 0),
@@ -98,7 +103,11 @@ export class AxeArray {
       axe.angle = axeAngle(this.swingTime, axe.def.phase);
       axe.velocity = axeAngularVelocity(this.swingTime, axe.def.phase) * speed;
       axe.body.setNextKinematicRotation(
-        new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), axe.angle),
+        new Quaternion()
+          .setFromAxisAngle(new Vector3(0, 1, 0), axe.def.yaw ?? 0)
+          .multiply(
+            new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), axe.angle),
+          ),
       );
     }
   }
@@ -206,6 +215,7 @@ export class AxeArray {
         x: a.def.x,
         y: a.def.y,
         z: a.def.z,
+        yaw: a.def.yaw ?? 0,
         angle: a.angle,
         velocity: a.velocity,
         contacts: a.contacts,

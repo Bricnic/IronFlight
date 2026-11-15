@@ -127,7 +127,7 @@ it("sweeps the laser periodically across a symmetric arc", () => {
   expect(firing).toContain(false);
 });
 
-function laserProbeTrack() {
+function laserProbeTrack(yaw = 0) {
   registerCustomTrack(
     toTrack(
       validateCustomLevel({
@@ -141,7 +141,7 @@ function laserProbeTrack() {
         solids: [
           { id: "g", kind: "ground", x: 0, y: -0.65, z: 0, w: 60, h: 1.3, d: 60, color: 12107409 },
         ],
-        prefabs: [{ id: "rob", kind: "robot", x: 0, y: 0, z: 0 }],
+        prefabs: [{ id: "rob", kind: "robot", x: 0, y: 0, z: 0, yaw }],
         medals: { gold: 10, silver: 20, bronze: 30 },
         limit: 60,
       }),
@@ -178,6 +178,38 @@ it("burns an exposed truck but spares the blind spot", () => {
     ).toBe(false);
   } finally {
     blind.dispose();
+  }
+});
+
+it("swings the laser arc with prefab yaw", () => {
+  laserProbeTrack(Math.PI / 2);
+  // Beam faces +x now: park in it.
+  const sim = new Simulation();
+  try {
+    sim.startTrack("custom:robot-laser-probe");
+    const full = sim.parts.get("chassis-front")!.health;
+    sim.body.setTranslation({ x: 10, y: 2, z: 0 }, true);
+    sim.run(8);
+    expect(sim.parts.get("chassis-front")!.health).toBeLessThan(full);
+    expect(
+      sim.damageEvents.some((event) => event.source === "robot"),
+    ).toBe(true);
+  } finally {
+    sim.dispose();
+  }
+  // The unrotated arc position stays safe.
+  const safe = new Simulation();
+  try {
+    safe.startTrack("custom:robot-laser-probe");
+    const full = safe.parts.get("chassis-front")!.health;
+    safe.body.setTranslation({ x: 0, y: 2, z: 10 }, true);
+    safe.run(8);
+    expect(safe.parts.get("chassis-front")!.health).toBe(full);
+    expect(
+      safe.damageEvents.some((event) => event.source === "robot"),
+    ).toBe(false);
+  } finally {
+    safe.dispose();
   }
 });
 

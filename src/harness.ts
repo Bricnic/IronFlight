@@ -55,6 +55,7 @@ export interface GameHarness {
       depthTest: boolean;
       depthWrite: boolean;
     }[];
+    prefabArrows: { id: string; dir: { x: number; z: number } }[];
     centerPick: unknown;
   };
   editorProject(point: { x: number; y: number; z: number }): {

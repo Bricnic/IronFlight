@@ -1,6 +1,7 @@
 import { beforeAll, expect, it } from "vitest";
 import { Simulation, initPhysics } from "../src/simulation";
 import { buildBoostPadMesh } from "../src/course-view";
+import { onBoostPad } from "../src/course";
 import {
   PREFAB_KINDS,
   validateCustomLevel,
@@ -43,12 +44,24 @@ const withPad = (): CustomLevel => {
   return level;
 };
 
-it("registers boost-pad as a course prefab kind without rotation", () => {
+it("rotates the boost footprint with pad yaw", () => {
+  // Pad footprint is 10 wide (x) by 12 deep (z): yaw 90 degrees swaps them.
+  const pad = { x: 0, y: 0, z: 0, yaw: Math.PI / 2 };
+  expect(onBoostPad({ x: 0, y: 2, z: 5.5 }, pad)).toBe(false);
+  expect(onBoostPad({ x: 5.5, y: 2, z: 0 }, pad)).toBe(true);
+  expect(onBoostPad({ x: 0, y: 2, z: 4.5 }, pad)).toBe(true);
+  expect(onBoostPad({ x: 0, y: 5, z: 0 }, pad)).toBe(false);
+  const flat = { x: 0, y: 0, z: 0 };
+  expect(onBoostPad({ x: 0, y: 2, z: 5.5 }, flat)).toBe(true);
+  expect(onBoostPad({ x: 5.5, y: 2, z: 0 }, flat)).toBe(false);
+});
+
+it("registers boost-pad as a course prefab kind with yaw", () => {
   expect(PREFAB_KINDS).toContain("boost-pad");
   expect(() => validateCustomLevel(withPad())).not.toThrow();
   const yawed = withPad();
   yawed.prefabs[0].yaw = 0.5;
-  expect(() => validateCustomLevel(yawed)).toThrow();
+  expect(() => validateCustomLevel(yawed)).not.toThrow();
 });
 
 it("pushes a truck driving over the pad like the Triple Loop booster", () => {

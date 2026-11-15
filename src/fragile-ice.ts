@@ -1,4 +1,5 @@
 import R from "@dimforge/rapier3d-compat";
+import { Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import type { Track } from "./tracks";
 import type { Simulation } from "./simulation";
@@ -28,6 +29,7 @@ export type FragileIceTile = {
   x: number;
   z: number;
   y?: number;
+  yaw?: number;
 };
 
 /** Custom levels serve whatever ice tiles the author floated over the pits. */
@@ -40,6 +42,7 @@ export function fragileIceHazards(track?: Track): FragileIceTile[] {
       x: p.x,
       z: p.z,
       ...(p.y === undefined ? {} : { y: p.y }),
+      ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
     }));
 }
 
@@ -67,6 +70,10 @@ export class FragileIce {
   addTile(h: FragileIceTile) {
     const world = this.sim.world;
     const baseY = h.y ?? 0;
+    const yawQ = new Quaternion().setFromAxisAngle(
+      new Vector3(0, 1, 0),
+      h.yaw ?? 0,
+    );
     const box = (
       x: number,
       y: number,
@@ -79,6 +86,7 @@ export class FragileIce {
       const c = world.createCollider(
         R.ColliderDesc.cuboid(w / 2, height / 2, d / 2)
           .setTranslation(h.x + x, baseY + y, h.z + z)
+          .setRotation(yawQ.clone())
           .setSensor(sensor)
           .setFriction(0.8),
       );

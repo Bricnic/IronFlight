@@ -1,6 +1,11 @@
 import { beforeAll, expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
-import { registerCustomTrack } from "../src/custom-level";
+import {
+  blankLevel,
+  registerCustomTrack,
+  toTrack,
+  validateCustomLevel,
+} from "../src/custom-level";
 import { officialFileTracks } from "../src/official-levels";
 import { initPhysics, Simulation } from "../src/simulation";
 
@@ -35,6 +40,41 @@ it("keeps every level dinosaur at the large Jurassic scale", () => {
     }
   }
   expect(dinos).toBeGreaterThan(0);
+});
+
+it("aims the bite cone with prefab yaw", () => {
+  const level = blankLevel("Yawed Raptor");
+  level.prefabs = [
+    { id: "raptor-1", kind: "raptor", x: 0, z: 0, yaw: Math.PI / 2 },
+  ];
+  const track = toTrack(validateCustomLevel(level));
+  registerCustomTrack(track);
+  // Cone faces +x now: park inside it.
+  const sim = new Simulation();
+  try {
+    sim.startTrack(track.id);
+    sim.body.setTranslation({ x: 6, y: 3.5, z: 0 }, true);
+    for (let i = 0; i < 600 && sim.status === "driving"; i++)
+      sim.step({ brake: 1 });
+    const mech = () =>
+      sim.dungeon.mechanisms.find((m) => m.h.id === "raptor-1")!;
+    expect(mech().contacts).toBeGreaterThanOrEqual(1);
+  } finally {
+    sim.dispose();
+  }
+  // Behind the yawed cone stays unbothered.
+  const safe = new Simulation();
+  try {
+    safe.startTrack(track.id);
+    safe.body.setTranslation({ x: -6, y: 3.5, z: 0 }, true);
+    for (let i = 0; i < 600 && safe.status === "driving"; i++)
+      safe.step({ brake: 1 });
+    const mech = () =>
+      safe.dungeon.mechanisms.find((m) => m.h.id === "raptor-1")!;
+    expect(mech().contacts).toBe(0);
+  } finally {
+    safe.dispose();
+  }
 });
 
 it("wrecks a parked truck within two giant bites", () => {

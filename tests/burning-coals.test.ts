@@ -62,13 +62,13 @@ function lab() {
   return sim;
 }
 
-it("registers burning-coals as a rotation-free prefab kind", () => {
+it("registers burning-coals as a prefab kind with yaw", () => {
   expect(BURNING_COALS_PREFAB_KINDS).toContain("burning-coals");
   expect(PREFAB_KINDS).toContain("burning-coals");
   expect(() => validateCustomLevel(withCoals())).not.toThrow();
   const yawed = withCoals();
   yawed.prefabs[0].yaw = 0.5;
-  expect(() => validateCustomLevel(yawed)).toThrow();
+  expect(() => validateCustomLevel(yawed)).not.toThrow();
   expect(burningCoalHazards(lab().courseTrack)).toHaveLength(2);
 });
 

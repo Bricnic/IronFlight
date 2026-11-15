@@ -101,6 +101,13 @@ export function applyPan(
   if (plane === "xz") target.z -= dy * scale;
   else target.y += dy * scale;
 }
+/** Yaw that faces `from` toward `to` under the engine forward convention. */
+export function lookYaw(
+  from: { x: number; z: number },
+  to: { x: number; z: number },
+) {
+  return Math.atan2(to.x - from.x, to.z - from.z);
+}
 /** Intersect a ray with a horizontal plane; null when parallel/upward. */
 export function planeHit(
   origin: { x: number; y: number; z: number },
@@ -340,6 +347,12 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   let clipDrag: { x: number; z: number; y: number; before: ClipRect[] } | null = null;
   const canStart = (e: PointerEvent) => {
     pendingClick = null;
+    // A look session ends on any viewport click; the click selects nothing.
+    if (store.tool === "look") {
+      store.endGesture();
+      store.setTool("select");
+      return false;
+    }
     if (store.tool === "clip" && (e.button !== 0 || e.altKey)) return true;
     if (store.tool === "clip" && e.button === 0 && !e.altKey) {
       const s = store.level.solids.find((s) => store.clip?.targets.includes(s.id));
@@ -447,6 +460,23 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       downY = e.clientY;
       return;
     }
+    if (store.tool === "look") {
+      const current = store.selectedItem();
+      if (current?.kind === "prefab") {
+        raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
+        const hit = planeHit(
+          raycaster.ray.origin,
+          raycaster.ray.direction,
+          current.item.y ?? 0,
+        );
+        if (hit) {
+          // One undo step for the whole look session.
+          store.beginGesture();
+          store.updateSelected({ yaw: lookYaw(current.item, hit) });
+        }
+      }
+      return;
+    }
     if (rotateAxis) {
       const dx = e.clientX - downX;
       downX = e.clientX;
@@ -471,10 +501,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         const isProp = (PROP_PREFAB_KINDS as readonly string[]).includes(
           current.item.kind,
         );
-        const isDragon = current.item.kind === "dragon";
-        const canYaw = isProp || isDragon || isDinosaur(current.item.kind) ||
-          isGauntletMachine(current.item.kind) || isShipyard(current.item.kind) || isHollow(current.item.kind) || current.item.kind === "lime-chomper" || current.item.kind === "guided-pipe";
-        if (rotateAxis === "yaw" && canYaw)
+        if (rotateAxis === "yaw")
           store.updateSelected({ yaw: (current.item.yaw ?? 0) + dx * 0.01 });
         else if (rotateAxis === "pitch" && isProp)
           store.updateSelected({ angle: (current.item.angle ?? 0) + dx * 0.01 });
@@ -664,8 +691,23 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         marker.userData.pick = { kind: "prefab", id: p.id };
         if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!p.locked;
-        if (selection != null && "id" in selection && selection.id === p.id)
+        const prefabSelected =
+          selection != null && "id" in selection && selection.id === p.id;
+        if (prefabSelected) {
           marker.scale.setScalar(1.6);
+          // Orientation arrow along local +Z, so it follows yaw/pitch/roll.
+          const arrow = new T.Group();
+          arrow.userData.arrowOf = p.id;
+          const arrowMat = new T.MeshBasicMaterial({ color: 0xffe08a });
+          const shaft = new T.Mesh(new T.BoxGeometry(0.14, 0.14, 3), arrowMat);
+          shaft.position.z = 2.7;
+          const head = new T.Mesh(new T.ConeGeometry(0.42, 1, 10), arrowMat);
+          head.rotation.x = Math.PI / 2;
+          head.position.z = 4.7;
+          arrow.add(shaft, head);
+          if (preview) arrow.traverse((o) => o.layers.set(1));
+          marker.add(arrow);
+        }
         group.add(marker);
       }
       for (const [i, t] of [
@@ -783,10 +825,20 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       const hits = group
         ? raycaster.intersectObjects(group.children, true)
         : [];
+      const prefabArrows: { id: string; dir: { x: number; z: number } }[] = [];
+      group?.traverse((o) => {
+        const arrowOf = (o as T.Group).userData?.arrowOf as string | undefined;
+        if (!arrowOf || !(o instanceof T.Group)) return;
+        const dir = new T.Vector3(0, 0, 1).applyQuaternion(
+          o.getWorldQuaternion(new T.Quaternion()),
+        );
+        prefabArrows.push({ id: arrowOf, dir: { x: dir.x, z: dir.z } });
+      });
       return {
         preview: previewOn,
         gridVisible: grid.visible,
         solids,
+        prefabArrows,
         centerPick: resolveViewportPick(hits),
       };
     },

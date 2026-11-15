@@ -4,15 +4,26 @@ import type { Point, Track } from "./tracks.ts";
 import type { Hazard } from "./hazards.ts";
 import type { PropDefinition, PropKind } from "./destructibles.ts";
 import {
+  BOOST_PAD,
   PROP_PREFAB_KINDS,
   customTrackIds,
 } from "./custom-level.ts";
 /** Rotate a local (dx, dz) offset by three.js YXZ yaw. */
-function yawOffset(dx: number, dz: number, yaw: number) {
+export function yawOffset(dx: number, dz: number, yaw: number) {
   return {
     x: dx * Math.cos(yaw) + dz * Math.sin(yaw),
     z: -dx * Math.sin(yaw) + dz * Math.cos(yaw),
   };
+}
+/** Boost-pad footprint test in the pad's yawed frame. */
+export function onBoostPad(
+  position: { x: number; y: number; z: number },
+  pad: { x: number; y?: number; z: number; yaw?: number },
+) {
+  const padY = pad.y ?? 0;
+  if (position.y <= padY || position.y >= padY + 4) return false;
+  const o = yawOffset(position.x - pad.x, position.z - pad.z, -(pad.yaw ?? 0));
+  return Math.abs(o.x) < BOOST_PAD.w / 2 && Math.abs(o.z) < BOOST_PAD.d / 2;
 }
 import { loopRingSolids, loopSupportSolids } from "./loop.ts";
 import { clipFootprint } from "./solid-clip.ts";
@@ -126,27 +137,44 @@ export function courseSolids(track: Track): CourseSolid[] {
   if (track.custom) {
     const solids: CourseSolid[] = track.custom.solids.map((s) => ({ ...s }));
     for (const p of track.custom.prefabs) {
+      const yaw = p.yaw ?? 0;
+      const yawed = p.yaw === undefined ? {} : { yaw: p.yaw };
+      const at = (dx: number, dz: number) => {
+        const o = yawOffset(dx, dz, yaw);
+        return { x: p.x + o.x, z: p.z + o.z };
+      };
       if (p.kind === "loop") {
         const baseY = p.y ?? 0;
-        loopRingSolids(p.x, baseY, p.z).forEach((s, i) =>
+        loopRingSolids(p.x, baseY, p.z).forEach((s, i) => {
+          // Ring segments keep their pitch; the whole ring yaws as a rigid
+          // frame (YXZ euler: yaw applied to the pitched slab).
+          const c = at(s.x - p.x, s.z - p.z);
           solids.push({
             ...s,
             id: `${p.id}-loop-${i}`,
             kind: "loop",
+            x: c.x,
+            z: c.z,
+            ...yawed,
             color: 0xb0b8b8,
-          }),
-        );
-        loopSupportSolids(p.x, baseY, p.z).forEach((s, i) =>
+          });
+        });
+        loopSupportSolids(p.x, baseY, p.z).forEach((s, i) => {
+          const c = at(s.x - p.x, s.z - p.z);
           solids.push({
             ...s,
             id: `${p.id}-post-${i}`,
             kind: "support",
+            x: c.x,
+            z: c.z,
+            ...yawed,
             color: 0x767c76,
-          }),
-        );
+          });
+        });
       } else if (p.kind === "carousel") {
-        solids.push({ id: `${p.id}-boarding-ramp`, kind: "ramp", x: p.x, y: (p.y ?? 0) + 0.5,
-          z: p.z - 30, w: 10, h: 0.2, d: 12, angle: -Math.atan(1 / 12), color: 0xd6b47a, texture: "concrete_layers_02" });
+        const c = at(0, -30);
+        solids.push({ id: `${p.id}-boarding-ramp`, kind: "ramp", x: c.x, y: (p.y ?? 0) + 0.5,
+          z: c.z, w: 10, h: 0.2, d: 12, angle: -Math.atan(1 / 12), ...yawed, color: 0xd6b47a, texture: "concrete_layers_02" });
       } else if (p.kind === "axe") {
         // The prefab position is the ground under the Canyon-style gantry;
         // the pendulum pivot sits nine units above it (see axeDefs).
@@ -155,18 +183,21 @@ export function courseSolids(track: Track): CourseSolid[] {
           ["post-right", 15.5, 6.5, 1.5, 13, 1.5],
           ["beam", 0, 13, 32.5, 1, 1.5],
           ["hanger", 0, 11, 0.8, 3, 0.8],
-        ] as const)
+        ] as const) {
+          const c = at(dx, 0);
           solids.push({
             id: `${p.id}-${part}`,
             kind: "barrier",
-            x: p.x + dx,
+            x: c.x,
             y: (p.y ?? 0) + dy,
-            z: p.z,
+            z: c.z,
             w,
             h,
             d,
+            ...yawed,
             color: 0x4a545c,
           });
+        }
       } else if (p.kind === "lamp") {
         solids.push({
           id: `${p.id}-pole`,
@@ -177,30 +208,28 @@ export function courseSolids(track: Track): CourseSolid[] {
           w: 0.5,
           h: 25,
           d: 0.5,
+          ...yawed,
           color: 0x767c76,
         });
       } else if (p.kind === "grandstand") {
+        const c = at(8.5, 0);
         solids.push({
           id: `${p.id}-bank`,
           kind: "grandstand",
-          x: p.x + 8.5,
+          x: c.x,
           y: (p.y ?? 0) + 2.2,
-          z: p.z,
+          z: c.z,
           w: 17,
           h: 7.6,
           d: 80,
+          ...yawed,
           color: 0x767c76,
         });
       } else if (p.kind === "jail-cell") {
         // Barred 8x8 cell: corner posts, three bars per side and top rails.
         // The truck (4+ wide) cannot slip between the 1.6-wide gaps.
         const baseY = p.y ?? 0,
-          yaw = p.yaw ?? 0,
           iron = 0x2b2f33;
-        const at = (dx: number, dz: number) => {
-          const o = yawOffset(dx, dz, yaw);
-          return { x: p.x + o.x, z: p.z + o.z };
-        };
         (["n", "s", "e", "w"] as const).forEach((side) => {
           for (const t of [-2, 0, 2]) {
             const along = side === "n" || side === "s";
@@ -217,6 +246,7 @@ export function courseSolids(track: Track): CourseSolid[] {
               w: 0.35,
               h: 5,
               d: 0.35,
+              ...yawed,
               color: iron,
             });
           }
@@ -237,6 +267,7 @@ export function courseSolids(track: Track): CourseSolid[] {
             w: 0.5,
             h: 5,
             d: 0.5,
+            ...yawed,
             color: iron,
           });
         });
@@ -254,7 +285,7 @@ export function courseSolids(track: Track): CourseSolid[] {
             w: alongX ? 7.5 : 0.5,
             h: 0.4,
             d: alongX ? 0.5 : 7.5,
-            ...(yaw ? { yaw } : {}),
+            ...yawed,
             color: iron,
           });
         });
@@ -1057,6 +1088,7 @@ export function courseHazards(track: Track): Hazard[] {
         x: p.x,
         y: p.y ?? 3.5,
         z: p.z,
+        ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
       }));
   if (track.id === "inferno-vault")
     return [

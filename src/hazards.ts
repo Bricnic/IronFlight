@@ -8,6 +8,7 @@ export type Hazard = {
   x: number;
   y: number;
   z: number;
+  yaw?: number;
 };
 export const HAZARDS: Hazard[] = ROUTES.flatMap((r) => {
   const all: Hazard[] = [

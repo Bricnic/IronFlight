@@ -6,7 +6,6 @@ import {
   TEXTURE_IDS,
   PREFAB_KINDS,
   PROP_PREFAB_KINDS,
-  DUNGEON_PREFAB_KINDS,
   COLLECTIBLE_KINDS,
   SOLID_KINDS,
   customTrackIds,
@@ -98,7 +97,7 @@ export function createLevelEditor(
   redoButton.addEventListener("click", () => store.redo());
   const backButton = el("button", { id: "editor-back" }, "Back");
   const toolButtons = (
-    ["select", "pan", "eyedropper", "rotator", "clip"] as const
+    ["select", "pan", "eyedropper", "rotator", "clip", "look"] as const
   ).map((tool) => {
     const button = el(
       "button",
@@ -106,6 +105,7 @@ export function createLevelEditor(
       tool[0].toUpperCase() + tool.slice(1),
     ) as HTMLButtonElement;
     if (tool === "clip") button.title = "Clip selected ground/road solids. Shift/Ctrl click list rows to select several.";
+    if (tool === "look") button.title = "Point the selected prefab at the cursor. Click the viewport to finish.";
     button.addEventListener("click", () => store.setTool(tool));
     return { tool, button };
   });
@@ -533,17 +533,14 @@ export function createLevelEditor(
       const isProp = (PROP_PREFAB_KINDS as readonly string[]).includes(
         current.item.kind,
       );
-      const isDungeon = (DUNGEON_PREFAB_KINDS as readonly string[]).includes(
-        current.item.kind,
+      // Every prefab kind carries an editable yaw; pitch/roll stay prop-only.
+      numberField(
+        props,
+        "Yaw",
+        "yaw",
+        item.yaw as number | undefined,
+        commit("yaw"),
       );
-      if (isProp || isDungeon || current.item.kind === "dragon")
-        numberField(
-          props,
-          "Yaw",
-          "yaw",
-          item.yaw as number | undefined,
-          commit("yaw"),
-        );
       if (isProp) {
         numberField(
           props,
@@ -701,8 +698,10 @@ export function createLevelEditor(
     if (document.activeElement !== nameInput) nameInput.value = store.level.name;
     if (!store.dirty) unsaved.hidden = true;
     showStatus(store.dirty ? "Unsaved changes" : "Saved");
-    for (const { tool, button } of toolButtons)
+    for (const { tool, button } of toolButtons) {
       button.classList.toggle("selected", store.tool === tool);
+      if (tool === "look") button.disabled = store.selection?.kind !== "prefab";
+    }
     previewButton.classList.toggle("selected", store.preview);
     addTarget.textContent =
       store.level.mode === "demolition"

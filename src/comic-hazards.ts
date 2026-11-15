@@ -19,6 +19,7 @@ export type ComicHazard = {
   z: number;
   phase: number;
   y?: number;
+  yaw?: number;
   scale?: number;
 };
 /** Alternating road-edge threats leave a readable ordinary-driving bypass. */
@@ -35,6 +36,7 @@ export function comicHazards(track: Track): ComicHazard[] {
         z: p.z,
         phase: 0,
         ...(p.y === undefined ? {} : { y: p.y }),
+        ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
         ...(p.scale === undefined ? {} : { scale: p.scale }),
       }));
   if (track.id === "canyon-plunge")

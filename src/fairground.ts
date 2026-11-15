@@ -3,7 +3,7 @@ import { Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import type { Simulation, Input } from "./simulation";
 import type { CustomPrefab } from "./custom-level";
-import { courseSolids } from "./course";
+import { courseSolids, yawOffset } from "./course";
 import { arenaSolids } from "./arena";
 
 export const CAROUSEL_RADIUS = 26;
@@ -182,11 +182,14 @@ export class Fairground {
   }
   private addCarousel(p: CustomPrefab) {
     const body = this.sim.world.createRigidBody(
-      R.RigidBodyDesc.kinematicPositionBased().setTranslation(
-        p.x,
-        p.y ?? 0,
-        p.z,
-      ),
+      R.RigidBodyDesc.kinematicPositionBased()
+        .setTranslation(p.x, p.y ?? 0, p.z)
+        .setRotation(
+          new Quaternion().setFromAxisAngle(
+            new Vector3(0, 1, 0),
+            p.yaw ?? 0,
+          ),
+        ),
     );
     this.sim.world.createCollider(
       R.ColliderDesc.cylinder(0.5, CAROUSEL_RADIUS)
@@ -235,7 +238,14 @@ export class Fairground {
   }
   private addArena(p: CustomPrefab) {
     const base = this.sim.world.createRigidBody(
-      R.RigidBodyDesc.fixed().setTranslation(p.x, p.y ?? 0, p.z),
+      R.RigidBodyDesc.fixed()
+        .setTranslation(p.x, p.y ?? 0, p.z)
+        .setRotation(
+          new Quaternion().setFromAxisAngle(
+            new Vector3(0, 1, 0),
+            p.yaw ?? 0,
+          ),
+        ),
     );
     // Four generous entrances; perimeter bumpers are real collision geometry.
     for (const side of [-1, 1]) {
@@ -245,11 +255,18 @@ export class Fairground {
       }
     }
     for (let i = 0; i < 6; i++) {
-      const x = p.x + ((i % 3) - 1) * 13,
-        z = p.z + (i < 3 ? -10 : 10);
+      const off = yawOffset(((i % 3) - 1) * 13, i < 3 ? -10 : 10, p.yaw ?? 0);
+      const x = p.x + off.x,
+        z = p.z + off.z;
       const body = this.sim.world.createRigidBody(
         R.RigidBodyDesc.dynamic()
           .setTranslation(x, (p.y ?? 0) + 1.2, z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 1, 0),
+              p.yaw ?? 0,
+            ),
+          )
           .enabledRotations(false, true, false)
           .setLinearDamping(0.3)
           .setAngularDamping(4)
@@ -274,10 +291,14 @@ export class Fairground {
         patrol: i * 1.047,
         mode: i % 3 === 0 ? "cruise" : i % 3 === 1 ? "ram-car" : "wander",
         targetId: `${p.id}-car-${((i + 1) % 6) + 1}`,
-        target: {
-          x: p.x + Math.sin(i * 2) * 23,
-          z: p.z + Math.cos(i * 2) * 16,
-        },
+        target: (() => {
+          const o = yawOffset(
+            Math.sin(i * 2) * 23,
+            Math.cos(i * 2) * 16,
+            p.yaw ?? 0,
+          );
+          return { x: p.x + o.x, z: p.z + o.z };
+        })(),
         nextDecision: 0.6 + i * 0.23,
         lastStrike: -100,
         random: randomFor(`${p.id}-car-${i + 1}`),
@@ -286,7 +307,14 @@ export class Fairground {
   }
   private addArenaXL(p: CustomPrefab) {
     const base = this.sim.world.createRigidBody(
-      R.RigidBodyDesc.fixed().setTranslation(p.x, p.y ?? 0, p.z),
+      R.RigidBodyDesc.fixed()
+        .setTranslation(p.x, p.y ?? 0, p.z)
+        .setRotation(
+          new Quaternion().setFromAxisAngle(
+            new Vector3(0, 1, 0),
+            p.yaw ?? 0,
+          ),
+        ),
     );
     // Double-length floor; one 20-wide gate centered on the south wall.
     for (const side of [-1, 1]) {
@@ -297,11 +325,18 @@ export class Fairground {
     this.box(base, -21, 1, 50, 22, 2, 1);
     this.box(base, 21, 1, 50, 22, 2, 1);
     for (let i = 0; i < 6; i++) {
-      const x = p.x + ((i % 3) - 1) * 13,
-        z = p.z + (i < 3 ? -25 : 25);
+      const off = yawOffset(((i % 3) - 1) * 13, i < 3 ? -25 : 25, p.yaw ?? 0);
+      const x = p.x + off.x,
+        z = p.z + off.z;
       const body = this.sim.world.createRigidBody(
         R.RigidBodyDesc.dynamic()
           .setTranslation(x, (p.y ?? 0) + 1.2, z)
+          .setRotation(
+            new Quaternion().setFromAxisAngle(
+              new Vector3(0, 1, 0),
+              p.yaw ?? 0,
+            ),
+          )
           .enabledRotations(false, true, false)
           .setLinearDamping(0.3)
           .setAngularDamping(4)
@@ -326,10 +361,14 @@ export class Fairground {
         patrol: i * 1.047,
         mode: i % 3 === 0 ? "cruise" : i % 3 === 1 ? "ram-car" : "wander",
         targetId: `${p.id}-car-${((i + 1) % 6) + 1}`,
-        target: {
-          x: p.x + Math.sin(i * 2) * 23,
-          z: p.z + Math.cos(i * 2) * 32,
-        },
+        target: (() => {
+          const o = yawOffset(
+            Math.sin(i * 2) * 23,
+            Math.cos(i * 2) * 32,
+            p.yaw ?? 0,
+          );
+          return { x: p.x + o.x, z: p.z + o.z };
+        })(),
         nextDecision: 0.6 + i * 0.23,
         lastStrike: -100,
         random: randomFor(`${p.id}-car-${i + 1}`),
@@ -359,7 +398,10 @@ export class Fairground {
       const omega = CAROUSEL_OMEGA * s.tuning.carouselSpeed;
       c.angle += omega * DT;
       c.body.setNextKinematicRotation(
-        new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), c.angle),
+        new Quaternion().setFromAxisAngle(
+          new Vector3(0, 1, 0),
+          (c.p.yaw ?? 0) + c.angle,
+        ),
       );
       const dx = player.x - c.p.x,
         dz = player.z - c.p.z,
@@ -406,8 +448,15 @@ export class Fairground {
     for (const car of this.bumpers) {
       const pos = car.body.translation(),
         a = car.arena;
+      const toLocal = (x: number, z: number) =>
+        yawOffset(x - a.x, z - a.z, -(a.yaw ?? 0));
+      const toWorld = (lx: number, lz: number) => {
+        const o = yawOffset(lx, lz, a.yaw ?? 0);
+        return { x: a.x + o.x, z: a.z + o.z };
+      };
+      const playerLocal = toLocal(player.x, player.z);
       const playerInside =
-        Math.abs(player.x - a.x) < 31 && Math.abs(player.z - a.z) < 24;
+        Math.abs(playerLocal.x) < 31 && Math.abs(playerLocal.z) < 24;
       if (
         s.time >= car.nextDecision ||
         (car.mode === "ram-player" && !playerInside)
@@ -438,13 +487,11 @@ export class Fairground {
                 x: pos.x + Math.sin(car.patrol + s.time) * 5,
                 z: pos.z + Math.cos(car.patrol + s.time) * 5,
               }
-            : {
-                x: a.x + (car.random() * 2 - 1) * 24,
-                z:
-                  a.z +
-                  (car.random() * 2 - 1) *
-                    (a.kind === "bumper-arena-xl" ? 34 : 17),
-              };
+            : toWorld(
+                (car.random() * 2 - 1) * 24,
+                (car.random() * 2 - 1) *
+                  (a.kind === "bumper-arena-xl" ? 34 : 17),
+              );
         car.nextDecision =
           s.time +
           (car.mode === "reverse"
@@ -462,12 +509,10 @@ export class Fairground {
         : car.mode === "ram-car" && peer
           ? peer.body.translation()
           : car.mode === "cruise"
-            ? {
-                x: a.x + Math.sin(phase) * 21,
-                z:
-                  a.z +
-                  Math.cos(phase) * (a.kind === "bumper-arena-xl" ? 30 : 15),
-              }
+            ? toWorld(
+                Math.sin(phase) * 21,
+                Math.cos(phase) * (a.kind === "bumper-arena-xl" ? 30 : 15),
+              )
             : car.mode === "reverse"
               ? { x: pos.x * 2 - car.target.x, z: pos.z * 2 - car.target.z }
               : car.target;
@@ -491,8 +536,9 @@ export class Fairground {
           dz += (oz / distance) * (7 - distance) * 5;
         }
       }
-      if (Math.abs(pos.x - a.x) > 28) dx = (a.x - pos.x) * 3;
-      if (Math.abs(pos.z - a.z) > 21) dz = (a.z - pos.z) * 3;
+      const carLocal = toLocal(pos.x, pos.z);
+      if (Math.abs(carLocal.x) > 28) dx = (a.x - pos.x) * 3;
+      if (Math.abs(carLocal.z) > 21) dz = (a.z - pos.z) * 3;
       const length = Math.hypot(dx, dz) || 1,
         speed =
           car.health <= 0
