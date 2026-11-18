@@ -1,15 +1,19 @@
 import * as T from "three";
 import {
+  BIRTHDAY_CAKES,
   BIRTHDAY_CANDLE,
   BIRTHDAY_CARD,
   BOUNCY_CASTLE,
   birthdayCardCycle,
   birthdayCardOpenness,
   birthdayCardTelegraphing,
+  mulberry32,
+  type BirthdayCakeKind,
   type DungeonHazard,
 } from "./dungeon-hazards";
 import type { DungeonPhysics } from "./dungeon-physics";
 import type { Simulation } from "./simulation";
+import { pbr } from "./materials";
 
 type Mech = DungeonPhysics["mechanisms"][number];
 type XYZ = [number, number, number];
@@ -235,6 +239,203 @@ export function buildBouncyCastle(root: T.Group, scale = 1) {
     }
   }
   return {};
+}
+
+/** Shared cake palette, mirrored in visual-plan/cake-visual-target.md. */
+export const CAKE_PALETTE = {
+  spongeChocolate: 0x6b3a1e,
+  spongePink: 0xff7fa8,
+  icingWhite: 0xfff6f0,
+  dripPink: 0xff5f9e,
+  mint: 0x63d9b5,
+  cherry: 0xe02040,
+  stemChocolate: 0x4a2410,
+} as const;
+
+/** Speckled sponge crumb; stub-safe (fillRect/fillStyle only). */
+function cakeCrumbTexture(base: string, crumb: string, seed: number) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 256;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, 256, 256);
+  const rnd = mulberry32(seed);
+  ctx.fillStyle = crumb;
+  for (let i = 0; i < 900; i++)
+    ctx.fillRect(Math.floor(rnd() * 256), Math.floor(rnd() * 256), 2, 2);
+  const tex = new T.CanvasTexture(canvas);
+  tex.colorSpace = T.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = T.RepeatWrapping;
+  tex.repeat.set(10, 2);
+  return tex;
+}
+
+/** Scalloped icing drip skirt hanging over a tier rim; DoubleSide. */
+function dripSkirt(r: number, h: number, drips: number, phase: number) {
+  const steps = drips * 8;
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const index: number[] = [];
+  const ro = r + 0.3;
+  const top = h + 0.06;
+  for (let i = 0; i <= steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    const w = Math.pow(0.5 + 0.5 * Math.sin(a * drips + phase), 1.6);
+    const bottom = top - (1.3 + 2.1 * w);
+    const c = Math.cos(a), s = Math.sin(a);
+    positions.push(ro * c, top, ro * s, ro * c, bottom, ro * s);
+    uvs.push((i / steps) * drips, 1, (i / steps) * drips, 0);
+    if (i < steps) {
+      const b = i * 2;
+      index.push(b, b + 1, b + 2, b + 1, b + 3, b + 2);
+    }
+  }
+  const g = new T.BufferGeometry();
+  g.setAttribute("position", new T.Float32BufferAttribute(positions, 3));
+  g.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  return g;
+}
+
+/**
+ * Shared birthday cake centerpiece builder: lathe-profiled sponge tiers with
+ * flat drivable tops, scalloped icing drips, sprinkles, and a cherry topper.
+ * Tier radii/heights come from BIRTHDAY_CAKES, so the visuals match the
+ * static cylinder colliders exactly; only sub-unit icing trim (drip skirt,
+ * wall bead, sprinkles) sits outside the collider shells.
+ */
+export function buildBirthdayCake(root: T.Group, kind: BirthdayCakeKind) {
+  const spec = BIRTHDAY_CAKES[kind];
+  const spongeChoc = new T.MeshStandardMaterial({
+    map: cakeCrumbTexture("#6b3a1e", "#4a2410", 11),
+    roughness: 0.75,
+  });
+  const spongePink = new T.MeshStandardMaterial({
+    map: cakeCrumbTexture("#ff7fa8", "#e85d8a", 23),
+    roughness: 0.7,
+  });
+  const icing = new T.MeshPhysicalMaterial({
+    map: pbr("marble_01", 6).map,
+    color: CAKE_PALETTE.icingWhite,
+    roughness: 0.32,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.4,
+  });
+  const dripPink = new T.MeshPhysicalMaterial({
+    color: CAKE_PALETTE.dripPink,
+    roughness: 0.35,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.4,
+    side: T.DoubleSide,
+  });
+  const dripWhite = new T.MeshPhysicalMaterial({
+    color: CAKE_PALETTE.icingWhite,
+    roughness: 0.32,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.4,
+    side: T.DoubleSide,
+  });
+  const bead = plastic(CAKE_PALETTE.mint);
+  const sprinkles = [0xff5f9e, 0x63d9b5, 0x4fa8ff, 0xffd23b, 0xffffff].map((c) =>
+    plastic(c),
+  );
+  const cherryMat = new T.MeshPhysicalMaterial({
+    color: CAKE_PALETTE.cherry,
+    roughness: 0.15,
+    clearcoat: 1,
+    clearcoatRoughness: 0.15,
+  });
+  const stemMat = plastic(CAKE_PALETTE.stemChocolate);
+  const leafMat = plastic(0x2f9e5f);
+
+  let base = 0;
+  spec.tiers.forEach((tier, ti) => {
+    const { r, h } = tier;
+    const radial = Math.max(96, Math.round(r * 3));
+    const sponge = ti % 2 === 0 ? spongeChoc : spongePink;
+    const drip = ti % 2 === 0 ? dripWhite : dripPink;
+    // Exact cylinder match: sharp profile corners, flat top cap at local h.
+    // The drip skirt hides the rim; the icing sheet covers the cap.
+    const body = new T.Mesh(
+      new T.LatheGeometry(
+        [
+          new T.Vector2(0, 0),
+          new T.Vector2(r, 0),
+          new T.Vector2(r, h),
+          new T.Vector2(0, h),
+        ],
+        radial,
+      ),
+      sponge,
+    );
+    body.position.y = base;
+    body.castShadow = body.receiveShadow = true;
+    root.add(body);
+    const sheet = mesh(
+      root,
+      new T.CircleGeometry(r - 0.4, radial),
+      icing,
+      [0, base + h + 0.04, 0],
+    );
+    sheet.rotation.x = -Math.PI / 2;
+    const drips = Math.max(12, Math.round((2 * Math.PI * r) / 5));
+    const phase = ti * 1.3 + (kind === "birthday-cake-table" ? 0.7 : 0);
+    const skirt = mesh(root, dripSkirt(r, h, drips, phase), drip, [0, base, 0]);
+    skirt.castShadow = false;
+    // Rounded tips on the longest drips.
+    const tipGeo = new T.SphereGeometry(0.6, 8, 6);
+    for (let k = 0; k < drips; k++) {
+      const a = ((3 * Math.PI) / 2 - phase + k * 2 * Math.PI) / drips;
+      mesh(root, tipGeo, drip, [
+        (r + 0.3) * Math.cos(a),
+        base + h + 0.06 - 3.4 + 0.3,
+        (r + 0.3) * Math.sin(a),
+      ]);
+    }
+    // Piped mint bead on the wall, clear of the driving surface.
+    const ring = mesh(
+      root,
+      new T.TorusGeometry(r + 0.1, 0.3, 10, radial),
+      bead,
+      [0, base + h - 0.4, 0],
+    );
+    ring.rotation.x = Math.PI / 2;
+    // Flat sprinkles scattered on the icing sheet (deterministic layout).
+    const rnd = mulberry32(ti * 7919 + 13);
+    const count = Math.round(r * 1.1);
+    const sprinkleGeo = new T.BoxGeometry(0.55, 0.16, 0.2);
+    for (let i = 0; i < count; i++) {
+      const a = rnd() * Math.PI * 2;
+      const rr = Math.sqrt(rnd()) * (r - 3);
+      const s = mesh(root, sprinkleGeo, sprinkles[i % sprinkles.length], [
+        Math.cos(a) * rr,
+        base + h + 0.14,
+        Math.sin(a) * rr,
+      ]);
+      s.rotation.y = rnd() * Math.PI;
+    }
+    base += h;
+  });
+  // Cherry topper: the stem matches its collider exactly; the cherry ball
+  // clears truck roofs so only the stem needs to collide.
+  const topY = base;
+  mesh(
+    root,
+    new T.CylinderGeometry(spec.stemR, spec.stemR, spec.stemH, 24),
+    stemMat,
+    [0, topY + spec.stemH / 2, 0],
+  );
+  mesh(root, new T.SphereGeometry(2.6, 32, 24), cherryMat, [0, topY + spec.stemH + 1.9, 0]);
+  const leaf = mesh(
+    root,
+    new T.SphereGeometry(0.9, 12, 8),
+    leafMat,
+    [1.1, topY + spec.stemH + 4.1, 0.4],
+  );
+  leaf.scale.set(1.4, 0.25, 0.7);
+  leaf.rotation.y = 0.6;
+  return { topY };
 }
 
 /** Lid artwork; stub-safe (fillRect/fillText only, like the dungeon labels). */

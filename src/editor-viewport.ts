@@ -152,6 +152,7 @@ const PREFAB_COLORS: Record<string, number> = {
   lamp: 0xfaf8e8,
   grandstand: 0x50626b,
   checkpoint: 0x6ae08a,
+  "gold-star": 0xffd700,
   skull: 0xe8e0cc,
   pumpkin: 0xd8641f,
   "candy-apple": 0xc81f2e,

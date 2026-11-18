@@ -364,6 +364,51 @@ export function birthdayCardDestination(homeX: number, homeZ: number, seed: numb
   const a = rng() * Math.PI * 2;
   return { x: homeX + Math.cos(a) * r, z: homeZ + Math.sin(a) * r };
 }
+/** Birthday cake centerpiece tiers, stacked from y=0 upward. Radius and
+ * height per tier in world units; the collider builder and the shared cake
+ * artist in birthday-view.ts both read this spec, so colliders match the
+ * visuals exactly. Tops stay at the historic box-tier heights (Circuit
+ * 10/20/30, Table 8/16) so ramps and jumps tuned against them still land. */
+export type BirthdayCakeTier = { r: number; h: number };
+export type BirthdayCakeKind = "birthday-cake-grand" | "birthday-cake-table";
+export type BirthdayCakeSpec = {
+  tiers: BirthdayCakeTier[];
+  /** Cherry-topper stem: the only furniture above the top tier. */
+  stemR: number;
+  stemH: number;
+};
+export const BIRTHDAY_CAKES: Record<BirthdayCakeKind, BirthdayCakeSpec> = {
+  "birthday-cake-grand": {
+    tiers: [
+      { r: 70, h: 10 },
+      { r: 50, h: 10 },
+      { r: 30, h: 10 },
+    ],
+    stemR: 1.2,
+    stemH: 7,
+  },
+  "birthday-cake-table": {
+    tiers: [
+      { r: 50, h: 8 },
+      { r: 30, h: 8 },
+    ],
+    stemR: 1.2,
+    stemH: 7,
+  },
+};
+export function isBirthdayCake(kind: string): kind is BirthdayCakeKind {
+  return kind === "birthday-cake-grand" || kind === "birthday-cake-table";
+}
+/** Cumulative top Y of every tier, from the ground up. */
+export function birthdayCakeTops(kind: BirthdayCakeKind): number[] {
+  const tops: number[] = [];
+  let y = 0;
+  for (const tier of BIRTHDAY_CAKES[kind].tiers) {
+    y += tier.h;
+    tops.push(y);
+  }
+  return tops;
+}
 /** Bouncy castle: a trampoline pad that also shakes one car part loose per
  * bounce. Same 30 u/s launch, 5 u/s arm gate and 1 s cooldown as the slide
  * trampolines; scale stretches the 10x10 footprint to tile a bouncy floor. */

@@ -10,6 +10,8 @@ import {
   BALLOON,
   BIRTHDAY_CANDLE,
   BIRTHDAY_CARD,
+  BIRTHDAY_CAKES,
+  isBirthdayCake,
   BOUNCY_CASTLE,
   birthdayCardCycle,
   birthdayCardDestination,
@@ -554,6 +556,29 @@ export class DungeonPhysics {
           SHIP.cargo.w, SHIP.cargo.h, SHIP.cargo.d, 0.6,
         );
       m.ship = {};
+    } else if (isBirthdayCake(h.kind)) {
+      // Drivable centerpiece: one static cylinder per tier, exactly matching
+      // the lathe visuals, plus the cherry-stem furniture. Friction 1 like
+      // the ground slabs these cakes replace.
+      const spec = BIRTHDAY_CAKES[h.kind];
+      let base = 0;
+      for (const tier of spec.tiers) {
+        m.colliders.push(
+          world.createCollider(
+            R.ColliderDesc.cylinder(tier.h / 2, tier.r)
+              .setTranslation(h.x, (h.y ?? 0) + base + tier.h / 2, h.z)
+              .setFriction(1),
+          ),
+        );
+        base += tier.h;
+      }
+      m.colliders.push(
+        world.createCollider(
+          R.ColliderDesc.cylinder(spec.stemH / 2, spec.stemR)
+            .setTranslation(h.x, (h.y ?? 0) + base + spec.stemH / 2, h.z)
+            .setFriction(0.6),
+        ),
+      );
     } else if (isCandyDecor(h.kind)) {
       // Bumpable scenery only: candy kinds have no strike entry, so after() never fires.
       if (h.kind === "candy-cane-arch") {

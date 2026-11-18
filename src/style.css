@@ -846,6 +846,20 @@ kbd {
 .best-time {
   color: #9fb3b7;
 }
+.star-row {
+  display: inline-flex;
+  gap: 4px;
+  font-size: 16px;
+  line-height: 1;
+}
+.star-row .star-lit {
+  color: #ffd700;
+  text-shadow: 0 0 8px #ffd70088;
+}
+.star-row .star-unlit {
+  color: transparent;
+  -webkit-text-stroke: 1px #82999f;
+}
 .play-word {
   color: #fff;
   font-weight: 700;
@@ -901,6 +915,12 @@ kbd {
     sans-serif;
   letter-spacing: 2px;
   text-shadow: 0 2px 10px #000;
+}
+#checkpoint-banner.gold strong {
+  color: #ffd700;
+  text-shadow:
+    0 3px 0 #7a5a00,
+    0 8px 26px #000;
 }
 #checkpoint-delta.ahead {
   color: #8be28b;

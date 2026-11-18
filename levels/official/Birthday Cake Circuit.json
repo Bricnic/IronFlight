@@ -62,39 +62,6 @@
       "color": 15981032
     },
     {
-      "id": "tier-1",
-      "kind": "ground",
-      "x": 0,
-      "y": 5,
-      "z": 0,
-      "w": 140,
-      "h": 10,
-      "d": 140,
-      "color": 7029795
-    },
-    {
-      "id": "tier-2",
-      "kind": "ground",
-      "x": 0,
-      "y": 15,
-      "z": 0,
-      "w": 100,
-      "h": 10,
-      "d": 100,
-      "color": 16752331
-    },
-    {
-      "id": "tier-3",
-      "kind": "ground",
-      "x": 0,
-      "y": 25,
-      "z": 0,
-      "w": 60,
-      "h": 10,
-      "d": 60,
-      "color": 16184042
-    },
-    {
       "id": "road-1",
       "kind": "road",
       "x": 200,
@@ -328,6 +295,12 @@
   ],
   "prefabs": [
     {
+      "id": "cake-grand",
+      "kind": "birthday-cake-grand",
+      "x": 0,
+      "z": 0
+    },
+    {
       "id": "balloon-1",
       "kind": "helium-balloon",
       "x": 196,
@@ -467,7 +440,7 @@
     {
       "id": "cake-candle",
       "kind": "birthday-candle",
-      "x": 0,
+      "x": 8,
       "y": 30,
       "z": 0
     },
@@ -785,6 +758,33 @@
       "x": 44.99,
       "y": 0.5,
       "z": 194.87
+    },
+    {
+      "id": "gold-star-1",
+      "kind": "gold-star",
+      "x": 18.1,
+      "y": 31.5,
+      "z": 18.1
+    },
+    {
+      "id": "tramp-1",
+      "kind": "trampoline",
+      "x": 54.45,
+      "z": 54.45
+    },
+    {
+      "id": "tramp-2",
+      "kind": "trampoline",
+      "x": 43.6,
+      "y": 10,
+      "z": 43.6
+    },
+    {
+      "id": "tramp-3",
+      "kind": "trampoline",
+      "x": 28.8,
+      "y": 20,
+      "z": 28.8
     }
   ],
   "medals": {

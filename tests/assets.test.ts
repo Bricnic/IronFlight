@@ -31,6 +31,7 @@ it("local Poly Haven material maps match their recorded hashes", () => {
     "blue_plaster_wall",
     "bark_brown_01",
     "snow_01",
+    "marble_01",
   ]);
   for (const asset of manifest.assets) {
     expect(asset.license).toBe("CC0");

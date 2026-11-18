@@ -1648,6 +1648,13 @@
       "kind": "flippers",
       "x": -120,
       "z": 100
+    },
+    {
+      "id": "gold-star-1",
+      "kind": "gold-star",
+      "x": 20,
+      "y": 1.9,
+      "z": -150
     }
   ],
   "medals": {

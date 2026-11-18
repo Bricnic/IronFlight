@@ -39,6 +39,8 @@ export function segmentDistance(a: Position, b: Position, p: Position) {
     : 0;
   return Math.hypot(a.x + dx * t - p.x, a.y + dy * t - p.y, a.z + dz * t - p.z);
 }
+/** Swept collect radius for gold stars, shared by the run and the views. */
+export const GOLD_STAR_RADIUS = 4;
 export class TrackRun {
   status: "running" | "completed" | "failed" = "running";
   reason: "timeout" | "wrecked" | null = null;
@@ -47,6 +49,8 @@ export class TrackRun {
   /** Elapsed time at each checkpoint crossing, one entry per checkpoint. */
   splits: number[] = [];
   collected = new Set<string>();
+  /** Gold-star ids banked this run; stars never gate completion. */
+  stars = new Set<string>();
   destroyed = new Set<string>();
   bounced = false;
   ringDone = false;
@@ -83,6 +87,13 @@ export class TrackRun {
     if (flags.bounced) this.bounced = true;
     if (flags.destroyed)
       for (const id of flags.destroyed) this.destroyed.add(id);
+    // Stars collect in every mode but never gate completion.
+    for (const s of this.track.goldStars ?? [])
+      if (
+        !this.stars.has(s.id) &&
+        segmentDistance(previous, current, s) <= GOLD_STAR_RADIUS
+      )
+        this.stars.add(s.id);
     if (this.track.ring && this.bounced && !this.ringDone) {
       const r = this.track.ring;
       if (previous.z < r.z && current.z >= r.z) {
@@ -170,6 +181,8 @@ export class TrackRun {
       splits: [...this.splits],
       collected: [...this.collected],
       collectibleCount: this.track.collectibles.length,
+      stars: [...this.stars],
+      starCount: (this.track.goldStars ?? []).length,
       destroyed: [...this.destroyed],
       demolishCount: this.track.demolish?.length ?? 0,
       bounced: this.bounced,

@@ -41,6 +41,12 @@ test("normal startup shows the illustrated official lineup and keeps the simulat
     "Tabletop Brawl",
     "Sharkbite Run",
     "Rock and Roll",
+    "Shipyard",
+    "Spider Hollow",
+    "Screwball Run",
+    "Birthday Cake Circuit",
+    "Birthday Table Loop",
+    "Bouncy House",
   ]);
   for (const t of TRACKS) {
     await expect(
@@ -142,7 +148,7 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(38);
+  await expect(page.locator(".track-card")).toHaveCount(44);
   expect(
     await page
       .locator("#level-select")

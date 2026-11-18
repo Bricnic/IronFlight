@@ -25,6 +25,7 @@ for (const id of [
   "blue_plaster_wall",
   "bark_brown_01",
   "snow_01",
+  "marble_01",
 ]) {
   const cached = priorById.get(id);
   const roles = ["diffuse", "normal", "roughness"];

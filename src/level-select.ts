@@ -1,6 +1,7 @@
 import { getTrack, type TrackId, type CustomTrackId } from "./tracks";
 import { officialTracks } from "./official-levels";
 import type { BestTimes } from "./best-times";
+import type { GoldStars } from "./gold-stars";
 import type { TrackRun } from "./track-run";
 import { modeLabel, timeoutCopy } from "./run-copy";
 const format = (time: number) => `${time.toFixed(2)}s`;
@@ -13,6 +14,7 @@ export function createLevelSelect(
   onRetry: () => void,
   onMenu: () => void,
   onNext: () => void,
+  starBank?: GoldStars,
 ) {
   const screen = document.createElement("main");
   screen.id = "level-select";
@@ -27,7 +29,7 @@ export function createLevelSelect(
       "--track-accent",
       `#${track.color.toString(16).padStart(6, "0")}`,
     );
-    card.innerHTML = `<button class="track-play" aria-label="Play ${track.name}"><div class="track-image"><img src="${track.thumbnail}" alt="${track.name} route preview"><span class="track-number">${String(i + 1).padStart(2, "0")}</span><span class="track-mode">${modeLabel(track)}</span></div><div class="track-card-body"><div class="track-card-heading"><h2>${track.name}</h2><span class="best-medal">UNRANKED</span></div><p>${track.description}</p><div class="medal-targets"><span class="gold">● ${track.medals.gold}s</span><span class="silver">● ${track.medals.silver}s</span><span class="bronze">● ${track.medals.bronze}s</span></div><div class="track-card-bottom"><span class="best-time">NO TIME SET</span><span class="play-word">PLAY ↗</span></div></div></button>`;
+    card.innerHTML = `<button class="track-play" aria-label="Play ${track.name}"><div class="track-image"><img src="${track.thumbnail}" alt="${track.name} route preview"><span class="track-number">${String(i + 1).padStart(2, "0")}</span><span class="track-mode">${modeLabel(track)}</span></div><div class="track-card-body"><div class="track-card-heading"><h2>${track.name}</h2><span class="best-medal">UNRANKED</span></div><p>${track.description}</p><div class="medal-targets"><span class="gold">● ${track.medals.gold}s</span><span class="silver">● ${track.medals.silver}s</span><span class="bronze">● ${track.medals.bronze}s</span></div><div class="track-card-bottom"><span class="best-time">NO TIME SET</span><span class="star-row" aria-label="Gold stars"></span><span class="play-word">PLAY ↗</span></div></div></button>`;
     card.querySelector("button")!.onclick = () => {
       selected = i;
       onStart(track.id);
@@ -98,6 +100,14 @@ export function createLevelSelect(
         best?.b?.medal?.toUpperCase() ?? (best?.b ? "COMPLETED" : "UNRANKED");
       card.querySelector(".best-medal")!.className =
         `best-medal ${best?.b?.medal ?? ""}`;
+      const defs = track.goldStars ?? [];
+      const banked = starBank?.stars(track.id) ?? [];
+      card.querySelector(".star-row")!.innerHTML = defs
+        .map(
+          (s) =>
+            `<span class="star ${banked.includes(s.id) ? "star-lit" : "star-unlit"}" data-star="${s.id}" title="${banked.includes(s.id) ? "Gold star collected" : "Gold star not collected yet"}">★</span>`,
+        )
+        .join("");
     }
   };
   return {

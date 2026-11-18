@@ -16,6 +16,7 @@ export const TEXTURE_IDS = [
   "blue_plaster_wall",
   "bark_brown_01",
   "snow_01",
+  "marble_01",
 ] as const;
 export type TextureId = (typeof TEXTURE_IDS)[number];
 export const PROP_PREFAB_KINDS = [
@@ -159,8 +160,8 @@ export type ToyboxKind = (typeof TOYBOX_PREFAB_KINDS)[number];
 export function isToybox(kind: string): kind is ToyboxKind {
   return (TOYBOX_PREFAB_KINDS as readonly string[]).includes(kind);
 }
-/** Birthday prefabs: the toppling candle, the car-napping balloon, the jumping card, the part-shaking bouncy castle. */
-export const BIRTHDAY_PREFAB_KINDS = ["birthday-candle", "helium-balloon", "birthday-card", "bouncy-castle"] as const;
+/** Birthday prefabs: the toppling candle, the car-napping balloon, the jumping card, the part-shaking bouncy castle, the drivable cake centerpieces. */
+export const BIRTHDAY_PREFAB_KINDS = ["birthday-candle", "helium-balloon", "birthday-card", "bouncy-castle", "birthday-cake-grand", "birthday-cake-table"] as const;
 export type BirthdayKind = (typeof BIRTHDAY_PREFAB_KINDS)[number];
 export function isBirthday(kind: string): kind is BirthdayKind {
   return (BIRTHDAY_PREFAB_KINDS as readonly string[]).includes(kind);
@@ -198,6 +199,12 @@ export const DUNGEON_PREFAB_KINDS = [
   ...CHRISTMAS_PREFAB_KINDS,
   ...CHRISTMAS_LETHAL_PREFAB_KINDS,
 ] as const;
+/** Gold-star collectible: a spinning chrome star worth permanent garage glory. */
+export const GOLD_STAR_PREFAB_KINDS = ["gold-star"] as const;
+export type GoldStarKind = (typeof GOLD_STAR_PREFAB_KINDS)[number];
+export function isGoldStar(kind: string): kind is GoldStarKind {
+  return (GOLD_STAR_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const LOOSE_BLOCK_PREFAB_KINDS = ["loose-blocks", "glass-pane"] as const;
 export const BURNING_COALS_PREFAB_KINDS = ["burning-coals"] as const;
 export const FRAGILE_ICE_PREFAB_KINDS = ["fragile-ice"] as const;
@@ -207,6 +214,7 @@ export const PREFAB_KINDS = [
   ...COURSE_PREFAB_KINDS,
   ...DUNGEON_PREFAB_KINDS,
   ...LOOSE_BLOCK_PREFAB_KINDS,
+  ...GOLD_STAR_PREFAB_KINDS,
   ...BURNING_COALS_PREFAB_KINDS,
   ...FRAGILE_ICE_PREFAB_KINDS,
   "checkpoint",
@@ -545,8 +553,9 @@ export function validateCustomLevel(input: unknown): CustomLevel {
         (JAW_PREFAB_KINDS as readonly string[]).includes(p?.kind) ||
         p?.kind === "snowman" ||
         p?.kind === "birthday-card" ||
-        p?.kind === "bouncy-castle",
-      `prefab ${p?.id ?? i} scale is only supported on dinosaurs, jaw traps, snowmen, birthday cards and bouncy castles`,
+        p?.kind === "bouncy-castle" ||
+        p?.kind === "gold-star",
+      `prefab ${p?.id ?? i} scale is only supported on dinosaurs, jaw traps, snowmen, birthday cards, bouncy castles and gold stars`,
     );
     check(
       errors,
@@ -636,6 +645,16 @@ export function toTrack(level: CustomLevel): Track {
       z: p.z,
       ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
     }));
+  const goldStars = level.prefabs
+    .filter((p) => p.kind === "gold-star")
+    .map((p) => ({
+      id: p.id,
+      x: p.x,
+      y: p.y ?? 2,
+      z: p.z,
+      ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
+      ...(p.scale === undefined ? {} : { scale: p.scale }),
+    }));
   const base = {
     id: `custom:${customSlug(level.name)}` as CustomTrackId,
     name: level.name,
@@ -646,6 +665,7 @@ export function toTrack(level: CustomLevel): Track {
     path,
     medals: { ...level.medals },
     custom: level,
+    ...(goldStars.length ? { goldStars } : {}),
     ...(level.underground ? { underground: true } : {}),
     ...(level.backgroundTemplate === undefined
       ? {}

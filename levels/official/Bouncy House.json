@@ -728,6 +728,13 @@
       "kind": "helium-balloon",
       "x": 36,
       "z": 60
+    },
+    {
+      "id": "gold-star-1",
+      "kind": "gold-star",
+      "x": -17,
+      "y": 28,
+      "z": 57
     }
   ],
   "medals": {

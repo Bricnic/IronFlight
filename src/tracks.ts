@@ -30,6 +30,13 @@ export type Collectible = Point & {
   kind?: "ring" | "chest";
 };
 export type Demolishable = Point & { id: string; y: number; radius: number };
+/** Gold-star collectible: drive within GOLD_STAR_RADIUS to bank it forever. */
+export type GoldStar = Point & {
+  id: string;
+  y: number;
+  yaw?: number;
+  scale?: number;
+};
 export type TrackRing = Point & { y: number; radius: number; goal: boolean };
 export type Track = {
   id: TrackId | CustomTrackId;
@@ -41,6 +48,7 @@ export type Track = {
   ring?: Point & { y: number; radius: number };
   rings?: TrackRing[];
   demolish?: Demolishable[];
+  goldStars?: GoldStar[];
   description: string;
   legacy?: boolean;
   thumbnail: string;
@@ -351,6 +359,30 @@ const TRACK_BACKGROUNDS: Record<TrackId, string> = {
   "sky-slide": "alpine-peaks",
 };
 for (const track of TRACKS) track.backgroundTemplate = TRACK_BACKGROUNDS[track.id];
+// One star per classic track, 15u+ off the ideal line beside a landmark.
+// Routes are untouched; only the star positions below were hand-placed.
+const LEGACY_STARS: Record<TrackId, GoldStar> = {
+  // West of the easy-lane runup, by the southwest floodlight pole.
+  "triple-loop": { id: "gold-star-1", x: -45, y: 2, z: -80 },
+  // East of the launch straight, by the first foundry block.
+  "foundry-run": { id: "gold-star-1", x: 30, y: 2.1, z: -60 },
+  // Outside the outer rail a short run past the start line (drive straight).
+  "skyline-circuit": { id: "gold-star-1", x: 48, y: 2, z: -83.14 },
+  // East fence corner, by the first scrap stack and the start sign.
+  "scrapyard-sweep": { id: "gold-star-1", x: 60, y: 1.9, z: -62 },
+  // East apron, by the first vault store container.
+  "inferno-vault": { id: "gold-star-1", x: 75, y: 1.9, z: -60 },
+  // EXCEPTION (see gold-star-legacy.test.ts): the 2-high plunge rails
+  // span the whole far road and high-center any truck that touches
+  // them, so no 15u+ off-line point is reachable; the star sits on the
+  // safe 10.5u off-line axe-dodge line by the first axe gantry.
+  "canyon-plunge": { id: "gold-star-1", x: 10.5, y: 2, z: 935 },
+  // West of the crypt, by the mausoleum door.
+  "haunted-hollow": { id: "gold-star-1", x: 105, y: 1.9, z: -100 },
+  // On the trampoline-to-ring flight arc, just short of the sky ring.
+  "sky-slide": { id: "gold-star-1", x: 1, y: 19.5, z: 2426 },
+};
+for (const track of TRACKS) track.goldStars = [{ ...LEGACY_STARS[track.id] }];
 export function getTrack(id: string): Track {
   const track = TRACKS.find((t) => t.id === id) ?? getCustomTrack(id);
   if (!track) throw new RangeError(`Unknown track: ${id}`);

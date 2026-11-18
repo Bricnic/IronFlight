@@ -225,7 +225,8 @@ const VIEW_EXEMPT = new Map<string, string>([
 /**
  * Physics exemptions: kind -> why identical collider sets are correct.
  * CODE kinds honor yaw in codeless behavior (covered by the cited tests);
- * NO_COLLIDERS kinds are radial/symmetric with no directional physics.
+ * NO_COLLIDERS kinds are radial/symmetric with no directional physics;
+ * RADIAL kinds have concentric colliders that are yaw-invariant by construction.
  * View rotation above still applies to every physics-exempt kind.
  */
 const PHYSICS_EXEMPT = new Map<string, string>([
@@ -248,6 +249,9 @@ const PHYSICS_EXEMPT = new Map<string, string>([
   ["helium-balloon", "NO_COLLIDERS: radial hook zone plus vertical haul; model carries yaw"],
   ["start-gate", "NO_COLLIDERS: visual gate with no behavior"],
   ["candle", "NO_COLLIDERS: decorative flames with no strike entry"],
+  ["birthday-cake-grand", "RADIAL: concentric cylinder colliders are yaw-invariant by construction; model carries yaw"],
+  ["birthday-cake-table", "RADIAL: concentric cylinder colliders are yaw-invariant by construction; model carries yaw"],
+  ["gold-star", "NO_COLLIDERS: radial collect zone in TrackRun; model carries yaw"],
   ["hands", "NO_COLLIDERS: radial snap-strike zone; model carries yaw"],
   ["scissors", "NO_COLLIDERS: radial snap-strike zone; model carries yaw"],
   ["cup", "NO_COLLIDERS: radial snap-strike zone; model carries yaw"],

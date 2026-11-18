@@ -121,6 +121,7 @@ export class CourseView extends T.Group {
   private axeModels: { root: T.Group; rotor: T.Group }[] = [];
   private ghostGroup: T.Group | null = null;
   private pickupModels = new Map<string, T.Group>();
+  private starModels = new Map<string, T.Group>();
   private meshes: T.Mesh[] = [];
   private builtTrack: Track | null = null;
   private label(text: string, color: number) {
@@ -531,6 +532,7 @@ export class CourseView extends T.Group {
       this.ghostGroup = null;
       this.hazards = [];
       this.pickupModels.clear();
+      this.starModels.clear();
       this.meshes = [];
       this.wetSurfaces = [];
       this.lavaMaterials = [];
@@ -852,6 +854,15 @@ export class CourseView extends T.Group {
           this.add(g);
           this.pickupModels.set(p.id, g);
         }
+        for (const s of track.goldStars ?? []) {
+          const g = new T.Group();
+          g.position.set(s.x, s.y, s.z);
+          g.name = s.id;
+          g.rotation.y = s.yaw ?? 0;
+          g.add(buildGoldStar(s.scale ?? 1));
+          this.add(g);
+          this.starModels.set(s.id, g);
+        }
       }
     }
     this.visible = !!run;
@@ -914,6 +925,13 @@ export class CourseView extends T.Group {
       g.children[0].rotation.y = sim.time * (g.userData.spin ?? 1);
       if (camera) g.children[1].quaternion.copy(camera.quaternion);
     }
+    for (const s of run.track.goldStars ?? []) {
+      const g = this.starModels.get(s.id);
+      if (!g) continue;
+      g.visible = !run.stars.has(s.id);
+      g.position.y = s.y + Math.sin(sim.time * 2.2) * 0.25;
+      g.children[0].rotation.y = sim.time * 2.4;
+    }
     for (const { key, at } of sim.pianoPresses()) {
       const solid = run.track.custom?.solids.find((s) => s.pianoKey === key);
       const mesh = solid && this.solidMesh(solid.id);
@@ -950,6 +968,7 @@ export class CourseView extends T.Group {
       grandstands: this.grandstandModels.length,
       gates: this.gateModels.filter((g) => g.visible).length,
       pickups: [...this.pickupModels.values()].filter((g) => g.visible).length,
+      stars: [...this.starModels.values()].filter((g) => g.visible).length,
       solids: this.meshes.length,
       jets: this.hazards
         .filter((m) => m.flames)
@@ -1182,6 +1201,74 @@ export function buildRingMesh(radius = 6) {
   // The torus lies in XY: forward (+Z) travel passes through its opening.
   group.add(band, inner);
   return group;
+}
+/** Chrome-gold collectible star: beveled extrusion, full metal, envmap shine. */
+export function buildGoldStar(scale = 1) {
+  const group = new T.Group();
+  const shape = new T.Shape();
+  const points = 5, outer = 1.6, inner = 0.68;
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(a) * r, y = Math.sin(a) * r;
+    if (i === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  }
+  shape.closePath();
+  const geometry = new T.ExtrudeGeometry(shape, {
+    depth: 0.5,
+    bevelEnabled: true,
+    bevelThickness: 0.18,
+    bevelSize: 0.14,
+    bevelSegments: 6,
+    curveSegments: 12,
+  });
+  geometry.center();
+  const star = new T.Mesh(
+    geometry,
+    new T.MeshStandardMaterial({
+      color: 0xffd34d,
+      metalness: 1,
+      roughness: 0.16,
+      envMapIntensity: 1.6,
+      emissive: 0x7a5a00,
+      emissiveIntensity: 0.35,
+    }),
+  );
+  star.castShadow = star.receiveShadow = true;
+  const glow = new T.Sprite(
+    new T.SpriteMaterial({
+      map: makeGlowTexture(),
+      color: 0xffd76a,
+      transparent: true,
+      opacity: 0.55,
+      blending: T.AdditiveBlending,
+      depthWrite: false,
+    }),
+  );
+  glow.scale.setScalar(6);
+  // Non-interactive shine: the camera-less contact-shadow ray skips sprites.
+  glow.raycast = () => {};
+  group.add(star, glow);
+  group.scale.setScalar(scale);
+  return group;
+}
+export function goldStarStats(group: T.Group) {
+  let meshes = 0,
+    triangles = 0;
+  let metalness = 0,
+    roughness = 1;
+  group.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    meshes++;
+    triangles += o.geometry.index
+      ? o.geometry.index.count / 3
+      : o.geometry.attributes.position.count / 3;
+    const mat = o.material as T.MeshStandardMaterial;
+    if (typeof mat.metalness === "number") metalness = Math.max(metalness, mat.metalness);
+    if (typeof mat.roughness === "number") roughness = Math.min(roughness, mat.roughness);
+  });
+  return { meshes, triangles: Math.round(triangles), metalness, roughness };
 }
 export function ringStats(group: T.Group) {
   let meshes = 0,

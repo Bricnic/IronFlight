@@ -20,7 +20,7 @@ import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
 import { buildSpider, poseSpider } from "./hollow-view";
 import { buildMailbox, buildSpeedTube, buildTeeterTotter, poseMailbox } from "./screwball-view";
-import { buildBalloon, buildBirthdayCandle, buildBirthdayCard, buildBouncyCastle, poseBalloon, poseBirthdayCard } from "./birthday-view";
+import { buildBalloon, buildBirthdayCandle, buildBirthdayCake, buildBirthdayCard, buildBouncyCastle, poseBalloon, poseBirthdayCard } from "./birthday-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
@@ -103,6 +103,8 @@ const labelMessages: Record<string, [string, string]> = {
   "helium-balloon": ["HELIUM BALLOON", "HOOKS A PART / HOLD ON TIGHT"],
   "birthday-card": ["BIRTHDAY CARD", "JUMPS WHEN IT OPENS / RIDE IT TO FLY"],
   "bouncy-castle": ["BOUNCY CASTLE", "TRAMPOLINE LAUNCH / COSTS A PART"],
+  "birthday-cake-grand": ["GRAND BIRTHDAY CAKE", "DRIVE THE TIERS / MIND THE CHERRY"],
+  "birthday-cake-table": ["TABLE BIRTHDAY CAKE", "DRIVE THE TIERS / MIND THE CHERRY"],
   pelican: ["HARBOUR PELICAN", "GUARDS 3 PERCHES / MIND THE BILL"],
   anchor: ["DECK ANCHOR", "HOOKS TRUCKS / DUNKS THEM"],
   ship: ["DEPARTING FERRY", "SAILS ON THE GATES / CATCH IT"],
@@ -1062,6 +1064,9 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "bouncy-castle") {
     buildBouncyCastle(root, h.scale ?? 1);
     root.add(buildDungeonLabel(h, 8));
+  } else if (h.kind === "birthday-cake-grand" || h.kind === "birthday-cake-table") {
+    const { topY } = buildBirthdayCake(root, h.kind);
+    root.add(buildDungeonLabel(h, topY + 16));
   } else {
     model.pivots = buildJailCellModel(h, root);
   }

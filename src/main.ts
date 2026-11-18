@@ -32,6 +32,7 @@ import {
 } from "./custom-level";
 import { getVehicle } from "./vehicles";
 import { BestTimes } from "./best-times";
+import { GoldStars } from "./gold-stars";
 import {
   getTrack,
   type CustomTrackId,
@@ -112,7 +113,13 @@ async function boot() {
   let bannerCheckpoint = 0;
   let bannerFiredAt = 0;
   let bannerUntil = 0;
+  let starRun: Simulation["trackRun"];
+  let starSeen = 0;
   const scores = new BestTimes({
+    getItem: (key) => localStorage.getItem(key),
+    setItem: (key, value) => localStorage.setItem(key, value),
+  });
+  const starBank = new GoldStars({
     getItem: (key) => localStorage.getItem(key),
     setItem: (key, value) => localStorage.setItem(key, value),
   });
@@ -279,6 +286,7 @@ async function boot() {
     retryTrack,
     showLevelSelect,
     () => stepLevel(1),
+    starBank,
   );
   $("level-select-button").onclick = showLevelSelect;
   vehicleScreens = createVehicleSelect(
@@ -995,16 +1003,22 @@ async function boot() {
     if (confettiPieces.length) drawConfetti();
     else ($("confetti") as HTMLCanvasElement).hidden = true;
   }
-  function fireConfetti() {
+  const CONFETTI_COLORS = ["#ffa762", "#f6edde", "#f0ca69", "#ff8a7a", "#8be28b", "#7ec8e3"];
+  const CONFETTI_COUNT = 140;
+  const GOLD_CONFETTI = ["#ffd700", "#ffdf40", "#f5c542", "#fff3c4", "#e8b53a", "#ffb700"];
+  function fireConfetti(opts: { colors?: string[]; count?: number } = {}) {
     if (REDUCED_MOTION) return;
     const canvas = $("confetti") as HTMLCanvasElement;
     canvas.hidden = false;
     canvas.width = innerWidth;
     canvas.height = innerHeight;
     canvas.dataset.bursts = String(Number(canvas.dataset.bursts ?? 0) + 1);
-    const colors = ["#ffa762", "#f6edde", "#f0ca69", "#ff8a7a", "#8be28b", "#7ec8e3"];
+    const colors = opts.colors ?? CONFETTI_COLORS;
+    const count = opts.count ?? CONFETTI_COUNT;
+    canvas.dataset.lastCount = String(count);
+    canvas.dataset.lastColor = colors[0];
     const cx = canvas.width / 2;
-    for (let i = 0; i < 140; i++) {
+    for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
       const speed = 180 + Math.random() * 420;
       confettiPieces.push({
@@ -1023,11 +1037,25 @@ async function boot() {
     confettiLast = sim.time;
     drawConfetti();
   }
+  function showStarBanner() {
+    const banner = $("checkpoint-banner");
+    banner.querySelector("strong")!.textContent = "GOLD STAR!";
+    banner.classList.add("gold");
+    banner.hidden = false;
+    bannerFiredAt = sim.time;
+    bannerUntil = sim.time + 2.5;
+    banner.style.transform = "";
+    banner.style.opacity = "";
+    $("checkpoint-delta").hidden = true;
+    fireConfetti({ colors: GOLD_CONFETTI, count: CONFETTI_COUNT * 3 });
+  }
   function showCheckpointBanner(
     run: NonNullable<ReturnType<Simulation["snapshot"]>["run"]>,
   ) {
     const banner = $("checkpoint-banner");
     const delta = $("checkpoint-delta");
+    banner.querySelector("strong")!.textContent = "CHECKPOINT!";
+    banner.classList.remove("gold");
     banner.hidden = false;
     bannerFiredAt = sim.time;
     bannerUntil = sim.time + 2.5;
@@ -1137,6 +1165,15 @@ async function boot() {
         if (s.run.checkpoint > bannerCheckpoint) {
           bannerCheckpoint = s.run.checkpoint;
           showCheckpointBanner(s.run);
+        }
+        // Bank each newly collected star and celebrate it like a checkpoint.
+        if (sim.trackRun !== starRun) {
+          starRun = sim.trackRun;
+          starSeen = s.run.stars.length;
+        } else if (s.run.stars.length > starSeen) {
+          for (const id of s.run.stars) starBank.collect(s.run.trackId, id);
+          starSeen = s.run.stars.length;
+          showStarBanner();
         }
         // Pop and fade on sim time so pausing freezes the celebration
         // mid-show (and headless captures catch it at full opacity).
@@ -1329,6 +1366,8 @@ async function boot() {
       },
       vehiclePreview: () => view.vehiclePreview(),
       overhead: (x: number, z: number, height = 150) => view.overhead(x, z, height),
+      frameSpot: (x: number, y: number, z: number, dist = 60, azimuth = 0.6, elevation = 0.5) =>
+        view.frameSpot(x, y, z, dist, azimuth, elevation),
       camera: () => view.inspectCamera(),
       burnoutOverview: (focus) => view.burnoutOverview(focus),
       lavaOverview: () => view.lavaOverview(),

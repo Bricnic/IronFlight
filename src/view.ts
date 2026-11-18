@@ -1120,6 +1120,18 @@ export class GameView {
     this.camera.updateMatrixWorld();
     this.renderer.render(this.scene, this.camera);
   }
+  /** Angled inspection framing for QA screenshots; caller freezes rAF first. */
+  frameSpot(x: number, y: number, z: number, dist = 60, azimuth = 0.6, elevation = 0.5) {
+    this.render(true);
+    this.camera.position.set(
+      x + Math.cos(azimuth) * Math.cos(elevation) * dist,
+      y + Math.sin(elevation) * dist,
+      z + Math.sin(azimuth) * Math.cos(elevation) * dist,
+    );
+    this.camera.lookAt(x, y, z);
+    this.camera.updateMatrixWorld();
+    this.renderer.render(this.scene, this.camera);
+  }
   /** Top-down inspection framing for QA screenshots; caller freezes rAF first. */
   overhead(x: number, z: number, height = 150) {
     this.render(true);

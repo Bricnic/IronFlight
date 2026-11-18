@@ -102,6 +102,7 @@ export interface GameHarness {
   burnoutOverview(focus?: "all" | "start" | "end"): void;
   vehiclePreview(): void;
   overhead(x: number, z: number, height?: number): void;
+  frameSpot(x: number, y: number, z: number, dist?: number, azimuth?: number, elevation?: number): void;
   camera(): ReturnType<GameView["inspectCamera"]>;
   signs(): ReturnType<GameView["inspectSigns"]>;
   traceFrames(frames: number, rate: number, input: Input): CameraSample[];
@@ -152,6 +153,7 @@ export interface GameHarness {
       grandstands: number;
       gates: number;
       pickups: number;
+      stars: number;
       solids: number;
       jets: {
         id: string;

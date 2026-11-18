@@ -23700,6 +23700,13 @@
       "kind": "fragile-ice",
       "x": 197.5,
       "z": 57.5
+    },
+    {
+      "id": "gold-star-1",
+      "kind": "gold-star",
+      "x": -230,
+      "y": 1.9,
+      "z": -76
     }
   ],
   "medals": {
