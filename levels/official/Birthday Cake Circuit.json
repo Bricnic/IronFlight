@@ -285,65 +285,48 @@
       "d": 86,
       "yaw": -5.890486225480862,
       "color": 16511972
+    },
+    {
+      "id": "jump-1",
+      "kind": "ramp",
+      "x": 173.21,
+      "y": 1.2,
+      "z": 100,
+      "w": 14,
+      "h": 0.4,
+      "d": 14,
+      "yaw": -0.5236,
+      "angle": -0.36,
+      "color": 9080726
+    },
+    {
+      "id": "jump-2",
+      "kind": "ramp",
+      "x": -190.21,
+      "y": 1.2,
+      "z": 61.8,
+      "w": 14,
+      "h": 0.4,
+      "d": 14,
+      "yaw": -2.8274,
+      "angle": -0.36,
+      "color": 9080726
+    },
+    {
+      "id": "jump-3",
+      "kind": "ramp",
+      "x": 0,
+      "y": 1.2,
+      "z": -200,
+      "w": 14,
+      "h": 0.4,
+      "d": 14,
+      "yaw": -4.7124,
+      "angle": -0.36,
+      "color": 9080726
     }
   ],
   "prefabs": [
-    {
-      "id": "candle-1",
-      "kind": "birthday-candle",
-      "x": 173.6893521121219,
-      "y": 0.3,
-      "z": 71.94448528463688
-    },
-    {
-      "id": "candle-2",
-      "kind": "birthday-candle",
-      "x": 71.94448528463688,
-      "y": 0.3,
-      "z": 173.6893521121219
-    },
-    {
-      "id": "candle-3",
-      "kind": "birthday-candle",
-      "x": -71.94448528463687,
-      "y": 0.3,
-      "z": 173.6893521121219
-    },
-    {
-      "id": "candle-4",
-      "kind": "birthday-candle",
-      "x": -173.6893521121219,
-      "y": 0.3,
-      "z": 71.9444852846369
-    },
-    {
-      "id": "candle-5",
-      "kind": "birthday-candle",
-      "x": -173.68935211212192,
-      "y": 0.3,
-      "z": -71.94448528463685
-    },
-    {
-      "id": "candle-6",
-      "kind": "birthday-candle",
-      "x": -71.94448528463698,
-      "y": 0.3,
-      "z": -173.68935211212187
-    },
-    {
-      "id": "candle-7",
-      "kind": "birthday-candle",
-      "x": 71.94448528463693,
-      "y": 0.3,
-      "z": -173.6893521121219
-    },
-    {
-      "id": "candle-8",
-      "kind": "birthday-candle",
-      "x": 173.68935211212187,
-      "y": 0.3,
-      "z": -71.944485284637
-    },
     {
       "id": "balloon-1",
       "kind": "helium-balloon",
@@ -368,13 +351,6 @@
       "kind": "birthday-card",
       "x": 0,
       "z": 222
-    },
-    {
-      "id": "cake-candle",
-      "kind": "birthday-candle",
-      "x": 0,
-      "y": 30,
-      "z": 0
     },
     {
       "id": "food-1",
@@ -487,6 +463,328 @@
       "x": 7.7883668461730124,
       "y": 30.5,
       "z": -18.4212198800577
+    },
+    {
+      "id": "cake-candle",
+      "kind": "birthday-candle",
+      "x": 0,
+      "y": 30,
+      "z": 0
+    },
+    {
+      "id": "candle-1",
+      "kind": "birthday-candle",
+      "x": 180,
+      "y": 0.05,
+      "z": 0
+    },
+    {
+      "id": "candle-2",
+      "kind": "birthday-candle",
+      "x": 159.38,
+      "y": 0.05,
+      "z": 83.65
+    },
+    {
+      "id": "candle-3",
+      "kind": "birthday-candle",
+      "x": 102.25,
+      "y": 0.05,
+      "z": 148.14
+    },
+    {
+      "id": "candle-4",
+      "kind": "birthday-candle",
+      "x": 21.7,
+      "y": 0.05,
+      "z": 178.69
+    },
+    {
+      "id": "candle-5",
+      "kind": "birthday-candle",
+      "x": -63.83,
+      "y": 0.05,
+      "z": 168.3
+    },
+    {
+      "id": "candle-6",
+      "kind": "birthday-candle",
+      "x": -134.73,
+      "y": 0.05,
+      "z": 119.36
+    },
+    {
+      "id": "candle-7",
+      "kind": "birthday-candle",
+      "x": -174.77,
+      "y": 0.05,
+      "z": 43.08
+    },
+    {
+      "id": "candle-8",
+      "kind": "birthday-candle",
+      "x": -174.77,
+      "y": 0.05,
+      "z": -43.08
+    },
+    {
+      "id": "candle-9",
+      "kind": "birthday-candle",
+      "x": -134.73,
+      "y": 0.05,
+      "z": -119.36
+    },
+    {
+      "id": "candle-10",
+      "kind": "birthday-candle",
+      "x": -63.83,
+      "y": 0.05,
+      "z": -168.3
+    },
+    {
+      "id": "candle-11",
+      "kind": "birthday-candle",
+      "x": 21.7,
+      "y": 0.05,
+      "z": -178.69
+    },
+    {
+      "id": "candle-12",
+      "kind": "birthday-candle",
+      "x": 102.25,
+      "y": 0.05,
+      "z": -148.14
+    },
+    {
+      "id": "candle-13",
+      "kind": "birthday-candle",
+      "x": 159.38,
+      "y": 0.05,
+      "z": -83.65
+    },
+    {
+      "id": "candle-14",
+      "kind": "birthday-candle",
+      "x": 215.55,
+      "y": 0.05,
+      "z": 53.13
+    },
+    {
+      "id": "candle-15",
+      "kind": "birthday-candle",
+      "x": 166.17,
+      "y": 0.05,
+      "z": 147.21
+    },
+    {
+      "id": "candle-16",
+      "kind": "birthday-candle",
+      "x": 78.72,
+      "y": 0.05,
+      "z": 207.57
+    },
+    {
+      "id": "candle-17",
+      "kind": "birthday-candle",
+      "x": -26.76,
+      "y": 0.05,
+      "z": 220.38
+    },
+    {
+      "id": "candle-18",
+      "kind": "birthday-candle",
+      "x": -126.11,
+      "y": 0.05,
+      "z": 182.7
+    },
+    {
+      "id": "candle-19",
+      "kind": "birthday-candle",
+      "x": -196.57,
+      "y": 0.05,
+      "z": 103.17
+    },
+    {
+      "id": "candle-20",
+      "kind": "birthday-candle",
+      "x": -222,
+      "y": 0.05,
+      "z": 0
+    },
+    {
+      "id": "candle-21",
+      "kind": "birthday-candle",
+      "x": -196.57,
+      "y": 0.05,
+      "z": -103.17
+    },
+    {
+      "id": "candle-22",
+      "kind": "birthday-candle",
+      "x": -126.11,
+      "y": 0.05,
+      "z": -182.7
+    },
+    {
+      "id": "candle-23",
+      "kind": "birthday-candle",
+      "x": -26.76,
+      "y": 0.05,
+      "z": -220.38
+    },
+    {
+      "id": "candle-24",
+      "kind": "birthday-candle",
+      "x": 78.72,
+      "y": 0.05,
+      "z": -207.57
+    },
+    {
+      "id": "candle-25",
+      "kind": "birthday-candle",
+      "x": 166.17,
+      "y": 0.05,
+      "z": -147.21
+    },
+    {
+      "id": "candle-26",
+      "kind": "birthday-candle",
+      "x": 215.55,
+      "y": 0.05,
+      "z": -53.13
+    },
+    {
+      "id": "card-2",
+      "kind": "birthday-card",
+      "x": 195.63,
+      "y": 0.25,
+      "z": 41.58
+    },
+    {
+      "id": "card-3",
+      "kind": "birthday-card",
+      "x": 61.8,
+      "y": 0.25,
+      "z": 190.21
+    },
+    {
+      "id": "card-4",
+      "kind": "birthday-card",
+      "x": -161.8,
+      "y": 0.25,
+      "z": 117.56
+    },
+    {
+      "id": "card-5",
+      "kind": "birthday-card",
+      "x": -148.63,
+      "y": 0.25,
+      "z": -133.83
+    },
+    {
+      "id": "card-6",
+      "kind": "birthday-card",
+      "x": 61.8,
+      "y": 0.25,
+      "z": -190.21
+    },
+    {
+      "id": "balloon-4",
+      "kind": "helium-balloon",
+      "x": -100,
+      "y": 8,
+      "z": 60
+    },
+    {
+      "id": "balloon-5",
+      "kind": "helium-balloon",
+      "x": 100,
+      "y": 8,
+      "z": -60
+    },
+    {
+      "id": "snack-1",
+      "kind": "cookie",
+      "x": 200,
+      "y": 0.5,
+      "z": 0
+    },
+    {
+      "id": "snack-2",
+      "kind": "cracker",
+      "x": 199.24,
+      "y": 0.5,
+      "z": 17.43
+    },
+    {
+      "id": "snack-3",
+      "kind": "fruit",
+      "x": 187.94,
+      "y": 0.5,
+      "z": 68.4
+    },
+    {
+      "id": "snack-4",
+      "kind": "cookie",
+      "x": 181.26,
+      "y": 0.5,
+      "z": 84.52
+    },
+    {
+      "id": "snack-5",
+      "kind": "cracker",
+      "x": 163.83,
+      "y": 0.5,
+      "z": 114.72
+    },
+    {
+      "id": "snack-6",
+      "kind": "fruit",
+      "x": 153.21,
+      "y": 0.5,
+      "z": 128.56
+    },
+    {
+      "id": "snack-7",
+      "kind": "cookie",
+      "x": 141.42,
+      "y": 0.5,
+      "z": 141.42
+    },
+    {
+      "id": "snack-8",
+      "kind": "cracker",
+      "x": 128.56,
+      "y": 0.5,
+      "z": 153.21
+    },
+    {
+      "id": "barrel-1",
+      "kind": "barrel",
+      "x": 191.26,
+      "y": 0.5,
+      "z": 58.47
+    },
+    {
+      "id": "barrel-2",
+      "kind": "barrel",
+      "x": 108.93,
+      "y": 0.5,
+      "z": 167.73
+    },
+    {
+      "id": "barrel-3",
+      "kind": "barrel",
+      "x": 93.89,
+      "y": 0.5,
+      "z": 176.59
+    },
+    {
+      "id": "barrel-4",
+      "kind": "barrel",
+      "x": 44.99,
+      "y": 0.5,
+      "z": 194.87
     }
   ],
   "medals": {

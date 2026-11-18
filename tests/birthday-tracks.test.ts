@@ -99,6 +99,14 @@ it("Birthday Cake Circuit laps a radius-200 ring on a wide cake-top track", () =
   const kinds = level.prefabs.map((p) => p.kind);
   for (const kind of ["birthday-candle", "helium-balloon", "birthday-card"])
     expect(kinds, kind).toContain(kind);
+  expect(kinds.filter((k) => k === "birthday-candle")).toHaveLength(27);
+  const cards = level.prefabs.filter((p) => p.kind === "birthday-card");
+  expect(cards).toHaveLength(6);
+  // Five cards block the ring itself; the sixth roams outside it.
+  expect(
+    cards.filter((c) => Math.abs(Math.hypot(c.x, c.z) - 200) <= 8),
+  ).toHaveLength(5);
+  expect(level.solids.filter((s) => s.kind === "ramp")).toHaveLength(3);
 });
 
 it("Birthday Table Loop rounds the 500x300 corners", () => {
@@ -114,20 +122,36 @@ it("Birthday Table Loop rounds the 500x300 corners", () => {
   const kinds = level.prefabs.map((p) => p.kind);
   for (const kind of ["birthday-candle", "helium-balloon", "birthday-card"])
     expect(kinds, kind).toContain(kind);
+  expect(kinds.filter((k) => k === "birthday-candle")).toHaveLength(27);
+  const cards = level.prefabs.filter((p) => p.kind === "birthday-card");
+  expect(cards).toHaveLength(6);
+  // Five cards block the loop roads; the sixth roams the center cake.
+  const onRoad = (x: number, z: number) =>
+    (Math.abs(Math.abs(x) - 250) <= 8 && Math.abs(z) <= 150) ||
+    (Math.abs(Math.abs(z) - 150) <= 8 && Math.abs(x) <= 250);
+  expect(cards.filter((c) => onRoad(c.x, c.z))).toHaveLength(5);
+  expect(level.solids.filter((s) => s.kind === "ramp")).toHaveLength(4);
 });
 
-it("Bouncy House threads 3-4 wide planks over a full bouncy floor", () => {
+it("Bouncy House threads narrow legs with wide turns over a full bouncy floor", () => {
   const level = load("Bouncy House.json");
-  const planks = level.solids.filter(
-    (s) => s.id.startsWith("leg-") || s.id.startsWith("link-"),
-  );
-  expect(planks.length).toBeGreaterThanOrEqual(5);
-  for (const p of planks) {
-    const lateral = p.id.startsWith("leg-") ? p.w : p.d;
-    expect(lateral, `${p.id} width`).toBeGreaterThanOrEqual(3);
-    expect(lateral, `${p.id} width`).toBeLessThanOrEqual(4);
+  // Legs stay narrow but fittable: wheel rays sit at +-1.65, so anything
+  // under ~5 leaves zero wobble margin and beaches constantly.
+  const legs = level.solids.filter((s) => s.id.startsWith("leg-"));
+  expect(legs.length).toBeGreaterThanOrEqual(4);
+  for (const p of legs) {
+    expect(p.w, `${p.id} width`).toBeGreaterThanOrEqual(5);
+    expect(p.w, `${p.id} width`).toBeLessThanOrEqual(7);
     expect(p.y + p.h / 2, `${p.id} top`).toBeCloseTo(14, 0);
   }
+  // Turn links are wide (room to pivot); straights stay narrow.
+  const links = level.solids.filter((s) => s.id.startsWith("link-"));
+  expect(links.length).toBeGreaterThanOrEqual(3);
+  for (const p of links) {
+    expect(p.d, `${p.id} width`).toBeGreaterThanOrEqual(8);
+    expect(p.y + p.h / 2, `${p.id} top`).toBeCloseTo(14, 0);
+  }
+  const planks = [...legs, ...links];
   // Every checkpoint stands over a plank and over a bouncy pad.
   const pads = level.prefabs.filter((p) => p.kind === "bouncy-castle");
   expect(pads.length).toBeGreaterThan(0);
@@ -143,6 +167,43 @@ it("Bouncy House threads 3-4 wide planks over a full bouncy floor", () => {
   for (const c of level.checkpoints) {
     expect(onPlank(c.x, c.z), `${c.name} over a plank`).toBe(true);
     expect(onPad(c.x, c.z), `${c.name} over a pad`).toBe(true);
+    // Gates trigger in 3D: checkpoints ride at track height, not the floor.
+    expect(c.y, `${c.name} height`).toBe(14);
+  }
+  // Wide corner bulbs make the hairpins turnable.
+  const corners = level.solids.filter((s) => s.id.startsWith("corner-"));
+  expect(corners).toHaveLength(7);
+  for (const p of corners) {
+    expect(p.w, `${p.id} width`).toBeGreaterThanOrEqual(14);
+    expect(p.d, `${p.id} depth`).toBeGreaterThanOrEqual(14);
+    const top = p.y + p.h / 2;
+    expect(top, `${p.id} top`).toBeGreaterThanOrEqual(14.05);
+    expect(top, `${p.id} top`).toBeLessThanOrEqual(14.25);
+  }
+  const onCorner = (x: number, z: number) =>
+    corners.some(
+      (s) => Math.abs(x - s.x) <= s.w / 2 && Math.abs(z - s.z) <= s.d / 2,
+    );
+  for (const c of level.checkpoints)
+    expect(onCorner(c.x, c.z), `${c.name} over a corner bulb`).toBe(true);
+  // The racing line itself is continuous deck: every 2u of the spawn-gate
+  // polyline stands over a plank top.
+  const line = [level.spawn, ...level.checkpoints];
+  for (let i = 1; i < line.length; i++) {
+    const a = line[i - 1], b = line[i];
+    const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 2));
+    for (let j = 0; j <= n; j++) {
+      const x = a.x + ((b.x - a.x) * j) / n;
+      const z = a.z + ((b.z - a.z) * j) / n;
+      const deck = level.solids.some(
+        (s) =>
+          Math.abs(x - s.x) <= s.w / 2 &&
+          Math.abs(z - s.z) <= s.d / 2 &&
+          s.y + s.h / 2 >= 13.5 &&
+          s.y + s.h / 2 <= 14.5,
+      );
+      expect(deck, `deck under (${x.toFixed(1)},${z.toFixed(1)})`).toBe(true);
+    }
   }
 });
 

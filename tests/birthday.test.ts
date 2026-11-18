@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from "three";
 import { beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { Simulation, initPhysics } from "../src/simulation";
+import { officialFileTracks } from "../src/official-levels";
 import {
   blankLevel,
   BIRTHDAY_PREFAB_KINDS,
@@ -163,5 +164,72 @@ it("helium balloon hooks a part, hauls up, pops and tumbles the car", () => {
     expect(sim.snapshot().dungeon.hazards.find((h) => h.kind === "helium-balloon")!.popped).toBe(true);
   } finally {
     sim.dispose();
+  }
+});
+
+it("Bouncy House gates trigger in order at track height", () => {
+  const id = "custom:bouncy-house" as const;
+  registerCustomTrack(officialFileTracks.find((t) => t.id === id)!);
+  const sim = new Simulation();
+  try {
+    sim.startTrack(id);
+    // Teleport before each gate, face through its plane, check progress.
+    // Throttle follows the nose, so each leg sets its heading first.
+    const legs = [
+      { from: { x: 0, z: 114 }, yaw: 0 },
+      { from: { x: 18, z: 120 }, yaw: Math.PI / 2 },
+      { from: { x: 24, z: 6 }, yaw: Math.PI },
+      { from: { x: 42, z: 0 }, yaw: Math.PI / 2 },
+      { from: { x: 48, z: 114 }, yaw: 0 },
+      { from: { x: 66, z: 120 }, yaw: Math.PI / 2 },
+      { from: { x: 72, z: 6 }, yaw: Math.PI },
+    ];
+    legs.forEach((leg, i) => {
+      sim.body.setTranslation({ x: leg.from.x, y: 15, z: leg.from.z }, true);
+      const q = new Quaternion().setFromAxisAngle(
+        new Vector3(0, 1, 0),
+        leg.yaw,
+      );
+      sim.body.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }, true);
+      sim.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      for (let s = 0; s < 120; s++) sim.step({ throttle: 1 });
+      expect(sim.trackRun!.checkpoint, `gate ${i}`).toBe(i + 1);
+    });
+    expect(sim.trackRun!.status).toBe("completed");
+  } finally {
+    sim.dispose();
+  }
+});
+
+it("birthday candles stand undisturbed for 30s on every birthday track", () => {
+  for (const id of [
+    "custom:birthday-cake-circuit",
+    "custom:birthday-table-loop",
+    "custom:bouncy-house",
+  ] as const) {
+    registerCustomTrack(officialFileTracks.find((t) => t.id === id)!);
+    const sim = new Simulation();
+    try {
+      sim.startTrack(id);
+      for (let i = 0; i < 3600; i++) sim.step({});
+      const candles = sim.dungeon.mechanisms.filter(
+        (m) => m.h.kind === "birthday-candle",
+      );
+      expect(candles.length).toBeGreaterThan(0);
+      for (const m of candles) {
+        const q = m.body!.rotation();
+        const upY = 1 - 2 * (q.x * q.x + q.z * q.z);
+        const t = m.body!.translation();
+        expect(upY, `${id} ${m.h.id} upright`).toBeGreaterThan(
+          BIRTHDAY_CANDLE.tiltCos,
+        );
+        expect(
+          Math.hypot(t.x - m.h.x, t.z - m.h.z),
+          `${id} ${m.h.id} unmoved`,
+        ).toBeLessThan(BIRTHDAY_CANDLE.displace);
+      }
+    } finally {
+      sim.dispose();
+    }
   }
 });
