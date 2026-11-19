@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { beforeAll, expect, it } from "vitest";
 import { DT } from "../src/clock";
 import { registerCustomTrack } from "../src/custom-level";
+import { SNAP_CYCLE } from "../src/dungeon-hazards";
 import { officialFileTracks } from "../src/official-levels";
 import { initPhysics, Simulation } from "../src/simulation";
 
@@ -145,18 +146,38 @@ function diagOf(sim: Simulation, minDist: number, next: number): DriveDiag {
     elapsed: sim.trackRun!.elapsed,
   };
 }
+/** Snap-trap cycle position for a mechanism phase (tests/toybox-road-drive.ts pattern). */
+function snapPhase(time: number) {
+  return ((((time % SNAP_CYCLE) + SNAP_CYCLE) % SNAP_CYCLE) + SNAP_CYCLE) % SNAP_CYCLE;
+}
 /** Follow waypoints until the star collects, the budget lapses, or the run ends. */
 function driveRoute(
   sim: Simulation, route: Waypoint[], budgetSec: number, star: Vec,
+  wait?: { at: number; ready: (sim: Simulation) => boolean }, endOnArrival = false,
 ): DriveDiag {
   let next = 0;
+  let arrived = false;
+  let released = false;
   let minDist = Infinity;
   for (let i = 0; i < Math.floor(budgetSec / DT) && sim.trackRun!.status === "running"; i++) {
     if (sim.trackRun!.stars.has(STAR_ID)) break;
     const p = sim.body.translation();
     minDist = Math.min(minDist, Math.hypot(p.x - star.x, p.y - star.y, p.z - star.z));
     const [wx, wz, , reach] = route[next];
-    if (Math.hypot(wx - p.x, wz - p.z) < reach && next < route.length - 1) next++;
+    if (Math.hypot(wx - p.x, wz - p.z) < reach) {
+      if (next === route.length - 1 && endOnArrival) break;
+      if (wait && next === wait.at && !released) arrived = true;
+      else if (next < route.length - 1) next++;
+    }
+    if (wait && next === wait.at && arrived && !released) {
+      if (wait.ready(sim)) {
+        released = true;
+        next++;
+      } else {
+        sim.step({ brake: 1 });
+        continue;
+      }
+    }
     const [x, z, speed] = route[next];
     pursuit(sim, x, z, speed);
   }
@@ -182,34 +203,44 @@ it("Ring Chase: turns to the southwest corner lamp and collects the star", { tim
     // Turn in open ground: straight at the ring first, then back to the corner.
     const diag = driveRoute(sim, [[-100, -100, 9, 6], [-140, -144, 7, 0]], 60, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Block Party: detours to the bumper arena gate and collects the star", { timeout: 120000 }, () => {
+it("Block Party: crosses the bumper arena to the southwest corner and collects the star", { timeout: 180000 }, () => {
   const file = "Block Party.json";
-  const star = expectStarGeometry(file, { x: -17, y: 10.9, z: -24 }, "arena-spur");
+  const star = expectStarGeometry(file, { x: -62, y: 10.9, z: -50.5 }, "arena-floor");
+  const sim = race(file);
+  try {
+    // Through the gate, in the arena's east gap, out the south gap: the
+    // star waits just outside the south wall, past spawn-camera range.
+    const route: Waypoint[] = [
+      [0, 60, 10, 6], [0, 30, 10, 6], [0, 8, 9, 5],
+      [0, -8, 9, 5], [-8, -16, 8, 4], [-16, -24, 7, 4],
+      [-30, -28, 7, 4], [-45, -40, 7, 5], [-55, -48, 6, 4], [-62, -50.5, 6, 0],
+    ];
+    const diag = driveRoute(sim, route, 120, star);
+    expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
+    expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
+  } finally {
+    sim.dispose();
+  }
+});
+it("Frostfire Pass: runs the west straight and bottom road to the east corner pad and collects the star", { timeout: 120000 }, () => {
+  const file = "Frostfire Pass.json";
+  const star = expectStarGeometry(file, { x: 36, y: 10.9, z: 58 }, "corner-pad-e");
   const sim = race(file);
   try {
     const route: Waypoint[] = [
-      [0, 60, 10, 6], [0, 30, 10, 6], [0, 8, 9, 5],
-      [0, -8, 9, 5], [-8, -16, 8, 4], [-17, -24, 7, 0],
+      [-30, -40, 12, 6], [-30, 0, 12, 6], [-30, 40, 10, 6],
+      [-20, 54, 9, 5], [10, 54, 10, 5], [30, 54, 9, 4], [36, 58, 7, 0],
     ];
-    const diag = driveRoute(sim, route, 60, star);
+    const diag = driveRoute(sim, route, 90, star);
     expectCollected(diag, file);
-    expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
-  } finally {
-    sim.dispose();
-  }
-});
-it("Frostfire Pass: runs the west straight to the corner pad and collects the star", { timeout: 120000 }, () => {
-  const file = "Frostfire Pass.json";
-  const star = expectStarGeometry(file, { x: -30, y: 10.9, z: 44 }, "corner-pad-w");
-  const sim = race(file);
-  try {
-    const diag = driveRoute(sim, [[-30, -40, 12, 6], [-30, 20, 12, 6], [-30, 44, 8, 0]], 60, star);
-    expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -230,105 +261,170 @@ it("Volcano Loop: circles the loop and collects the star on the boost pad", { ti
     ];
     const diag = driveRoute(sim, route, 240, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Toybox Road: exits the arena and collects the star north of the first clip", { timeout: 120000 }, () => {
+it("Toybox Road: runs the north verge to the flagpole and collects the star", { timeout: 180000 }, () => {
   const file = "Toybox Road.json";
-  const star = expectStarGeometry(file, { x: -60, y: 1.9, z: 85 }, "clip-0");
+  const star = expectStarGeometry(file, { x: 130, y: 1.9, z: 95 }, "flagpole-ride");
   const sim = race(file);
   try {
+    // North of the clips, raptors, robot and spinosaurus the whole way.
     const route: Waypoint[] = [
-      [-120, 56, 8, 5], [-120, 62, 8, 5], [-100, 85, 10, 6], [-60, 85, 8, 0],
+      [-120, 56, 8, 5], [-120, 62, 8, 5], [-100, 85, 10, 6], [-40, 90, 12, 6],
+      [20, 88, 12, 6], [60, 90, 12, 6], [100, 94, 10, 5], [130, 95, 8, 0],
     ];
-    const diag = driveRoute(sim, route, 60, star);
+    const diag = driveRoute(sim, route, 120, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Gumdrop Meadows: steps past the start arch and collects the star", { timeout: 120000 }, () => {
+it("Gumdrop Meadows: cuts cross-country to the mid-track stall and collects the star", { timeout: 120000 }, () => {
   const file = "Gumdrop Meadows.json";
-  const star = expectStarGeometry(file, { x: -216, y: 1.9, z: -38 }, "gm-arch-spawn");
+  const star = expectStarGeometry(file, { x: 48, y: 1.9, z: 44 }, "gm-stall-3-0");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[-216, -38, 8, 0]], 40, star);
+    // West of both snap traps, round the checkpoint arch's west post,
+    // then south of the mid-track stall.
+    const route: Waypoint[] = [
+      [-150, -60, 10, 6], [-62, -26, 10, 6], [-78, 32, 9, 5],
+      [-20, 55, 9, 5], [48, 44, 8, 0],
+    ];
+    const diag = driveRoute(sim, route, 120, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Lollipop Loop: steps past the start arch and collects the star", { timeout: 120000 }, () => {
+it("Lollipop Loop: runs the south verge to the far corner and collects the star", { timeout: 120000 }, () => {
   const file = "Lollipop Loop.json";
-  const star = expectStarGeometry(file, { x: -116, y: 1.9, z: -48 }, "ll-arch-spawn");
+  const star = expectStarGeometry(file, { x: 140, y: 1.9, z: -20 }, "ll-decor-2-0");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[-116, -48, 8, 0]], 40, star);
+    // South of the gummy vice, east of the far straight.
+    const route: Waypoint[] = [
+      [-40, -95, 10, 6], [75, -80, 12, 6], [110, -40, 10, 5], [140, -20, 8, 0],
+    ];
+    const diag = driveRoute(sim, route, 120, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Peppermint Pass: steps past the start arch and collects the star", { timeout: 120000 }, () => {
+it("Peppermint Pass: cuts east to the second-leg stall and collects the star", { timeout: 120000 }, () => {
   const file = "Peppermint Pass.json";
-  const star = expectStarGeometry(file, { x: -146, y: 1.9, z: -98 }, "pp-arch-spawn");
+  const star = expectStarGeometry(file, { x: 62, y: 1.9, z: -48 }, "pp-stall-1-0");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[-146, -98, 8, 0]], 40, star);
+    // North of the jawbreaker crusher, then a smooth bend well east of
+    // the stall: tight finals round the stall corner orbit and pinball.
+    const route: Waypoint[] = [
+      [-60, -95, 10, 6], [20, -90, 10, 6], [50, -70, 7, 5], [62, -48, 6, 0],
+    ];
+    const diag = driveRoute(sim, route, 120, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Chocolate Chasm: steps past the start arch and collects the star", { timeout: 120000 }, () => {
+it("Chocolate Chasm: runs the south verge of the first leg and collects the star", { timeout: 120000 }, () => {
   const file = "Chocolate Chasm.json";
-  const star = expectStarGeometry(file, { x: -159, y: 1.9, z: -106 }, "cc-arch-spawn");
+  const star = expectStarGeometry(file, { x: 50, y: 1.9, z: -128 }, "cc-decor-0-6");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[-159, -106, 8, 0]], 40, star);
+    // South of the sugar chomper, by the gumdrop tree at the far corner.
+    const route: Waypoint[] = [
+      [-100, -145, 10, 6], [0, -135, 12, 6], [50, -128, 8, 0],
+    ];
+    const diag = driveRoute(sim, route, 120, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Sugar Rush Summit: steps past the start arch and collects the star", { timeout: 120000 }, () => {
+it("Sugar Rush Summit: runs the south verge west to the lamp and collects the star", { timeout: 120000 }, () => {
   const file = "Sugar Rush Summit.json";
-  const star = expectStarGeometry(file, { x: 66, y: 1.9, z: -162 }, "sr-arch-spawn");
+  const star = expectStarGeometry(file, { x: -120, y: 1.9, z: -168 }, "sr-decor-0-7");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[66, -162, 8, 0]], 40, star);
+    // South of the slammer and crusher on the first straight.
+    const route: Waypoint[] = [
+      [20, -170, 10, 6], [-40, -170, 10, 6], [-120, -168, 9, 0],
+    ];
+    const diag = driveRoute(sim, route, 120, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Tinsel Town: dips south of the start arch and collects the star", { timeout: 180000 }, () => {
+it("Tinsel Town: times the chomper and collects the star on the junction pad", { timeout: 180000 }, () => {
   const file = "Tinsel Town.json";
-  const star = expectStarGeometry(file, { x: -230, y: 1.9, z: -76 }, "tt-arch-spawn");
+  const star = expectStarGeometry(file, { x: 30, y: 1.9, z: -4 }, "tt-arch-2");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[-230, -76, 8, 0]], 60, star);
+    const chomper = sim.dungeon.mechanisms.find((m) => m.h.id === "tt-chomper")!.h;
+    // Road line from tests/christmas-drive.ts, truncated at pad-0: wait
+    // outside the chomper strike zone for the hold to release, then sprint.
+    const route: Waypoint[] = [
+      [-240, -60, 14, 8], [-180, -60, 10, 5], [-170, -60, 14, 5],
+      [-120, -60, 14, 8], [-90, -60, 12, 8], [-30, -60, 12, 8],
+      [0, -45, 10, 6], [30, -20, 10, 6], [30, -10, 8, 4], [30, -4, 7, 0],
+    ];
+    const diag = driveRoute(sim, route, 150, star, {
+      at: 1,
+      ready: (s) => {
+        const v = s.body.linvel();
+        const t = snapPhase(s.time + chomper.phase);
+        return Math.hypot(v.x, v.z) <= 0.6 && t >= 2.6 && t < 2.95;
+      },
+    });
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Mistletoe Mile: cuts north past the start arch and collects the star", { timeout: 180000 }, () => {
+it("Mistletoe Mile: times the nutcracker and collects the star by the junction pine", { timeout: 180000 }, () => {
   const file = "Mistletoe Mile.json";
-  const star = expectStarGeometry(file, { x: -272, y: 1.9, z: -52.1 }, "mm-arch-spawn");
+  const star = expectStarGeometry(file, { x: 0, y: 1.9, z: 50 }, "mm-tree-1");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[-272, -52.1, 8, 0]], 60, star);
+    const nutcracker = sim.dungeon.mechanisms.find((m) => m.h.id === "mm-nutcracker")!.h;
+    // Diagonal road line from tests/christmas-drive.ts, truncated at pad-0,
+    // then east to the pine: wait outside the nutcracker strike zone for
+    // the hold to release, then sprint between its posts.
+    const route: Waypoint[] = [
+      [-240, -64, 12, 8], [-200, -48, 12, 6], [-178, -40.5, 8, 4],
+      [-150, -30, 12, 6], [-100, -12, 12, 6], [-50, 8, 12, 6],
+      [-20, 20, 10, 5], [-10, 35, 9, 5], [0, 50, 8, 0],
+    ];
+    const diag = driveRoute(sim, route, 150, star, {
+      at: 2,
+      ready: (s) => {
+        const v = s.body.linvel();
+        const t = snapPhase(s.time + nutcracker.phase);
+        return Math.hypot(v.x, v.z) <= 0.6 && t >= 2.6 && t < 2.95;
+      },
+    });
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();

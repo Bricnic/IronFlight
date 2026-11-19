@@ -1171,7 +1171,16 @@ async function boot() {
           starRun = sim.trackRun;
           starSeen = s.run.stars.length;
         } else if (s.run.stars.length > starSeen) {
-          for (const id of s.run.stars) starBank.collect(s.run.trackId, id);
+          for (const id of s.run.stars) {
+            const def = getTrack(s.run.trackId).goldStars?.find(
+              (g) => g.id === id,
+            );
+            starBank.collect(
+              s.run.trackId,
+              id,
+              def ? { x: def.x, y: def.y, z: def.z } : undefined,
+            );
+          }
           starSeen = s.run.stars.length;
           showStarBanner();
         }
@@ -1369,6 +1378,21 @@ async function boot() {
       frameSpot: (x: number, y: number, z: number, dist = 60, azimuth = 0.6, elevation = 0.5) =>
         view.frameSpot(x, y, z, dist, azimuth, elevation),
       camera: () => view.inspectCamera(),
+      starHiddenFromSpawn: (trackId: string) => {
+        const track = getTrack(trackId);
+        const star = track.goldStars?.[0];
+        if (!star) throw new Error(`No gold star on track: ${trackId}`);
+        startOfficial(trackId as TrackId | CustomTrackId, "easy", true);
+        // Settle ~1s so physics and the chase camera rest at spawn.
+        for (let f = 0; f < 60; f++) {
+          clock.advance(1 / 60, 1, () => sim.step({}));
+          view.render(false, clock.alpha, false);
+        }
+        view.render(true);
+        hud();
+        paused = true;
+        return view.starVisibility(star);
+      },
       burnoutOverview: (focus) => view.burnoutOverview(focus),
       lavaOverview: () => view.lavaOverview(),
       hazardOverview: (id) => view.hazardOverview(id),

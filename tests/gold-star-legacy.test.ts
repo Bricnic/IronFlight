@@ -144,43 +144,66 @@ it("Triple Loop: cuts west across the runup to the floodlight pole and collects 
   try {
     const diag = driveRoute(sim, [[-45, -80, 8, 0]], 40, star);
     expectCollected(diag, "triple-loop");
+    expect(sim.trackRun!.elapsed, `triple-loop star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Foundry Run: sidesteps east to the first foundry block and collects the star", { timeout: 120000 }, () => {
-  const star = expectStarGeometry("foundry-run", { x: 30, y: 2.1, z: -60 }, "foundry-block-1-0");
+it("Foundry Run: runs the road north and cuts west to the fourth block star", { timeout: 120000 }, () => {
+  const star = expectStarGeometry("foundry-run", { x: -31, y: 2.1, z: 79 }, "foundry-block--1-3");
   const sim = new Simulation();
   sim.startTrack("foundry-run");
   try {
-    const diag = driveRoute(sim, [[30, -60, 8, 0]], 40, star);
+    // Up the launch straight past the ramp, along the second leg,
+    // then west across the third leg to the star: 10u+ clear of the
+    // burner, 20u+ clear of the teeth and hammer, south of the flame.
+    const route: Waypoint[] = [
+      [0, -50, 10, 6], [0, 0, 10, 6], [8, 60, 10, 6],
+      [-15, 79, 8, 5], [-31, 79, 6, 0],
+    ];
+    const diag = driveRoute(sim, route, 120, star);
     expectCollected(diag, "foundry-run");
+    expect(sim.trackRun!.elapsed, `foundry-run star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Skyline Circuit: runs past the start line to the outer rail and collects the star", { timeout: 120000 }, () => {
-  const star = expectStarGeometry("skyline-circuit", { x: 48, y: 2, z: -83.14 }, "circuit-rail-96-4");
+it("Skyline Circuit: rounds the ring west and collects the star at the far rail", { timeout: 180000 }, () => {
+  const star = expectStarGeometry("skyline-circuit", { x: 0, y: 2, z: 96 }, "circuit-rail-96-24");
   const sim = new Simulation();
   sim.startTrack("skyline-circuit");
   try {
-    // Nearly straight shot down the start straight, over the outer rail.
-    const diag = driveRoute(sim, [[48, -83.14, 9, 0]], 40, star);
+    // Round the ring counterclockwise past the west road, line up
+    // through the north gate waypoint, then run straight at the far
+    // outer rail: 11u+ clear of the book crusher, 14u+ clear of the
+    // burner, 6u+ clear of the finish hydrant — the final waypoint
+    // aims exactly at the star so it banks 4u short of the rail and
+    // no rail is ever touched.
+    const route: Waypoint[] = [
+      [-30.6, -73.9, 10, 6], [-56.6, -56.6, 10, 6], [-73.9, -30.6, 10, 6],
+      [-80, 0, 10, 6], [-73.9, 30.6, 10, 6], [-56.6, 56.6, 10, 6],
+      [-30.6, 73.9, 10, 6], [-6, 79, 5, 3], [0, 96, 4, 0],
+    ];
+    const diag = driveRoute(sim, route, 150, star);
     expectCollected(diag, "skyline-circuit");
+    expect(sim.trackRun!.elapsed, `skyline-circuit star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Scrapyard Sweep: cuts to the east corner stack and collects the star", { timeout: 120000 }, () => {
-  const star = expectStarGeometry("scrapyard-sweep", { x: 60, y: 1.9, z: -62 }, "scrap-stack-0");
+it("Scrapyard Sweep: cuts past the east corner stack to the start sign star", { timeout: 120000 }, () => {
+  const star = expectStarGeometry("scrapyard-sweep", { x: 84, y: 1.9, z: -70 }, "scrap-prop-1-0");
   const sim = new Simulation();
   sim.startTrack("scrapyard-sweep");
   try {
-    const diag = driveRoute(sim, [[60, -62, 8, 0]], 40, star);
+    // Straight cut across the yard, 20u south of the corner stack
+    // and 30u+ clear of every crusher.
+    const diag = driveRoute(sim, [[84, -70, 8, 0]], 60, star);
     expectCollected(diag, "scrapyard-sweep");
+    expect(sim.trackRun!.elapsed, `scrapyard-sweep star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -193,6 +216,7 @@ it("Inferno Vault: cuts to the east apron store and collects the star", { timeou
   try {
     const diag = driveRoute(sim, [[75, -60, 8, 0]], 40, star);
     expectCollected(diag, "inferno-vault");
+    expect(sim.trackRun!.elapsed, `inferno-vault star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -224,6 +248,7 @@ it("Canyon Plunge: clears the gorge and collects the star on the axe-dodge line"
       sim.step(courseDriver(sim.snapshot(false), track));
     }
     expectCollected(diagOf(sim, minDist, 0), "canyon-plunge");
+    expect(sim.trackRun!.elapsed, `canyon-plunge star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -236,6 +261,7 @@ it("Haunted Hollow: crosses to the crypt door and collects the star", { timeout:
   try {
     const diag = driveRoute(sim, [[105, -100, 10, 0]], 60, star);
     expectCollected(diag, "haunted-hollow");
+    expect(sim.trackRun!.elapsed, `haunted-hollow star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -258,6 +284,7 @@ it("Sky Slide: threads the sky ring and collects the star mid-flight", { timeout
       sim.step(courseDriver(sim.snapshot(false), track));
     }
     expectCollected(diagOf(sim, minDist, 0), "sky-slide");
+    expect(sim.trackRun!.elapsed, `sky-slide star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();

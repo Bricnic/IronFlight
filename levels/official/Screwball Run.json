@@ -39,7 +39,7 @@
     { "id": "screw-2", "kind": "screw-field", "x": 0, "y": 0.12, "z": 80 },
     { "id": "barrel-1", "kind": "barrel", "x": 8, "z": 330 },
     { "id": "barrel-2", "kind": "barrel", "x": -8, "z": 200 },
-    { "id": "gold-star-1", "kind": "gold-star", "x": 17, "y": 1.9, "z": 425 }
+    { "id": "gold-star-1", "kind": "gold-star", "x": -20, "y": 1.9, "z": 200 }
   ],
   "medals": { "gold": 50, "silver": 75, "bronze": 110 },
   "limit": 240,

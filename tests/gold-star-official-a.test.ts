@@ -199,37 +199,53 @@ function race(file: string) {
   sim.startTrack(trackId(file));
   return sim;
 }
-it("Fairground: drives to the southwest corner lamp and collects the star", { timeout: 120000 }, () => {
+it("Fairground: drives the south midway to the east grandstand and collects the star", { timeout: 180000 }, () => {
   const file = "Fairground.json";
-  const star = expectStarGeometry(file, { x: -205, y: 1.9, z: -205 }, "lamp-22");
+  const star = expectStarGeometry(file, { x: 200, y: 1.9, z: -135 }, "grandstand-42");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[-190, -220, 10, 6], [-205, -205, 8, 0]], 40, star);
+    // The grandstand bank collider spans x[210,227], so the star waits
+    // 10u west of its face and the route stays west of x=200.
+    const route: Waypoint[] = [
+      [0, -175, 10, 6], [150, -175, 10, 6], [200, -160, 9, 5], [200, -135, 8, 0],
+    ];
+    const diag = driveRoute(sim, route, 120, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Dungeon: drives across the south bay to the skull and collects the star", { timeout: 120000 }, () => {
+it("Dungeon: drives the south corridor to the southeast gravestone and collects the star", { timeout: 180000 }, () => {
   const file = "Dungeon.json";
-  const star = expectStarGeometry(file, { x: 20, y: 1.9, z: -150 }, "skull-1");
+  const star = expectStarGeometry(file, { x: 162, y: 1.9, z: -166 }, "stone-2");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[10, -175, 10, 6], [20, -150, 8, 0]], 40, star);
+    const route: Waypoint[] = [
+      [40, -195, 10, 6], [100, -195, 10, 6], [140, -185, 9, 5], [162, -166, 8, 0],
+    ];
+    const diag = driveRoute(sim, route, 120, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Jurassic Junction: drives the start lane to the purple raptor and collects the star", { timeout: 120000 }, () => {
+it("Jurassic Junction: crosses the bridge to the spinosaurus junction and collects the star", { timeout: 120000 }, () => {
   const file = "Jurassic Junction.json";
-  const star = expectStarGeometry(file, { x: -62, y: 10.9, z: 50 }, "purple-raptor");
+  const star = expectStarGeometry(file, { x: 64, y: 10.9, z: -42 }, "green-spinosaurus");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[-62, 50, 7, 0]], 30, star);
+    // Route prefix from tests/jurassic-drive.ts, ending at the star.
+    const route: Waypoint[] = [
+      [-62, 50, 7, 5], [-56, 30, 9, 5], [-56, -37, 7, 5], [-33, -45, 9, 10],
+      [61, -45, 8, 5], [64, -42, 7, 0],
+    ];
+    const diag = driveRoute(sim, route, 80, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -247,6 +263,7 @@ it("Emberfall Causeway: drives the tower run to the pterosaur corner and collect
     ];
     const diag = driveRoute(sim, route, 85, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -276,18 +293,33 @@ it("Chompworks: times the lime dinosaur and collects the star on the east straig
       },
     });
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
   }
 });
-it("Machine Gauntlet: strays wide on the screw-field approach and collects the star", { timeout: 120000 }, () => {
+it("Machine Gauntlet: jumps the crater and collects the star on the gate apron", { timeout: 180000 }, () => {
   const file = "Machine Gauntlet.json";
-  const star = expectStarGeometry(file, { x: 20, y: 10.9, z: -106 }, "field-flare");
+  const star = expectStarGeometry(file, { x: 18, y: 10.9, z: 98 }, "gate-lane-18");
   const sim = race(file);
   try {
-    const diag = driveRoute(sim, [[0, -132, 10, 5], [24.5, -99, 9, 0]], 40, star);
+    const volcano = sim.dungeon.gauntlet.machines.get("volcano")!.h;
+    // Route prefix from tests/gauntlet-drive.ts, ending at the star.
+    const route: Waypoint[] = [
+      [0, -132, 10, 5], [24.5, -99, 9, 6], [24.5, -47, 14, 7],
+      [0, -11, 12, 7], [0, 84, 25, 9], [14, 94, 6, 5], [18, 98, 5, 0],
+    ];
+    const diag = driveRoute(sim, route, 85, star, {
+      at: 3,
+      ready: (s) => {
+        const v = s.body.linvel();
+        const phase = (s.time + volcano.phase) % VOLCANO_PERIOD;
+        return Math.hypot(v.x, v.z) <= 0.55 && phase >= 3.1 && phase <= 3.35;
+      },
+    });
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -304,6 +336,7 @@ it("Amber Undertow: rides the pipe and collects the star on the purple diagonal"
     expect(sim.guidedPipe.snapshot(), "amber tube exit").toBeNull();
     const diag = driveRoute(sim, [[-36, 77, 18, 7], [-32, 97, 11, 0]], 60, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -321,6 +354,7 @@ it("Fireside Sonata: detours to the bonus trampoline and collects the star", { t
     ];
     const diag = driveRoute(sim, route, 150, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -342,6 +376,7 @@ it("Pumpkin Pass: drives the toy track past the loop and collects the star by th
     ];
     const diag = driveRoute(sim, route, 150, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -411,6 +446,7 @@ it("Booster Gap: clears both jumps and collects the star at the dino junction", 
       });
     }
     expectCollected(diagOf(sim, minDist, next), file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -434,6 +470,7 @@ it("Evil Tube Run: rides the transit tube and collects the star by the spike-jaw
     rideTube(sim, "transit-tube");
     const diag = driveRoute(sim, route.slice(13), 150, star);
     expectCollected(diag, file);
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();
@@ -471,6 +508,7 @@ it("Slime Surge: jumps the crater and collects the star at the tube mouth", { ti
       { ...diag, collected: sim.trackRun!.stars.has(STAR_ID), pos: { x: pos.x, y: pos.y, z: pos.z } },
       file,
     );
+    expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
   } finally {
     sim.dispose();

@@ -4,11 +4,12 @@ test.slow();
 
 const TRACK = "foundry-run" as const;
 
-/** Steer off the spawn line toward the star until it banks. */
+/** Place the truck on the star (relocated stars sit far off spawn) and bank it. */
 async function collectStar(page: Page) {
   return page.evaluate((track) => {
     const g = window.__game!;
     const star = g.track(track).goldStars![0];
+    g.place({ x: star.x, y: star.y, z: star.z }, 0);
     for (let f = 0; f < 1200; f++) {
       const s = g.snapshot();
       const desired = Math.atan2(
@@ -86,7 +87,17 @@ test("gold star collects with a gold triple-count celebration", async ({
         localStorage.getItem("iron-flight-gold-stars-v1") ?? "null",
       ),
     ),
-  ).toEqual({ version: 1, banked: { [TRACK]: ["gold-star-1"] } });
+  ).toEqual({
+    version: 1,
+    banked: {
+      [TRACK]: {
+        [star![0].id]: {
+          found: true,
+          coords: { x: star![0].x, y: star![0].y, z: star![0].z },
+        },
+      },
+    },
+  });
 });
 
 test("level select shows banked and unbanked star states", async ({
@@ -94,24 +105,27 @@ test("level select shows banked and unbanked star states", async ({
 }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  const card = page.locator('.track-card[data-track="foundry-run"]');
+  // triple-loop is NOT relocated, so a legacy found-only save still lights it.
+  const card = page.locator('.track-card[data-track="triple-loop"]');
   await expect(card.locator(".star-unlit")).toHaveCount(1);
   await expect(card.locator(".star-lit")).toHaveCount(0);
   await card.scrollIntoViewIfNeeded();
   await page.screenshot({ path: "test-results/gold-star-select-unlit.png" });
 
+  // Legacy string-array save: still lights the icon while the star
+  // is not flagged relocated in levels/gold-star-migrations.json.
   await page.evaluate(() =>
     localStorage.setItem(
       "iron-flight-gold-stars-v1",
       JSON.stringify({
         version: 1,
-        banked: { "foundry-run": ["gold-star-1"] },
+        banked: { "triple-loop": ["gold-star-1"] },
       }),
     ),
   );
   await page.reload();
   await page.waitForFunction(() => !!window.__game);
-  const relit = page.locator('.track-card[data-track="foundry-run"]');
+  const relit = page.locator('.track-card[data-track="triple-loop"]');
   await expect(relit.locator(".star-lit")).toHaveCount(1);
   await expect(relit.locator(".star-unlit")).toHaveCount(0);
   await relit.scrollIntoViewIfNeeded();

@@ -2,6 +2,7 @@ import { getTrack, type TrackId, type CustomTrackId } from "./tracks";
 import { officialTracks } from "./official-levels";
 import type { BestTimes } from "./best-times";
 import type { GoldStars } from "./gold-stars";
+import { isStarRelocated } from "./gold-star-migrations";
 import type { TrackRun } from "./track-run";
 import { modeLabel, timeoutCopy } from "./run-copy";
 const format = (time: number) => `${time.toFixed(2)}s`;
@@ -101,12 +102,15 @@ export function createLevelSelect(
       card.querySelector(".best-medal")!.className =
         `best-medal ${best?.b?.medal ?? ""}`;
       const defs = track.goldStars ?? [];
-      const banked = starBank?.stars(track.id) ?? [];
       card.querySelector(".star-row")!.innerHTML = defs
-        .map(
-          (s) =>
-            `<span class="star ${banked.includes(s.id) ? "star-lit" : "star-unlit"}" data-star="${s.id}" title="${banked.includes(s.id) ? "Gold star collected" : "Gold star not collected yet"}">★</span>`,
-        )
+        .map((s) => {
+          // Relocated stars need banked coords matching the current
+          // position; every other star keeps the found-only check.
+          const lit =
+            starBank?.isLit(track.id, s, isStarRelocated(track.id, s.id)) ??
+            false;
+          return `<span class="star ${lit ? "star-lit" : "star-unlit"}" data-star="${s.id}" title="${lit ? "Gold star collected" : "Gold star not collected yet"}">★</span>`;
+        })
         .join("");
     }
   };

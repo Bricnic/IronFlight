@@ -71,7 +71,7 @@
     { "id": "barrel-1", "kind": "barrel", "x": 5, "z": 150 },
     { "id": "barrel-2", "kind": "barrel", "x": -10, "z": 90 },
     { "id": "barrel-3", "kind": "barrel", "x": 66, "z": 78 },
-    { "id": "gold-star-1", "kind": "gold-star", "x": -1, "y": 1.9, "z": 163 }
+    { "id": "gold-star-1", "kind": "gold-star", "x": 93, "y": 1.9, "z": 70 }
   ],
   "medals": { "gold": 47, "silver": 71, "bronze": 104 },
   "limit": 240,

@@ -951,6 +951,10 @@ export class CourseView extends T.Group {
     for (const g of this.lampModels) this.lampGlowLevel += applyNightGlow(g, night);
     this.wetGlossLevel = applyWetGloss(this.wetSurfaces, sim.weather.rain);
   }
+  /** Solid occluders for the spawn-visibility probe (no stars, labels, or effects). */
+  occluderMeshes(): T.Object3D[] {
+    return [...this.meshes, ...this.lampModels, ...this.grandstandModels];
+  }
   inspect() {
     return {
       key: this.key,

@@ -364,12 +364,12 @@ for (const track of TRACKS) track.backgroundTemplate = TRACK_BACKGROUNDS[track.i
 const LEGACY_STARS: Record<TrackId, GoldStar> = {
   // West of the easy-lane runup, by the southwest floodlight pole.
   "triple-loop": { id: "gold-star-1", x: -45, y: 2, z: -80 },
-  // East of the launch straight, by the first foundry block.
-  "foundry-run": { id: "gold-star-1", x: 30, y: 2.1, z: -60 },
-  // Outside the outer rail a short run past the start line (drive straight).
-  "skyline-circuit": { id: "gold-star-1", x: 48, y: 2, z: -83.14 },
-  // East fence corner, by the first scrap stack and the start sign.
-  "scrapyard-sweep": { id: "gold-star-1", x: 60, y: 1.9, z: -62 },
+  // West of the third leg, by the fourth west foundry block.
+  "foundry-run": { id: "gold-star-1", x: -31, y: 2.1, z: 79 },
+  // Outside the outer rail at the far side (drive the ring round).
+  "skyline-circuit": { id: "gold-star-1", x: 0, y: 2, z: 96 },
+  // East fence corner, past the first stack, by the start sign.
+  "scrapyard-sweep": { id: "gold-star-1", x: 84, y: 1.9, z: -70 },
   // East apron, by the first vault store container.
   "inferno-vault": { id: "gold-star-1", x: 75, y: 1.9, z: -60 },
   // EXCEPTION (see gold-star-legacy.test.ts): the 2-high plunge rails

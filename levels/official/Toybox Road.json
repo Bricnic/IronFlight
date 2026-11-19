@@ -406,9 +406,9 @@
     {
       "id": "gold-star-1",
       "kind": "gold-star",
-      "x": -60,
+      "x": 130,
       "y": 1.9,
-      "z": 85
+      "z": 95
     }
   ],
   "medals": {

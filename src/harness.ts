@@ -1,7 +1,7 @@
 import type { CustomTrackId, Track, TrackId } from "./tracks";
 import type { Tuning } from "./tuning";
 import type { Simulation, Stage, Input } from "./simulation";
-import type { GameView } from "./view";
+import type { GameView, StarVisibility } from "./view";
 import type { CustomLevel } from "./custom-level";
 export type CameraSample = ReturnType<GameView["inspectCamera"]> & {
   state: ReturnType<Simulation["snapshot"]>;
@@ -104,6 +104,13 @@ export interface GameHarness {
   overhead(x: number, z: number, height?: number): void;
   frameSpot(x: number, y: number, z: number, dist?: number, azimuth?: number, elevation?: number): void;
   camera(): ReturnType<GameView["inspectCamera"]>;
+  /**
+   * Spawn-visibility probe: loads the track, settles ~1s at spawn, then
+   * reports the gold star hidden iff it is outside the spawn-camera
+   * frustum OR occluded (raycast vs solid level geometry) OR farther
+   * than 150u. See GameView.starVisibility for the exact rule.
+   */
+  starHiddenFromSpawn(trackId: string): StarVisibility;
   signs(): ReturnType<GameView["inspectSigns"]>;
   traceFrames(frames: number, rate: number, input: Input): CameraSample[];
   startCameraTrace(): void;

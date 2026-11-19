@@ -32,6 +32,16 @@ import { BackgroundView } from "./background-view";
 import { getBackgroundTemplate, resolveMood } from "./backgrounds";
 import { bodyBounds, buildHeadlightRig, setHeadlightRig } from "./headlights";
 import { buildWheelSpray, updateWheelSpray } from "./wheel-spray";
+/** Beyond this camera distance a gold star is unrecognizable: spawn-hidden by definition. */
+export const STAR_RECOGNITION_RANGE = 150;
+/** Spawn-visibility verdict for one gold star; see GameView.starVisibility. */
+export type StarVisibility = {
+  hidden: boolean;
+  inFrustum: boolean;
+  occluded: boolean;
+  distance: number;
+  reason: "outside-frustum" | "occluded" | "beyond-range" | "visible";
+};
 export class GameView {
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
@@ -1152,6 +1162,63 @@ export class GameView {
           return { id: `pole-${x}-${z}`, x: p.x, y: p.y, z: p.z };
         }),
       ),
+    };
+  }
+  /**
+   * Spawn-visibility probe for one gold star.
+   *
+   * EXACT RULE: hidden = (!inFrustum) || occluded || (distance > STAR_RECOGNITION_RANGE).
+   * - inFrustum: the star center is inside the current spawn-camera frustum.
+   * - occluded: a three.js raycast from the camera to the star center hits
+   *   solid level geometry (course solids, lamps, grandstands; arena/course
+   *   meshes on the legacy lane stage) more than 1u short of the star.
+   *   Stars, labels, ghosts, effects, the truck, and the background are
+   *   never occluders.
+   * - distance: camera-to-star distance; beyond 150u the star is
+   *   unrecognizable and counts as hidden.
+   * reason names the first satisfied hidden-term in the order
+   * outside-frustum, occluded, beyond-range, else "visible".
+   */
+  starVisibility(star: { x: number; y: number; z: number }): StarVisibility {
+    const target = new T.Vector3(star.x, star.y, star.z);
+    this.camera.updateMatrixWorld();
+    const distance = this.camera.position.distanceTo(target);
+    const frustum = new T.Frustum().setFromProjectionMatrix(
+      new T.Matrix4().multiplyMatrices(
+        this.camera.projectionMatrix,
+        this.camera.matrixWorldInverse,
+      ),
+    );
+    const inFrustum = frustum.containsPoint(target);
+    this.scene.updateMatrixWorld(true);
+    const offset = target.clone().sub(this.camera.position);
+    const range = offset.length();
+    const ray = new T.Raycaster(
+      this.camera.position.clone(),
+      range > 0 ? offset.multiplyScalar(1 / range) : new T.Vector3(0, 0, 1),
+      0,
+      range,
+    );
+    const roots = this.simulation.courseTrack
+      ? this.officialCourse.occluderMeshes()
+      : [this.arena, this.course];
+    const occluded = ray
+      .intersectObjects(roots, true)
+      .some((hit) => hit.object instanceof T.Mesh && hit.distance < range - 1);
+    const hidden =
+      !inFrustum || occluded || distance > STAR_RECOGNITION_RANGE;
+    return {
+      hidden,
+      inFrustum,
+      occluded,
+      distance,
+      reason: !inFrustum
+        ? "outside-frustum"
+        : occluded
+          ? "occluded"
+          : distance > STAR_RECOGNITION_RANGE
+            ? "beyond-range"
+            : "visible",
     };
   }
   inspectSigns() {
