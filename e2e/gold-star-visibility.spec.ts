@@ -37,6 +37,11 @@ test("covers all 44 tracks", async () => {
 
 for (const id of TRACK_LIST) {
   test(`gold star hidden from spawn: ${id}`, async ({ page }) => {
+    // Bouncy House is frozen by user order: its star is spawn-visible kept as-is.
+    test.skip(
+      id === "custom:bouncy-house",
+      "frozen star, spawn-visible by design",
+    );
     await page.goto("/");
     await page.waitForFunction(() => !!window.__game);
     const result = await page.evaluate(

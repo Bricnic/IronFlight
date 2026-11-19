@@ -427,25 +427,26 @@ it("Screwball Run: rides the tube and teeter, threads screws, collects west of t
     sim.dispose();
   }
 });
-it("Bouncy House: tips off the west edge early and collects the star low by the wall", { timeout: 180000 }, () => {
+it("Bouncy House: tips off the west edge mid-leg and collects the star mid-bounce", { timeout: 180000 }, () => {
   const file = "Bouncy House.json";
-  const star = expectStarGeometry(file, { x: -19, y: 5, z: 4.5 }, "candle-1");
+  const star = expectStarGeometry(file, { x: -17, y: 28, z: 57 }, "food-1");
   const sim = race(file);
   try {
-    // Crawl just past the start, stop dead, then tip off the west edge:
-    // the bounce run travels west toward the wall, and the third dip
-    // bottoms out through the star's 4u sphere low by the west wall.
-    // (The old mid-leg star hung visible from the spawn camera.)
+    // Crawl the plank to mid-leg, stop dead, then tip off the west edge:
+    // the whole floor is bouncy (scale-4 pads tile it), so the car can
+    // never drive down there — instead the second launch carries it
+    // straight through the star's 4u sphere and the test banks it there.
+    // (Frozen star: spawn-visible by user order, never relocated.)
     let next = 0;
     let minDist = Infinity;
     let stopped = false;
-    const route: Waypoint[] = [[0, 10, 5, 4], [-22, 10, 2.5, 0], [-22, 10, 1.5, 0]];
+    const route: Waypoint[] = [[0, 60, 5, 4], [-19, 60, 2.5, 0]];
     for (let i = 0; i < Math.floor(120 / DT) && sim.trackRun!.status === "running"; i++) {
       if (sim.trackRun!.stars.has(STAR_ID)) break;
       const p = sim.body.translation();
       minDist = Math.min(minDist, Math.hypot(p.x - star.x, p.y - star.y, p.z - star.z));
       const v = sim.body.linvel();
-      if (next === 0 && Math.hypot(0 - p.x, 10 - p.z) < 4) {
+      if (next === 0 && Math.hypot(0 - p.x, 60 - p.z) < 4) {
         if (Math.hypot(v.x, v.z) < 0.5) {
           stopped = true;
           next = 1;
@@ -454,14 +455,13 @@ it("Bouncy House: tips off the west edge early and collects the star low by the 
           continue;
         }
       }
-      if (next === 1 && p.x < -3.5) next = 2;
       const [wx, wz, , reach] = route[next];
       if (Math.hypot(wx - p.x, wz - p.z) < reach && next < route.length - 1) next++;
       const [x, z, speed] = route[next];
       pursuit(sim, x, z, speed);
     }
     const diag = diagOf(sim, minDist, next);
-    expect(stopped, `${file}: stopped past the start before the drop`).toBe(true);
+    expect(stopped, `${file}: stopped at mid-leg before the drop`).toBe(true);
     expectCollected(diag, file);
     expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
