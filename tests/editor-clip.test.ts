@@ -2,6 +2,7 @@ import { beforeAll, expect, it } from "vitest";
 import * as T from "three";
 import {
   blankLevel,
+  SOLID_KINDS,
   validateCustomLevel,
   toTrack,
   registerCustomTrack,
@@ -18,6 +19,7 @@ import { EditorStore } from "../src/editor-state";
 import { scaleSolidUVs } from "../src/solid-uv";
 import { courseSolids } from "../src/course";
 import { Simulation, initPhysics } from "../src/simulation";
+import { editorSolidGeometry } from "../src/editor-viewport";
 
 const box: CustomSolid = {
   id: "foundation",
@@ -35,6 +37,35 @@ const box: CustomSolid = {
 };
 const hole = { minX: -3, maxX: 3, minZ: -2, maxZ: 2 };
 const area = (r: ClipRect) => (r.maxX - r.minX) * (r.maxZ - r.minZ);
+it.each(SOLID_KINDS)("clips %s boxes while preserving their kind and metadata", (kind) => {
+  const result = previewClip([{ ...box, kind }], [box.id], [hole]);
+  expect(result.issues).toEqual([]);
+  expect(result.retained).toHaveLength(4);
+  expect(result.retained.every(p => p.kind === kind && p.color === box.color)).toBe(true);
+});
+it("clips polygon tiles without filling in their missing corners", () => {
+  const tile: CustomSolid = { ...box, kind: "tile", footprint: [{ x: -10, z: -10 }, { x: 10, z: -10 }, { x: -10, z: 10 }] };
+  const result = previewClip([tile], [tile.id], [{ minX: -2, maxX: 2, minZ: -20, maxZ: 20 }]);
+  expect(result.issues).toEqual([]);
+  const polygonArea = (s: CustomSolid) => Math.abs(s.footprint!.reduce((n, p, i, ps) => { const q = ps[(i + 1) % ps.length]; return n + p.x * q.z - p.z * q.x; }, 0)) / 2;
+  expect(result.retained.reduce((n, s) => n + polygonArea(s), 0)).toBeCloseTo(160);
+  expect(result.retained.every(s => s.footprint)).toBe(true);
+  validateCustomLevel({ ...blankLevel("Polygon clip"), solids: result.solids });
+});
+it("renders a polygon tile as its actual footprint in both editor modes", () => {
+  const tile: CustomSolid = { ...box, kind: "tile", footprint: [{ x: -10, z: -10 }, { x: 10, z: -10 }, { x: -10, z: 10 }] };
+  const geometry = editorSolidGeometry(tile);
+  const points = geometry.getAttribute("position");
+  for (let i = 0; i < points.count; i++) expect(points.getX(i) + points.getZ(i)).toBeLessThanOrEqual(0.00001);
+  geometry.dispose();
+});
+it("clips yawed tiles in world space and preserves their orientation", () => {
+  const s = { ...box, kind: "tile" as const, yaw: Math.PI / 4 };
+  const result = previewClip([s], [s.id], [hole]);
+  expect(result.issues).toEqual([]);
+  expect(result.retained.every(p => p.yaw === s.yaw && p.footprint)).toBe(true);
+  validateCustomLevel({ ...blankLevel("Yaw clip"), solids: result.solids });
+});
 it.each([
   [hole, 376, 4],
   [{ minX: 8, maxX: 12, minZ: -2, maxZ: 2 }, 392, 3],
@@ -84,11 +115,9 @@ it("rejects non-finite/degenerate cutters and reports slivers, locks and rotated
   expect(thin.slivers).toBe(1);
   for (const patch of [
     { locked: true },
-    { yaw: 0.1 },
     { angle: 0.1 },
     { roll: 0.1 },
     { w: Infinity },
-    { kind: "lava" as const },
   ]) {
     const s = { ...box, ...patch };
     const result = previewClip([s], [s.id], [hole]);
@@ -195,6 +224,23 @@ it("keeps an existing cutter and clears selection after full removal", () => {
   expect(store.solidSelection).toEqual([]);
 });
 beforeAll(initPhysics);
+it.each(["lava", "slime"] as const)("clipped polygon %s only damages parts inside the retained footprint", (kind) => {
+  const level = blankLevel(`Clipped ${kind}`);
+  const pool: CustomSolid = { ...box, kind, w: 80, d: 80, footprint: [{ x: -40, z: -40 }, { x: 40, z: -40 }, { x: -40, z: 40 }] };
+  level.solids = previewClip([pool], [pool.id], [{ minX: -5, maxX: 5, minZ: -50, maxZ: 50 }]).solids;
+  const track = toTrack(validateCustomLevel(level)); registerCustomTrack(track);
+  const sim = new Simulation();
+  try {
+    sim.startTrack(track.id);
+    sim.body.setTranslation({ x: 20, y: 0.6, z: -10 }, true);
+    sim.run(0.2);
+    expect(sim.damageEvents.some(e => e.source === kind)).toBe(false);
+    sim.body.setTranslation({ x: 20, y: 0.6, z: -30 }, true);
+    sim.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    sim.run(0.2);
+    expect(sim.damageEvents.some(e => e.source === kind)).toBe(true);
+  } finally { sim.dispose(); }
+});
 it("uses the saved retained boxes for physical support and leaves a through-opening", () => {
   const level = blankLevel("Clip Physics");
   level.solids = previewClip(

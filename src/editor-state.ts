@@ -9,6 +9,7 @@ import {
   type SolidKind,
 } from "./custom-level";
 import { previewClip, type ClipRect } from "./editor-clip";
+import { Euler, Quaternion, Vector3 } from "three";
 export type EditorSelection =
   | { kind: "solid"; id: string }
   | { kind: "prefab"; id: string }
@@ -18,7 +19,9 @@ export type EditorSelection =
   | { kind: "spawn" }
   | null;
 export type EditorTool = "select" | "pan" | "eyedropper" | "rotator" | "clip" | "look";
-type Snapshot = { level: CustomLevel; selection: EditorSelection; solidSelection: string[] };
+type Selection = NonNullable<EditorSelection>;
+export const selectionKey = (s: Selection) => `${s.kind}:${"id" in s ? s.id : "index" in s ? s.index : ""}`;
+type Snapshot = { level: CustomLevel; selection: EditorSelection; solidSelection: string[]; selections: Selection[] };
 /**
  * The editor store may adopt a live session's level only when it has no
  * unsaved work of its own and both sides name the same level.
@@ -35,6 +38,9 @@ export class EditorStore {
   level: CustomLevel;
   selection: EditorSelection = null;
   solidSelection: string[] = [];
+  selections: Selection[] = [];
+  private clipboard: { kind: Selection["kind"]; item: NonNullable<ReturnType<EditorStore["selectedItem"]>>["item"] }[] = [];
+  private pasteCount = 0;
   clip: { targets: string[]; cutters: ClipRect[]; cutterId?: string } | null = null;
   tool: EditorTool = "select";
   preview = false;
@@ -60,6 +66,7 @@ export class EditorStore {
       level: structuredClone(this.level),
       selection: structuredClone(this.selection),
       solidSelection: [...this.solidSelection],
+      selections: structuredClone(this.selections),
     };
   }
   private pushHistory() {
@@ -96,6 +103,7 @@ export class EditorStore {
     this.level = prev.level;
     this.selection = prev.selection;
     this.solidSelection = prev.solidSelection;
+    this.selections = prev.selections;
     this.emit();
     return true;
   }
@@ -109,6 +117,7 @@ export class EditorStore {
     this.level = next.level;
     this.selection = next.selection;
     this.solidSelection = next.solidSelection;
+    this.selections = next.selections;
     this.emit();
     return true;
   }
@@ -117,15 +126,22 @@ export class EditorStore {
     return () => void this.listeners.delete(listener);
   }
   private emit(touch = true) {
-    if (this.selection?.kind !== "solid") this.solidSelection = [];
-    else {
-      this.solidSelection = this.solidSelection.filter((id) => this.level.solids.some((s) => s.id === id && !s.locked));
-      if (!this.solidSelection.includes(this.selection.id)) this.solidSelection = [this.selection.id];
+    if (!this.selection) this.selections = [];
+    else if (!this.selections.some(s => selectionKey(s) === selectionKey(this.selection!)))
+      this.selections = [this.selection];
+    this.selections = this.selections.filter(s => this.selectedItem(s));
+    const selectedGroups = new Set(this.selections.map(s => this.selectedItem(s)?.item.group).filter(Boolean));
+    if (selectedGroups.size) {
+      const selectedKeys = new Set(this.selections.map(selectionKey));
+      const items = this.allItems();
+      this.selections = this.allEntries().filter((s, i) => selectedKeys.has(selectionKey(s)) || (!!items[i].group && selectedGroups.has(items[i].group)));
     }
+    this.solidSelection = this.selectedEntries().filter(s => s.kind === "solid").map(s => (s as { id: string }).id);
     if (touch) this.dirty = true;
     for (const listener of this.listeners) listener();
   }
   openBlank(name: string) {
+    this.selections = [];
     this.clip = null; this.tool = "select"; this.solidSelection = [];
     this.level = blankLevel(name);
     this.selection = null;
@@ -136,6 +152,7 @@ export class EditorStore {
     for (const listener of this.listeners) listener();
   }
   openLevel(level: CustomLevel) {
+    this.selections = [];
     this.clip = null; this.tool = "select"; this.solidSelection = [];
     this.level = level;
     this.selection = null;
@@ -155,23 +172,90 @@ export class EditorStore {
     this.emit();
   }
   select(selection: EditorSelection, additive = false) {
-    if (this.selectedItem(selection)?.item.locked) return;
-    this.selection = selection;
-    if (selection?.kind === "solid") {
-      this.solidSelection = additive
-        ? this.solidSelection.includes(selection.id) ? this.solidSelection.filter((id) => id !== selection.id) : [...this.solidSelection, selection.id]
-        : [selection.id];
-      if (!this.solidSelection.includes(selection.id)) this.selection = this.solidSelection.length ? { kind: "solid", id: this.solidSelection[this.solidSelection.length - 1] } : null;
-    } else this.solidSelection = [];
+    if (selection && this.isLocked(selection)) return;
+    const members = selection ? this.membersOf(selection) : [];
+    const keys = new Set(members.map(selectionKey));
+    if (additive && selection) {
+      this.selections = this.isSelected(selection)
+        ? this.selectedEntries().filter(s => !keys.has(selectionKey(s)))
+        : [...this.selectedEntries(), ...members];
+      this.selection = this.selections.some(s => selectionKey(s) === selectionKey(selection)) ? selection : this.selections.at(-1) ?? null;
+    } else {
+      this.selections = members;
+      this.selection = selection;
+    }
     this.emit(false);
+  }
+  allEntries(): Selection[] {
+    return [
+      ...this.level.solids.map(s => ({ kind: "solid" as const, id: s.id })),
+      ...this.level.prefabs.map(p => ({ kind: "prefab" as const, id: p.id })),
+      ...this.level.checkpoints.map((_, index) => ({ kind: "checkpoint" as const, index })),
+      ...this.targetList().map((_, index) => ({ kind: "target" as const, index })),
+      ...(this.level.rings ?? []).map((_, index) => ({ kind: "ring" as const, index })),
+      { kind: "spawn" },
+    ];
+  }
+  private allItems() {
+    return [...this.level.solids, ...this.level.prefabs, ...this.level.checkpoints, ...this.targetList(), ...(this.level.rings ?? []), this.level.spawn];
+  }
+  membersOf(selection: Selection): Selection[] {
+    const group = this.selectedItem(selection)?.item.group;
+    if (!group) return [selection];
+    const items = this.allItems();
+    return this.allEntries().filter((_, i) => items[i].group === group);
+  }
+  selectedEntries(): Selection[] {
+    return this.selections.length ? this.selections : this.selection ? [this.selection] : [];
+  }
+  isSelected(selection: Selection) {
+    return this.selectedEntries().some(s => selectionKey(s) === selectionKey(selection));
+  }
+  isLocked(selection: Selection) {
+    const item = this.selectedItem(selection)?.item;
+    return !!item?.locked || (!!item?.group && this.allItems().some(s => s.group === item.group && s.locked));
+  }
+  private uniqueGroup(base: string) {
+    const taken = new Set(this.allItems().map(s => s.group));
+    let name = base, n = 2;
+    while (taken.has(name)) name = `${base.slice(0, 70)} ${n++}`;
+    return name;
+  }
+  groupSelected(name = "Group") {
+    const entries = this.selectedEntries();
+    if (entries.length < 2 || entries.some(s => this.isLocked(s))) return;
+    if (!name.trim() || name.length > 80) throw new Error("Group names must be 1-80 characters");
+    const group = this.uniqueGroup(name.trim());
+    this.pushHistory();
+    for (const s of entries) this.selectedItem(s)!.item.group = group;
+    this.emit();
+    return group;
+  }
+  ungroupSelected() {
+    const entries = this.selectedEntries();
+    if (!entries.some(s => this.selectedItem(s)?.item.group) || entries.some(s => this.isLocked(s))) return;
+    this.pushHistory();
+    for (const s of entries) delete this.selectedItem(s)!.item.group;
+    this.emit();
+  }
+  renameGroup(name: string) {
+    name = name.trim();
+    const group = this.selectedItem()?.item.group;
+    if (!group || !name.trim() || name.length > 80 || name === group) return;
+    if (this.allItems().some(s => s.group === name)) throw new Error("A group with this name already exists");
+    this.pushHistory();
+    for (const item of this.allItems()) if (item.group === group) item.group = name.trim();
+    this.emit();
   }
   setLocked(selection: EditorSelection, locked: boolean) {
     const current = this.selectedItem(selection);
-    if (!current || !!current.item.locked === locked) return;
+    if (!current || !selection) return;
+    const entries = this.membersOf(selection);
+    if (entries.every(s => !!this.selectedItem(s)?.item.locked === locked)) return;
     this.pushHistory();
-    if (locked && this.selectedItem()?.item === current.item)
+    if (locked && entries.some(s => this.isSelected(s)))
       this.selection = null;
-    current.item.locked = locked;
+    for (const s of entries) this.selectedItem(s)!.item.locked = locked;
     this.emit();
   }
   setTool(tool: EditorTool) {
@@ -182,7 +266,7 @@ export class EditorStore {
   }
   startClip() {
     this.endGesture();
-    const ids = this.selection?.kind === "solid" ? (this.solidSelection.includes(this.selection.id) ? this.solidSelection : [this.selection.id]) : [];
+    const ids = this.selectedEntries().filter(s => s.kind === "solid").map(s => (s as { id: string }).id);
     this.clip = { targets: [...ids], cutters: [] };
     this.tool = "clip";
     this.emit(false);
@@ -212,6 +296,7 @@ export class EditorStore {
     this.pushHistory();
     this.level.solids = result.solids;
     this.solidSelection = result.retained.map((s) => s.id);
+    this.selections = result.retained.map(s => ({ kind: "solid", id: s.id }));
     this.selection = result.retained[0] ? { kind: "solid", id: result.retained[0].id } : null;
     this.clip = null; this.tool = "select"; this.emit();
     return true;
@@ -338,8 +423,34 @@ export class EditorStore {
   }
   updateSelected(patch: Record<string, number | string | boolean | undefined>) {
     const current = this.selectedItem();
-    if (!current) return;
+    if (!current || (this.selection && this.isLocked(this.selection))) return;
     this.pushHistory();
+    const entries = this.selectedEntries();
+    const old = { ...current.item };
+    const dx = typeof patch.x === "number" ? patch.x - old.x : 0;
+    const dy = typeof patch.y === "number" ? patch.y - (old.y ?? 0) : 0;
+    const dz = typeof patch.z === "number" ? patch.z - old.z : 0;
+    for (const s of entries) {
+      const item = this.selectedItem(s)!.item;
+      if (item === current.item) continue;
+      item.x += dx; item.z += dz;
+      if (dy) item.y = (item.y ?? 0) + dy;
+    }
+    // Rotate the whole selection about the primary object's origin.
+    const orientation = (item: object) => { const p = item as { yaw?: number; angle?: number; roll?: number }; return new Quaternion().setFromEuler(new Euler(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ")); };
+    if (["yaw", "angle", "roll"].some(k => typeof patch[k] === "number")) {
+      const delta = orientation({ ...old, ...patch }).multiply(orientation(old).invert());
+      for (const s of entries) {
+        const item = this.selectedItem(s)!.item;
+        if (item === current.item) continue;
+        const v = new Vector3(item.x - old.x - dx, (item.y ?? 0) - (old.y ?? 0) - dy, item.z - old.z - dz).applyQuaternion(delta);
+        item.x = old.x + dx + v.x; item.y = (old.y ?? 0) + dy + v.y; item.z = old.z + dz + v.z;
+        if (s.kind === "solid" || s.kind === "prefab" || s.kind === "spawn" || s.kind === "checkpoint") {
+          const e = new Euler().setFromQuaternion(delta.clone().multiply(orientation(item)), "YXZ");
+          Object.assign(item, { yaw: e.y, angle: e.x, roll: e.z });
+        }
+      }
+    }
     Object.assign(current.item, patch);
     this.emit();
   }
@@ -373,71 +484,68 @@ export class EditorStore {
     this.emit();
   }
   deleteSelected() {
-    const sel = this.selection;
-    if (!sel || sel.kind === "spawn") return;
+    const entries = this.selectedEntries().filter(s => s.kind !== "spawn");
+    if (!entries.length || entries.some(s => this.isLocked(s))) return;
     this.pushHistory();
-    if (sel.kind === "solid")
-      this.level.solids = this.level.solids.filter((s) => s.id !== sel.id);
-    else if (sel.kind === "prefab")
-      this.level.prefabs = this.level.prefabs.filter((p) => p.id !== sel.id);
-    else if (sel.kind === "checkpoint")
-      this.level.checkpoints.splice(sel.index, 1);
-    else if (sel.kind === "ring")
-      (this.level.rings ?? []).splice(sel.index, 1);
-    else this.targetList().splice(sel.index, 1);
+    const keys = new Set(entries.map(selectionKey));
+    this.level.solids = this.level.solids.filter(s => !keys.has(`solid:${s.id}`));
+    this.level.prefabs = this.level.prefabs.filter(s => !keys.has(`prefab:${s.id}`));
+    this.level.checkpoints = this.level.checkpoints.filter((_, i) => !keys.has(`checkpoint:${i}`));
+    if (this.level.rings) this.level.rings = this.level.rings.filter((_, i) => !keys.has(`ring:${i}`));
+    const targets = this.targetList().filter((_, i) => !keys.has(`target:${i}`));
+    if (this.level.mode === "demolition") this.level.demolish = targets;
+    else this.level.collectibles = targets;
     this.selection = null;
     this.emit();
   }
-  duplicateSelected():
-    | CustomSolid
-    | CustomPrefab
-    | CustomPoint
-    | CustomRing
-    | undefined {
-    const current = this.selectedItem();
-    if (!current || current.kind === "spawn") return undefined;
+  copySelected() {
+    const entries = this.selectedEntries().filter(s => s.kind !== "spawn");
+    if (!entries.length) return false;
+    this.clipboard = entries.map(s => ({ kind: s.kind, item: structuredClone(this.selectedItem(s)!.item) }));
+    this.pasteCount = 0;
+    return true;
+  }
+  get canPaste() { return this.clipboard.length > 0; }
+  private pasteItems(source: typeof this.clipboard, dx: number, dz: number) {
+    if (!source.length || this.clip) return;
     this.pushHistory();
-    if (current.kind === "ring") {
-      const copy = { ...current.item, x: current.item.x + 2 };
-      const rings = (this.level.rings ??= []);
-      rings.push(copy);
-      this.selection = { kind: "ring", index: rings.length - 1 };
-      this.emit();
-      return copy;
+    const groups = new Map<string, string>();
+    const selections: Selection[] = [];
+    for (const entry of source) {
+      const copy = structuredClone(entry.item);
+      copy.x += dx; copy.z += dz;
+      if (copy.group) {
+        if (!groups.has(copy.group)) groups.set(copy.group, this.uniqueGroup(copy.group));
+        copy.group = groups.get(copy.group)!;
+      }
+      let selection: Selection;
+      if (entry.kind === "solid" || entry.kind === "prefab") {
+        const list = entry.kind === "solid" ? this.level.solids : this.level.prefabs;
+        const object = copy as CustomSolid | CustomPrefab;
+        object.id = this.nextId(object.kind, new Set(list.map(s => s.id)));
+        if (entry.kind === "solid") this.level.solids.push(object as CustomSolid);
+        else this.level.prefabs.push(object as CustomPrefab);
+        selection = { kind: entry.kind, id: object.id };
+      } else if (entry.kind === "checkpoint" || entry.kind === "target" || entry.kind === "ring") {
+        const list = entry.kind === "checkpoint" ? this.level.checkpoints : entry.kind === "ring" ? (this.level.rings ??= []) : this.targetList();
+        list.push(copy as CustomRing);
+        selection = { kind: entry.kind, index: list.length - 1 };
+      } else continue;
+      selections.push(selection);
     }
-    if (current.kind === "checkpoint" || current.kind === "target") {
-      const copy = { ...current.item, x: current.item.x + 2 };
-      const list =
-        current.kind === "checkpoint"
-          ? this.level.checkpoints
-          : this.targetList();
-      list.push(copy);
-      this.selection = { kind: current.kind, index: list.length - 1 };
-      this.emit();
-      return copy;
-    }
-    if (current.kind === "solid") {
-      const taken = new Set(this.level.solids.map((s) => s.id));
-      const copy = {
-        ...current.item,
-        id: this.nextId(current.item.kind, taken),
-        x: current.item.x + 2,
-      };
-      this.level.solids.push(copy);
-      this.selection = { kind: "solid", id: copy.id };
-      this.solidSelection = [copy.id];
-      this.emit();
-      return copy;
-    }
-    const taken = new Set(this.level.prefabs.map((p) => p.id));
-    const copy = {
-      ...current.item,
-      id: this.nextId(current.item.kind, taken),
-      x: current.item.x + 2,
-    };
-    this.level.prefabs.push(copy);
-    this.selection = { kind: "prefab", id: copy.id };
+    this.selections = selections;
+    this.selection = selections[0] ?? null;
     this.emit();
-    return copy;
+    return this.selectedItem()?.item;
+  }
+  paste() {
+    if (!this.canPaste || this.clip) return;
+    this.pasteCount++;
+    return this.pasteItems(this.clipboard, 2 * this.pasteCount, 2 * this.pasteCount);
+  }
+  duplicateSelected(): CustomSolid | CustomPrefab | CustomPoint | CustomRing | undefined {
+    const entries = this.selectedEntries().filter(s => s.kind !== "spawn");
+    if (entries.some(s => this.isLocked(s))) return;
+    return this.pasteItems(entries.map(s => ({ kind: s.kind, item: this.selectedItem(s)!.item })), 2, 0);
   }
 }

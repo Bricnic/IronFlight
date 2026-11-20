@@ -233,6 +233,7 @@ export const SOLID_KINDS = [
 ] as const;
 export type SolidKind = (typeof SOLID_KINDS)[number];
 export interface CustomSolid {
+  group?: string;
   /** Local texture phase retained when a box is partitioned by the editor. */
   uvOffsetX?: number;
   uvOffsetZ?: number;
@@ -256,6 +257,7 @@ export interface CustomSolid {
   pianoKey?: number;
 }
 export interface CustomPrefab {
+  group?: string;
   name?: string;
   locked?: boolean;
   id: string;
@@ -278,6 +280,7 @@ export interface CustomPrefab {
 export const COLLECTIBLE_KINDS = ["ring", "chest"] as const;
 export type CollectibleKind = (typeof COLLECTIBLE_KINDS)[number];
 export interface CustomPoint {
+  group?: string;
   name?: string;
   locked?: boolean;
   x: number;
@@ -293,6 +296,7 @@ export interface CustomCheckpoint extends CustomPoint {
   appearance?: keyof typeof CHECKPOINT_WIDTHS;
 }
 export interface CustomRing {
+  group?: string;
   name?: string;
   locked?: boolean;
   x: number;
@@ -307,7 +311,7 @@ export interface CustomLevel {
   /** Runtime storage location relative to levels/, without the .json extension. */
   sourcePath?: string;
   mode: CustomMode;
-  spawn: { x: number; y: number; z: number; yaw: number; locked?: boolean; name?: string };
+  spawn: { x: number; y: number; z: number; yaw: number; locked?: boolean; name?: string; group?: string };
   checkpoints: CustomCheckpoint[];
   collectibles?: CustomPoint[];
   demolish?: CustomPoint[];
@@ -581,6 +585,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     );
   }
   for (const [i, item] of [spawn, ...solids, ...prefabs, ...checkpoints, ...collectibles, ...demolish, ...rings].entries()) {
+    check(errors, item?.group === undefined || (typeof item.group === "string" && item.group.trim().length > 0 && item.group.length <= 80), `object ${i} group must be 1-80 characters`);
     check(errors, item?.locked === undefined || typeof item.locked === "boolean", `object ${i} locked must be a boolean`);
     check(errors, item?.name === undefined || (typeof item.name === "string" && item.name.trim().length > 0 && item.name.length <= 80), `object ${i} name must be 1-80 characters`);
   }

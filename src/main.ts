@@ -1242,6 +1242,7 @@ async function boot() {
   };
 
   window.addEventListener("keydown", (e) => {
+    if (editorScreens?.isVisible()) return;
     if (e.code === "Backquote") {
       e.preventDefault();
       if (!e.repeat) toggleDebug();

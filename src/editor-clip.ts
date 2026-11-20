@@ -1,4 +1,34 @@
 import type { CustomSolid } from "./custom-level";
+import { clipFootprint, subtractFootprint } from "./solid-clip";
+import type { Point } from "./tracks";
+
+export function solidFootprint(s: CustomSolid): Point[] {
+  const c = Math.cos(s.yaw ?? 0), n = Math.sin(s.yaw ?? 0);
+  return (s.footprint ?? [
+    { x: -s.w / 2, z: -s.d / 2 }, { x: s.w / 2, z: -s.d / 2 },
+    { x: s.w / 2, z: s.d / 2 }, { x: -s.w / 2, z: s.d / 2 },
+  ]).map(p => ({ x: s.x + p.x * c + p.z * n, z: s.z - p.x * n + p.z * c }));
+}
+function cleanPolygon(poly: Point[]) {
+  const unique = poly.filter((p, i) => { const q = poly[(i + poly.length - 1) % poly.length]; return Math.hypot(p.x - q.x, p.z - q.z) > CLIP_EPSILON; });
+  return unique.filter((p, i) => {
+    const a = unique[(i + unique.length - 1) % unique.length], b = unique[(i + 1) % unique.length];
+    return Math.abs((p.x - a.x) * (b.z - p.z) - (p.z - a.z) * (b.x - p.x)) > CLIP_EPSILON;
+  });
+}
+function polygonArea(poly: Point[]) {
+  return poly.reduce((sum, a, i) => { const b = poly[(i + 1) % poly.length]; return sum + a.x * b.z - a.z * b.x; }, 0) / 2;
+}
+function polygonPiece(s: CustomSolid, poly: Point[]): CustomSolid {
+  const c = Math.cos(s.yaw ?? 0), n = Math.sin(s.yaw ?? 0);
+  const local = poly.map(p => ({ x: (p.x - s.x) * c - (p.z - s.z) * n, z: (p.x - s.x) * n + (p.z - s.z) * c }));
+  const xs = local.map(p => p.x), zs = local.map(p => p.z);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs);
+  const x = (minX + maxX) / 2, z = (minZ + maxZ) / 2;
+  return { ...s, x: s.x + x * c + z * n, z: s.z - x * n + z * c, w: maxX - minX, d: maxZ - minZ,
+    footprint: local.map(p => ({ x: p.x - x, z: p.z - z })),
+    uvOffsetX: (s.uvOffsetX ?? 0) + x, uvOffsetZ: (s.uvOffsetZ ?? 0) + z };
+}
 
 /** Metres: used only to discard degenerate strips, never to enlarge a cutter. */
 export const CLIP_EPSILON = 1e-8;
@@ -10,6 +40,10 @@ export type ClipRect = {
   maxZ: number;
 };
 export function solidRect(s: CustomSolid): ClipRect {
+  if (s.footprint || s.yaw) {
+    const poly = solidFootprint(s);
+    return { minX: Math.min(...poly.map(p => p.x)), maxX: Math.max(...poly.map(p => p.x)), minZ: Math.min(...poly.map(p => p.z)), maxZ: Math.max(...poly.map(p => p.z)) };
+  }
   return {
     minX: s.x - s.w / 2,
     maxX: s.x + s.w / 2,
@@ -90,10 +124,8 @@ export function clipUnsupported(s: CustomSolid): string | null {
   )
     return "invalid dimensions";
   if (!validRect(solidRect(s))) return "invalid bounds";
-  if ((s.yaw ?? 0) !== 0 || (s.angle ?? 0) !== 0 || (s.roll ?? 0) !== 0)
-    return "rotated solid";
-  if (s.kind !== "ground" && s.kind !== "road")
-    return "only ground/road boxes are supported";
+  if ((s.angle ?? 0) !== 0 || (s.roll ?? 0) !== 0)
+    return "pitched/rolled solid — use a horizontal solid for clipping";
   if (s.locked) return "locked — unlock before clipping";
   return null;
 }
@@ -130,6 +162,40 @@ export function previewClip(
     if (issue) {
       result.issues.push(`${s.name ?? s.id}: ${issue}`);
       result.solids.push(s);
+      continue;
+    }
+    if (s.footprint || s.yaw) {
+      let original = cleanPolygon(solidFootprint(s));
+      if (polygonArea(original) < 0) original = original.reverse();
+      let polygons = [original];
+      let affected = false;
+      for (const cutter of cutters) {
+        const points = [{ x: cutter.minX, z: cutter.minZ }, { x: cutter.maxX, z: cutter.minZ }, { x: cutter.maxX, z: cutter.maxZ }, { x: cutter.minX, z: cutter.maxZ }];
+        const next: Point[][] = [];
+        for (const poly of polygons) {
+          let inside = poly;
+          for (const [i, a] of points.entries()) {
+            const b = points[(i + 1) % points.length];
+            inside = clipFootprint(inside, a, { x: a.z - b.z, z: b.x - a.x });
+          }
+          if (Math.abs(polygonArea(inside)) <= CLIP_EPSILON) { next.push(poly); continue; }
+          affected = true;
+          result.removed.push(polygonPiece(s, cleanPolygon(inside)));
+          next.push(...subtractFootprint(poly, points).map(cleanPolygon).filter(p => p.length >= 3 && Math.abs(polygonArea(p)) > CLIP_EPSILON));
+        }
+        polygons = next;
+      }
+      if (!affected) { result.solids.push(s); continue; }
+      result.affected.push(s.id);
+      for (const [i, poly] of polygons.entries()) {
+        const base = `${s.id}-piece-${String(i + 1).padStart(2, "0")}`;
+        let id = base, n = 2;
+        while (taken.has(id)) id = `${base}-${n++}`;
+        taken.add(id);
+        const piece = { ...polygonPiece(s, poly), id, name: `${(s.name ?? s.id).slice(0, 60)} / piece ${i + 1}` };
+        if (Math.min(piece.w, piece.d) < CLIP_SLIVER) result.slivers++;
+        result.solids.push(piece); result.retained.push(piece);
+      }
       continue;
     }
     let rects = [solidRect(s)];

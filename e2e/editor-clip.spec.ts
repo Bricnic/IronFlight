@@ -138,17 +138,17 @@ test("draws a through-cut and preserves an existing cutter; locked and rotated l
   await page.locator("#editor-clip-cancel").click();
   await page.locator('li[data-key="solid:road-1"] button').click();
   await page.locator('li[data-key="solid:road-1"] span').click();
-  await page.locator('[data-prop="yaw"]').fill("0.2");
-  await page.locator('[data-prop="yaw"]').press("Tab");
+  await page.locator('[data-prop="angle"]').fill("0.2");
+  await page.locator('[data-prop="angle"]').press("Tab");
   await page.locator("#editor-tool-clip").click();
   await numeric(page);
   await expect(page.locator("#editor-clip-layers")).toContainText(
-    "rotated solid",
+    "pitched/rolled solid",
   );
   await expect(page.locator("#editor-clip-apply")).toBeDisabled();
   await page.locator("#editor-clip-cancel").click();
-  await page.locator('[data-prop="yaw"]').fill("0");
-  await page.locator('[data-prop="yaw"]').press("Tab");
+  await page.locator('[data-prop="angle"]').fill("0");
+  await page.locator('[data-prop="angle"]').press("Tab");
   await page.locator("#editor-tool-clip").click();
   await page.locator("#editor-clip-object").selectOption("road-1");
   await page.locator("#editor-clip-use-object").click();

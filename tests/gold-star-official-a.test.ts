@@ -325,16 +325,15 @@ it("Machine Gauntlet: jumps the crater and collects the star on the gate apron",
     sim.dispose();
   }
 });
-it("Amber Undertow: rides the pipe and collects the star on the purple diagonal", { timeout: 180000 }, () => {
+it("Amber Undertow: takes the copper detour and collects the star by the turquoise opening", { timeout: 180000 }, () => {
   const file = "Amber Undertow.json";
-  const star = expectStarGeometry(file, { x: -32, y: 11.9, z: 97 }, "turn-to-slime-1");
+  const star = expectStarGeometry(file, { x: -36.0227649079933, y: 11.9, z: -84.19528724068712 }, "copper-after-hole");
   const sim = race(file);
   try {
-    for (let i = 0; i < Math.floor(4 / DT) && !sim.guidedPipe.snapshot(); i++) sim.step({ throttle: 1 });
-    expect(sim.guidedPipe.snapshot()?.section, "amber tube entry").toBe("tube");
-    for (let i = 0; i < Math.floor(10 / DT) && sim.guidedPipe.snapshot(); i++) sim.step({});
-    expect(sim.guidedPipe.snapshot(), "amber tube exit").toBeNull();
-    const diag = driveRoute(sim, [[-36, 77, 18, 7], [-32, 97, 11, 0]], 60, star);
+    // Back up on the start tile to make room for the turn onto the copper branch.
+    for (let i = 0; i < 5 / DT && sim.body.translation().z > -148; i++) sim.step({ throttle: -0.3 });
+    sim.run(0.4, { brake: 1 });
+    const diag = driveRoute(sim, [[-22, -135, 4, 5], [-38, -119, 5, 6], [-45.5, -104, 4, 3], [-47, -94, 3.5, 3], [-44, -91, 3.5, 3], [star.x, star.z, 3, 0]], 90, star);
     expectCollected(diag, file);
     expect(sim.trackRun!.elapsed, `${file} star collected at ${sim.trackRun!.elapsed.toFixed(1)}s`).toBeGreaterThanOrEqual(10);
     expect(sim.trackRun!.snapshot().stars).toEqual([STAR_ID]);
@@ -427,7 +426,7 @@ it("Booster Gap: clears both jumps and collects the star at the dino junction", 
         sim.step({ steer: 0, throttle: 0, brake: 1 });
         continue;
       }
-      const [wx, wz, , reach] = route[next];
+    const [wx, wz, , reach] = route[next];
       if (Math.hypot(wx - p.x, wz - p.z) < reach && next < route.length - 1) next++;
       const [x, z, speed] = route[next];
       const q = sim.body.rotation();

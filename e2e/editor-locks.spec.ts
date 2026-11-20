@@ -11,6 +11,8 @@ test("locked solids cannot be picked or dragged until unlocked", async ({
   await page.getByRole("button", { name: "Level editor", exact: true }).click();
   await page.locator("#editor-name").fill(name);
   await page.locator("#editor-new").click();
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   try {
     await page.locator("#editor-solid-kind").selectOption("barrier");
     await page.locator("#editor-add-solid").click();
@@ -68,6 +70,8 @@ test("object locks prevent list and viewport selection and persist through disk 
   await page.locator("#editor-name").fill(name);
   await page.locator("#editor-new").click();
   try {
+    await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+    await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
     await page.locator("#editor-prefab-kind").selectOption("axe");
     await page.locator("#editor-add-prefab").click();
     await page.locator("#editor-add-target").click();

@@ -1,4 +1,4 @@
-import { EditorStore, type EditorSelection } from "./editor-state";
+import { EditorStore, selectionKey, type EditorSelection } from "./editor-state";
 import { createEditorViewport } from "./editor-viewport";
 import { defaultTextureFor } from "./course-view";
 import { clipUnsupported, intersectRects, solidRect, validRect, type ClipRect } from "./editor-clip";
@@ -104,7 +104,7 @@ export function createLevelEditor(
       { id: `editor-tool-${tool}` },
       tool[0].toUpperCase() + tool.slice(1),
     ) as HTMLButtonElement;
-    if (tool === "clip") button.title = "Clip selected ground/road solids. Shift/Ctrl click list rows to select several.";
+    if (tool === "clip") button.title = "Clip selected horizontal solids, including tiles. Shift/Ctrl click list rows to select several.";
     if (tool === "look") button.title = "Point the selected prefab at the cursor. Click the viewport to finish.";
     button.addEventListener("click", () => store.setTool(tool));
     return { tool, button };
@@ -156,6 +156,14 @@ export function createLevelEditor(
   addRing.title = "Place a large ring to jump or drive through";
   const objects = el("ul", { id: "editor-objects" });
   const duplicateButton = el("button", { id: "editor-duplicate" }, "Duplicate");
+  const groupButton = el("button", { id: "editor-group" }, "Group");
+  const ungroupButton = el("button", { id: "editor-ungroup" }, "Ungroup");
+  const copyButton = el("button", { id: "editor-copy" }, "Copy");
+  const pasteButton = el("button", { id: "editor-paste" }, "Paste");
+  copyButton.title = "Copy selected items (Ctrl+C)";
+  pasteButton.title = "Paste copied items (Ctrl+V)";
+  const groupActions = el("div", { class: "editor-group-actions" });
+  groupActions.append(groupButton, ungroupButton, copyButton, pasteButton);
   const removeButton = el("button", { id: "editor-remove" }, "Delete selected");
   const spawnButton = el("button", { id: "editor-select-spawn" }, "Edit spawn");
   listPane.append(
@@ -166,6 +174,8 @@ export function createLevelEditor(
     addCheckpoint,
     addTarget,
     addRing,
+    groupActions,
+    el("p", { class: "prop-hint" }, "Shift/Ctrl-click items to select several. Groups move and lock together."),
     objects,
     duplicateButton,
     removeButton,
@@ -452,6 +462,16 @@ export function createLevelEditor(
       props.append(el("p", { class: "prop-hint" }, "Select an object to edit it."));
       return;
     }
+    if (current.item.group) {
+      const groupRow = el("label", { class: "prop-row" }, "Group ");
+      const groupName = el("input", { type: "text", "aria-label": "Group name", maxlength: "80" });
+      groupName.value = current.item.group;
+      groupName.addEventListener("change", () => {
+        try { store.renameGroup(groupName.value); } catch (e) { showError((e as Error).message); }
+      });
+      groupRow.append(groupName); props.append(groupRow);
+      props.append(el("p", { class: "prop-hint" }, `${store.selectedEntries().length} selected items move, rotate, copy and delete together.`));
+    }
     section(
       current.kind === "solid"
         ? `Solid ${current.item.id}`
@@ -597,10 +617,13 @@ export function createLevelEditor(
       props.append(goalRow);
     }
   }
+  const expandedGroups = new Set<string>();
   function refreshList() {
     objects.innerHTML = "";
     const level = store.level;
     const rows: { li: HTMLLIElement; name: string; key: string }[] = [];
+    const selectedKeys = new Set(store.selectedEntries().map(selectionKey));
+    const groups = new Map<string, { selection: NonNullable<EditorSelection>; rows: typeof rows; count: number; locked: boolean; selected: boolean }>();
     const row = (
       label: string,
       selected: boolean,
@@ -610,6 +633,18 @@ export function createLevelEditor(
       const item = store.selectedItem(selection)?.item;
       const locked = !!item?.locked;
       label = item?.name ?? label;
+      let bucket: ReturnType<typeof groups.get>;
+      if (item?.group && selection && !store.clip) {
+        bucket = groups.get(item.group);
+        if (!bucket) {
+          bucket = { selection, rows: [], count: 0, locked: false, selected: false };
+          groups.set(item.group, bucket);
+        }
+        bucket.count++; bucket.locked ||= locked;
+        bucket.selected ||= selectedKeys.has(selectionKey(selection));
+        if (!expandedGroups.has(item.group)) return;
+      }
+      if (!store.clip) selected = !!selection && selectedKeys.has(selectionKey(selection));
       const onPick = (event: MouseEvent | KeyboardEvent) => {
         if (store.clip) {
           if (selection?.kind === "solid") store.setClipTarget(selection.id, !store.clip.targets.includes(selection.id));
@@ -639,7 +674,7 @@ export function createLevelEditor(
           onPick(e);
         }
       });
-      rows.push({ li, name: label, key });
+      (bucket?.rows ?? rows).push({ li, name: label, key });
     };
     for (const s of level.solids)
       row(
@@ -689,10 +724,33 @@ export function createLevelEditor(
       { kind: "spawn" },
       "spawn",
     );
+    for (const [name, bucket] of groups) {
+      const li = el("li", { class: `editor-group${bucket.selected ? " selected" : ""}`, "data-group": name, "data-locked": String(bucket.locked) });
+      const header = el("div", { class: "editor-group-header" });
+      const toggle = el("button", { "aria-label": `${expandedGroups.has(name) ? "Collapse" : "Expand"} ${name}`, "aria-expanded": String(expandedGroups.has(name)) }, expandedGroups.has(name) ? "▾" : "▸");
+      toggle.addEventListener("click", () => {
+        if (expandedGroups.has(name)) expandedGroups.delete(name); else expandedGroups.add(name);
+        refreshList();
+      });
+      const label = el("button", { class: "editor-group-name" }, `${name} (${bucket.count})`);
+      label.addEventListener("click", event => store.select(bucket.selection, event.shiftKey || event.ctrlKey || event.metaKey));
+      const lock = el("button", { class: "editor-lock", "aria-label": `${bucket.locked ? "Unlock" : "Lock"} ${name}` }, bucket.locked ? "Unlock" : "Lock");
+      lock.addEventListener("click", () => store.setLocked(bucket.selection, !bucket.locked));
+      header.append(toggle, label, lock); li.append(header);
+      if (expandedGroups.has(name)) {
+        const children = el("ul", { class: "editor-group-children" });
+        children.append(...bucket.rows.map(r => r.li)); li.append(children);
+      }
+      rows.push({ li, name, key: `group:${name}` });
+    }
     rows.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true }) || a.key.localeCompare(b.key));
     objects.append(...rows.map((row) => row.li));
   }
   function refresh() {
+    groupButton.disabled = !!store.clip || store.selectedEntries().length < 2;
+    ungroupButton.disabled = !!store.clip || !store.selectedEntries().some(s => store.selectedItem(s)?.item.group);
+    copyButton.disabled = !!store.clip || !store.selectedEntries().some(s => s.kind !== "spawn");
+    pasteButton.disabled = !!store.clip || !store.canPaste;
     for (const button of [saveButton, playtestButton, randomButton, addSolid, addPrefab, addCheckpoint, addTarget, addRing, duplicateButton, removeButton, spawnButton]) button.disabled = !!store.clip;
     nameInput.disabled = !!store.clip;
     if (document.activeElement !== nameInput) nameInput.value = store.level.name;
@@ -862,11 +920,25 @@ export function createLevelEditor(
   });
   addRing.addEventListener("click", () => store.addRing());
   duplicateButton.addEventListener("click", () => store.duplicateSelected());
+  groupButton.addEventListener("click", () => store.groupSelected());
+  ungroupButton.addEventListener("click", () => store.ungroupSelected());
+  copyButton.addEventListener("click", () => { store.copySelected(); refresh(); });
+  pasteButton.addEventListener("click", () => store.paste());
   removeButton.addEventListener("click", () => store.deleteSelected());
   spawnButton.addEventListener("click", () => store.select({ kind: "spawn" }));
   // Rebuilding the property panel can remove the focused button. Escape must
   // still cancel when the browser has consequently moved focus to the body.
   document.addEventListener("keydown", (e) => {
+    if (!screen.hidden && !store.clip && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement) && !(e.target instanceof HTMLSelectElement) && !(e.target instanceof HTMLElement && e.target.isContentEditable) && (e.ctrlKey || e.metaKey) && !e.altKey) {
+      const key = e.key.toLowerCase();
+      if (key === "c" || key === "v") {
+        e.preventDefault(); e.stopPropagation();
+        if (!e.repeat) {
+          if (key === "c") { store.copySelected(); refresh(); } else store.paste();
+        }
+        return;
+      }
+    }
     if (!screen.hidden && e.key === "Escape" && store.clip) {
       e.preventDefault(); store.cancelClip();
     }
@@ -886,6 +958,7 @@ export function createLevelEditor(
   });
   refresh();
   return {
+    isVisible() { return !screen.hidden; },
     show() {
       screen.hidden = false;
       host.classList.add("at-level-select");

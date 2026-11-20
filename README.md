@@ -25,6 +25,10 @@ N and P cycle through the official lineup in the same order as level select. Aft
 
 The level editor's Open level menu includes level files in `levels/` and its subfolders, displaying their relative paths. Saving keeps the original file location even if the level's name changes. New and imported levels default to `levels/`. Environment templates and other JSON metadata are excluded from the menu.
 
+Shift/Ctrl-click list rows or viewport objects to select several. **Group** creates a named, collapsible group; **Ungroup** separates it again. Selecting any group member selects the whole group for movement, rotation, duplication and deletion. Locking a member locks the group. Group names can be edited in the properties panel and are saved with the level. **Ctrl+C / Ctrl+V** copy and paste selected items or groups, including between levels, with independent IDs and group names. Text fields keep normal copy/paste. The vehicle-select C shortcut is inactive in the editor.
+
+**Clip** supports every solid kind, including tiles, yawed solids and convex polygon footprints. Preview and collision geometry retain the actual outline of each piece. Pitched or rolled solids must still be made horizontal before clipping. Amber Undertow's tile sections and North Pole Summit's ice patches are organized into groups.
+
 Press backtick (`) for **Playtest tuning**. The current defaults live in `src/tuning-defaults.json`; Store as Defaults saves all current settings there in the local development server, and Reset tuning reloads that config. Tuning and colors also persist in this browser. Source saving is disabled in production builds.
 
 Steering rate, maximum tire angle (5–90 degrees) and actual turning power (0.1–10x) are independent. Gravity spans 0.1–10x. Primary and secondary color wheels recolor the paint and metal trim/rims, with brightness and hex entry; burn darkening remains applied. Acceleration, top speed, boost, coasting friction, brake power, dragon damage, hammer speed, handbrake strength and shadow darkness are also tunable.

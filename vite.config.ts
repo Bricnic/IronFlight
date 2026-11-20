@@ -221,7 +221,7 @@ function customLevels(): Plugin {
           let body = "";
           for await (const chunk of req) {
             body += chunk;
-            if (body.length > 262144) throw new Error("Level is too large");
+            if (body.length > 4 * 1024 * 1024) throw new Error("Level is too large");
           }
           const { name, level } = JSON.parse(body) as {
             name: string;

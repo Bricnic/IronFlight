@@ -1,4 +1,5 @@
 import { ComicPhysics } from "./comic-physics";
+import { solidContainsXZ } from "./solid-clip";
 import { DungeonPhysics } from "./dungeon-physics";
 import { GuidedPipe } from "./guided-pipe";
 import { LooseBlocks } from "./loose-blocks";
@@ -1101,8 +1102,7 @@ export class Simulation {
         }
         const pool = pools.find(
           (p) =>
-            Math.abs(position.x - p.x) < p.w / 2 &&
-            Math.abs(position.z - p.z) < p.d / 2 &&
+            solidContainsXZ(p, position) &&
             position.y + minY <= p.y + p.h / 2 &&
             position.y + maxY >= p.y - p.h / 2,
         );

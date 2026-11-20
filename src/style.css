@@ -1380,3 +1380,10 @@ kbd {
   height: 100%;
   object-fit: cover;
 }
+
+.editor-group-header { display: flex; align-items: center; gap: 4px; width: 100%; }
+.editor-group-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.editor-group-name { flex: 1; min-width: 0; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.editor-group-header > button:first-child { flex: 0 0 24px; padding: 4px 6px; }
+.editor-group-children { width: 100%; padding-left: 12px; list-style: none; }
+#editor-objects > .editor-group { display: block; }

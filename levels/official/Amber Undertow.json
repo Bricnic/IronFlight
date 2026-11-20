@@ -1,6 +1,5 @@
 {
   "name": "Amber Undertow",
-  "backgroundTemplate": "pastoral-hills",
   "mode": "race",
   "spawn": {
     "x": 0,
@@ -31,38 +30,6 @@
       "yaw": 1.5707963267948966
     }
   ],
-  "prefabs": [
-    {
-      "id": "amber-guide",
-      "name": "Amber guided pipe",
-      "kind": "guided-pipe",
-      "x": 0,
-      "y": 24,
-      "z": -108,
-      "yaw": 0
-    },
-    {
-      "id": "side-volcano",
-      "name": "Volcano beside the pink tile",
-      "kind": "volcano",
-      "x": -24,
-      "y": 10,
-      "z": 143,
-      "yaw": 0
-    },
-    {
-      "id": "gold-star-1",
-      "kind": "gold-star",
-      "x": -32,
-      "y": 11.9,
-      "z": 97
-    }
-  ],
-  "medals": {
-    "gold": 31,
-    "silver": 44,
-    "bronze": 68
-  },
   "solids": [
     {
       "id": "lava-lake",
@@ -295,7 +262,8 @@
           "x": -1.932535,
           "z": -2.188098
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-1",
@@ -325,7 +293,8 @@
           "x": -1.95803,
           "z": -3.626118
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-2",
@@ -355,7 +324,8 @@
           "x": -0.771193,
           "z": -3.86563
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-3",
@@ -385,7 +355,8 @@
           "x": 1.179517,
           "z": -2.602395
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-4",
@@ -415,7 +386,8 @@
           "x": 2.188098,
           "z": -1.932535
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-5",
@@ -445,7 +417,8 @@
           "x": 3.626118,
           "z": -1.95803
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-6",
@@ -475,7 +448,8 @@
           "x": 3.86563,
           "z": -0.771193
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-7",
@@ -505,7 +479,8 @@
           "x": 2.602395,
           "z": 1.179517
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-8",
@@ -535,7 +510,8 @@
           "x": 1.932535,
           "z": 2.188098
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-9",
@@ -565,7 +541,8 @@
           "x": 1.95803,
           "z": 3.626118
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-10",
@@ -595,7 +572,8 @@
           "x": 0.771193,
           "z": 3.86563
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-11",
@@ -625,7 +603,8 @@
           "x": -1.179517,
           "z": 2.602395
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-12",
@@ -655,7 +634,8 @@
           "x": -2.188098,
           "z": 1.932535
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-13",
@@ -685,7 +665,8 @@
           "x": -3.626118,
           "z": 1.95803
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-14",
@@ -715,7 +696,8 @@
           "x": -3.86563,
           "z": 0.771193
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "hole-sector-15",
@@ -745,7 +727,8 @@
           "x": -2.602395,
           "z": -1.179517
         }
-      ]
+      ],
+      "group": "Turquoise ring"
     },
     {
       "id": "copper-after-hole",
@@ -757,37 +740,45 @@
       "w": 26,
       "h": 1.24,
       "d": 13,
-      "color": 12082738
+      "color": 12082738,
+      "group": "Copper side passage"
     },
     {
-      "id": "copper-alternative-0",
-      "name": "Copper side passage",
+      "id": "copper-alternative-0-piece-01",
+      "name": "Copper side passage / piece 1",
       "kind": "tile",
-      "x": -39.5,
+      "x": -37.538725,
       "y": 9.38,
-      "z": -64,
-      "w": 26.566994,
+      "z": -60.8950955,
+      "w": 22.644443999999996,
       "h": 1.24,
-      "d": 25.12112,
+      "d": 14.209809,
       "color": 12082738,
       "footprint": [
         {
-          "x": -6.283497,
-          "z": -12.56056
+          "x": 1.5387249999999977,
+          "z": -7.1049045
         },
         {
-          "x": 13.283497,
-          "z": 4.56056
+          "x": 11.322221999999998,
+          "z": 1.4556555000000024
         },
         {
-          "x": 2.360947,
-          "z": 10.209809
+          "x": 0.3996720000000007,
+          "z": 7.1049045
         },
         {
-          "x": -9.360947,
-          "z": -2.209809
+          "x": -11.322221999999998,
+          "z": -5.314713500000007
+        },
+        {
+          "x": -10.789968514919545,
+          "z": -7.1049045
         }
-      ]
+      ],
+      "group": "Copper side passage",
+      "uvOffsetX": 1.9612750000000023,
+      "uvOffsetZ": 3.1049045
     },
     {
       "id": "copper-alternative-1",
@@ -817,7 +808,8 @@
           "x": -10.359518,
           "z": -0.810629
         }
-      ]
+      ],
+      "group": "Copper side passage"
     },
     {
       "id": "copper-alternative-2",
@@ -847,7 +839,8 @@
           "x": -8.5,
           "z": 2.730658
         }
-      ]
+      ],
+      "group": "Copper side passage"
     },
     {
       "id": "copper-alternative-3",
@@ -877,7 +870,8 @@
           "x": -7,
           "z": 4.5
         }
-      ]
+      ],
+      "group": "Copper side passage"
     },
     {
       "id": "copper-alternative-4",
@@ -907,7 +901,8 @@
           "x": -7,
           "z": 9
         }
-      ]
+      ],
+      "group": "Copper side passage"
     },
     {
       "id": "copper-main-merge",
@@ -919,7 +914,8 @@
       "w": 14,
       "h": 1.24,
       "d": 21.9,
-      "color": 12082738
+      "color": 12082738,
+      "group": "Copper side passage"
     },
     {
       "id": "copper-main-edge",
@@ -931,7 +927,8 @@
       "w": 0.7,
       "h": 1.3,
       "d": 52,
-      "color": 12082738
+      "color": 12082738,
+      "group": "Copper side passage"
     },
     {
       "id": "purple-causeway-0",
@@ -961,7 +958,8 @@
           "x": -1.97975,
           "z": -11
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-1",
@@ -991,7 +989,8 @@
           "x": -1.979766,
           "z": -11
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-2",
@@ -1021,7 +1020,8 @@
           "x": -1.674359,
           "z": -11
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-3",
@@ -1051,7 +1051,8 @@
           "x": -1.388851,
           "z": -11.094155
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-4",
@@ -1081,7 +1082,8 @@
           "x": -2.56771,
           "z": -11.146279
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-5",
@@ -1111,7 +1113,8 @@
           "x": -4.898489,
           "z": -10.357356
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-6",
@@ -1141,7 +1144,8 @@
           "x": -6.808286,
           "z": -9.120798
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-7",
@@ -1171,7 +1175,8 @@
           "x": -8.685297,
           "z": -7.566219
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-8",
@@ -1201,7 +1206,8 @@
           "x": -10.77491,
           "z": -4.614822
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-9",
@@ -1231,7 +1237,8 @@
           "x": -11.346139,
           "z": -1.278687
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-10",
@@ -1261,7 +1268,8 @@
           "x": -11.240664,
           "z": 0.248705
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-11",
@@ -1291,7 +1299,8 @@
           "x": -11.239054,
           "z": 1.254936
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-12",
@@ -1321,7 +1330,8 @@
           "x": -11.012644,
           "z": 2.137425
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "purple-causeway-13",
@@ -1351,7 +1361,8 @@
           "x": -10.924633,
           "z": 2.360311
         }
-      ]
+      ],
+      "group": "Purple causeway"
     },
     {
       "id": "guide-chevron-1--1",
@@ -2991,5 +3002,38 @@
       "d": 2.1,
       "color": 2435896
     }
-  ]
+  ],
+  "prefabs": [
+    {
+      "id": "amber-guide",
+      "name": "Amber guided pipe",
+      "kind": "guided-pipe",
+      "x": 0,
+      "y": 24,
+      "z": -108,
+      "yaw": 0
+    },
+    {
+      "id": "side-volcano",
+      "name": "Volcano beside the pink tile",
+      "kind": "volcano",
+      "x": -24,
+      "y": 10,
+      "z": 143,
+      "yaw": 0
+    },
+    {
+      "id": "gold-star-1",
+      "kind": "gold-star",
+      "x": -36.0227649079933,
+      "y": 11.9,
+      "z": -84.19528724068712
+    }
+  ],
+  "medals": {
+    "gold": 31,
+    "silver": 44,
+    "bronze": 68
+  },
+  "backgroundTemplate": "pastoral-hills"
 }

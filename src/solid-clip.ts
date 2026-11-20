@@ -1,5 +1,18 @@
 import type { Point } from "./tracks";
 
+/** Test a world point against the actual horizontal solid, including yaw. */
+export function solidContainsXZ(s: { x: number; z: number; w: number; d: number; yaw?: number; footprint?: readonly Point[] }, point: Point) {
+  const c = Math.cos(s.yaw ?? 0), n = Math.sin(s.yaw ?? 0);
+  const dx = point.x - s.x, dz = point.z - s.z;
+  const x = dx * c - dz * n, z = dx * n + dz * c;
+  if (!s.footprint) return Math.abs(x) < s.w / 2 && Math.abs(z) < s.d / 2;
+  const winding = Math.sign(twiceArea(s.footprint));
+  return s.footprint.every((a, i, points) => {
+    const b = points[(i + 1) % points.length];
+    return winding * ((b.x - a.x) * (z - a.z) - (b.z - a.z) * (x - a.x)) >= -1e-8;
+  });
+}
+
 /** Keep the part of a footprint on the normal-facing side of a vertical cut. */
 export function clipFootprint(
   footprint: readonly Point[],

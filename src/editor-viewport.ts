@@ -18,6 +18,12 @@ import { buildToyCheckpoint } from "./toy-track-view";
 import { scaleSolidUVs } from "./solid-uv";
 import { validRect, type ClipRect } from "./editor-clip";
 type ViewportHit = { object: unknown; distance?: number; point?: T.Vector3 };
+export function editorSolidGeometry(s: CustomSolid) {
+  return s.footprint
+    ? new T.ExtrudeGeometry(new T.Shape(s.footprint.map(({ x, z }) => new T.Vector2(x, -z))), { depth: s.h, bevelEnabled: false })
+      .rotateX(-Math.PI / 2).translate(0, -s.h / 2, 0)
+    : new T.BoxGeometry(s.w, s.h, s.d);
+}
 const pickKey = (pick: EditorSelection) => !pick ? "" :
   `${pick.kind}:${"id" in pick ? pick.id : "index" in pick ? pick.index : ""}`;
 /** One candidate per logical object, ordered from the camera into the scene.
@@ -403,7 +409,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       pendingClick = { x: ndc.x, y: ndc.y, picks, context };
     }
     const point = stack.find((entry) => pickKey(entry.selection) === pickKey(selection))?.hit.point;
-    if (store.tool === "select" && (e.shiftKey || e.ctrlKey || e.metaKey) && selection?.kind === "solid") {
+    if (store.tool === "select" && (e.shiftKey || e.ctrlKey || e.metaKey) && selection) {
       pendingClick = null; store.select(selection, true); return false;
     }
     if (!selection || !point) {
@@ -425,7 +431,8 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       }
       return false;
     }
-    store.select(selection);
+    if (!store.isSelected(selection)) store.select(selection);
+    else store.selection = selection;
     if (store.tool === "rotator") {
       rotateAxis = rotatorAxisForButton(e.button);
       store.beginGesture();
@@ -564,8 +571,8 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   };
   /** Textured preview solid: opaque, depth-tested, course-view UVs. */
   const previewSolid = (parent: T.Group, s: CustomSolid, selected: boolean) => {
-    const geometry = new T.BoxGeometry(s.w, s.h, s.d);
-    scaleSolidUVs(geometry, s);
+    const geometry = editorSolidGeometry(s);
+    scaleSolidUVs(geometry, s, s.kind === "ground" || !!s.footprint);
     const surface = { color: s.color, roughness: 0.9 };
     let material: T.MeshStandardMaterial;
     if (s.kind === "slime") material = slimeMaterial(s.color);
@@ -577,17 +584,14 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   };
   const wireBox = (
     parent: T.Group,
-    w: number,
-    h: number,
-    d: number,
-    color: number,
+    s: CustomSolid,
     selected: boolean,
   ) => {
-    const geometry = new T.BoxGeometry(w, h, d);
+    const geometry = editorSolidGeometry(s);
     const fill = new T.Mesh(
       geometry,
       new T.MeshBasicMaterial({
-        color,
+        color: s.color,
         transparent: true,
         opacity: 0.14,
         depthWrite: false,
@@ -642,12 +646,13 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         const selected = store.solidSelection.includes(s.id) ||
           (selection != null && "id" in selection && selection.id === s.id);
         if (preview) previewSolid(holder, s, selected);
-        else wireBox(holder, s.w, s.h, s.d, s.color, selected);
+        else wireBox(holder, s, selected);
         group.add(holder);
       }
       for (const s of clip?.removed ?? []) {
-        const removed = new T.Mesh(new T.BoxGeometry(s.w, s.h, s.d), new T.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 0.4, depthWrite: false }));
+        const removed = new T.Mesh(editorSolidGeometry(s), new T.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 0.4, depthWrite: false }));
         removed.position.set(s.x, s.y, s.z);
+        removed.rotation.set(s.angle ?? 0, s.yaw ?? 0, s.roll ?? 0, "YXZ");
         // Preview volumes are not selectable and are disposed with the scene.
         group.add(removed);
       }
@@ -702,8 +707,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         marker.userData.pick = { kind: "prefab", id: p.id };
         if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!p.locked;
-        const prefabSelected =
-          selection != null && "id" in selection && selection.id === p.id;
+        const prefabSelected = store.isSelected({ kind: "prefab", id: p.id });
         if (prefabSelected) {
           marker.scale.setScalar(1.6);
           // Orientation arrow along local +Z, so it follows yaw/pitch/roll.
