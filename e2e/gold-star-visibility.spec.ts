@@ -23,7 +23,7 @@ const order = JSON.parse(
 ) as { file: string }[];
 const officialIds = order.map(({ file }) => {
   const level = JSON.parse(
-    readFileSync(`levels/official/${file}`, "utf8"),
+    readFileSync(`levels${file}`, "utf8"),
   ) as { name: string };
   return `custom:${customSlug(level.name)}`;
 });

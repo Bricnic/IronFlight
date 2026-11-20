@@ -10,13 +10,16 @@ const definitions = import.meta.glob<unknown>(
 const entries: LevelEntry[] = order;
 export const officialFileTracks = entries.map(
   ({ file, thumbnail, description }) => {
-    const definition = definitions[`../levels/official/${file}`];
+    const definition = definitions[`../levels${file}`];
     if (!definition)
       throw new Error(`Unknown official level in order.json: ${file}`);
-    const track = toTrack(validateCustomLevel(definition));
+    const track = toTrack({
+      ...validateCustomLevel(definition),
+      sourcePath: file.slice(1, -5),
+    });
     return {
       ...track,
-      sourceFile: `levels/official/${file}`,
+      sourceFile: `levels${file}`,
       thumbnail: thumbnail ?? track.thumbnail,
       description: description ?? track.description,
     };

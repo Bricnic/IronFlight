@@ -304,6 +304,8 @@ export interface CustomRing {
 export type CustomMode = "race" | "arena" | "demolition";
 export interface CustomLevel {
   name: string;
+  /** Runtime storage location relative to levels/, without the .json extension. */
+  sourcePath?: string;
   mode: CustomMode;
   spawn: { x: number; y: number; z: number; yaw: number; locked?: boolean; name?: string };
   checkpoints: CustomCheckpoint[];
@@ -585,6 +587,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
   if (errors.length) throw new Error(`Invalid custom level: ${errors.join("; ")}`);
   return {
     name,
+    ...(level.sourcePath === undefined ? {} : { sourcePath: level.sourcePath }),
     mode,
     spawn: { ...spawn },
     checkpoints: checkpoints.map((p) => ({ ...p })),

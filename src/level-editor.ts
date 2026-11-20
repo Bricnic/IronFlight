@@ -739,8 +739,8 @@ export function createLevelEditor(
     try {
       const valid = validateCustomLevel(store.level);
       saveLevel(undefined, valid)
-        .then(() => loadLevel(undefined, valid.name))
-        .then(() => {
+        .then((saved) => {
+          store.level.sourcePath = saved.sourcePath;
           store.markSaved();
           showStatus(`Saved ${valid.name}`);
           return refreshLevels();
@@ -819,6 +819,7 @@ export function createLevelEditor(
     }
     saveLevel(undefined, valid)
       .then((saved) => {
+        store.level.sourcePath = saved.sourcePath;
         store.markSaved();
         showStatus(`Saved ${saved.name}`);
         onPlaytest(toTrack(saved).id as `custom:${string}`);

@@ -138,7 +138,7 @@ if ($PSCmdlet.ParameterSetName -eq 'Record') {
     }
     $official = Join-Path $levelsDirectory 'official'
     $order = Get-Content -LiteralPath (Join-Path $official 'order.json') -Raw | ConvertFrom-Json
-    if ($LevelFile -notin $order.file -or !(Test-Path -LiteralPath (Join-Path $official $LevelFile) -PathType Leaf)) {
+    if ("/official/$LevelFile" -notin $order.file -or !(Test-Path -LiteralPath (Join-Path $official $LevelFile) -PathType Leaf)) {
         throw 'Record an image only after adding its level to the official lineup.'
     }
     $levelPath = Join-Path $official $LevelFile

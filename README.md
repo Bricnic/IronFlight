@@ -21,7 +21,9 @@ On Windows, double-click `start.cmd` to install missing dependencies, start the 
 
 Open http://127.0.0.1:5173 and choose a track. The level-select screen pauses the simulation. Use arrow keys to choose a track and Space to start. L returns to level select. W/Up accelerates; A/D or Left/Right steers; S/Down brakes then reverses; Space is the handbrake. R restarts the selected attempt and recenters the camera. Drag to orbit and scroll to zoom between 6 and 45 meters. Triple Loop's lane buttons restart that lane. Official finishes and timeouts show a result panel with Retry and Level select. The playback selector offers 1x, 4x and 16x, using the same fixed physics timestep. The lab's thirteen-part selector applies the same damage system as collisions and hazards.
 
-N and P cycle through the official lineup in the same order as level select. After completing a level, choose **Next level** to continue. The filenames listed in `levels/official/order.json` are added after Sky Slide in the order shown there. Each entry can also set a thumbnail and description for the level card.
+N and P cycle through the official lineup in the same order as level select. After completing a level, choose **Next level** to continue. The paths listed in `levels/official/order.json` (for example, `/official/Fairground.json`, relative to `levels/`) are added after Sky Slide in the order shown there. Each entry can also set a thumbnail and description for the level card.
+
+The level editor's Open level menu includes level files in `levels/` and its subfolders, displaying their relative paths. Saving keeps the original file location even if the level's name changes. New and imported levels default to `levels/`. Environment templates and other JSON metadata are excluded from the menu.
 
 Press backtick (`) for **Playtest tuning**. The current defaults live in `src/tuning-defaults.json`; Store as Defaults saves all current settings there in the local development server, and Reset tuning reloads that config. Tuning and colors also persist in this browser. Source saving is disabled in production builds.
 

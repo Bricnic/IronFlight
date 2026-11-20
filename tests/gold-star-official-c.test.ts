@@ -475,7 +475,7 @@ it("every official level JSON hides exactly one gold-star prefab", () => {
   const seen = new Set<string>();
   for (const { file } of order) {
     seen.add(file);
-    const level = levelJson(file);
+    const level = levelJson(file.replace(/^\/official\//, ""));
     const stars = level.prefabs.filter((p) => p.kind === "gold-star");
     expect(stars, `${file} hides one star`).toHaveLength(1);
     expect(stars[0].id, `${file} star id`).toBe(STAR_ID);
@@ -483,6 +483,6 @@ it("every official level JSON hides exactly one gold-star prefab", () => {
   // No official JSON outside the lineup may hide (or miss) a star either.
   for (const file of readdirSync("levels/official")) {
     if (file === "order.json" || !file.endsWith(".json")) continue;
-    expect(seen.has(file), `${file} is listed in order.json`).toBe(true);
+    expect(seen.has(`/official/${file}`), `${file} is listed in order.json`).toBe(true);
   }
 });

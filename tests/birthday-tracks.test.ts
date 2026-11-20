@@ -234,7 +234,7 @@ it("lists the birthday tracks last in build order", () => {
     file: string;
     thumbnail: string;
   }[];
-  expect(order.slice(-3).map((e) => e.file)).toEqual(TRACKS.map((t) => t.file));
+  expect(order.slice(-3).map((e) => e.file)).toEqual(TRACKS.map((t) => `/official/${t.file}`));
   for (const e of order.slice(-3)) {
     expect(e.thumbnail.startsWith("/tracks/")).toBe(true);
     expect(e.thumbnail.endsWith(".png")).toBe(true);

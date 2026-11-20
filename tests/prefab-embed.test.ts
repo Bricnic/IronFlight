@@ -48,7 +48,7 @@ it("keeps every official prefab base out of structural solid volumes", () => {
   const embedded: string[] = [];
   for (const { file } of order) {
     const level = JSON.parse(
-      readFileSync(`levels/official/${file}`, "utf8"),
+      readFileSync(`levels${file}`, "utf8"),
     ) as {
       solids: Solid[];
       prefabs: { id: string; kind: string; x: number; z: number; y?: number }[];

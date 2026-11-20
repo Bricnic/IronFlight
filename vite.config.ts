@@ -93,8 +93,9 @@ const gameCopyFile = fileURLToPath(
   new URL("./game-copy.json", import.meta.url),
 );
 const levelsDir = fileURLToPath(new URL("./levels/", import.meta.url));
-const LEVEL_NAME = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,63}$/;
+const LEVEL_PATH = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,63}(\/[A-Za-z0-9][A-Za-z0-9 _-]{0,63})*$/;
 function levelFile(name: string) {
+  if (!LEVEL_PATH.test(name)) throw new Error("Invalid level path");
   const file = resolve(levelsDir, `${name}.json`);
   if (!file.startsWith(levelsDir.endsWith(sep) ? levelsDir : levelsDir + sep))
     throw new Error("Invalid level name");
@@ -141,17 +142,30 @@ function customLevels(): Plugin {
           const url = new URL(req.url, "http://levels.local");
           if (req.method === "GET" && !url.searchParams.get("name")) {
             await mkdir(levelsDir, { recursive: true });
-            const files = await readdir(levelsDir);
+            const files = await readdir(levelsDir, { recursive: true, withFileTypes: true });
+            const names: string[] = [];
+            for (const entry of files) {
+              if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+              const path = resolve(entry.parentPath, entry.name);
+              const name = path.slice(levelsDir.length).replaceAll("\\", "/").slice(0, -5);
+              if (!LEVEL_PATH.test(name)) continue;
+              try {
+                validateCustomLevel(JSON.parse(await readFile(path, "utf8")));
+                names.push(name);
+              } catch {
+                // Indexes and environment templates are not editable levels.
+              }
+            }
             res.end(
               JSON.stringify(
-                files.filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5)),
+                names.sort(),
               ),
             );
             return;
           }
           if (req.method === "GET") {
             const name = url.searchParams.get("name") ?? "";
-            if (!LEVEL_NAME.test(name)) throw new Error("Invalid level name");
+            levelFile(name);
             try {
               res.end(await readFile(levelFile(name), "utf8"));
             } catch {
@@ -171,7 +185,7 @@ function customLevels(): Plugin {
           }
           if (req.method === "DELETE") {
             const name = url.searchParams.get("name") ?? "";
-            if (!LEVEL_NAME.test(name)) throw new Error("Invalid level name");
+            levelFile(name);
             try {
               await unlink(levelFile(name));
             } catch {
@@ -196,9 +210,10 @@ function customLevels(): Plugin {
             name: string;
             level: unknown;
           };
-          if (!LEVEL_NAME.test(name ?? "")) throw new Error("Invalid level name");
+          levelFile(name ?? "");
           const valid = validateCustomLevel(level);
-          if (valid.name !== name) throw new Error("Name and level disagree");
+          // Storage identity is independent of the editable display name.
+          delete valid.sourcePath;
           try {
             await mkdir(levelsDir, { recursive: true });
             const file = levelFile(name);

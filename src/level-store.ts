@@ -60,13 +60,16 @@ export async function saveLevel(
 ) {
   const { fetchFn, storage } = depsOrDefaults(deps);
   const valid = validateCustomLevel(level);
+  const path = valid.sourcePath ?? valid.name;
+  valid.sourcePath = path;
+  level.sourcePath = path;
   registerCustomTrack(toTrack(valid));
-  storage.setItem(levelKey(valid.name), JSON.stringify(valid));
+  storage.setItem(levelKey(path), JSON.stringify(valid));
   const names = readIndex(storage);
-  if (!names.includes(valid.name)) writeIndex(storage, [...names, valid.name]);
+  if (!names.includes(path)) writeIndex(storage, [...names, path]);
   // Transient disk hiccups (file locks, slow AV scans) retry; deterministic
   // rejections (400) and total outages still fall back to the local mirror.
-  const body = JSON.stringify({ name: valid.name, level: valid });
+  const body = JSON.stringify({ name: path, level: valid });
   for (let attempt = 1; ; attempt++) {
     try {
       const res = await fetchFn("/__levels", {
@@ -101,6 +104,7 @@ export async function loadLevel(
   }
   if (!raw) throw new Error(`Unknown custom level: ${name}`);
   const level = validateCustomLevel(raw);
+  level.sourcePath = name;
   // Reads must not clobber a live-registered track (in-playtest edits keep
   // stable gate ids that a fresh positional build would renumber).
   const track = toTrack(level);
@@ -126,13 +130,14 @@ export async function removeLevel(
   );
 }
 export function exportLevel(level: CustomLevel) {
-  return JSON.stringify(validateCustomLevel(level), null, 2) + "\n";
+  const { sourcePath: _sourcePath, ...data } = validateCustomLevel(level);
+  return JSON.stringify(data, null, 2) + "\n";
 }
 export async function importLevel(
   deps: Partial<LevelStoreDeps> | undefined,
   json: string,
 ) {
-  const level = validateCustomLevel(JSON.parse(json) as unknown);
+  const { sourcePath: _sourcePath, ...level } = validateCustomLevel(JSON.parse(json) as unknown);
   return saveLevel(
     deps,
     level.backgroundTemplate === undefined
