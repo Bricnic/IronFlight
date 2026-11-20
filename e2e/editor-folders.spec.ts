@@ -2,6 +2,38 @@ import { test, expect } from "@playwright/test";
 import { mkdir, readFile, writeFile, unlink, rmdir } from "node:fs/promises";
 import { blankLevel } from "../src/custom-level";
 
+test("playtesting an edited official level stays in the game without reloading", async ({ page }) => {
+  test.slow();
+  const file = "levels/official/Amber Undertow.json";
+  const original = await readFile(file);
+  try {
+    await page.goto("/");
+    await page.waitForFunction(() => !!window.__game);
+    await page.getByRole("button", { name: "Level editor", exact: true }).click();
+    await page.locator("#editor-levels").selectOption("official/Amber Undertow");
+    await expect(page.locator("#editor-status")).toContainText("Opened official/Amber Undertow");
+    await page.locator("#editor-solid-kind").selectOption("barrier");
+    await page.locator("#editor-add-solid").click();
+    const solids = await page.evaluate(() => window.__game!.editor().solids);
+    let navigations = 0;
+    page.on("framenavigated", (frame) => {
+      if (frame === page.mainFrame()) navigations++;
+    });
+    await page.locator("#editor-playtest").click();
+    await expect(page.locator("#level-editor")).toBeHidden();
+    // Vite's file watcher may reload after the save response and game start.
+    await page.waitForTimeout(2000);
+    expect(navigations).toBe(0);
+    await expect(page.locator("#level-select")).toBeHidden();
+    await expect(page.locator("#placement-bar")).toBeVisible();
+    expect(await page.evaluate(() => window.__game!.snapshot().run?.trackId)).toBe("custom:amber-undertow");
+    expect(await page.evaluate(() => window.__game!.track("custom:amber-undertow").custom!.solids.length)).toBe(solids);
+    expect(JSON.parse(await readFile(file, "utf8")).solids).toHaveLength(solids);
+  } finally {
+    await writeFile(file, original);
+  }
+});
+
 test("editor browses nested levels and saves to the original file", async ({ page }) => {
   test.slow();
   const folder = "levels/backgrounds/e2e-nested";

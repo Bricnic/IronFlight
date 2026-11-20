@@ -130,6 +130,23 @@ function gameCopy(): Plugin {
 function customLevels(): Plugin {
   return {
     name: "local-custom-levels",
+    async handleHotUpdate(ctx) {
+      if (
+        !resolve(ctx.file).startsWith(resolve(levelsDir) + sep) ||
+        !ctx.file.endsWith(".json")
+      ) return;
+      try {
+        validateCustomLevel(JSON.parse(await ctx.read()));
+      } catch {
+        // Lineup indexes, environment templates and invalid files keep normal HMR.
+        return;
+      }
+      for (const module of ctx.server.moduleGraph.getModulesByFile(ctx.file) ?? [])
+        ctx.server.moduleGraph.invalidateModule(module);
+      // Saves register the edited track in the running game. Official levels are
+      // also bundled imports: reloading them here would interrupt the playtest.
+      return [];
+    },
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith("/__levels")) {
