@@ -448,3 +448,9 @@ Validation: 153 focused unit tests and the build passed. The Mystic Caverns brow
 ## Gameplay right-click menu
 
 RED: a real right click on the gameplay canvas produced an uncancelled contextmenu event. The game canvas now prevents the browser's default context menu. The browser regression verifies cancellation after an actual right click. Validation: the browser regression and production build passed.
+
+## Solid light settings, cave roads and gold-star light
+
+RED: mixed solid/prefab bulk light edits were ignored, invalid solid light data passed validation, and gold stars resolved to zero output. Solids now share lumen/color properties, validation, save/load, bulk editing and the preview/gameplay light pool. Solid origins follow the rotated top surface. All road sections in the three official mystic cave levels now carry 50-lumen teal settings; migration checks confirmed no other level data changed. Gold-star defaults are 300 lumens in soft yellow for both custom and legacy tracks, and collected stars are excluded from the light sources. The staged Mystic Caverns data includes only the road-light changes from the committed version, preserving the user's other working edits.
+
+Validation: 45 focused unit tests and the production build passed. Two browser checks verify solid and mixed editing through preview/save/Playtest, all cave-road values and runtime light output, and legacy gold-star defaults. The cave lighting screenshot was also inspected.

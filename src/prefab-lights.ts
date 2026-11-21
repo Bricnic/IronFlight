@@ -1,11 +1,12 @@
 import * as T from "three";
-import { prefabY, type CustomPrefab } from "./custom-level";
+import { prefabY, type CustomPrefab, type CustomSolid } from "./custom-level";
 
 const DEFAULTS: Record<string, { lumens: number; color: number; height: number }> = {
   "cave-fairy": { lumens: 150, color: 0xff6fe0, height: 0 },
   firefly: { lumens: 150, color: 0xffd23b, height: 0 },
   "glow-mushroom": { lumens: 500, color: 0x4ff5e0, height: 2.6 },
   "birthday-candle": { lumens: 250, color: 0xffe6a3, height: 1.56 },
+  "gold-star": { lumens: 300, color: 0xffe6a3, height: 0 },
 };
 export function prefabLightSettings(p: Pick<CustomPrefab, "kind" | "lightLumens" | "lightColor">) {
   const defaults = DEFAULTS[p.kind];
@@ -19,15 +20,21 @@ export function validPrefabLightPatch(patch: Record<string, unknown>) {
 export class PrefabLights extends T.Group {
   static readonly capacity = 16;
   private pool: T.PointLight[] = [];
-  update(prefabs: CustomPrefab[], focus: T.Vector3, anchorFor?: (id: string) => T.Object3D | undefined) {
-    const sources = prefabs.flatMap(p => {
+  update(prefabs: CustomPrefab[], focus: T.Vector3, anchorFor?: (id: string, kind: "solid" | "prefab") => T.Object3D | undefined, solids: CustomSolid[] = []) {
+    const objects: { object: CustomPrefab | CustomSolid; kind: "solid" | "prefab" }[] = [
+      ...prefabs.map(object => ({ object, kind: "prefab" as const })),
+      ...solids.map(object => ({ object, kind: "solid" as const })),
+    ];
+    const sources = objects.flatMap(({ object: p, kind }) => {
       const settings = prefabLightSettings(p); if (settings.lumens <= 0) return [];
-      const anchor = anchorFor?.(p.id);
+      const anchor = anchorFor?.(p.id, kind);
       if (anchor && !anchor.visible) return [];
-      const origin = anchor?.getObjectByName("prefab-light-origin");
+      const origin = kind === "prefab" ? anchor?.getObjectByName("prefab-light-origin") : undefined;
+      const height = kind === "solid" ? (p as CustomSolid).h / 2 + 0.15 : settings.height;
       const position = origin ? origin.getWorldPosition(new T.Vector3()) : anchor
-        ? anchor.localToWorld(new T.Vector3(0, settings.height, 0))
-        : new T.Vector3(p.x, prefabY(p) + settings.height * (p.resizeScale ?? 1), p.z);
+        ? anchor.localToWorld(new T.Vector3(0, height, 0))
+        : kind === "solid" ? new T.Vector3(0, height, 0).applyEuler(new T.Euler(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ")).add(new T.Vector3(p.x, p.y, p.z))
+        : new T.Vector3(p.x, prefabY(p as CustomPrefab) + height * ((p as CustomPrefab).resizeScale ?? 1), p.z);
       return [{ id: p.id, position, ...settings }];
     }).sort((a, b) => a.position.distanceToSquared(focus) - b.position.distanceToSquared(focus)).slice(0, PrefabLights.capacity);
     while (this.pool.length < sources.length) {

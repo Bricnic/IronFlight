@@ -163,3 +163,5 @@ Headlights use shadowed spotlights, so walls block their illumination and prefab
 In the editor, wheel scrolling moves the camera and orbit pivot physically forward/backward. There is no minimum/maximum travel distance, the field of view stays fixed, and pan sensitivity does not shrink after scrolling inward.
 
 Glow mushrooms have solid tapered stems and domed caps. Their **Size** is explicit and scales both appearance and collision; moving one never changes its dimensions. Existing mushrooms in Mystic Caverns, Firefly Grotto and Lavabridge Abyss retain their previous in-game sizes through saved size values.
+
+Solids also expose **Light (lumens)** and **Light color**, including mixed solid/prefab bulk editing. Their point lights originate just above the top surface and follow rotation. Roads in the three mystic cave levels emit 50 lumens in teal. Gold stars, including those on legacy tracks, default to 300 lumens in soft yellow; collecting a star removes its light.

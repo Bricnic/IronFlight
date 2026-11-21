@@ -26,7 +26,7 @@ it("reports shared defaults and mixed values and limits mixed selections to shar
   const items = s.selectedEntries().map(e => s.selectedItem(e)!);
   expect(commonProperty(items, "yaw", s.level)).toEqual({ mixed: false, value: 0 });
   expect(commonProperty(items, "x", s.level).mixed).toBe(true);
-  expect(editableProperties(items).map(p => p.key)).toEqual(["x", "y", "z", "yaw"]);
+  expect(editableProperties(items).map(p => p.key)).toEqual(["x", "y", "z", "yaw", "lightLumens", "lightColor"]);
 });
 it("locks/unlocks the whole selection from the inspector without losing it", () => {
   const s = new EditorStore("Bulk"); const a = s.addPrefab("candle"), b = s.addPrefab("candle");

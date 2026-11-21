@@ -691,7 +691,7 @@ export function createLevelEditor(
       texRow.append(tex);
       props.append(texRow);
     }
-    if (current.kind === "prefab") {
+    if (current.kind === "prefab" || current.kind === "solid") {
       const light = prefabLightSettings(current.item);
       const lumens = numberField(props, "Light (lumens)", "lightLumens", light.lumens, commit("lightLumens"));
       lumens.min = "0";
@@ -699,6 +699,8 @@ export function createLevelEditor(
       const lightColor = el("input", { type: "color", "data-prop": "lightColor", value: `#${light.color.toString(16).padStart(6, "0")}` }) as HTMLInputElement;
       lightColor.addEventListener("change", () => store.updateSelected({ lightColor: parseInt(lightColor.value.slice(1), 16) }));
       lightRow.append(lightColor); props.append(lightRow);
+    }
+    if (current.kind === "prefab") {
       numberField(props, "Size", "resizeScale", (item.resizeScale as number | undefined) ?? 1, commit("resizeScale"));
       props.append(el("p", { class: "prop-hint" }, "Prefab resizing preserves proportions and updates gameplay size."));
       props.append(

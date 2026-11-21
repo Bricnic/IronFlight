@@ -170,7 +170,9 @@
       "d": 17.96,
       "yaw": 1.2925,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d1",
@@ -183,7 +185,9 @@
       "d": 17.96,
       "yaw": 1.2925,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d2",
@@ -196,7 +200,9 @@
       "d": 17.96,
       "yaw": 1.2925,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d3",
@@ -209,7 +215,9 @@
       "d": 17.96,
       "yaw": 1.2925,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d4",
@@ -222,7 +230,9 @@
       "d": 12.5,
       "yaw": 1.1309,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d5",
@@ -235,7 +245,9 @@
       "d": 12.5,
       "yaw": 0.8078,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d6",
@@ -248,7 +260,9 @@
       "d": 12.5,
       "yaw": 0.4847,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d7",
@@ -261,7 +275,9 @@
       "d": 12.5,
       "yaw": 0.1616,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d8",
@@ -274,7 +290,9 @@
       "d": 18.7,
       "yaw": 0,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d9",
@@ -287,7 +305,9 @@
       "d": 18.7,
       "yaw": 0,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d10",
@@ -300,7 +320,9 @@
       "d": 18.7,
       "yaw": 0,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d11",
@@ -313,7 +335,9 @@
       "d": 18.7,
       "yaw": 0,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d12",
@@ -326,7 +350,9 @@
       "d": 13.16,
       "yaw": 0.1717,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d13",
@@ -339,7 +365,9 @@
       "d": 13.16,
       "yaw": 0.5152,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d14",
@@ -352,7 +380,9 @@
       "d": 13.16,
       "yaw": 0.8586,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d15",
@@ -365,7 +395,9 @@
       "d": 15.08,
       "yaw": 1.0304,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d16",
@@ -378,7 +410,9 @@
       "d": 15.08,
       "yaw": 1.0304,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d17",
@@ -391,7 +425,9 @@
       "d": 15.08,
       "yaw": 1.0304,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-a-d18",
@@ -404,7 +440,9 @@
       "d": 15.08,
       "yaw": 1.0304,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-tun0-wl0",
@@ -508,7 +546,9 @@
       "d": 18.37,
       "yaw": 1.8438,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-apr-d1",
@@ -521,7 +561,9 @@
       "d": 18.37,
       "yaw": 1.8438,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-apr-d2",
@@ -534,7 +576,9 @@
       "d": 18.37,
       "yaw": 1.8438,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-apr-d3",
@@ -547,7 +591,9 @@
       "d": 8.41,
       "yaw": 1.5365,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-apr-d4",
@@ -560,7 +606,9 @@
       "d": 8.41,
       "yaw": 0.9219,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-apr-d5",
@@ -573,7 +621,9 @@
       "d": 8.41,
       "yaw": 0.3073,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-apr-d6",
@@ -586,7 +636,9 @@
       "d": 17.6,
       "yaw": 0,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-rail-w",
@@ -761,7 +813,9 @@
       "d": 16.1,
       "yaw": 0.9828,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d1",
@@ -774,7 +828,9 @@
       "d": 16.1,
       "yaw": 0.9828,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d2",
@@ -787,7 +843,9 @@
       "d": 16.1,
       "yaw": 0.9828,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d3",
@@ -800,7 +858,9 @@
       "d": 16.1,
       "yaw": 0.9828,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d4",
@@ -813,7 +873,9 @@
       "d": 16.1,
       "yaw": 0.9828,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d5",
@@ -826,7 +888,9 @@
       "d": 16.1,
       "yaw": 0.9828,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d6",
@@ -839,7 +903,9 @@
       "d": 3.35,
       "yaw": 1.0035,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d7",
@@ -852,7 +918,9 @@
       "d": 3.35,
       "yaw": 1.045,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d8",
@@ -865,7 +933,9 @@
       "d": 3.35,
       "yaw": 1.0864,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d9",
@@ -878,7 +948,9 @@
       "d": 15.17,
       "yaw": 1.1071,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d10",
@@ -891,7 +963,9 @@
       "d": 15.17,
       "yaw": 1.1071,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d11",
@@ -904,7 +978,9 @@
       "d": 15.17,
       "yaw": 1.1071,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d12",
@@ -917,7 +993,9 @@
       "d": 12.49,
       "yaw": 0.82,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d13",
@@ -930,7 +1008,9 @@
       "d": 12.49,
       "yaw": 0.2456,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d14",
@@ -943,7 +1023,9 @@
       "d": 12.49,
       "yaw": -0.3288,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d15",
@@ -956,7 +1038,9 @@
       "d": 12.49,
       "yaw": -0.9031,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d16",
@@ -969,7 +1053,9 @@
       "d": 18.18,
       "yaw": -1.1903,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d17",
@@ -982,7 +1068,9 @@
       "d": 18.18,
       "yaw": -1.1903,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d18",
@@ -995,7 +1083,9 @@
       "d": 18.18,
       "yaw": -1.1903,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d19",
@@ -1008,7 +1098,9 @@
       "d": 18.18,
       "yaw": -1.1903,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d20",
@@ -1021,7 +1113,9 @@
       "d": 18.18,
       "yaw": -1.1903,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d21",
@@ -1034,7 +1128,9 @@
       "d": 8.26,
       "yaw": -1.2866,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d22",
@@ -1047,7 +1143,9 @@
       "d": 8.26,
       "yaw": -1.4792,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d23",
@@ -1060,7 +1158,9 @@
       "d": 8.26,
       "yaw": -1.6719,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d24",
@@ -1073,7 +1173,9 @@
       "d": 18.16,
       "yaw": -1.7682,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d25",
@@ -1086,7 +1188,9 @@
       "d": 18.16,
       "yaw": -1.7682,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d26",
@@ -1099,7 +1203,9 @@
       "d": 18.16,
       "yaw": -1.7682,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d27",
@@ -1112,7 +1218,9 @@
       "d": 18.16,
       "yaw": -1.7682,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d28",
@@ -1125,7 +1233,9 @@
       "d": 18.16,
       "yaw": -1.7682,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d29",
@@ -1138,7 +1248,9 @@
       "d": 18.16,
       "yaw": -1.7682,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-b-d30",
@@ -1151,7 +1263,9 @@
       "d": 18.16,
       "yaw": -1.7682,
       "color": 13162704,
-      "texture": "glow_moss_01"
+      "texture": "glow_moss_01",
+      "lightLumens": 50,
+      "lightColor": 5240288
     },
     {
       "id": "la-tun1-wl0",

@@ -1070,7 +1070,9 @@ export class GameView {
     }
     this.snapCamera = false;
     for (const models of [this.officialCourse, this.comic, this.dungeon, this.fairground, this.resizedPrefabs, this.props, this.looseBlocks, this.fragileIce]) configureShadowSurfaces(models);
-    this.prefabLights.update(s.courseTrack?.custom?.prefabs ?? [], root, id => this.scene.getObjectByName(id));
+    const prefabs = s.courseTrack?.custom?.prefabs ?? (s.courseTrack?.goldStars ?? []).map(p => ({ ...p, kind: "gold-star" }));
+    this.prefabLights.update(prefabs.filter(p => p.kind !== "gold-star" || !s.trackRun?.stars.has(p.id)), root,
+      (id, kind) => kind === "solid" ? this.officialCourse.getObjectByName(id) : this.scene.getObjectByName(id), s.courseTrack?.custom?.solids);
     if (draw) this.renderer.render(this.scene, this.camera);
   }
   hazardOverview(id: string) {
