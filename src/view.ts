@@ -155,6 +155,7 @@ export class GameView {
       lastX = 0,
       lastY = 0;
     const canvas = this.renderer.domElement;
+    canvas.addEventListener("contextmenu", (e) => e.preventDefault());
     canvas.addEventListener("pointerdown", (e) => {
       if (e.button !== 0) return;
       dragging = true;
