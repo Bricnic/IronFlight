@@ -146,3 +146,6 @@ Object help labels are off by default. Enable Show object help text in Settings 
 
 
 The Select level header button stays available on every screen. Open Destruction lab from the level-selection menu; return using Select level. Collection cards keep their existing footprint while fitting the complete artwork above a title and compact gold/star progress.
+
+
+In the level editor, middle-mouse drag always orbits the camera, including over unlocked objects and while using another tool. Shift does not turn middle-drag into a pan. Rotator uses left drag for yaw and right drag for pitch; roll remains editable in its degree field.

@@ -74,14 +74,14 @@ export class ViewportPickCycle {
   }
 }
 export type PanPlane = "xz" | "xy";
-/** Pan tool: left drags stay on the ground plane, right/middle go vertical. */
+/** Pan tool: left drags stay on the ground plane, right goes vertical. */
 export function panPlaneForButton(button: number): PanPlane {
   return button === 0 ? "xz" : "xy";
 }
 export type RotatorAxis = "yaw" | "pitch" | "roll";
-/** Rotator tool: exactly one euler axis per mouse button. */
-export function rotatorAxisForButton(button: number): RotatorAxis {
-  return button === 0 ? "yaw" : button === 2 ? "pitch" : "roll";
+/** Middle mouse is reserved for camera orbit, including in the Rotator tool. */
+export function rotatorAxisForButton(button: number): RotatorAxis | null {
+  return button === 0 ? "yaw" : button === 2 ? "pitch" : null;
 }
 /** Advance one euler axis by horizontal drag pixels; others untouched. */
 export function applyRotator(
@@ -166,7 +166,7 @@ function attachOrbit(
   dom.addEventListener("pointerdown", (e) => {
     if (canStart && !canStart(e)) return;
     dragging = true;
-    panning = e.shiftKey || e.button === 2;
+    panning = e.button !== 1 && (e.shiftKey || e.button === 2);
     px = e.clientX;
     py = e.clientY;
     dom.setPointerCapture(e.pointerId);
@@ -280,6 +280,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   let downX = 0;
   let downY = 0;
   let moved = false;
+  let middleOrbit = false;
   const cycle = new ViewportPickCycle();
   let pendingClick: { x: number; y: number; picks: NonNullable<EditorSelection>[]; context: string } | null = null;
   let clipDrag: { x: number; z: number; y: number; before: ClipRect[] } | null = null;
@@ -287,7 +288,13 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   let prefabResize: { original: import("./custom-level").CustomPrefab; matrix: T.Matrix4; inverse: T.Matrix4; box: ResizeBox; handle: ResizeHandle; plane: T.Plane; start: T.Vector3; changed: boolean; lastFactor: number } | null = null;
   const canStart = (e: PointerEvent) => {
     pendingClick = null;
-    // A look session ends on any viewport click; the click selects nothing.
+    if (e.button === 1) {
+      middleOrbit = true;
+      downEmpty = false;
+      cycle.reset();
+      return true;
+    }
+    // A non-middle click ends a look session without selecting anything.
     if (store.tool === "look") {
       store.endGesture();
       store.setTool("select");
@@ -414,6 +421,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     canStart,
   );
   renderer.domElement.addEventListener("pointermove", (e) => {
+    if (middleOrbit) return;
     if (clipDrag && store.clip) {
       raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
       const hit = planeHit(raycaster.ray.origin, raycaster.ray.direction, clipDrag.y);
@@ -536,6 +544,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       store.updateSelected({ x: hit.x - drag.offX, z: hit.z - drag.offZ });
   });
   const endGesture = (e: PointerEvent) => {
+    if (middleOrbit) { middleOrbit = false; return; }
     if (prefabResize) {
       const cancel = e.type === "pointercancel" && prefabResize.changed;
       prefabResize = null; store.endGesture(); if (cancel) store.undo(); return;

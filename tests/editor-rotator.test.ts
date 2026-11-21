@@ -1,10 +1,10 @@
 import { expect, it } from "vitest";
 import { applyRotator, rotatorAxisForButton } from "../src/editor-viewport";
 
-it("routes left to yaw, right to pitch, middle to roll", () => {
+it("routes left to yaw and right to pitch, reserving middle for the camera", () => {
   expect(rotatorAxisForButton(0)).toBe("yaw");
   expect(rotatorAxisForButton(2)).toBe("pitch");
-  expect(rotatorAxisForButton(1)).toBe("roll");
+  expect(rotatorAxisForButton(1)).toBeNull();
 });
 
 it("drives exactly one axis per drag", () => {

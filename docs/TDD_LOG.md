@@ -411,3 +411,10 @@ RED: the seeded card browser test found a 9px earned-medal label against 10px PL
 ## Collection artwork space and persistent level navigation
 
 RED: browser checks found the collection description still present and the level-navigation button hidden on menu screens. Collection cards retain a 358px footprint, dedicate the recovered description/OPEN space to the image, and contain the entire artwork without cropping. Progress is reduced to gold and star ratios. Select level is always visible in the header; the old lab/back-to-routes toggle is removed, while the lab entry remains in the level-selection menu. Browser coverage exercises desktop/mobile artwork, compact progress, navigation through settings/vehicles/editor/play/lab, previous level-card best times, startup and narrow-screen storage fallback. Screenshots show the complete HAPPY BIRTHDAY headline and the simplified lab header.
+
+
+## Editor middle-mouse camera orbit
+
+RED: a browser drag on an unlocked barrier changed its X/Z instead of moving the camera. Middle pointer-down now bypasses picking and every object tool; subsequent move/up events remain camera-only. Shift+middle also stays an orbit. Coverage checks unchanged object data, selection and camera target with changed camera projection in Select, Pan, Eyedropper, Rotator, Resize, Clip and Look, plus locked objects and prefab selection. The old middle-to-roll expectation is replaced with camera orbit; numeric roll remains in degrees.
+
+Validation: 20 focused unit tests, both browser regression tests (including the wall Playtest), and the production build passed.

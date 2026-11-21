@@ -399,7 +399,7 @@ test("wireframe tools pan, sample textures and rotate", async ({ page }) => {
     "e2e-tools",
   );
 });
-test("wireframe rotator drives one euler axis per button and drives the yawed wall", async ({
+test("wireframe rotator drives yaw/pitch, edits roll in degrees and drives the yawed wall", async ({
   page,
 }) => {
   await page.goto("/");
@@ -472,7 +472,7 @@ test("wireframe rotator drives one euler axis per button and drives the yawed wa
     "Opened e2e-euler",
     { timeout: 15000 },
   );
-  // Each mouse button drives exactly one euler axis.
+  // Left/right drive yaw/pitch; middle is reserved for camera orbit.
   await page.locator("#editor-tool-rotator").click();
   const spinAngles = () =>
     page.evaluate(async () => {
@@ -517,8 +517,13 @@ test("wireframe rotator drives one euler axis per button and drives the yawed wa
   expect(pitched.roll).toBeCloseTo(0, 6);
   await dragSpin("middle");
   await save();
+  expect(await spinAngles()).toEqual(pitched);
+  // Roll remains editable in degrees through the property panel.
+  await page.locator('#editor-props input[data-prop="roll"]').fill("45");
+  await page.locator('#editor-props input[data-prop="roll"]').dispatchEvent("change");
+  await save();
   const rolled = await spinAngles();
-  expect(Math.abs(rolled.roll)).toBeGreaterThan(0.02);
+  expect(rolled.roll).toBeCloseTo(Math.PI / 4);
   expect(rolled.yaw).toBeCloseTo(yawed.yaw, 6);
   expect(rolled.angle).toBeCloseTo(pitched.angle, 6);
   // The yaw numeric swings the road-blocking wall open.
