@@ -67,6 +67,7 @@ export interface GameHarness {
     prefabArrows: { id: string; dir: { x: number; z: number } }[];
     centerPick: unknown;
   };
+  prefabBounds(id: string): { min: number[]; max: number[] } | null;
   editorProject(point: { x: number; y: number; z: number }): {
     x: number;
     y: number;

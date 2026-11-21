@@ -1068,7 +1068,7 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     // Ambient decor carries no warning label (like candles and jail cells).
     model.bat = buildBat(root);
   } else if (h.kind === "glow-mushroom") {
-    model.mushroom = buildMushroom(root, Math.abs(Math.round(h.x + h.z)) % 5);
+    model.mushroom = buildMushroom(root);
   } else if (h.kind === "cave-fairy") {
     model.fairy = buildFairy(root);
   } else if (h.kind === "firefly") {

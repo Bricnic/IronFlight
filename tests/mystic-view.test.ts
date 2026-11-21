@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import * as T from "three";
 import { buildDungeonModel } from "../src/dungeon-view";
+import { buildEditorPrefab } from "../src/editor-prefabs";
 import {
   buildBat,
   buildCaterpillar,
@@ -28,6 +29,16 @@ beforeEach(() => {
   vi.stubGlobal("document", {
     createElement: () => ({ width: 0, height: 0, getContext: () => ctx }),
   });
+});
+it("mushroom dimensions are fixed across placement positions and identical in preview and gameplay models", () => {
+  let expected: T.Vector3 | undefined;
+  for (const x of [0, 1, 2, 3, 4, 25.3]) {
+    const p = { id: "mushroom", kind: "glow-mushroom", x, z: 8, y: 4 };
+    const preview = new T.Box3().setFromObject(buildEditorPrefab(p, true)).getSize(new T.Vector3());
+    const game = new T.Box3().setFromObject(buildDungeonModel({ ...p, kind: "glow-mushroom", phase: 0 }).root).getSize(new T.Vector3());
+    expect(preview.distanceTo(game)).toBeLessThan(1e-5);
+    if (expected) expect(preview.distanceTo(expected)).toBeLessThan(1e-5); else expected = preview;
+  }
 });
 
 for (const kind of ["cave-caterpillar", "cave-moth", "cave-bat", "glow-mushroom", "cave-fairy", "firefly"] as const) {

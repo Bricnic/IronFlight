@@ -161,3 +161,5 @@ Level and World grid settings start collapsed. Every prefab exposes **Light (lum
 Headlights use shadowed spotlights, so walls block their illumination and prefab surfaces cast floor shadows. The old unoccluded decorative cones have been removed. Shadow rendering follows the video-quality setting.
 
 In the editor, wheel scrolling moves the camera and orbit pivot physically forward/backward. There is no minimum/maximum travel distance, the field of view stays fixed, and pan sensitivity does not shrink after scrolling inward.
+
+Glow mushrooms have solid tapered stems and domed caps. Their **Size** is explicit and scales both appearance and collision; moving one never changes its dimensions. Existing mushrooms in Mystic Caverns, Firefly Grotto and Lavabridge Abyss retain their previous in-game sizes through saved size values.

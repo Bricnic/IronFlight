@@ -752,6 +752,12 @@ export class GameView {
       },
     };
   }
+  prefabBounds(id: string) {
+    const root = this.scene.getObjectByName(id);
+    if (!root) return null;
+    const bounds = new T.Box3().setFromObject(root);
+    return { min: bounds.min.toArray(), max: bounds.max.toArray() };
+  }
   resize() {
     const host = this.renderer.domElement.parentElement!;
     const w = host.clientWidth,

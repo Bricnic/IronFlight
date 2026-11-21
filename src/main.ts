@@ -1366,6 +1366,7 @@ async function boot() {
       editorProject: (point: { x: number; y: number; z: number }) =>
         editorScreens.projectViewport(point),
       inspectPreview: () => editorScreens.inspectPreview(),
+      prefabBounds: (id: string) => view.prefabBounds(id),
       inspectSolids: () => view.inspectSolids(),
       inspectDragons: () => view.inspectDragons(),
       textureLoadErrors: () => textureLoadErrors(),

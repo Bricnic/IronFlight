@@ -2,6 +2,7 @@ import * as T from "three";
 import { BAT, MOTH } from "./dungeon-hazards";
 import { applyNightGlow, makeGlowTexture } from "./course-view";
 import type { DungeonPhysics } from "./dungeon-physics";
+import { MUSHROOM } from "./mushroom-shape";
 
 type Mech = DungeonPhysics["mechanisms"][number];
 type XYZ = [number, number, number];
@@ -336,25 +337,23 @@ export function poseBat(
 }
 
 /** Glow mushroom: spotted cap, gills, stalk; cyan beacon. */
-export function buildMushroom(root: T.Group, variant = 0) {
-  const scale = 0.8 + (variant % 3) * 0.45;
+export function buildMushroom(root: T.Group) {
   const stalk = plastic(0xe8dcc8);
   const capMat = glowMat(0x1a5a5a, 0x4ff5e0, 0.3, 1.0, 0.7);
   const spotMat = glowMat(0xd8f8f0, 0xbffff0, 0.25, 0.8);
   const g = new T.Group();
-  g.scale.setScalar(scale);
   root.add(g);
-  const stem = mesh(g, new T.CylinderGeometry(0.45, 0.65, 2.2, 14), stalk, [0, 1.1, 0]);
+  const stem = mesh(g, new T.CylinderGeometry(MUSHROOM.stemTopRadius, MUSHROOM.stemBottomRadius, MUSHROOM.stemHeight, 14), stalk, [0, MUSHROOM.stemHeight / 2, 0]);
   stem.userData.animate = true;
   const ring = mesh(g, new T.TorusGeometry(0.5, 0.12, 8, 16), stalk, [0, 1.4, 0]);
   ring.rotation.x = Math.PI / 2;
   ring.userData.animate = true;
-  const cap = mesh(g, new T.SphereGeometry(1.5, 22, 12, 0, Math.PI * 2, 0, Math.PI / 2), capMat, [0, 2.1, 0]);
+  const cap = mesh(g, new T.SphereGeometry(MUSHROOM.capRadius, 22, 12, 0, Math.PI * 2, 0, Math.PI / 2), capMat, [0, MUSHROOM.capY, 0]);
   cap.userData.animate = true;
-  const gills = mesh(g, new T.CylinderGeometry(1.35, 1.35, 0.18, 20), stalk, [0, 2.05, 0]);
+  const gills = mesh(g, new T.CylinderGeometry(MUSHROOM.gillRadius, MUSHROOM.gillRadius, MUSHROOM.gillHeight, 20), stalk, [0, MUSHROOM.gillY, 0]);
   gills.userData.animate = true;
   for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2 + variant;
+    const a = (i / 7) * Math.PI * 2;
     const spot = mesh(
       g,
       new T.SphereGeometry(0.22 - (i % 3) * 0.04, 8, 6),
@@ -365,7 +364,7 @@ export function buildMushroom(root: T.Group, variant = 0) {
     spot.userData.animate = true;
   }
   halo(g, 0x4ff5e0, 5, [0, 2.6, 0], 0.6);
-  return { top: 3.4 * scale };
+  return { top: 3.4 };
 }
 
 export function poseMushroom(

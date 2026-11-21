@@ -1,5 +1,6 @@
 import { beforeAll, expect, it } from "vitest";
 import { Simulation, initPhysics } from "../src/simulation";
+import R from "@dimforge/rapier3d-compat";
 import {
   toTrack,
   validateCustomLevel,
@@ -9,6 +10,35 @@ import {
 } from "../src/custom-level";
 
 beforeAll(initPhysics);
+
+it("mushroom stems and domed caps stay the same size across positions and authored heights", () => {
+  for (const x of [0, 1, 2, 3, 4]) {
+    const sim = mysticFixture([{ id: "mushroom", kind: "glow-mushroom", x, y: 5, z: 0 }]);
+    try {
+      const colliders = sim.dungeon.mechanisms[0].colliders;
+      expect(colliders).toHaveLength(2); expect(colliders.every(c => !c.isSensor())).toBe(true);
+      const scale = 1;
+      const hit = (height: number, offset: number) => colliders.some(c => c.castRay(new R.Ray({ x: x + 5, y: 5 + height * scale, z: offset * scale }, { x: -1, y: 0, z: 0 }), 10, true) >= 0);
+      expect(hit(1.1, 0)).toBe(true); // stem
+      expect(hit(2.5, 0.9)).toBe(true); // cap overhang
+      expect(hit(1.1, 0.9)).toBe(false); // open space below the cap
+      expect(hit(3.8, 0)).toBe(false); // above the dome
+    } finally { sim.dispose(); }
+  }
+});
+it("resized mushrooms scale their solid overhang and physically stop a driving truck", () => {
+  const sim = mysticFixture([{ id: "mushroom", kind: "glow-mushroom", x: 0, z: 0, resizeScale: 3 }], undefined, -15);
+  const clear = mysticFixture([], undefined, -15);
+  try {
+    const handles = sim.resizedPrefabs[0].space.colliders;
+    expect(handles.size).toBe(2);
+    const ray = new R.Ray({ x: 10, y: 2.5 * 3, z: 0.9 * 3 }, { x: -1, y: 0, z: 0 });
+    expect([...handles].some(handle => sim.world.getCollider(handle).castRay(ray, 20, true) >= 0)).toBe(true);
+    sim.run(3, { throttle: 1 }); clear.run(3, { throttle: 1 });
+    expect(clear.body.translation().z).toBeGreaterThan(5);
+    expect(sim.body.translation().z).toBeLessThan(-2);
+  } finally { sim.dispose(); clear.dispose(); }
+});
 
 const minimal = (prefabs: CustomPrefab[] = [], backgroundTemplate?: string): CustomLevel => ({
   name: "Mystic Data",
@@ -23,8 +53,9 @@ const minimal = (prefabs: CustomPrefab[] = [], backgroundTemplate?: string): Cus
   ...(backgroundTemplate === undefined ? {} : { backgroundTemplate }),
 });
 
-function mysticFixture(prefabs: CustomPrefab[], backgroundTemplate?: string) {
-  const track = toTrack(validateCustomLevel(minimal(prefabs, backgroundTemplate)));
+function mysticFixture(prefabs: CustomPrefab[], backgroundTemplate?: string, spawnZ = -100) {
+  const level = minimal(prefabs, backgroundTemplate); level.spawn.z = spawnZ;
+  const track = toTrack(validateCustomLevel(level));
   registerCustomTrack(track);
   const sim = new Simulation();
   sim.startTrack(track.id);

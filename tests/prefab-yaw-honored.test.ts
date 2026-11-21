@@ -283,7 +283,6 @@ const PHYSICS_EXEMPT = new Map<string, string>([
   ["cave-caterpillar", "NO_COLLIDERS: radial touch zone plus planar chase; model carries yaw"],
   ["cave-moth", "NO_COLLIDERS: radial dust/crash zones plus planar chase; model carries yaw"],
   ["cave-bat", "NO_COLLIDERS: radial flee trigger, harmless; model carries yaw"],
-  ["glow-mushroom", "NO_COLLIDERS: static glow decor; model carries yaw"],
   ["cave-fairy", "NO_COLLIDERS: wandering glow decor; model carries yaw"],
   ["firefly", "NO_COLLIDERS: wandering glow decor; model carries yaw"],
   [

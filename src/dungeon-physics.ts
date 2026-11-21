@@ -5,6 +5,7 @@ import type { Simulation } from "./simulation";
 import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
+import { MUSHROOM } from "./mushroom-shape";
 import {
   ANCHOR,
   BALLOON,
@@ -206,7 +207,25 @@ export class DungeonPhysics {
       );
       m.colliders.push(c);
     };
-    if (isChristmasLethal(h.kind)) {
+    if (h.kind === "glow-mushroom") {
+      const stem: number[] = [], cap: number[] = [];
+      const ring = (points: number[], radius: number, y: number) => {
+        for (let i = 0; i < 16; i++) {
+          const angle = i * Math.PI / 8;
+          points.push(radius * Math.cos(angle), y, radius * Math.sin(angle));
+        }
+      };
+      ring(stem, MUSHROOM.stemBottomRadius, 0); ring(stem, MUSHROOM.stemTopRadius, MUSHROOM.stemHeight);
+      ring(cap, MUSHROOM.gillRadius, MUSHROOM.gillY - MUSHROOM.gillHeight / 2);
+      for (let i = 0; i <= 8; i++) {
+        const angle = i * Math.PI / 16;
+        ring(cap, MUSHROOM.capRadius * Math.sin(angle), MUSHROOM.capY + MUSHROOM.capRadius * Math.cos(angle));
+      }
+      for (const points of [stem, cap]) {
+        const shape = R.ColliderDesc.convexHull(new Float32Array(points))!;
+        m.colliders.push(world.createCollider(shape.setTranslation(h.x, h.y ?? 0, h.z).setRotation(yawQuat()).setFriction(0.8)));
+      }
+    } else if (isChristmasLethal(h.kind)) {
       // Press traps keep solid side posts; the rest drive straight through
       // like hands/scissors and kill via the shared snap-strike check.
       if (

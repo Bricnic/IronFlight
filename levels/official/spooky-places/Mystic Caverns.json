@@ -1077,35 +1077,40 @@
       "kind": "glow-mushroom",
       "x": -10.5,
       "z": -185,
-      "y": 0
+      "y": 0,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-tun0-tsh-1",
       "kind": "glow-mushroom",
       "x": 10.5,
       "z": -165,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.25
     },
     {
       "id": "mc-tun0-tsh-2",
       "kind": "glow-mushroom",
       "x": -10.5,
       "z": -145,
-      "y": 0
+      "y": 0,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-tun0-tsh-3",
       "kind": "glow-mushroom",
       "x": 10.5,
       "z": -125,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.25
     },
     {
       "id": "mc-tun0-tsh-4",
       "kind": "glow-mushroom",
       "x": -10.5,
       "z": -105,
-      "y": 0
+      "y": 0,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-cat-1",
@@ -1160,21 +1165,24 @@
       "kind": "glow-mushroom",
       "x": -5.98,
       "z": -177,
-      "y": 0
+      "y": 0,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-grove-s0-mush-1",
       "kind": "glow-mushroom",
       "x": -1.68,
       "z": -169.48,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.25
     },
     {
       "id": "mc-grove-s0-mush-2",
       "kind": "glow-mushroom",
       "x": -10.34,
       "z": -169.52,
-      "y": 0
+      "y": 0,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-grove-s0-fairy",
@@ -1209,21 +1217,24 @@
       "kind": "glow-mushroom",
       "x": 6.02,
       "z": -170,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.25
     },
     {
       "id": "mc-grove-s1-mush-1",
       "kind": "glow-mushroom",
       "x": 10.32,
       "z": -162.48,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.7
     },
     {
       "id": "mc-grove-s1-mush-2",
       "kind": "glow-mushroom",
       "x": 1.66,
       "z": -162.52,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.25
     },
     {
       "id": "mc-grove-s1-fairy",
@@ -1258,28 +1269,32 @@
       "kind": "glow-mushroom",
       "x": -29.2,
       "z": -62.72,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.7
     },
     {
       "id": "mc-grove-a-mush-1",
       "kind": "glow-mushroom",
       "x": -22.28,
       "z": -64.2,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.25
     },
     {
       "id": "mc-grove-a-mush-2",
       "kind": "glow-mushroom",
       "x": -20.8,
       "z": -57.28,
-      "y": 0
+      "y": 0,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-grove-a-mush-3",
       "kind": "glow-mushroom",
       "x": -27.72,
       "z": -55.8,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.25
     },
     {
       "id": "mc-grove-a-fairy",
@@ -1314,28 +1329,32 @@
       "kind": "glow-mushroom",
       "x": 35.8,
       "z": 97.28,
-      "y": 0
+      "y": 0,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-grove-b-mush-1",
       "kind": "glow-mushroom",
       "x": 42.72,
       "z": 95.8,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.25
     },
     {
       "id": "mc-grove-b-mush-2",
       "kind": "glow-mushroom",
       "x": 44.2,
       "z": 102.72,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.7
     },
     {
       "id": "mc-grove-b-mush-3",
       "kind": "glow-mushroom",
       "x": 37.28,
       "z": 104.2,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.25
     },
     {
       "id": "mc-grove-b-fairy",
@@ -1370,14 +1389,16 @@
       "kind": "glow-mushroom",
       "x": 130.54,
       "z": 96.1,
-      "y": 6
+      "y": 6,
+      "resizeScale": 1.7
     },
     {
       "id": "mc-grove-peak-mush-1",
       "kind": "glow-mushroom",
       "x": 121.46,
       "z": 91.9,
-      "y": 6
+      "y": 6,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-grove-peak-fairy",
@@ -1412,21 +1433,24 @@
       "kind": "glow-mushroom",
       "x": -99.2,
       "z": 42.28,
-      "y": 0
+      "y": 0,
+      "resizeScale": 1.7
     },
     {
       "id": "mc-grove-c-mush-1",
       "kind": "glow-mushroom",
       "x": -90.55,
       "z": 42.73,
-      "y": 0
+      "y": 0,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-grove-c-mush-2",
       "kind": "glow-mushroom",
       "x": -95.26,
       "z": 49.99,
-      "y": 0
+      "y": 0,
+      "resizeScale": 0.8
     },
     {
       "id": "mc-grove-c-fairy",
