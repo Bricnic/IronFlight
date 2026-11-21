@@ -616,28 +616,32 @@
       "kind": "birthday-candle",
       "x": -14,
       "y": 0,
-      "z": 2
+      "z": 2,
+      "resizeScale": 3
     },
     {
       "id": "candle-2",
       "kind": "birthday-candle",
       "x": -14,
       "y": 0,
-      "z": 118
+      "z": 118,
+      "resizeScale": 3
     },
     {
       "id": "candle-3",
       "kind": "birthday-candle",
       "x": 86,
       "y": 0,
-      "z": 2
+      "z": 2,
+      "resizeScale": 3
     },
     {
       "id": "candle-4",
       "kind": "birthday-candle",
       "x": 86,
       "y": 0,
-      "z": 118
+      "z": 118,
+      "resizeScale": 3
     },
     {
       "id": "food-0",
