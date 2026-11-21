@@ -267,6 +267,9 @@ export interface CustomSolid {
   pianoKey?: number;
 }
 export interface CustomPrefab {
+  /** Point light output in lumens; omitted values use kind defaults. */
+  lightLumens?: number;
+  lightColor?: number;
   /** Editor resize, independent of existing prefab-specific size parameters. */
   resizeScale?: number;
   group?: string;
@@ -576,6 +579,8 @@ export function validateCustomLevel(input: unknown): CustomLevel {
       p?.scale === undefined || (finite(p.scale) && p.scale > 0),
       `prefab ${p?.id ?? i} needs a positive finite scale`,
     );
+    check(errors, p?.lightLumens === undefined || finite(p.lightLumens) && p.lightLumens >= 0, `prefab ${p?.id ?? i} needs nonnegative finite light lumens`);
+    check(errors, p?.lightColor === undefined || Number.isInteger(p.lightColor) && p.lightColor >= 0 && p.lightColor <= 0xffffff, `prefab ${p?.id ?? i} needs a valid light color`);
     check(
       errors,
       p?.scale === undefined ||

@@ -1461,7 +1461,7 @@ export class DungeonView extends T.Group {
       this.candlePool,
       this.candleSources(),
       new T.Vector3(focus.x, focus.y, focus.z),
-      s.weather.night,
+      s.weather.night && !s.courseTrack?.custom,
       s.time,
     );
     if (this.mysticPool.length === 0) this.mysticPool = buildMysticLightPool();
@@ -1470,7 +1470,7 @@ export class DungeonView extends T.Group {
       this.mysticPool,
       this.mysticSources(),
       new T.Vector3(focus.x, focus.y, focus.z),
-      s.weather.night,
+      s.weather.night && !s.courseTrack?.custom,
       s.time,
     );
   }

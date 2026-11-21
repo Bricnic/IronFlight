@@ -36,11 +36,11 @@ it("allows levels to override mystic permanent night while respecting weather se
   expect(levelWeather(day, false, day, undefined, true).night).toBe(true);
   expect(levelWeather({ night: true, rain: true }, false, day, "mystic-cave", false)).toEqual({ night: true, rain: true });
 });
-it("includes static candle and mystic gameplay lights only at night", () => {
+it("includes configured candle and default mystic lights with physical lumen output", () => {
   const level = blankLevel("Lights");
-  level.prefabs = [{ id: "candle", kind: "candle", x: 0, z: 0 }, { id: "mushroom", kind: "glow-mushroom", x: 5, z: 0 }];
-  const night = buildEditorLocalLights(level, new T.Vector3(), true);
+  level.prefabs = [{ id: "candle", kind: "candle", x: 0, z: 0, lightLumens: 250 }, { id: "mushroom", kind: "glow-mushroom", x: 5, z: 0 }];
+  const night = buildEditorLocalLights(level, new T.Vector3());
   const active = night.children.filter(o => o.visible) as T.PointLight[];
   expect(active).toHaveLength(2); expect(active.map(o => o.color.getHex())).toContain(0x4ff5e0);
-  expect(buildEditorLocalLights(level, new T.Vector3(), false).children.some(o => o.visible)).toBe(false);
+  expect(active.map(o => o.power)).toContain(500);
 });

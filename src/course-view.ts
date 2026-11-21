@@ -261,7 +261,7 @@ export class CourseView extends T.Group {
     const mesh = new T.Mesh(geometry, mat);
     mesh.position.set(s.x, s.y, s.z);
     mesh.quaternion.copy(solidQuaternion(s));
-    mesh.castShadow = !["ground", "road", "slime"].includes(s.kind);
+    mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.name = s.id;
     if (s.kind === "container")

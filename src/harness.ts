@@ -47,6 +47,8 @@ export interface GameHarness {
   textureLoadErrors(): string[];
   loadedTextureIds(): string[];
   inspectPreview(): {
+    camera: { position: number[]; target: number[]; distance: number; fov: number };
+    prefabLights: { id: string; lumens: number; color: number; position: number[] }[];
     lighting: { game: boolean; night: boolean; rain: boolean; sun: number; hemi: number; env: number } | null;
     checkpoints: { index: number; meshes: number }[];
     spawn: { name?: string; meshes: number; visible: boolean };
@@ -137,6 +139,7 @@ export interface GameHarness {
     headlights: { on: boolean };
     spray: { active: boolean };
     candleLights: { active: number; total: number };
+    prefabLights: { id: string; lumens: number; color: number; position: number[] }[];
     comicHazards: {
       id: string;
       kind: string;

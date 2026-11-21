@@ -14,31 +14,20 @@ function parts(rig: T.Group) {
   return { spots, cones, bulbs };
 }
 
-it("builds twin spotlights with visible cones and bulbs", () => {
+it("builds twin shadowed spotlights and bulbs without unoccluded cones", () => {
   const rig = buildHeadlightRig();
   const { spots, cones, bulbs } = parts(rig);
   expect(spots).toHaveLength(2);
-  expect(cones).toHaveLength(2);
+  expect(cones).toHaveLength(0);
   expect(bulbs).toHaveLength(2);
   for (const spot of spots) {
     expect(spot.angle).toBeGreaterThan(0.3);
     expect(spot.distance).toBeGreaterThanOrEqual(40);
-    expect(spot.castShadow).toBe(false);
+    expect(spot.castShadow).toBe(true);
   }
   for (const spot of spots) {
     expect(spot.intensity).toBeGreaterThanOrEqual(3000);
     expect(spot.distance).toBeGreaterThanOrEqual(90);
-  }
-  for (const cone of cones) {
-    const geo = cone.geometry as T.ConeGeometry;
-    expect(geo.parameters.height).toBeGreaterThanOrEqual(20);
-    expect((cone.material as T.MeshBasicMaterial).opacity).toBeLessThanOrEqual(0.08);
-  }
-  for (const cone of cones) {
-    const mat = cone.material as T.MeshBasicMaterial;
-    expect(mat.blending).toBe(T.AdditiveBlending);
-    expect(mat.fog).toBe(false);
-    expect(mat.transparent).toBe(true);
   }
   for (const bulb of bulbs) {
     const mat = bulb.material as T.MeshStandardMaterial;

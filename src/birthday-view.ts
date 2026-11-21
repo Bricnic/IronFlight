@@ -55,6 +55,7 @@ export function buildBirthdayCandle(root: T.Group) {
   }
   mesh(root, new T.CylinderGeometry(0.03, 0.03, 0.16, 8), wickMat, [0, h / 2 + 0.06, 0]);
   const flame = new T.Group();
+  flame.name = "prefab-light-origin";
   flame.position.set(0, h / 2 + 0.36, 0);
   const outer = new T.Mesh(
     new T.ConeGeometry(0.19, 0.55, 12),

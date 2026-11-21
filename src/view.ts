@@ -35,6 +35,8 @@ import { BackgroundView } from "./background-view";
 import { getBackgroundTemplate, resolveMood } from "./backgrounds";
 import { bodyBounds, buildHeadlightRig, MYSTIC_HEADLIGHT_DIM, setHeadlightDim, setHeadlightRig } from "./headlights";
 import { isPermanentNight } from "./weather";
+import { PrefabLights } from "./prefab-lights";
+import { configureShadowSurfaces } from "./shadow-surfaces";
 import { buildWheelSpray, updateWheelSpray } from "./wheel-spray";
 /** Beyond this camera distance a gold star is unrecognizable: spawn-hidden by definition. */
 export const STAR_RECOGNITION_RANGE = 150;
@@ -57,6 +59,7 @@ export class GameView {
   private fragileIce = new FragileIceView();
   private comic = new ComicView();
   private dungeon = new DungeonView();
+  private prefabLights = new PrefabLights();
   private fairground = new FairgroundView();
   private comicInspection?: string;
   private lavaPitInspection?: { id: string; angle: number };
@@ -122,6 +125,7 @@ export class GameView {
       this.comic,
       this.resizedPrefabs,
       this.dungeon,
+      this.prefabLights,
       this.fairground,
       this.nitro,
       this.spray,
@@ -496,6 +500,7 @@ export class GameView {
     this.lavaEffects.reset();
     this.basinInspection = undefined;
     this.truck.traverse((o) => {
+      if (o instanceof T.Light) o.dispose();
       if (o instanceof T.Mesh) {
         o.geometry.dispose();
         const ms = Array.isArray(o.material) ? o.material : [o.material];
@@ -711,6 +716,7 @@ export class GameView {
       headlights: { on: this.simulation.weather.night && this.headlightRig !== null },
       spray: { active: this.spray.visible },
       candleLights: this.dungeon.candleLightStats(),
+      prefabLights: this.prefabLights.inspect(),
       ...truckStats(this.truck),
       potions: {
         jets: this.nitro.visible,
@@ -1056,6 +1062,8 @@ export class GameView {
       }
     }
     this.snapCamera = false;
+    for (const models of [this.officialCourse, this.comic, this.dungeon, this.fairground, this.resizedPrefabs, this.props, this.looseBlocks, this.fragileIce]) configureShadowSurfaces(models);
+    this.prefabLights.update(s.courseTrack?.custom?.prefabs ?? [], root, id => this.scene.getObjectByName(id));
     if (draw) this.renderer.render(this.scene, this.camera);
   }
   hazardOverview(id: string) {

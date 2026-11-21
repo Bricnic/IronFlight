@@ -13,6 +13,7 @@ import { buildBurningCoalModel } from "./burning-coals-view";
 import type { LooseBlock } from "./loose-blocks";
 import { courseSolids } from "./course";
 import type { DungeonKind } from "./dungeon-hazards";
+import { configureShadowSurfaces } from "./shadow-surfaces";
 
 /** Same model builders as the game, frozen at their authored resting pose. */
 export function buildEditorPrefab(p: CustomPrefab, preview: boolean): T.Group {
@@ -73,6 +74,7 @@ export function buildEditorPrefab(p: CustomPrefab, preview: boolean): T.Group {
   root.position.add(new T.Vector3(p.x, prefabY(p), p.z));
   root.rotation.set(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ");
   root.scale.setScalar(p.resizeScale ?? 1);
+  configureShadowSurfaces(root);
   if (!preview) root.traverse(o => {
     if (o instanceof T.Sprite || o instanceof T.Light) o.visible = false;
     if (o instanceof T.Mesh) {

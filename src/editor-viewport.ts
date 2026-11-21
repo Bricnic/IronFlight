@@ -21,6 +21,8 @@ import { buildWorldGrid, snapCoordinate } from "./editor-grid";
 import { buildEditorLocalLights } from "./editor-lighting";
 import { buildHeadlightRig, setHeadlightRig, setHeadlightDim, MYSTIC_HEADLIGHT_DIM } from "./headlights";
 import { DEFAULT_TUNING } from "./tuning";
+import { PrefabLights } from "./prefab-lights";
+import { configureShadowSurfaces } from "./shadow-surfaces";
 import { scaleSolidUVs } from "./solid-uv";
 import { validRect, type ClipRect } from "./editor-clip";
 type ViewportHit = { object: unknown; distance?: number; point?: T.Vector3; instanceId?: number };
@@ -142,7 +144,7 @@ export function planeHit(
   if (!(t > 0)) return null;
   return { x: origin.x + dir.x * t, z: origin.z + dir.z * t };
 }
-/** Minimal orbit: drag rotates, wheel zooms, shift-drag pans. */
+/** Minimal orbit: drag rotates, wheel dollies, shift-drag pans. */
 function attachOrbit(
   camera: T.PerspectiveCamera,
   dom: HTMLElement,
@@ -220,10 +222,10 @@ function attachOrbit(
     "wheel",
     (e) => {
       e.preventDefault();
-      spherical.radius = Math.max(
-        5,
-        Math.min(400, spherical.radius * (e.deltaY > 0 ? 1.12 : 1 / 1.12)),
-      );
+      const pixels = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? dom.clientHeight : 1);
+      // Move both camera and pivot instead of shrinking the orbit distance.
+      // This preserves pan sensitivity and allows travel through/past objects.
+      target.addScaledVector(camera.getWorldDirection(new T.Vector3()), -pixels * spherical.radius / 800);
       apply();
     },
     { passive: false },
@@ -722,6 +724,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       }
       if (group) {
         group.traverse((o) => {
+          if (o instanceof T.Light) o.dispose();
           if (o instanceof T.Mesh) {
             o.geometry.dispose();
             for (const material of Array.isArray(o.material) ? o.material : [o.material]) material.dispose();
@@ -872,10 +875,10 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       }
       group.add(spawn);
       if (preview && level.previewGameLighting) {
-        group.traverse(o => { if (o instanceof T.Mesh && !o.parent?.userData.ignoreBounds) { o.castShadow = true; o.receiveShadow = true; } });
+        configureShadowSurfaces(group);
         applyNightGlow(group, lighting!.night);
-        group.add(buildEditorLocalLights(level, target, lighting!.night));
       }
+      if (preview) group.add(buildEditorLocalLights(level, target, group));
       scene.add(group);
       draw();
       // Textures pop in asynchronously; redraw until they arrive.
@@ -945,7 +948,9 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       });
       return {
         preview: previewOn,
+        camera: { position: camera.position.toArray(), target: target.toArray(), distance: camera.position.distanceTo(target), fov: camera.fov },
         lighting,
+        prefabLights: (group?.children.find(o => o instanceof PrefabLights) as PrefabLights | undefined)?.inspect() ?? [],
         checkpoints: (group?.children ?? []).filter(o => o.userData.pick?.kind === "checkpoint" && o.layers.test(camera.layers)).map(o => {
           let meshes = 0; o.traverse(child => { if (child instanceof T.Mesh) meshes++; });
           return { index: o.userData.pick.index as number, meshes };

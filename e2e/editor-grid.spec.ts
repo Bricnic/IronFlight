@@ -11,6 +11,7 @@ test("world grid visibility, per-axis and multiple-object snapping, drag and Con
   const field = (key: string) => page.locator(`#editor-props [data-prop="${key}"]`);
   const set = async (key: string, value: number) => { await field(key).fill(String(value)); await field(key).dispatchEvent("change"); };
   expect((await probe()).grid.spacing).toBe(5);
+  await page.locator("#editor-world-settings summary").click();
   await page.locator("#editor-grid-y").check();
   expect((await probe()).grid.axes).toEqual(["world-grid-x", "world-grid-y", "world-grid-z"]);
   await page.locator("#editor-grid-x").uncheck(); expect((await probe()).grid.axes).not.toContain("world-grid-x");

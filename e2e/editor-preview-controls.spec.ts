@@ -79,6 +79,7 @@ test("lighting settings persist, override mystic night and reach Playtest", asyn
     await page.evaluate(async level => { await window.__game!.customLevels.save(level); }, { ...blankLevel(name), backgroundTemplate: "mystic-cave" });
     await page.locator("#editor-refresh-levels").click();
     await page.locator("#editor-levels").selectOption(name);
+    await page.locator("#editor-level-settings summary").click();
     await expect(page.locator('#editor-props [data-prop="forceNight"]')).toBeChecked();
     await page.locator("#editor-preview").click();
     expect((await page.evaluate(() => window.__game!.inspectPreview())).lighting?.game).toBe(false);

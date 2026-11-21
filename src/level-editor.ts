@@ -1,5 +1,6 @@
 import { partitionListKinds } from "./editor-list";
 import { isPermanentNight } from "./weather";
+import { prefabLightSettings } from "./prefab-lights";
 import { degreesToRadians, radiansToDegrees } from "./editor-angles";
 import { commonProperty, editableProperties, objectKindKey, objectKindLabel, type SelectedObject } from "./editor-properties";
 import { EditorStore, selectionKey, type EditorSelection } from "./editor-state";
@@ -509,6 +510,17 @@ export function createLevelEditor(
       props.append(row);
     }
   }
+  const openSettings = new Set<string>();
+  function settingsPanel(title: string, id: string) {
+    const details = el("details", { id, class: "editor-settings" });
+    details.open = openSettings.has(id);
+    details.append(el("summary", {}, title));
+    details.addEventListener("toggle", () => {
+      if (!details.isConnected) return;
+      if (details.open) openSettings.add(id); else openSettings.delete(id);
+    });
+    props.append(details); return details;
+  }
   function refreshProps() {
     props.innerHTML = "";
     if (store.clip) { refreshClipProps(); return; }
@@ -516,7 +528,7 @@ export function createLevelEditor(
     const section = (title: string) => {
       props.append(el("h3", {}, title));
     };
-    section("Level");
+    const levelProps = settingsPanel("Level", "editor-level-settings");
     const modeRow = el("label", { class: "prop-row" }, "Mode ");
     const mode = el("select", { "data-prop": "mode" }) as HTMLSelectElement;
     for (const m of ["race", "arena", "demolition"])
@@ -526,24 +538,24 @@ export function createLevelEditor(
       store.updateLevel({ mode: mode.value as CustomLevel["mode"] }),
     );
     modeRow.append(mode);
-    props.append(modeRow);
-    numberField(props, "Gold", "gold", level.medals.gold, (n) =>
+    levelProps.append(modeRow);
+    numberField(levelProps, "Gold", "gold", level.medals.gold, (n) =>
       store.updateLevel({ gold: n }),
     );
-    numberField(props, "Silver", "silver", level.medals.silver, (n) =>
+    numberField(levelProps, "Silver", "silver", level.medals.silver, (n) =>
       store.updateLevel({ silver: n }),
     );
-    numberField(props, "Bronze", "bronze", level.medals.bronze, (n) =>
+    numberField(levelProps, "Bronze", "bronze", level.medals.bronze, (n) =>
       store.updateLevel({ bronze: n }),
     );
-    numberField(props, "Limit", "limit", level.limit, (n) =>
+    numberField(levelProps, "Limit", "limit", level.limit, (n) =>
       store.updateLevel({ limit: n }),
     );
     const clearLimit = el("button", { id: "editor-clear-limit" }, "No limit");
     clearLimit.addEventListener("click", () =>
       store.updateLevel({ limit: Number.NaN }),
     );
-    props.append(clearLimit);
+    levelProps.append(clearLimit);
     const undergroundRow = el("label", { class: "prop-row" }, "Underground ");
     const underground = el("input", {
       type: "checkbox",
@@ -554,7 +566,7 @@ export function createLevelEditor(
       store.updateLevel({ underground: underground.checked }),
     );
     undergroundRow.append(underground);
-    props.append(undergroundRow);
+    levelProps.append(undergroundRow);
     for (const [key, label, checked] of [
       ["previewGameLighting", "Preview game lighting", !!level.previewGameLighting],
       ["forceNight", "Force night", isPermanentNight(level.backgroundTemplate, level.forceNight)],
@@ -563,18 +575,18 @@ export function createLevelEditor(
       const input = el("input", { type: "checkbox", "data-prop": key }) as HTMLInputElement;
       input.checked = checked;
       input.addEventListener("change", () => store.updateLevel({ [key]: input.checked }));
-      row.append(input); props.append(row);
+      row.append(input); levelProps.append(row);
     }
-    section("World grid");
+    const worldProps = settingsPanel("World grid", "editor-world-settings");
     const spacingRow = el("label", { class: "prop-row" }, "Spacing ");
     const spacing = el("input", { id: "editor-grid-spacing", type: "number", min: "0.01", step: "any", value: String(store.grid.spacing) }) as HTMLInputElement;
     spacing.addEventListener("change", () => { store.updateGrid({ spacing: Number(spacing.value) }); spacing.value = String(store.grid.spacing); });
-    spacingRow.append(spacing); props.append(spacingRow);
+    spacingRow.append(spacing); worldProps.append(spacingRow);
     for (const [key, label] of [["show", "Show world grid"], ["snap", "Snap to world grid"], ["x", "Draw X lines (red)"], ["y", "Draw Y lines (green)"], ["z", "Draw Z lines (blue)"]] as const) {
       const row = el("label", { class: "prop-row" }, label + " ");
       const input = el("input", { id: `editor-grid-${key}`, type: "checkbox" }) as HTMLInputElement;
       input.checked = store.grid[key]; input.addEventListener("change", () => store.updateGrid({ [key]: input.checked }));
-      row.append(input); props.append(row);
+      row.append(input); worldProps.append(row);
     }
     const snappable = store.selectedEntries().some(s => (s.kind === "solid" || s.kind === "prefab") && !store.isLocked(s));
     if (snappable) {
@@ -680,6 +692,13 @@ export function createLevelEditor(
       props.append(texRow);
     }
     if (current.kind === "prefab") {
+      const light = prefabLightSettings(current.item);
+      const lumens = numberField(props, "Light (lumens)", "lightLumens", light.lumens, commit("lightLumens"));
+      lumens.min = "0";
+      const lightRow = el("label", { class: "prop-row" }, "Light color ");
+      const lightColor = el("input", { type: "color", "data-prop": "lightColor", value: `#${light.color.toString(16).padStart(6, "0")}` }) as HTMLInputElement;
+      lightColor.addEventListener("change", () => store.updateSelected({ lightColor: parseInt(lightColor.value.slice(1), 16) }));
+      lightRow.append(lightColor); props.append(lightRow);
       numberField(props, "Size", "resizeScale", (item.resizeScale as number | undefined) ?? 1, commit("resizeScale"));
       props.append(el("p", { class: "prop-hint" }, "Prefab resizing preserves proportions and updates gameplay size."));
       props.append(

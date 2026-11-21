@@ -1,5 +1,6 @@
 import { COLLECTIBLE_KINDS, PROP_PREFAB_KINDS, TEXTURE_IDS, prefabY, type CustomLevel } from "./custom-level";
 import type { EditorStore } from "./editor-state";
+import { prefabLightSettings } from "./prefab-lights";
 
 export type SelectedObject = NonNullable<ReturnType<EditorStore["selectedItem"]>>;
 export type EditorProperty = { key: string; label: string; type?: "color" | "choice" | "boolean" | "text"; options?: readonly string[] };
@@ -16,7 +17,7 @@ function properties(object: SelectedObject): EditorProperty[] {
   if (object.kind === "solid") result.push(...["w", "h", "d"].map(key => ({ key, label: key.toUpperCase() })));
   if (object.kind === "solid" || (object.kind === "prefab" && (PROP_PREFAB_KINDS as readonly string[]).includes(object.item.kind))) result.push({ key: "angle", label: "Pitch" }, { key: "roll", label: "Roll" });
   if (object.kind === "solid") result.push({ key: "color", label: "Color", type: "color" }, { key: "texture", label: "Texture", type: "choice", options: TEXTURE_IDS });
-  if (object.kind === "prefab") result.push({ key: "resizeScale", label: "Size" });
+  if (object.kind === "prefab") result.push({ key: "resizeScale", label: "Size" }, { key: "lightLumens", label: "Light (lumens)" }, { key: "lightColor", label: "Light color", type: "color" });
   if (object.kind === "target") result.push({ key: "kind", label: "Type", type: "choice", options: COLLECTIBLE_KINDS });
   if (object.kind === "ring") result.push({ key: "radius", label: "Radius" }, { key: "goal", label: "Goal", type: "boolean" });
   return result;
@@ -31,6 +32,8 @@ export function editableProperties(objects: SelectedObject[], mode?: CustomLevel
 export function propertyValue(object: SelectedObject, key: string, level: CustomLevel): unknown {
   const raw = (object.item as unknown as Record<string, unknown>)[key];
   if (raw !== undefined) return raw;
+  if (object.kind === "prefab" && key === "lightLumens") return prefabLightSettings(object.item).lumens;
+  if (object.kind === "prefab" && key === "lightColor") return prefabLightSettings(object.item).color;
   if (["yaw", "angle", "roll"].includes(key)) return 0;
   if (key === "resizeScale") return 1;
   if (key === "goal") return false;

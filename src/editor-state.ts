@@ -13,6 +13,7 @@ import { previewClip, type ClipRect } from "./editor-clip";
 import { editableProperties, objectKindKey, propertyValue } from "./editor-properties";
 import { Euler, Quaternion, Vector3 } from "three";
 import { DEFAULT_EDITOR_GRID, snapCoordinate, type EditorGridSettings, type GridAxis } from "./editor-grid";
+import { validPrefabLightPatch } from "./prefab-lights";
 export type EditorSelection =
   | { kind: "solid"; id: string }
   | { kind: "prefab"; id: string }
@@ -282,6 +283,7 @@ export class EditorStore {
   }
   /** Inspector edits assign the value to each object; viewport gestures retain relative transforms. */
   updateSelectionProperties(patch: Record<string, unknown>) {
+    if (!validPrefabLightPatch(patch)) return;
     const entries = this.selectedEntries();
     if (!entries.length || entries.some(s => this.isLocked(s))) return;
     const objects = entries.map(s => this.selectedItem(s)!);
@@ -512,6 +514,7 @@ export class EditorStore {
     return { kind: "spawn", item: this.level.spawn };
   }
   updateSelected(patch: Record<string, unknown>) {
+    if (!validPrefabLightPatch(patch)) return;
     const current = this.selectedItem();
     if (!current || (this.selection && this.isLocked(this.selection))) return;
     this.pushHistory();

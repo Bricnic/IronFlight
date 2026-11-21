@@ -1,6 +1,6 @@
 import * as T from "three";
 
-/** Twin headlight rig: spotlights, volumetric-look cones and bulbs. */
+/** Shadowed headlights illuminate surfaces without unoccluded decorative cones. */
 export function buildHeadlightRig(): T.Group {
   const rig = new T.Group();
   rig.name = "headlight-rig";
@@ -8,25 +8,13 @@ export function buildHeadlightRig(): T.Group {
     const spot = new T.SpotLight(0xffeecf, 3500, 95, 0.38, 0.6, 1.5);
     spot.position.set(side * 0.92, 0.1, 0.95);
     spot.target.position.set(side * 0.3, -0.5, 14);
-    spot.castShadow = false;
+    spot.castShadow = true;
+    spot.shadow.mapSize.set(1024, 1024);
+    spot.shadow.camera.near = 0.15;
+    spot.shadow.camera.far = 95;
+    spot.shadow.bias = -0.0001;
+    spot.shadow.normalBias = 0.03;
     rig.add(spot, spot.target);
-    const cone = new T.Mesh(
-      new T.ConeGeometry(4.2, 24, 24, 1, true),
-      new T.MeshBasicMaterial({
-        color: 0xffedb8,
-        transparent: true,
-        opacity: 0.06,
-        blending: T.AdditiveBlending,
-        depthWrite: false,
-        fog: false,
-        side: T.DoubleSide,
-      }),
-    );
-    cone.name = "headlight-cone";
-    cone.raycast = () => {};
-    cone.rotation.x = -Math.PI / 2;
-    cone.position.set(side * 0.92, 0.1, 0.95 + 12);
-    rig.add(cone);
     const bulb = new T.Mesh(
       new T.SphereGeometry(0.16, 16, 12),
       new T.MeshStandardMaterial({
@@ -55,23 +43,21 @@ export function bodyBounds(root: T.Object3D, rig?: T.Object3D | null): T.Box3 {
 
 /** Mystic caves keep headlights dim so the glow decor reads. */
 export const MYSTIC_HEADLIGHT_DIM = 0.35;
-/** Scale spot intensity, cone opacity and bulb emissive by dim (0.1-1). */
+/** Scale spot intensity and bulb emissive by dim (0.1-1). */
 export function setHeadlightDim(rig: T.Group, dim: number) {
   rig.traverse((o) => {
     if (o instanceof T.SpotLight) o.intensity = 3500 * dim;
-    else if (o instanceof T.Mesh && o.name === "headlight-cone")
-      (o.material as T.MeshBasicMaterial).opacity = 0.06 * dim;
     else if (o instanceof T.Mesh && o.name === "headlight-bulb")
       (o.material as T.MeshStandardMaterial).emissiveIntensity = 3 * dim;
   });
 }
-/** Toggle every light, cone and bulb in the rig together. */
+/** Toggle every light and bulb in the rig together. */
 export function setHeadlightRig(rig: T.Group, on: boolean) {
   rig.traverse((o) => {
     if (
       o instanceof T.SpotLight ||
       (o instanceof T.Mesh &&
-        (o.name === "headlight-cone" || o.name === "headlight-bulb"))
+        o.name === "headlight-bulb")
     )
       o.visible = on;
   });
