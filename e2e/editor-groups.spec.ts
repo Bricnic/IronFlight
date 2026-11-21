@@ -97,11 +97,15 @@ test("dragging, locking and saving a group affects all its members", async ({ pa
 test("official tile sections and North Pole ice patches appear as named groups", async ({ page }) => {
   test.slow();
   await page.goto("/"); await page.waitForFunction(() => !!window.__game);
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   await page.getByRole("button", { name: "Level editor", exact: true }).click();
   await page.locator("#editor-levels").selectOption("official/Amber Undertow");
   await expect(page.locator("#editor-status")).toContainText("Opened official/Amber Undertow");
-  await expect(page.locator("#editor-objects .editor-group")).toHaveCount(3);
-  await page.getByRole("button", { name: /^Copper side passage \(/ }).click();
+  // Mixed groups have an entry under each kind, but retain one logical group.
+  expect(await page.locator("#editor-objects .editor-group").evaluateAll(nodes => new Set(nodes.map(node => node.getAttribute("data-group"))).size)).toBe(3);
+  await page.getByRole("button", { name: "Expand Solid: tile", exact: true }).click();
+  await page.locator('[data-kind="solid:tile"]').getByRole("button", { name: /^Copper side passage/ }).click();
   await expect(page.getByRole("textbox", { name: "Group name", exact: true })).toHaveValue("Copper side passage");
   await page.locator("#editor-preview").click();
   await page.screenshot({ path: "artifacts/editor-amber-groups.png" });
@@ -109,6 +113,7 @@ test("official tile sections and North Pole ice patches appear as named groups",
   await page.locator("#editor-levels").selectOption("official/North Pole Summit");
   await expect(page.locator("#editor-status")).toContainText("Opened official/North Pole Summit", { timeout: 30000 });
   await expect(page.locator("#editor-objects .editor-group")).toHaveCount(53);
+  await page.getByRole("button", { name: "Expand Prefab: fragile-ice", exact: true }).click();
   await expect(page.locator('#editor-objects li[data-key^="prefab:np-lake-"]')).toHaveCount(0);
   await page.getByRole("button", { name: "Ice field 1 (16)", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "Group name", exact: true })).toHaveValue("Ice field 1");

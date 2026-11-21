@@ -1,4 +1,6 @@
+import { partitionListKinds } from "./editor-list";
 import { degreesToRadians, radiansToDegrees } from "./editor-angles";
+import { commonProperty, editableProperties, objectKindKey, objectKindLabel, type SelectedObject } from "./editor-properties";
 import { EditorStore, selectionKey, type EditorSelection } from "./editor-state";
 import { createEditorViewport } from "./editor-viewport";
 import { defaultTextureFor } from "./course-view";
@@ -43,6 +45,7 @@ function numberField(
   prop: string,
   value: number | undefined,
   onCommit: (n: number) => void,
+  mixed = false,
 ) {
   const angular = ["yaw", "angle", "roll"].includes(prop);
   const display = (n: number) => angular ? radiansToDegrees(n) : n;
@@ -52,7 +55,8 @@ function numberField(
     step: "any",
     "data-prop": prop,
   }) as HTMLInputElement;
-  if (value !== undefined) input.value = String(display(value));
+  if (mixed) input.placeholder = "(various)";
+  else if (value !== undefined) input.value = String(display(value));
   input.addEventListener("change", () => {
     const n = parseFloat(input.value);
     if (Number.isFinite(n)) onCommit(angular ? degreesToRadians(n) : n);
@@ -60,6 +64,7 @@ function numberField(
   });
   row.append(input);
   props.append(row);
+  return input;
 }
 /** Traditional wireframe editing screen: list, viewport, properties. */
 export function createLevelEditor(
@@ -180,11 +185,11 @@ export function createLevelEditor(
     addTarget,
     addRing,
     groupActions,
-    el("p", { class: "prop-hint" }, "Shift/Ctrl-click items to select several. Groups move and lock together."),
-    objects,
     duplicateButton,
     removeButton,
     spawnButton,
+    el("p", { class: "prop-hint" }, "Shift/Ctrl-click items to select several. Groups move and lock together."),
+    objects,
   );
   const viewportHost = el("div", { class: "editor-viewport" });
   const props = el("div", { class: "editor-props", id: "editor-props" });
@@ -418,6 +423,61 @@ export function createLevelEditor(
     cancel.addEventListener("click", () => store.cancelClip());
     props.append(apply, cancel);
   }
+  function selectionControls(current: SelectedObject) {
+    const entries = store.selectedEntries();
+    const allLocked = entries.every(s => store.isLocked(s));
+    const actions = el("div", { class: "editor-selection-actions" });
+    const lock = el("button", { id: "editor-selection-lock" }, allLocked ? "Unlock selected" : "Lock selected");
+    lock.addEventListener("click", () => store.setSelectionLocked(!allLocked));
+    const selectKind = el("button", { id: "editor-select-kind", title: `Select all ${objectKindLabel(objectKindKey(current))}` }, "Select all of this kind");
+    selectKind.addEventListener("click", () => store.selectAllOfKind());
+    actions.append(lock, selectKind); props.append(actions);
+  }
+  function bulkProps(selected: SelectedObject[]) {
+    props.append(el("h3", {}, `${selected.length} objects selected`));
+    const kinds = new Set(selected.map(objectKindKey));
+    props.append(el("p", { class: "prop-hint", "data-selection-kind": "" }, `Kind: ${kinds.size === 1 ? objectKindKey(selected[0]).split(":").at(-1) : "(various)"}`));
+    const locked = store.selectedEntries().some(s => store.isLocked(s));
+    for (const field of editableProperties(selected, store.level.mode)) {
+      const { value, mixed } = commonProperty(selected, field.key, store.level);
+      const commit = (value: unknown) => store.updateSelectionProperties({ [field.key]: value });
+      if (!field.type) {
+        numberField(props, field.label, field.key, mixed ? undefined : value as number | undefined, commit, mixed).disabled = locked;
+        continue;
+      }
+      const row = el("label", { class: "prop-row" }, `${field.label} `);
+      if (field.type === "text") {
+        const input = el("input", { type: "text", "data-prop": field.key, "aria-label": "Group name", maxlength: "80" }) as HTMLInputElement;
+        input.value = mixed ? "" : String(value ?? ""); input.placeholder = mixed ? "(various)" : "(none)"; input.disabled = locked;
+        input.addEventListener("change", () => commit(input.value.trim() || undefined)); row.append(input);
+      } else if (field.type === "choice" || field.type === "boolean") {
+        const select = el("select", { "data-prop": field.key }) as HTMLSelectElement;
+        if (mixed) select.append(el("option", { value: "__various__", disabled: "" }, "(various)"));
+        if (field.type === "boolean") {
+          select.append(el("option", { value: "false" }, "No"), el("option", { value: "true" }, "Yes"));
+        } else {
+          if (field.key === "texture") select.append(el("option", { value: "" }, "(default)"));
+          for (const option of field.options ?? []) select.append(el("option", { value: option }, option));
+        }
+        select.value = mixed ? "__various__" : String(value ?? "");
+        select.disabled = locked;
+        select.addEventListener("change", () => commit(field.type === "boolean" ? select.value === "true" : select.value || undefined));
+        row.append(select);
+      } else {
+        const input = el("input", { type: "text", "data-prop": field.key, "aria-label": "Color", placeholder: "(various)" }) as HTMLInputElement;
+        const hex = typeof value === "number" ? `#${value.toString(16).padStart(6, "0")}` : "#ffffff";
+        input.value = mixed ? "" : hex; input.disabled = locked;
+        input.addEventListener("change", () => {
+          if (/^#[0-9a-f]{6}$/i.test(input.value)) commit(parseInt(input.value.slice(1), 16));
+          else input.value = mixed ? "" : hex;
+        });
+        const picker = el("input", { type: "color", "aria-label": "Choose color for selection", value: hex }) as HTMLInputElement;
+        picker.disabled = locked; picker.addEventListener("change", () => commit(parseInt(picker.value.slice(1), 16)));
+        const controls = el("span", { class: "editor-bulk-color" }); controls.append(input, picker); row.append(controls);
+      }
+      props.append(row);
+    }
+  }
   function refreshProps() {
     props.innerHTML = "";
     if (store.clip) { refreshClipProps(); return; }
@@ -469,10 +529,14 @@ export function createLevelEditor(
       props.append(el("p", { class: "prop-hint" }, "Select an object to edit it."));
       return;
     }
+    selectionControls(current);
+    const selected = store.selectedEntries().map(s => store.selectedItem(s)!).filter(Boolean);
+    if (selected.length > 1) { bulkProps(selected); return; }
     if (current.item.group) {
       const groupRow = el("label", { class: "prop-row" }, "Group ");
       const groupName = el("input", { type: "text", "aria-label": "Group name", maxlength: "80" });
       groupName.value = current.item.group;
+      groupName.disabled = !!store.selection && store.isLocked(store.selection);
       groupName.addEventListener("change", () => {
         try { store.renameGroup(groupName.value); } catch (e) { showError((e as Error).message); }
       });
@@ -500,8 +564,10 @@ export function createLevelEditor(
       string,
       number | string | boolean | undefined
     >;
+    if (current.kind === "solid") props.append(el("p", { class: "prop-hint" }, `Kind: ${current.item.kind}`));
     const commit = (prop: string) => (n: number) =>
       store.updateSelected({ [prop]: n });
+    const objectControlsStart = props.children.length;
     const objectNameRow = el("label", { class: "prop-row" }, "Name ");
     const objectName = el("input", { type: "text", "data-prop": "name", "aria-label": "Object name", maxlength: "80" });
     objectName.value = current.item.name ?? ("id" in current.item ? current.item.id : "");
@@ -625,14 +691,18 @@ export function createLevelEditor(
       goalRow.append(goal);
       props.append(goalRow);
     }
+    if (store.selection && store.isLocked(store.selection)) {
+      for (const row of Array.from(props.children).slice(objectControlsStart)) row.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select").forEach(input => input.disabled = true);
+    }
   }
   const expandedGroups = new Set<string>();
+  const expandedKinds = new Set<string>();
   function refreshList() {
     objects.innerHTML = "";
     const level = store.level;
-    const rows: { li: HTMLLIElement; name: string; key: string }[] = [];
+    const rows: { li: HTMLLIElement; name: string; key: string; kindKey?: string; count: number }[] = [];
     const selectedKeys = new Set(store.selectedEntries().map(selectionKey));
-    const groups = new Map<string, { selection: NonNullable<EditorSelection>; rows: typeof rows; count: number; locked: boolean; selected: boolean }>();
+    const groups = new Map<string, { selection: NonNullable<EditorSelection>; rows: typeof rows; count: number; locked: boolean; selected: boolean; groupName: string; kindKey: string }>();
     const row = (
       label: string,
       selected: boolean,
@@ -644,10 +714,12 @@ export function createLevelEditor(
       label = item?.name ?? label;
       let bucket: ReturnType<typeof groups.get>;
       if (item?.group && selection && !store.clip) {
-        bucket = groups.get(item.group);
+        const kindKey = objectKindKey(store.selectedItem(selection)!);
+        const bucketKey = `${item.group}:${kindKey}`;
+        bucket = groups.get(bucketKey);
         if (!bucket) {
-          bucket = { selection, rows: [], count: 0, locked: false, selected: false };
-          groups.set(item.group, bucket);
+          bucket = { selection, rows: [], count: 0, locked: false, selected: false, groupName: item.group, kindKey };
+          groups.set(bucketKey, bucket);
         }
         bucket.count++; bucket.locked ||= locked;
         bucket.selected ||= selectedKeys.has(selectionKey(selection));
@@ -683,7 +755,7 @@ export function createLevelEditor(
           onPick(e);
         }
       });
-      (bucket?.rows ?? rows).push({ li, name: label, key });
+      (bucket?.rows ?? rows).push({ li, name: label, key, kindKey: selection ? objectKindKey(store.selectedItem(selection)!) : undefined, count: 1 });
     };
     for (const s of level.solids)
       row(
@@ -733,15 +805,17 @@ export function createLevelEditor(
       { kind: "spawn" },
       "spawn",
     );
-    for (const [name, bucket] of groups) {
+    for (const bucket of groups.values()) {
+      const name = bucket.groupName;
+      const labelName = [...groups.values()].some(other => other !== bucket && other.groupName === name) ? `${name} · ${objectKindLabel(bucket.kindKey)}` : name;
       const li = el("li", { class: `editor-group${bucket.selected ? " selected" : ""}`, "data-group": name, "data-locked": String(bucket.locked) });
       const header = el("div", { class: "editor-group-header" });
-      const toggle = el("button", { "aria-label": `${expandedGroups.has(name) ? "Collapse" : "Expand"} ${name}`, "aria-expanded": String(expandedGroups.has(name)) }, expandedGroups.has(name) ? "▾" : "▸");
+      const toggle = el("button", { "aria-label": `${expandedGroups.has(name) ? "Collapse" : "Expand"} ${labelName}`, "aria-expanded": String(expandedGroups.has(name)) }, expandedGroups.has(name) ? "▾" : "▸");
       toggle.addEventListener("click", () => {
         if (expandedGroups.has(name)) expandedGroups.delete(name); else expandedGroups.add(name);
         refreshList();
       });
-      const label = el("button", { class: "editor-group-name" }, `${name} (${bucket.count})`);
+      const label = el("button", { class: "editor-group-name" }, `${labelName} (${bucket.count})`);
       label.addEventListener("click", event => store.select(bucket.selection, event.shiftKey || event.ctrlKey || event.metaKey));
       const lock = el("button", { class: "editor-lock", "aria-label": `${bucket.locked ? "Unlock" : "Lock"} ${name}` }, bucket.locked ? "Unlock" : "Lock");
       lock.addEventListener("click", () => store.setLocked(bucket.selection, !bucket.locked));
@@ -750,10 +824,18 @@ export function createLevelEditor(
         const children = el("ul", { class: "editor-group-children" });
         children.append(...bucket.rows.map(r => r.li)); li.append(children);
       }
-      rows.push({ li, name, key: `group:${name}` });
+      rows.push({ li, name, key: `group:${name}`, kindKey: bucket.kindKey, count: bucket.count });
     }
     rows.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true }) || a.key.localeCompare(b.key));
-    objects.append(...rows.map((row) => row.li));
+    for (const section of partitionListKinds(rows)) {
+      if (!section.kindKey) { objects.append(...section.rows.map(row => row.li)); continue; }
+      const key = section.kindKey, label = objectKindLabel(key), expanded = expandedKinds.has(key);
+      const holder = el("li", { class: "editor-kind-section", "data-kind": key });
+      const toggle = el("button", { class: "editor-kind-toggle", "aria-label": `${expanded ? "Collapse" : "Expand"} ${label}`, "aria-expanded": String(expanded) }, `${expanded ? "▾" : "▸"} ${label} (${section.count})`);
+      toggle.addEventListener("click", () => { if (expandedKinds.has(key)) expandedKinds.delete(key); else expandedKinds.add(key); refreshList(); });
+      const children = el("ul", { class: "editor-kind-children" }); children.hidden = !expanded;
+      children.append(...section.rows.map(row => row.li)); holder.append(toggle, children); objects.append(holder);
+    }
   }
   function refresh() {
     groupButton.disabled = !!store.clip || store.selectedEntries().length < 2;
@@ -790,6 +872,7 @@ export function createLevelEditor(
     if (!name) return;
     loadLevel(undefined, name)
       .then((level) => {
+        expandedKinds.clear(); expandedGroups.clear();
         store.openLevel(level);
         viewport.frameSpawn(store.level);
         showStatus(`Opened ${name}`);
@@ -798,6 +881,7 @@ export function createLevelEditor(
       .catch((e: Error) => showError(e.message));
   });
   newButton.addEventListener("click", () => {
+    expandedKinds.clear(); expandedGroups.clear();
     store.openBlank(nameInput.value.trim() || "Untitled");
     viewport.frameSpawn(store.level);
     showStatus("New level");
@@ -866,6 +950,7 @@ export function createLevelEditor(
           { ...params, name },
           (Math.random() * 0x7fffffff) | 0,
         );
+        expandedKinds.clear(); expandedGroups.clear();
         store.openLevel(level);
         viewport.frameSpawn(store.level);
         randomModal.hidden = true;

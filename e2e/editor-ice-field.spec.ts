@@ -15,6 +15,7 @@ test("North Pole Summit's full ice field opens, selects and previews", async ({ 
     return { count: level.prefabs.length, ice: level.prefabs.find(p => p.kind === "fragile-ice")! };
   });
   expect(field.count).toBeGreaterThan(5000);
+  await page.getByRole("button", { name: "Expand Prefab: fragile-ice", exact: true }).click();
   if (field.ice.group) await page.getByRole("button", { name: `Expand ${field.ice.group}`, exact: true }).click();
   await page.locator(`li[data-key="prefab:${field.ice.id}"] span`).click();
   await page.locator("#editor-frame-selection").click();

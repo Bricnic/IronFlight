@@ -135,3 +135,6 @@ Choose Resize, then drag on a flat face of a selected solid or prefab. The close
 All editor angle fields display and accept degrees, including negative angles and multiple turns. Level JSON continues to store radians.
 
 `e2e/editor-prefab-gallery.spec.ts` creates a new level and places all 118 prefab types individually, capturing wireframe and preview screenshots under `artifacts/prefab-gallery`. The resize and degree browser tests cover rotated face drags, Undo, saved prefab gameplay sizes, and 45, 90, 135, -45, -90, -135, 180, 360 and 720 degrees on all three solid axes.
+
+
+The right property panel includes Lock/Unlock and Select all of this kind. Multi-selection hides the object name and edits shared properties in bulk: common values are shown directly, differing values show `(various)`, and entering a value applies it to every selected object in one Undo step. Inspector coordinates and angles are absolute; viewport gestures preserve relative placement. Matching-kind selection skips locked objects. User groups still lock together. The object list collapses kinds with three or more instances by default, with user groups displayed inside those kind sections. Duplicate, Delete selected and Edit spawn sit below Copy/Paste and above the list.

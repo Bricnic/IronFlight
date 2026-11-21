@@ -10,6 +10,7 @@ import {
   type SolidKind,
 } from "./custom-level";
 import { previewClip, type ClipRect } from "./editor-clip";
+import { editableProperties, objectKindKey, propertyValue } from "./editor-properties";
 import { Euler, Quaternion, Vector3 } from "three";
 export type EditorSelection =
   | { kind: "solid"; id: string }
@@ -22,7 +23,7 @@ export type EditorSelection =
 export type EditorTool = "select" | "pan" | "eyedropper" | "rotator" | "resize" | "clip" | "look";
 type Selection = NonNullable<EditorSelection>;
 export const selectionKey = (s: Selection) => `${s.kind}:${"id" in s ? s.id : "index" in s ? s.index : ""}`;
-type Snapshot = { level: CustomLevel; selection: EditorSelection; solidSelection: string[]; selections: Selection[] };
+type Snapshot = { level: CustomLevel; selection: EditorSelection; solidSelection: string[]; selections: Selection[]; selectionKindFilter?: string };
 /**
  * The editor store may adopt a live session's level only when it has no
  * unsaved work of its own and both sides name the same level.
@@ -40,6 +41,7 @@ export class EditorStore {
   selection: EditorSelection = null;
   solidSelection: string[] = [];
   selections: Selection[] = [];
+  private selectionKindFilter?: string;
   private clipboard: { kind: Selection["kind"]; item: NonNullable<ReturnType<EditorStore["selectedItem"]>>["item"] }[] = [];
   private pasteCount = 0;
   clip: { targets: string[]; cutters: ClipRect[]; cutterId?: string } | null = null;
@@ -68,6 +70,7 @@ export class EditorStore {
       selection: structuredClone(this.selection),
       solidSelection: [...this.solidSelection],
       selections: structuredClone(this.selections),
+      selectionKindFilter: this.selectionKindFilter,
     };
   }
   private pushHistory() {
@@ -105,6 +108,7 @@ export class EditorStore {
     this.selection = prev.selection;
     this.solidSelection = prev.solidSelection;
     this.selections = prev.selections;
+    this.selectionKindFilter = prev.selectionKindFilter;
     this.emit();
     return true;
   }
@@ -119,6 +123,7 @@ export class EditorStore {
     this.selection = next.selection;
     this.solidSelection = next.solidSelection;
     this.selections = next.selections;
+    this.selectionKindFilter = next.selectionKindFilter;
     this.emit();
     return true;
   }
@@ -128,8 +133,10 @@ export class EditorStore {
   }
   private emit(touch = true) {
     if (!this.selection) this.selections = [];
-    else if (!this.selections.some(s => selectionKey(s) === selectionKey(this.selection!)))
+    else if (!this.selections.some(s => selectionKey(s) === selectionKey(this.selection!))) {
       this.selections = [this.selection];
+      this.selectionKindFilter = undefined;
+    }
     this.selections = this.selections.filter(s => this.selectedItem(s));
     const selectedGroups = new Set(this.selections.map(s => this.selectedItem(s)?.item.group).filter(Boolean));
     if (selectedGroups.size) {
@@ -137,12 +144,13 @@ export class EditorStore {
       const items = this.allItems();
       this.selections = this.allEntries().filter((s, i) => selectedKeys.has(selectionKey(s)) || (!!items[i].group && selectedGroups.has(items[i].group)));
     }
+    if (this.selectionKindFilter) this.selections = this.selections.filter(s => objectKindKey(this.selectedItem(s)!) === this.selectionKindFilter);
     this.solidSelection = this.selectedEntries().filter(s => s.kind === "solid").map(s => (s as { id: string }).id);
     if (touch) this.dirty = true;
     for (const listener of this.listeners) listener();
   }
   openBlank(name: string) {
-    this.selections = [];
+    this.selections = []; this.selectionKindFilter = undefined;
     this.clip = null; this.tool = "select"; this.solidSelection = [];
     this.level = blankLevel(name);
     this.selection = null;
@@ -153,7 +161,7 @@ export class EditorStore {
     for (const listener of this.listeners) listener();
   }
   openLevel(level: CustomLevel) {
-    this.selections = [];
+    this.selections = []; this.selectionKindFilter = undefined;
     this.clip = null; this.tool = "select"; this.solidSelection = [];
     this.level = level;
     this.selection = null;
@@ -174,6 +182,7 @@ export class EditorStore {
   }
   select(selection: EditorSelection, additive = false) {
     if (selection && this.isLocked(selection)) return;
+    this.selectionKindFilter = undefined;
     const members = selection ? this.membersOf(selection) : [];
     const keys = new Set(members.map(selectionKey));
     if (additive && selection) {
@@ -211,6 +220,47 @@ export class EditorStore {
   }
   isSelected(selection: Selection) {
     return this.selectedEntries().some(s => selectionKey(s) === selectionKey(selection));
+  }
+  selectAllOfKind() {
+    const current = this.selectedItem();
+    if (!current) return;
+    const key = objectKindKey(current);
+    this.selectionKindFilter = key;
+    const lockedGroups = new Set(this.allItems().filter(item => item.locked && item.group).map(item => item.group));
+    this.selections = this.allEntries().filter(s => {
+      const object = this.selectedItem(s)!;
+      return !object.item.locked && !lockedGroups.has(object.item.group) && objectKindKey(object) === key;
+    });
+    this.selection = this.selections.find(s => selectionKey(s) === (this.selection && selectionKey(this.selection))) ?? this.selections[0] ?? null;
+    this.emit(false);
+  }
+  setSelectionLocked(locked: boolean) {
+    const selected = this.selectedEntries(), keys = new Set(selected.map(selectionKey));
+    const groups = new Set(selected.map(s => this.selectedItem(s)?.item.group).filter(Boolean));
+    const entries = this.allEntries().filter(s => keys.has(selectionKey(s)) || !!this.selectedItem(s)?.item.group && groups.has(this.selectedItem(s)!.item.group));
+    if (!entries.length || entries.every(s => !!this.selectedItem(s)?.item.locked === locked)) return;
+    this.pushHistory();
+    for (const s of entries) this.selectedItem(s)!.item.locked = locked;
+    this.emit();
+  }
+  /** Inspector edits assign the value to each object; viewport gestures retain relative transforms. */
+  updateSelectionProperties(patch: Record<string, unknown>) {
+    const entries = this.selectedEntries();
+    if (!entries.length || entries.some(s => this.isLocked(s))) return;
+    const objects = entries.map(s => this.selectedItem(s)!);
+    const allowed = new Set(editableProperties(objects, this.level.mode).map(p => p.key));
+    const changes = Object.fromEntries(Object.entries(patch).filter(([key, value]) => allowed.has(key) && (key !== "group" || value === undefined || typeof value === "string" && value.trim().length > 0 && value.length <= 80) && (typeof value !== "number" || Number.isFinite(value)) && objects.some(object => !Object.is(propertyValue(object, key, this.level), value))));
+    if (!Object.keys(changes).length) return;
+    this.pushHistory();
+    for (const object of objects) {
+      if (object.kind === "solid" && object.item.footprint) {
+        const { w, d } = object.item;
+        object.item.footprint = object.item.footprint.map(p => ({ x: p.x * (typeof changes.w === "number" ? changes.w / w : 1), z: p.z * (typeof changes.d === "number" ? changes.d / d : 1) }));
+      }
+      Object.assign(object.item, changes);
+    }
+    if (this.selectionKindFilter && this.selectedItem()) this.selectionKindFilter = objectKindKey(this.selectedItem()!);
+    this.emit();
   }
   isLocked(selection: Selection) {
     const item = this.selectedItem(selection)?.item;
@@ -297,6 +347,7 @@ export class EditorStore {
     this.pushHistory();
     this.level.solids = result.solids;
     this.solidSelection = result.retained.map((s) => s.id);
+    this.selectionKindFilter = undefined;
     this.selections = result.retained.map(s => ({ kind: "solid", id: s.id }));
     this.selection = result.retained[0] ? { kind: "solid", id: result.retained[0].id } : null;
     this.clip = null; this.tool = "select"; this.emit();
@@ -557,6 +608,7 @@ export class EditorStore {
       } else continue;
       selections.push(selection);
     }
+    this.selectionKindFilter = undefined;
     this.selections = selections;
     this.selection = selections[0] ?? null;
     this.emit();

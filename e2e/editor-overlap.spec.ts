@@ -47,6 +47,7 @@ test("repeated clicks cycle through occluded objects front to back and wrap", as
     expect(await page.evaluate(() => window.__game!.editor().dirty)).toBe(
       false,
     );
+    await page.getByRole("button", { name: "Expand Solid: barrier", exact: true }).click();
     await page
       .locator('li[data-key="solid:middle"]')
       .getByRole("button", { name: /^Lock / })

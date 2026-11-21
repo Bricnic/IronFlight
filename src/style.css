@@ -1386,4 +1386,13 @@ kbd {
 .editor-group-name { flex: 1; min-width: 0; text-align: left; white-space: normal; overflow-wrap: anywhere; }
 .editor-group-header > button:first-child { flex: 0 0 24px; padding: 4px 6px; }
 .editor-group-children { width: 100%; padding-left: 12px; list-style: none; }
-#editor-objects > .editor-group { display: block; }
+#editor-objects .editor-group { display: block; }
+
+.editor-selection-actions { display: grid; gap: 6px; margin: 12px 0; }
+.editor-bulk-color { display: flex; min-width: 0; gap: 4px; }
+.editor-bulk-color input[type="text"] { width: 100%; min-width: 0; }
+.editor-bulk-color input[type="color"] { flex: 0 0 30px; width: 30px; }
+#editor-objects .editor-kind-section { display: block; padding: 4px; }
+.editor-kind-toggle { width: 100%; text-align: left; white-space: normal; }
+.editor-kind-children { list-style: none; padding: 4px 0 0 8px; }
+.editor-kind-children[hidden] { display: none; }
