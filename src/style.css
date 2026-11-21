@@ -834,8 +834,8 @@ kbd {
   color: #ce9972 !important;
 }
 .track-card-bottom {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   border-top: 1px solid #ffffff14;
   margin-top: 15px;
@@ -1598,3 +1598,7 @@ kbd {
 .editor-kind-toggle { width: 100%; text-align: left; white-space: normal; }
 .editor-kind-children { list-style: none; padding: 4px 0 0 8px; }
 .editor-kind-children[hidden] { display: none; }
+
+.track-card .best-medal { font-size: 10px; font-weight: 700; }
+.track-card-action { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; justify-self: end; }
+.best-variant { color: #9fb3b7; }

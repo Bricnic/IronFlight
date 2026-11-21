@@ -48,7 +48,7 @@ test("Fairground: all 26 rings are reachable by ordinary driving in under five m
   await page.waitForFunction(() => !!window.__game);
   await expect(
     page.locator('[data-track="custom:fairground"] .best-time'),
-  ).toHaveText(`${result.state.run!.elapsed.toFixed(2)}s`);
+  ).toHaveText(`Best: ${result.state.run!.elapsed.toFixed(1)}s`);
 });
 
 test("bumper and carousel speed sliders persist and reset", async ({

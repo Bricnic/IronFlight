@@ -100,7 +100,7 @@ export function createLevelSelect(
         "--track-accent",
         `#${track.color.toString(16).padStart(6, "0")}`,
       );
-      card.innerHTML = `<button class="track-play" aria-label="${locked ? `${track.name} (locked)` : `Play ${track.name}`}"${locked ? ' aria-disabled="true"' : ""}><div class="track-image"><img src="${track.thumbnail}" alt="${track.name} route preview"><span class="track-number">${String(i + 1).padStart(2, "0")}</span><span class="track-mode">${modeLabel(track)}</span>${locked ? `<span class="track-lock">${LOCK_SVG}</span>` : ""}</div><div class="track-card-body"><div class="track-card-heading"><h2>${track.name}</h2><span class="best-medal">UNRANKED</span></div><p>${track.description}</p><div class="medal-targets"><span class="gold">● ${track.medals.gold}s</span><span class="silver">● ${track.medals.silver}s</span><span class="bronze">● ${track.medals.bronze}s</span></div><div class="track-card-bottom"><span class="best-time">NO TIME SET</span><span class="star-row" aria-label="Gold stars"></span><span class="play-word">${locked ? "LOCKED" : "PLAY ↗"}</span></div></div></button>`;
+      card.innerHTML = `<button class="track-play" aria-label="${locked ? `${track.name} (locked)` : `Play ${track.name}`}"${locked ? ' aria-disabled="true"' : ""}><div class="track-image"><img src="${track.thumbnail}" alt="${track.name} route preview"><span class="track-number">${String(i + 1).padStart(2, "0")}</span><span class="track-mode">${modeLabel(track)}</span>${locked ? `<span class="track-lock">${LOCK_SVG}</span>` : ""}</div><div class="track-card-body"><div class="track-card-heading"><h2>${track.name}</h2><span class="best-medal">UNRANKED</span></div><p>${track.description}</p><div class="medal-targets"><span class="gold">● ${track.medals.gold}s</span><span class="silver">● ${track.medals.silver}s</span><span class="bronze">● ${track.medals.bronze}s</span></div><div class="track-card-bottom"><span class="best-variant"></span><span class="star-row" aria-label="Gold stars"></span><span class="track-card-action"><span class="best-time">NO TIME SET</span><span class="play-word">${locked ? "LOCKED" : "PLAY ↗"}</span></span></div></div></button>`;
       const lockedFeedback = () => {
         if (card.classList.contains("unlocking")) return;
         const need = i + 1 - unlockedCount(collection, scores);
@@ -265,9 +265,10 @@ export function createLevelSelect(
       const button = card.querySelector("button")!;
       if (locked) button.setAttribute("aria-disabled", "true");
       else button.removeAttribute("aria-disabled");
-      card.querySelector(".best-time")!.textContent = best?.b
-        ? `${track.legacy ? `${best.v.toUpperCase()} · ` : ""}${format(best.b.time)}`
-        : "NO TIME SET";
+      const bestTime = card.querySelector(".best-time")!;
+      bestTime.textContent = best?.b ? `Best: ${best.b.time.toFixed(1)}s` : "NO TIME SET";
+      bestTime.className = `best-time ${best?.b?.medal ?? ""}`;
+      card.querySelector(".best-variant")!.textContent = track.legacy && best?.b ? best.v.toUpperCase() : "";
       card.querySelector(".best-medal")!.textContent =
         best?.b?.medal?.toUpperCase() ?? (best?.b ? "COMPLETED" : "UNRANKED");
       card.querySelector(".best-medal")!.className =

@@ -115,7 +115,7 @@ test("a completed UI-selected course awards a medal and reloads its best time", 
   await page.waitForFunction(() => !!window.__game);
   await page.locator('[data-collection="industrial-mayhem"] button').click();
   await expect(card.locator(".best-time")).toContainText(
-    result.state.run!.elapsed.toFixed(2),
+    result.state.run!.elapsed.toFixed(1),
   );
   await expect(card.locator(".best-medal")).toHaveText(
     result.state.run!.medal!.toUpperCase(),
