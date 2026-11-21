@@ -1,5 +1,6 @@
 import {
   blankLevel,
+  prefabY,
   solidDefaults,
   type CustomLevel,
   type CustomPrefab,
@@ -18,7 +19,7 @@ export type EditorSelection =
   | { kind: "ring"; index: number }
   | { kind: "spawn" }
   | null;
-export type EditorTool = "select" | "pan" | "eyedropper" | "rotator" | "clip" | "look";
+export type EditorTool = "select" | "pan" | "eyedropper" | "rotator" | "resize" | "clip" | "look";
 type Selection = NonNullable<EditorSelection>;
 export const selectionKey = (s: Selection) => `${s.kind}:${"id" in s ? s.id : "index" in s ? s.index : ""}`;
 type Snapshot = { level: CustomLevel; selection: EditorSelection; solidSelection: string[]; selections: Selection[] };
@@ -421,7 +422,7 @@ export class EditorStore {
     }
     return { kind: "spawn", item: this.level.spawn };
   }
-  updateSelected(patch: Record<string, number | string | boolean | undefined>) {
+  updateSelected(patch: Record<string, unknown>) {
     const current = this.selectedItem();
     if (!current || (this.selection && this.isLocked(this.selection))) return;
     this.pushHistory();
@@ -452,6 +453,29 @@ export class EditorStore {
       }
     }
     Object.assign(current.item, patch);
+    this.emit();
+  }
+  /** Uniform group scaling keeps articulated prefabs and relative placement intact. */
+  scaleSelected(factor: number, pivot: { x: number; y: number; z: number }) {
+    const selections = this.selectedEntries();
+    if (!Number.isFinite(factor) || factor <= 0 || selections.some(s => this.isLocked(s))) return;
+    for (const s of selections) {
+      const current = this.selectedItem(s)!;
+      if (current.kind === "prefab") factor = Math.max(0.01 / (current.item.resizeScale ?? 1), Math.min(factor, 100 / (current.item.resizeScale ?? 1)));
+    }
+    this.pushHistory();
+    for (const s of selections) {
+      const current = this.selectedItem(s)!, item = current.item;
+      const y = current.kind === "prefab" ? prefabY(current.item) : item.y ?? (current.kind === "checkpoint" ? 2 : current.kind === "target" ? this.level.mode === "demolition" ? 1.5 : 1.7 : 0);
+      item.x = pivot.x + (item.x - pivot.x) * factor;
+      item.y = pivot.y + (y - pivot.y) * factor;
+      item.z = pivot.z + (item.z - pivot.z) * factor;
+      if (current.kind === "solid") {
+        current.item.w *= factor; current.item.h *= factor; current.item.d *= factor;
+        if (current.item.footprint) current.item.footprint = current.item.footprint.map(p => ({ x: p.x * factor, z: p.z * factor }));
+      } else if (current.kind === "prefab") current.item.resizeScale = (current.item.resizeScale ?? 1) * factor;
+      else if (current.kind === "ring") current.item.radius *= factor;
+    }
     this.emit();
   }
   renameSelected(value: string) {

@@ -1,4 +1,6 @@
 import { ComicView } from "./comic-view";
+import { ResizedPrefabView } from "./resized-prefab-view";
+import { basePrefabSimulation } from "./prefab-space";
 import { DungeonView } from "./dungeon-view";
 import { FairgroundView } from "./fairground-view";
 import { potionScale } from "./comic-hazards";
@@ -63,6 +65,7 @@ export class GameView {
   private skyEnv: { key: string; tex: T.Texture } | null = null;
   private pmrem: T.PMREMGenerator | null = null;
   private officialCourse = new CourseView();
+  private resizedPrefabs = new ResizedPrefabView();
   private background = new BackgroundView();
   private fire = new TruckFireView();
   private lavaEffects = new LavaPartEffects();
@@ -115,6 +118,7 @@ export class GameView {
     this.contactShadow.rotation.x = -Math.PI / 2;
     this.scene.add(
       this.comic,
+      this.resizedPrefabs,
       this.dungeon,
       this.fairground,
       this.nitro,
@@ -794,11 +798,13 @@ export class GameView {
     this.arena.visible = s.stage !== "lab" && !s.courseTrack;
     this.course.visible = s.stage !== "lab" && !s.courseTrack;
     this.hazards.visible = s.stage !== "lab" && !s.courseTrack;
-    this.officialCourse.update(s, this.camera);
-    this.comic.update(s);
-    this.dungeon.update(s);
-    this.fairground.update(s);
-    this.nitro.visible = s.comic.effect === "nitro";
+    const basePrefabs = basePrefabSimulation(s);
+    this.officialCourse.update(basePrefabs, this.camera);
+    this.comic.update(basePrefabs);
+    this.dungeon.update(basePrefabs);
+    this.fairground.update(basePrefabs);
+    this.resizedPrefabs.update(s, this.camera);
+    this.nitro.visible = s.activeComic.effect === "nitro";
     this.spray.position.copy(root);
     this.spray.quaternion.copy(q);
     updateWheelSpray(this.spray, s.time, Math.hypot(s.body.linvel().x, s.body.linvel().z), s.weather.rain);
@@ -808,11 +814,11 @@ export class GameView {
       ((jet as T.Mesh).material as T.ShaderMaterial).uniforms.time.value =
         s.time;
     this.renderer.domElement.style.filter =
-      s.comic.effect === "fog"
-        ? `blur(${Math.min(7, s.comic.effectUntil - s.time) * 1.1}px) contrast(.75)`
+      s.activeComic.effect === "fog"
+        ? `blur(${Math.min(7, s.activeComic.effectUntil - s.time) * 1.1}px) contrast(.75)`
         : "";
     const shape = new T.Vector3(
-      ...(potionScale(s.comic.effect) as [number, number, number]),
+      ...(potionScale(s.activeComic.effect) as [number, number, number]),
     );
     this.background.update(
       s.courseTrack ?? null,

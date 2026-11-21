@@ -20,6 +20,8 @@ export type Checkpoint = Point & {
   width: number;
   y: number;
   height: number;
+  /** Uniform size of a checkpoint placed from the prefab catalog. */
+  prefabScale?: number;
   yaw?: number;
   appearance?: CustomCheckpoint["appearance"];
 };
@@ -32,6 +34,7 @@ export type Collectible = Point & {
 export type Demolishable = Point & { id: string; y: number; radius: number };
 /** Gold-star collectible: drive within GOLD_STAR_RADIUS to bank it forever. */
 export type GoldStar = Point & {
+  resizeScale?: number;
   id: string;
   y: number;
   yaw?: number;

@@ -1,23 +1,19 @@
 import * as T from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { chooseResizeHandle, resizeBox, type ResizeHandle, type ResizeBox } from "./editor-resize";
 import {
   PROP_PREFAB_KINDS,
   CHECKPOINT_WIDTHS,
-  isBirthday,
-  isDinosaur,
-  isGauntletMachine,
-  isHollow,
-  isShipyard,
-  isToybox,
   type CustomLevel,
   type CustomSolid,
 } from "./custom-level";
 import type { EditorSelection, EditorStore } from "./editor-state";
 import { magneticTileMaterial, pbr, slimeMaterial } from "./materials";
-import { buildDungeonModel } from "./dungeon-view";
+import { buildEditorPrefab, buildEditorIceBatch } from "./editor-prefabs";
 import { buildToyCheckpoint } from "./toy-track-view";
 import { scaleSolidUVs } from "./solid-uv";
 import { validRect, type ClipRect } from "./editor-clip";
-type ViewportHit = { object: unknown; distance?: number; point?: T.Vector3 };
+type ViewportHit = { object: unknown; distance?: number; point?: T.Vector3; instanceId?: number };
 export function editorSolidGeometry(s: CustomSolid) {
   return s.footprint
     ? new T.ExtrudeGeometry(new T.Shape(s.footprint.map(({ x, z }) => new T.Vector2(x, -z))), { depth: s.h, bevelEnabled: false })
@@ -35,12 +31,14 @@ export function resolveViewportStack(hits: ViewportHit[]) {
     let node: unknown = hit.object;
     while (node !== null && node !== undefined) {
       const record = node as {
-        userData?: { pick?: EditorSelection; locked?: boolean };
+        userData?: { pick?: EditorSelection; locked?: boolean; instancePicks?: { pick: EditorSelection; locked: boolean }[] };
         parent?: unknown;
       };
-      if (record.userData?.locked) break;
-      if (record.userData?.pick != null) {
-        const selection = record.userData.pick, key = pickKey(selection);
+      const instance = hit.instanceId === undefined ? undefined : record.userData?.instancePicks?.[hit.instanceId];
+      if (record.userData?.locked || instance?.locked) break;
+      const pick = instance?.pick ?? record.userData?.pick;
+      if (pick != null) {
+        const selection = pick, key = pickKey(selection);
         if (!seen.has(key)) { stack.push({ selection, hit }); seen.add(key); }
         break;
       }
@@ -127,104 +125,6 @@ export function planeHit(
   if (!(t > 0)) return null;
   return { x: origin.x + dir.x * t, z: origin.z + dir.z * t };
 }
-const PREFAB_COLORS: Record<string, number> = {
-  book: 0xc86ae0,
-  teeth: 0xffffff,
-  computer: 0x6ae0c8,
-  flippers: 0xe0a46a,
-  donut: 0xff9ecb,
-  hydrant: 0xe06a6a,
-  burner: 0xff7a1f,
-  water: 0x4fb8ff,
-  ocean: 0x4fb8ff,
-  potion: 0x9ae06a,
-  "shark-pool": 0x8a1622,
-  sign: 0xe6c16a,
-  trash: 0x8a8f96,
-  barrel: 0xc25a3a,
-  gravestone: 0x9aa2a8,
-  snowman: 0xdfe8ff,
-  snowball: 0xdfe8ff,
-  hammer: 0xb08d57,
-  axe: 0x9aa2a8,
-  carousel: 0xff6bcb,
-  "bumper-arena": 0x63e8fc,
-  "bumper-arena-xl": 0x3fc3f0,
-  "hot-air-balloon": 0xffc23b,
-  trampoline: 0x7af2ff,
-  ghost: 0xc9b8ff,
-  loop: 0x9bddf4,
-  dragon: 0xff5a0a,
-  lamp: 0xfaf8e8,
-  grandstand: 0x50626b,
-  checkpoint: 0x6ae08a,
-  "gold-star": 0xffd700,
-  skull: 0xe8e0cc,
-  pumpkin: 0xd8641f,
-  "candy-apple": 0xc81f2e,
-  "gumdrop-boulder": 0x2fae5f,
-  "peppermint-barrel": 0xe23b3b,
-  "chocolate-crate": 0x6b4423,
-  "cotton-candy-cart": 0xff9ecb,
-  cookie: 0x8a5a2b,
-  cracker: 0xe2c98a,
-  fruit: 0xc81f2e,
-  hands: 0xff5a3c,
-  scissors: 0xc7ccd2,
-  clippers: 0x9fb8cc,
-  cup: 0x6b4226,
-  clip: 0xe3b341,
-  robot: 0xc23b2e,
-  flagpole: 0xb03a2e,
-  "loose-blocks": 0xe0a458,
-  "glass-pane": 0xe8d44d,
-  "burning-coals": 0xff5a1f,
-  "fragile-ice": 0x9ad6ff,
-  cage: 0x5a636b,
-  "cacti-patch": 0x3fa34d,
-  rocker: 0xb08d57,
-  boulder: 0x8a7a5f,
-  "jail-cell": 0x7a8494,
-  candle: 0xffb347,
-  "candy-cane-arch": 0xe23b3b,
-  "gumdrop-tree": 0x5fd35f,
-  "lollipop-stand": 0xff6fc3,
-  "chocolate-barrier": 0x6b4423,
-  "cotton-candy-stall": 0x9ad6ff,
-  "gumball-lamp": 0xffc23b,
-  "jawbreaker-crusher": 0xff4f6d,
-  "candy-snap-jaws": 0xff6fa5,
-  "gummy-vice": 0x7be495,
-  "peppermint-slammer": 0xe23b3b,
-  "taffy-snapper": 0xff9ec7,
-  "licorice-shears": 0x3a2b3f,
-  "sugar-chomper": 0xb98ae0,
-  "caramel-crusher": 0xd98a2b,
-  "christmas-tree": 0x2e8b47,
-  "christmas-light-arch": 0xffe14d,
-  "christmas-market-stall": 0x9a6a3a,
-  "christmas-lantern": 0xffc978,
-  "christmas-gift-wall": 0xb03a48,
-  "christmas-reindeer": 0xb07a4a,
-  "christmas-ornament": 0xe02040,
-  "christmas-snow-boulder": 0xdfefff,
-  "christmas-cracker-barrel": 0xb06030,
-  "christmas-gift-crate": 0x3f7a4d,
-  "christmas-cocoa-cart": 0x7a4a2b,
-  "christmas-nutcracker": 0xd42a2e,
-  "christmas-ice-vice": 0x7fcbe8,
-  "christmas-toy-chomper": 0x53c1de,
-  "christmas-yeti-jaws": 0xeaf6ff,
-  "christmas-ornament-slammer": 0xc81f5e,
-  "christmas-sleigh-crusher": 0x8a1f2b,
-  "christmas-icicle-shears": 0xbfe8ff,
-  "christmas-tinsel-snapper": 0xd8b93a,
-  "boost-pad": 0x35f0d0,
-  "birthday-candle": 0xff7ab8,
-  "helium-balloon": 0xff4f6d,
-  "birthday-card": 0xff9ec6,
-  "bouncy-castle": 0xf2e85a,
-};
 /** Minimal orbit: drag rotates, wheel zooms, shift-drag pans. */
 function attachOrbit(
   camera: T.PerspectiveCamera,
@@ -301,6 +201,15 @@ function attachOrbit(
   );
   apply();
   return {
+    frameBounds(bounds: T.Box3) {
+      bounds.getCenter(target);
+      const size = bounds.getSize(new T.Vector3());
+      const halfFov = T.MathUtils.degToRad(camera.fov) / 2;
+      spherical.radius = Math.max(4, size.length() / (2 * Math.sin(Math.min(halfFov, Math.atan(Math.tan(halfFov) * camera.aspect))))) * 1.15;
+      spherical.phi = 1.05;
+      spherical.theta = Math.PI + 0.6;
+      apply();
+    },
     frameSpawn({ x, y, z, yaw }: CustomLevel["spawn"]) {
       target.set(x, y, z);
       spherical.radius = 90;
@@ -319,6 +228,11 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   renderer.setClearColor(0x111c22);
   host.append(renderer.domElement);
   const scene = new T.Scene();
+  const environmentGenerator = new T.PMREMGenerator(renderer);
+  const environmentScene = new RoomEnvironment();
+  const environment = environmentGenerator.fromScene(environmentScene, 0.04);
+  scene.environment = environment.texture;
+  environmentScene.dispose(); environmentGenerator.dispose();
   const grid = new T.GridHelper(400, 40, 0x3a5a5a, 0x22393e);
   const axes = new T.AxesHelper(10);
   scene.add(grid, axes);
@@ -362,6 +276,8 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   const cycle = new ViewportPickCycle();
   let pendingClick: { x: number; y: number; picks: NonNullable<EditorSelection>[]; context: string } | null = null;
   let clipDrag: { x: number; z: number; y: number; before: ClipRect[] } | null = null;
+  let resizing: { solid: CustomSolid; box: ResizeBox; handle: ResizeHandle; q: T.Quaternion; plane: T.Plane; start: T.Vector3; changed: boolean; lastFactor: number } | null = null;
+  let prefabResize: { original: import("./custom-level").CustomPrefab; matrix: T.Matrix4; inverse: T.Matrix4; box: ResizeBox; handle: ResizeHandle; plane: T.Plane; start: T.Vector3; changed: boolean; lastFactor: number } | null = null;
   const canStart = (e: PointerEvent) => {
     pendingClick = null;
     // A look session ends on any viewport click; the click selects nothing.
@@ -409,6 +325,40 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       pendingClick = { x: ndc.x, y: ndc.y, picks, context };
     }
     const point = stack.find((entry) => pickKey(entry.selection) === pickKey(selection))?.hit.point;
+    if (store.tool === "resize" && selection?.kind === "prefab" && point && e.button === 0) {
+      // A first click selects a batched tile and gives it an individual model.
+      if (!store.isSelected(selection)) { store.select(selection); return false; }
+      const prefab = store.level.prefabs.find(p => p.id === (selection as { id: string }).id)!;
+      const root = group!.children.find(o => o.userData.pick?.kind === "prefab" && o.userData.pick.id === prefab.id)!;
+      const hit = stack.find(entry => pickKey(entry.selection) === pickKey(selection))!.hit as T.Intersection;
+      if (!hit.face) return false;
+      if (!store.isSelected(selection)) store.select(selection); else store.selection = selection; root.updateWorldMatrix(true, true);
+      const inverse = root.matrixWorld.clone().invert(), bounds = new T.Box3();
+      root.traverse(o => {
+        if (!(o instanceof T.Mesh) || o.parent?.userData.arrowOf) return;
+        o.geometry.computeBoundingBox();
+        bounds.union(o.geometry.boundingBox!.clone().applyMatrix4(inverse.clone().multiply(o.matrixWorld)));
+      });
+      const center = bounds.getCenter(new T.Vector3()), size = bounds.getSize(new T.Vector3());
+      const box = { x: center.x, y: center.y, z: center.z, w: size.x, h: size.y, d: size.z };
+      const normal = hit.face.normal.clone().applyMatrix3(new T.Matrix3().getNormalMatrix((hit.object as T.Object3D).matrixWorld)).normalize();
+      const localNormal = normal.clone().transformDirection(inverse), start = point.clone().applyMatrix4(inverse);
+      prefabResize = { original: structuredClone(prefab), matrix: root.matrixWorld.clone(), inverse, box, handle: chooseResizeHandle(box, start, localNormal), plane: new T.Plane().setFromNormalAndCoplanarPoint(normal, point), start, changed: false, lastFactor: 1 };
+      store.beginGesture(); renderer.domElement.setPointerCapture(e.pointerId); return false;
+    }
+    if (store.tool === "resize" && selection?.kind === "solid" && point && e.button === 0) {
+      const solid = store.level.solids.find(s => s.id === (selection as { id: string }).id)!;
+      const hit = stack.find(entry => pickKey(entry.selection) === pickKey(selection))!.hit as T.Intersection;
+      if (!hit.face) return false;
+      if (!store.isSelected(selection)) store.select(selection); else store.selection = selection;
+      const q = new T.Quaternion().setFromEuler(new T.Euler(solid.angle ?? 0, solid.yaw ?? 0, solid.roll ?? 0, "YXZ"));
+      const normal = hit.face.normal.clone().applyMatrix3(new T.Matrix3().getNormalMatrix((hit.object as T.Object3D).matrixWorld)).normalize();
+      const start = point.clone().sub(new T.Vector3(solid.x, solid.y, solid.z)).applyQuaternion(q.clone().invert());
+      const box = { x: 0, y: 0, z: 0, w: solid.w, h: solid.h, d: solid.d };
+      resizing = { solid: structuredClone(solid), box, q, start, handle: chooseResizeHandle(box, start, normal.clone().applyQuaternion(q.clone().invert())), plane: new T.Plane().setFromNormalAndCoplanarPoint(normal, point), changed: false, lastFactor: 1 };
+      store.beginGesture(); renderer.domElement.setPointerCapture(e.pointerId);
+      return false;
+    }
     if (store.tool === "select" && (e.shiftKey || e.ctrlKey || e.metaKey) && selection) {
       pendingClick = null; store.select(selection, true); return false;
     }
@@ -467,6 +417,46 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       return;
     }
     if (!store.clip) clipDrag = null;
+    if (prefabResize) {
+      raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
+      const hit = raycaster.ray.intersectPlane(prefabResize.plane, new T.Vector3()); if (!hit) return;
+      const r = prefabResize, delta = hit.applyMatrix4(r.inverse).sub(r.start);
+      const point = new T.Vector3(r.box.x + r.handle.x * r.box.w / 2, r.box.y + r.handle.y * r.box.h / 2, r.box.z + r.handle.z * r.box.d / 2).add(delta);
+      const out = resizeBox(r.box, r.handle, point);
+      const ratios = (["x", "y", "z"] as const).filter(a => r.handle[a]).map(a => a === "x" ? out.w / r.box.w : a === "y" ? out.h / r.box.h : out.d / r.box.d);
+      const originalScale = r.original.resizeScale ?? 1;
+      const factor = Math.max(0.01 / originalScale, Math.min(100 / originalScale, Math.max(...ratios)));
+      const pivot = new T.Vector3(r.box.x - r.handle.x * r.box.w / 2, r.box.y - (r.handle.y || 1) * r.box.h / 2, r.box.z - r.handle.z * r.box.d / 2);
+      if (store.selectedEntries().length > 1) {
+        store.scaleSelected(factor / r.lastFactor, pivot.clone().applyMatrix4(r.matrix));
+        r.lastFactor = factor;
+      } else {
+        const position = pivot.multiplyScalar(1 - factor).applyMatrix4(r.matrix);
+        store.updateSelected({ x: position.x, y: position.y, z: position.z, resizeScale: originalScale * factor });
+      }
+      r.changed = true; return;
+    }
+    if (resizing) {
+      raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
+      const hit = raycaster.ray.intersectPlane(resizing.plane, new T.Vector3());
+      if (!hit) return;
+      const { solid, q, box, handle, start } = resizing;
+      const delta = hit.sub(new T.Vector3(solid.x, solid.y, solid.z)).applyQuaternion(q.clone().invert()).sub(start);
+      const edge = new T.Vector3(handle.x * solid.w / 2, handle.y * solid.h / 2, handle.z * solid.d / 2).add(delta);
+      const out = resizeBox(box, handle, edge);
+      if (store.selectedEntries().length > 1) {
+        const ratios = (["x", "y", "z"] as const).filter(a => handle[a]).map(a => a === "x" ? out.w / box.w : a === "y" ? out.h / box.h : out.d / box.d);
+        const factor = Math.max(...ratios);
+        const pivot = new T.Vector3(-handle.x * solid.w / 2, -handle.y * solid.h / 2, -handle.z * solid.d / 2).applyQuaternion(q).add(new T.Vector3(solid.x, solid.y, solid.z));
+        store.scaleSelected(factor / resizing.lastFactor, pivot);
+        resizing.lastFactor = factor; resizing.changed = true; return;
+      }
+      const position = new T.Vector3(out.x, out.y, out.z).applyQuaternion(q).add(new T.Vector3(solid.x, solid.y, solid.z));
+      store.updateSelected({ x: position.x, y: position.y, z: position.z, w: out.w, h: out.h, d: out.d,
+        ...(solid.footprint ? { footprint: solid.footprint.map(p => ({ x: p.x * out.w / solid.w, z: p.z * out.d / solid.d })) } : {}) });
+      resizing.changed = true;
+      return;
+    }
     if (Math.hypot(e.clientX - downX, e.clientY - downY) >= 4) moved = true;
     if (pan) {
       orbit.panBy(
@@ -539,6 +529,16 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       store.updateSelected({ x: hit.x - drag.offX, z: hit.z - drag.offZ });
   });
   const endGesture = (e: PointerEvent) => {
+    if (prefabResize) {
+      const cancel = e.type === "pointercancel" && prefabResize.changed;
+      prefabResize = null; store.endGesture(); if (cancel) store.undo(); return;
+    }
+    if (resizing) {
+      const cancel = e.type === "pointercancel" && resizing.changed;
+      resizing = null; store.endGesture();
+      if (cancel) store.undo();
+      return;
+    }
     if (clipDrag) {
       if (e.type === "pointercancel") store.setClipCutters(clipDrag.before);
       clipDrag = null; return;
@@ -626,7 +626,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         group.traverse((o) => {
           if (o instanceof T.Mesh) {
             o.geometry.dispose();
-            (o.material as T.Material).dispose();
+            for (const material of Array.isArray(o.material) ? o.material : [o.material]) material.dispose();
           }
         });
         scene.remove(group);
@@ -688,42 +688,27 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         gate.userData.locked = !!cp.locked;
         group.add(gate);
       }
+      const iceBatch = level.prefabs.filter(p => p.kind === "fragile-ice" && !store.isSelected({ kind: "prefab", id: p.id }));
+      if (iceBatch.length > 1) group.add(buildEditorIceBatch(iceBatch, preview));
+      const batchedIds = new Set(iceBatch.length > 1 ? iceBatch.map(p => p.id) : []);
       for (const p of level.prefabs) {
-        if (preview && (isDinosaur(p.kind) || isGauntletMachine(p.kind) || isShipyard(p.kind) || isHollow(p.kind) || isToybox(p.kind) || isBirthday(p.kind) || p.kind === "lime-chomper" || p.kind === "guided-pipe" || p.kind === "flagpole")) {
-          const { root } = buildDungeonModel({ ...p, kind: p.kind, phase: 0 });
-          root.userData.pick = { kind: "prefab", id: p.id };
-          root.userData.locked = !!p.locked;
-          group.add(root);
-        }
-        const marker = new T.Mesh(
-          new T.OctahedronGeometry(1.2),
-          new T.MeshBasicMaterial({
-            color: PREFAB_COLORS[p.kind] ?? 0xffffff,
-            wireframe: true,
-          }),
-        );
-        marker.position.set(p.x, (p.y ?? 0) + 1.5, p.z);
-        marker.rotation.set(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ");
-        marker.userData.pick = { kind: "prefab", id: p.id };
-        if (preview) marker.layers.set(1); // gizmos hide in preview
-        marker.userData.locked = !!p.locked;
-        const prefabSelected = store.isSelected({ kind: "prefab", id: p.id });
-        if (prefabSelected) {
-          marker.scale.setScalar(1.6);
-          // Orientation arrow along local +Z, so it follows yaw/pitch/roll.
-          const arrow = new T.Group();
-          arrow.userData.arrowOf = p.id;
+        if (batchedIds.has(p.id)) continue;
+        const model = buildEditorPrefab(p, preview);
+        const selected = store.isSelected({ kind: "prefab", id: p.id });
+        if (selected) {
+          model.traverse(o => {
+            if (o instanceof T.Mesh) for (const mat of Array.isArray(o.material) ? o.material : [o.material]) {
+              if (!preview && mat instanceof T.MeshBasicMaterial) mat.color.set(0xffe08a);
+              else if (mat instanceof T.MeshStandardMaterial) mat.emissive.add(new T.Color(0x342900));
+            }
+          });
+          const arrow = new T.Group(); arrow.userData.arrowOf = p.id;
           const arrowMat = new T.MeshBasicMaterial({ color: 0xffe08a });
-          const shaft = new T.Mesh(new T.BoxGeometry(0.14, 0.14, 3), arrowMat);
-          shaft.position.z = 2.7;
-          const head = new T.Mesh(new T.ConeGeometry(0.42, 1, 10), arrowMat);
-          head.rotation.x = Math.PI / 2;
-          head.position.z = 4.7;
-          arrow.add(shaft, head);
-          if (preview) arrow.traverse((o) => o.layers.set(1));
-          marker.add(arrow);
+          const shaft = new T.Mesh(new T.BoxGeometry(0.14, 0.14, 3), arrowMat); shaft.position.z = 2.7;
+          const head = new T.Mesh(new T.ConeGeometry(0.42, 1, 10), arrowMat); head.rotation.x = Math.PI / 2; head.position.z = 4.7;
+          arrow.add(shaft, head); arrow.layers.set(1); arrow.traverse(o => o.layers.set(1)); model.add(arrow);
         }
-        group.add(marker);
+        group.add(model);
       }
       for (const [i, t] of [
         ...(level.collectibles ?? []),
@@ -851,6 +836,13 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       });
       return {
         preview: previewOn,
+        selectedPrefab: store.selection?.kind === "prefab" ? store.selection.id : undefined,
+        prefabs: (group?.children ?? []).filter(o => o.userData.pick?.kind === "prefab").map(root => {
+          let meshes = 0, vertices = 0;
+          root.traverse(o => { if (o instanceof T.Mesh) { meshes++; vertices += o.geometry.attributes.position.count; } });
+          const bounds = new T.Box3().setFromObject(root);
+          return { id: root.userData.pick.id as string, meshes, vertices, min: bounds.min.toArray(), max: bounds.max.toArray() };
+        }),
         gridVisible: grid.visible,
         solids,
         prefabArrows,
@@ -868,11 +860,25 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     frameSpawn(level: CustomLevel) {
       orbit.frameSpawn(level.spawn);
     },
+    frameSelection() {
+      if (!store.selection || !group) return;
+      const bounds = new T.Box3();
+      for (const model of group.children) {
+        const pick = model.userData.pick as EditorSelection;
+        if (pick && store.isSelected(pick)) model.traverse(o => {
+          if (!(o instanceof T.Mesh) || !o.visible || o.parent?.userData.arrowOf || !o.layers.isEnabled(0)) return;
+          o.geometry.computeBoundingBox();
+          bounds.union(o.geometry.boundingBox!.clone().applyMatrix4(o.matrixWorld));
+        });
+      }
+      if (!bounds.isEmpty()) orbit.frameBounds(bounds);
+    },
     cameraTarget() {
       return { x: target.x, y: target.y, z: target.z };
     },
     resize,
     dispose() {
+      environment.dispose();
       if (settleTimer) clearTimeout(settleTimer);
       renderer.dispose();
       renderer.domElement.remove();

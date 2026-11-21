@@ -1,5 +1,7 @@
 import { ComicPhysics } from "./comic-physics";
 import { solidContainsXZ } from "./solid-clip";
+import { PrefabSpace, basePrefabSimulation, basePrefabTrack } from "./prefab-space";
+import { ResizedPrefab } from "./resized-prefabs";
 import { DungeonPhysics } from "./dungeon-physics";
 import { GuidedPipe } from "./guided-pipe";
 import { LooseBlocks } from "./loose-blocks";
@@ -90,6 +92,17 @@ export class Simulation {
   trackRun?: TrackRun;
   courseTrack?: ReturnType<typeof getTrack>;
   activeHazards: Hazard[] = [];
+  resizedPrefabs: ResizedPrefab[] = [];
+  get activeComic() {
+    return this.resizedPrefabs.map(p => p.sim.comic).filter(c => c.effect && c.effectUntil > this.time).sort((a, b) => b.effectUntil - a.effectUntil)[0] ?? this.comic;
+  }
+  get fairgroundRiding() { return !!this.fairground.riding || this.resizedPrefabs.some(p => p.sim.fairground.riding); }
+  get fairgroundSlipping() { return this.fairground.slipping || this.resizedPrefabs.some(p => p.sim.fairground.slipping); }
+  get carouselCount() { return this.fairground.carousels.length + this.resizedPrefabs.reduce((sum, p) => sum + p.sim.fairground.carousels.length, 0); }
+  fairgroundDeckVelocity() {
+    const riding = this.resizedPrefabs.find(p => p.sim.fairground.riding);
+    return riding ? riding.space.vector(riding.sim.fairground.deckVelocity()) : this.fairground.deckVelocity();
+  }
   time = 0;
   ticks = 0;
   airborneTicks = 0;
@@ -252,6 +265,7 @@ export class Simulation {
         ? []
         : HAZARDS;
     this.world?.free();
+    this.resizedPrefabs = [];
     this.events?.free();
     this.events = new RAPIER.EventQueue(true);
     this.stage = stage;
@@ -306,7 +320,7 @@ export class Simulation {
       );
     else
       for (const s of this.courseTrack
-        ? courseSolids(this.courseTrack)
+        ? courseSolids(basePrefabTrack(this.courseTrack))
         : [
             ...routeSolids(),
             ...arenaSolids(),
@@ -372,22 +386,32 @@ export class Simulation {
     this.props = new Destructibles(
       this.world,
       stage === "lab",
-      this.courseTrack ? courseProps(this.courseTrack) : undefined,
+      this.courseTrack ? courseProps(basePrefabTrack(this.courseTrack)) : undefined,
     );
-    this.comic = new ComicPhysics(this);
-    this.dungeon = new DungeonPhysics(this);
-    this.looseBlocks = new LooseBlocks(this);
-    this.burningCoals = new BurningCoals(this);
-    this.fragileIce = new FragileIce(this);
-    this.guidedPipe = new GuidedPipe(this);
-    this.fairground = new Fairground(this);
-    this.ghosts = new GhostSwarm(this);
-    this.axes = new AxeArray(this);
-    this.slide = new SlideSystems(this);
+    const prefabSim = basePrefabSimulation(this);
+    this.comic = new ComicPhysics(prefabSim);
+    this.dungeon = new DungeonPhysics(prefabSim);
+    this.looseBlocks = new LooseBlocks(prefabSim);
+    this.burningCoals = new BurningCoals(prefabSim);
+    this.fragileIce = new FragileIce(prefabSim);
+    this.guidedPipe = new GuidedPipe(prefabSim);
+    this.fairground = new Fairground(prefabSim);
+    this.ghosts = new GhostSwarm(prefabSim);
+    this.axes = new AxeArray(prefabSim);
+    this.slide = new SlideSystems(prefabSim);
+    const resizedGroups = new Map<number, import("./custom-level").CustomPrefab[]>();
+    for (const p of this.courseTrack?.custom?.prefabs ?? []) if (p.resizeScale !== undefined && p.resizeScale !== 1) {
+      if (!resizedGroups.has(p.resizeScale)) resizedGroups.set(p.resizeScale, []);
+      resizedGroups.get(p.resizeScale)!.push(p);
+    }
+    for (const prefabs of resizedGroups.values()) this.resizedPrefabs.push(new ResizedPrefab(this, prefabs[0], prefabs));
     if (stage !== "lab")
       for (const h of this.activeHazards) {
+        const prefab = this.courseTrack?.custom?.prefabs.find(p => p.id === h.id);
+        const space = prefab?.resizeScale ? new PrefabSpace(prefab) : undefined;
+        const world = space ? space.world(this.world) : this.world;
         if (h.kind === "hammer") {
-          const b = this.world.createRigidBody(
+          const b = world.createRigidBody(
             RAPIER.RigidBodyDesc.kinematicPositionBased()
               .setTranslation(h.x, h.y, h.z)
               .setRotation(
@@ -397,13 +421,13 @@ export class Simulation {
                 ),
               ),
           );
-          this.hazardBodies.set(h.id, b);
-          this.world.createCollider(
+          this.hazardBodies.set(h.id, space ? space.unwrap(b) : b);
+          world.createCollider(
             RAPIER.ColliderDesc.cuboid(3.6, 0.3, 0.45),
             b,
           );
           for (const side of [-1, 1])
-            this.world.createCollider(
+            world.createCollider(
               RAPIER.ColliderDesc.cuboid(0.8, 0.8, 0.75).setTranslation(
                 side * 3.6,
                 0,
@@ -412,7 +436,7 @@ export class Simulation {
               b,
             );
           for (const side of [-1, 1])
-            this.world.createCollider(
+            world.createCollider(
               RAPIER.ColliderDesc.cone(0.9, 0.65)
                 .setTranslation(side * 5.1, 0, 0)
                 .setRotation(
@@ -433,7 +457,7 @@ export class Simulation {
               new Vector3(0, 0, 1),
               new Vector3(0, 0, -1),
             ]) {
-              this.world.createCollider(
+              world.createCollider(
                 RAPIER.ColliderDesc.cone(0.65, 0.45)
                   .setTranslation(side * 3.6, dir.y * 1.4, dir.z * 1.4)
                   .setRotation(
@@ -447,14 +471,14 @@ export class Simulation {
             }
         }
         if (h.kind === "fire")
-          this.world.createCollider(
+          world.createCollider(
             RAPIER.ColliderDesc.cuboid(6, 0.125, 0.3)
               .setTranslation(h.x, h.y - 1.2, h.z)
               .setFriction(0.6),
           );
         if (h.kind === "spikes")
           for (let x = -5; x <= 5; x += 2)
-            this.world.createCollider(
+            world.createCollider(
               RAPIER.ColliderDesc.cone(1.2, 0.45).setTranslation(
                 h.x + x,
                 h.y,
@@ -517,8 +541,10 @@ export class Simulation {
     }
   }
   step(input: Input = {}) {
-    const guided = this.guidedPipe.beforeStep();
+    let guided = this.guidedPipe.beforeStep();
     input = this.fairground.controls(input);
+    for (const prefab of this.resizedPrefabs) input = prefab.controls(input);
+    guided ||= this.resizedPrefabs.some(p => p.guided);
     if (guided) input = {};
     else if (this.dungeon.gauntlet.holding) input = { brake: 1 };
     else if (
@@ -626,7 +652,7 @@ export class Simulation {
         const aim = dragonAim(p.yaw ?? 0);
         const jet = dragonExposureAt(
           this.time,
-          position,
+          p.resizeScale ? new PrefabSpace(p).toLocal(position) : position,
           { x: p.x + aim.mx, y: (p.y ?? 0) + aim.my, z: p.z + aim.mz },
           { x: aim.dx, z: aim.dz },
         );
@@ -681,7 +707,7 @@ export class Simulation {
           Math.max(0, longitudinal * Math.sign(throttle)) /
             ((throttle < 0 ? 8 : 25) *
               this.effectiveTopSpeed *
-              (this.comic.effect === "nitro" ? 2 : 1)),
+              (this.activeComic.effect === "nitro" ? 2 : 1)),
       );
       // Extra arcade motor force acts through the center of mass to avoid a
       // tuning slider turning increased acceleration into an instant wheelie.
@@ -725,13 +751,13 @@ export class Simulation {
     const localUp = new Vector3(0, 1, 0).applyQuaternion(
       new Quaternion().copy(this.body.rotation()),
     );
-    if (frontGrip > 0 && localUp.y > 0.7 && !onLoop && !strafeMode && !this.fairground.slipping) {
+    if (frontGrip > 0 && localUp.y > 0.7 && !onLoop && !strafeMode && !this.fairgroundSlipping) {
       const yaw = new Vector3().copy(this.body.angvel()).dot(localUp);
       const targetYaw =
         (longitudinal *
           Math.sin(this.steeringAngle) *
           this.tuning.turningPower) /
-        3.3 + (this.fairground.riding ? CAROUSEL_OMEGA * this.tuning.carouselSpeed : 0);
+        3.3 + (this.fairgroundRiding ? CAROUSEL_OMEGA * this.tuning.carouselSpeed : 0);
       const delta = (targetYaw - yaw) * Math.min(1, 18 * DT) * frontGrip * gripScale;
       this.body.applyTorqueImpulse(
         localUp.clone().multiplyScalar(delta * this.body.principalInertia().y),
@@ -742,7 +768,7 @@ export class Simulation {
       );
       lateral.y = 0;
       lateral.normalize();
-      const slip = lateral.dot(new Vector3().copy(this.body.linvel()).sub(this.fairground.deckVelocity()));
+      const slip = lateral.dot(new Vector3().copy(this.body.linvel()).sub(this.fairgroundDeckVelocity()));
       this.body.applyImpulse(
         lateral.multiplyScalar(
           -slip * this.body.mass() * Math.min(1, 6 * DT) * frontGrip * gripScale,
@@ -771,7 +797,7 @@ export class Simulation {
       );
     }
     // Rolling resistance only acts while grounded and coasting, never in flight.
-    if (throttle === 0 && brake === 0 && handbrake === 0 && grounded && !flow && !this.fairground.riding && !this.fairground.slipping) {
+    if (throttle === 0 && brake === 0 && handbrake === 0 && grounded && !flow && !this.fairgroundRiding && !this.fairgroundSlipping) {
       const delta = Math.min(
         Math.abs(longitudinal),
         1.8 * this.tuning.friction * DT,
@@ -840,7 +866,7 @@ export class Simulation {
                   Math.max(0, longitudinal * Math.sign(throttle)) /
                     ((throttle < 0 ? 8 : 25) *
                       this.effectiveTopSpeed *
-                      (this.comic.effect === "nitro" ? 2 : 1)),
+                      (this.activeComic.effect === "nitro" ? 2 : 1)),
               )
           : 0,
       );
@@ -863,7 +889,7 @@ export class Simulation {
       this.vehicle.updateVehicle(
         DT,
         RAPIER.QueryFilterFlags.EXCLUDE_DYNAMIC |
-          (this.fairground.carousels.length ? 0 : RAPIER.QueryFilterFlags.EXCLUDE_KINEMATIC) |
+          (this.carouselCount ? 0 : RAPIER.QueryFilterFlags.EXCLUDE_KINEMATIC) |
           RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
       );
     this.hammerPhase += hammerAngle(DT) * this.tuning.hammerSpeed;
@@ -899,6 +925,7 @@ export class Simulation {
     this.ghosts.update();
     this.dungeon.gauntlet.before();
     this.dungeon.before();
+    for (const prefab of this.resizedPrefabs) prefab.before();
     this.world.step(this.events, this.hammerHooks);
     this.comic.after();
     const screwHit = this.dungeon.after();
@@ -907,6 +934,8 @@ export class Simulation {
     this.fragileIce.after();
     const fairgroundHit = this.fairground.after(before);
     this.ghosts.attack();
+    let resizedHit = false;
+    for (const prefab of this.resizedPrefabs) resizedHit = prefab.after(before) || resizedHit;
     if (this.courseTrack !== this.pianoKeyTrack) {
       this.pianoKeyTrack = this.courseTrack;
       this.pianoKeyById.clear();
@@ -935,6 +964,7 @@ export class Simulation {
     }
     if (
       !guided &&
+      !resizedHit &&
       !hammerHit &&
       !axeHit &&
       !screwHit &&
@@ -1151,7 +1181,7 @@ export class Simulation {
         : this.body.linvel();
       const lateral = new Vector3(1, 0, 0).applyQuaternion(q).dot(velocity);
       const slipping =
-        (this.fairground.slipping || (Math.abs(throttle) > 0.2 &&
+        (this.fairgroundSlipping || (Math.abs(throttle) > 0.2 &&
         Math.abs(steer) > 0.4 && Math.abs(lateral) > 0.4)) &&
         Math.hypot(velocity.x, velocity.z) > 2 &&
         !this.parts.get(this.partDefs[i + 2].id)!.body &&

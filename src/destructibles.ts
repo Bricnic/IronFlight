@@ -65,7 +65,7 @@ export function propDefinitions(lab = false): PropDefinition[] {
     })),
   );
 }
-function propHeight(kind: string) {
+export function propHeight(kind: string) {
   if (kind === "sign") return 1.6;
   if (kind === "snowman") return 1.4;
   if (kind === "snowball") return 4;

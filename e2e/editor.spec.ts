@@ -523,7 +523,7 @@ test("wireframe rotator drives one euler axis per button and drives the yawed wa
   expect(rolled.angle).toBeCloseTo(pitched.angle, 6);
   // The yaw numeric swings the road-blocking wall open.
   await page.locator('#editor-objects li[data-key="solid:yaw-1"]').click();
-  await page.locator('#editor-props input[data-prop="yaw"]').fill("1.5708");
+  await page.locator('#editor-props input[data-prop="yaw"]').fill("90");
   await page.locator("#editor-save").click();
   await expect(page.locator("#editor-status")).toContainText(
     "Saved e2e-euler",

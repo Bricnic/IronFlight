@@ -1,3 +1,4 @@
+import { degreesToRadians, radiansToDegrees } from "./editor-angles";
 import { EditorStore, selectionKey, type EditorSelection } from "./editor-state";
 import { createEditorViewport } from "./editor-viewport";
 import { defaultTextureFor } from "./course-view";
@@ -43,17 +44,19 @@ function numberField(
   value: number | undefined,
   onCommit: (n: number) => void,
 ) {
-  const row = el("label", { class: "prop-row" }, `${label} `);
+  const angular = ["yaw", "angle", "roll"].includes(prop);
+  const display = (n: number) => angular ? radiansToDegrees(n) : n;
+  const row = el("label", { class: "prop-row" }, `${label}${angular ? " (°)" : ""} `);
   const input = el("input", {
     type: "number",
     step: "any",
     "data-prop": prop,
   }) as HTMLInputElement;
-  if (value !== undefined) input.value = String(value);
+  if (value !== undefined) input.value = String(display(value));
   input.addEventListener("change", () => {
     const n = parseFloat(input.value);
-    if (Number.isFinite(n)) onCommit(n);
-    else input.value = value === undefined ? "" : String(value);
+    if (Number.isFinite(n)) onCommit(angular ? degreesToRadians(n) : n);
+    else input.value = value === undefined ? "" : String(display(value));
   });
   row.append(input);
   props.append(row);
@@ -96,8 +99,9 @@ export function createLevelEditor(
   undoButton.addEventListener("click", () => store.undo());
   redoButton.addEventListener("click", () => store.redo());
   const backButton = el("button", { id: "editor-back" }, "Back");
+  const frameButton = el("button", { id: "editor-frame-selection" }, "Frame selection");
   const toolButtons = (
-    ["select", "pan", "eyedropper", "rotator", "clip", "look"] as const
+    ["select", "pan", "eyedropper", "rotator", "resize", "clip", "look"] as const
   ).map((tool) => {
     const button = el(
       "button",
@@ -105,6 +109,7 @@ export function createLevelEditor(
       tool[0].toUpperCase() + tool.slice(1),
     ) as HTMLButtonElement;
     if (tool === "clip") button.title = "Clip selected horizontal solids, including tiles. Shift/Ctrl click list rows to select several.";
+    if (tool === "resize") button.title = "Drag the nearest edge or corner of the clicked face to resize. The opposite edge stays fixed.";
     if (tool === "look") button.title = "Point the selected prefab at the cursor. Click the viewport to finish.";
     button.addEventListener("click", () => store.setTool(tool));
     return { tool, button };
@@ -241,6 +246,8 @@ export function createLevelEditor(
   screen.append(top, body, unsaved, randomModal);
   host.append(screen);
   const viewport = createEditorViewport(viewportHost, store);
+  top.append(frameButton);
+  frameButton.addEventListener("click", () => viewport.frameSelection());
   const showError = (message: string) => {
     error.textContent = message;
   };
@@ -546,6 +553,8 @@ export function createLevelEditor(
       props.append(texRow);
     }
     if (current.kind === "prefab") {
+      numberField(props, "Size", "resizeScale", (item.resizeScale as number | undefined) ?? 1, commit("resizeScale"));
+      props.append(el("p", { class: "prop-hint" }, "Prefab resizing preserves proportions and updates gameplay size."));
       props.append(
         el("p", { class: "prop-hint" }, `Kind: ${current.item.kind}`),
       );
@@ -1001,6 +1010,7 @@ export function createLevelEditor(
                 ? "spawn"
                 : `${store.selection.kind}:${store.selection.index}`,
         tool: store.tool,
+        selectedObject: store.selectedItem()?.item as Record<string, unknown> | undefined,
         preview: store.preview,
         dirty: store.dirty,
         cameraTarget: viewport.cameraTarget(),

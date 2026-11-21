@@ -241,7 +241,7 @@ export function buildCarousel() {
   batch(group);
   return group;
 }
-function buildArena() {
+export function buildArena() {
   const group = new T.Group(),
     rail = metal(0xec4c8c),
     gold = metal(0xffd768);
@@ -282,7 +282,7 @@ function buildArena() {
   batch(group);
   return group;
 }
-function buildArenaXL() {
+export function buildArenaXL() {
   const group = new T.Group(),
     rail = metal(0xec4c8c),
     gold = metal(0xffd768);
@@ -328,7 +328,7 @@ function buildArenaXL() {
   batch(group);
   return group;
 }
-function buildBumper(index: number) {
+export function buildBumper(index: number) {
   const group = new T.Group(),
     paint = metal(COLORS[index % 6]),
     rubber = metal(0x1c2536),
@@ -368,7 +368,7 @@ function buildBumper(index: number) {
   batch(group);
   return group;
 }
-function buildBalloon() {
+export function buildBalloon() {
   const group = new T.Group();
   for (let i = 0; i < 12; i++) {
     const panel = mesh(

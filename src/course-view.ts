@@ -282,22 +282,14 @@ export class CourseView extends T.Group {
   private buildGate(track: Track, gate: Checkpoint, index: number, total: number) {
     const g = new T.Group();
     g.name = `checkpoint-${gate.id}`;
-    g.position.set(gate.x, Math.max(0, gate.y - 2.6), gate.z);
+    g.position.set(gate.x, gate.prefabScale === undefined ? Math.max(0, gate.y - 2.6) : gate.y - 2 * gate.prefabScale, gate.z);
+    g.scale.setScalar(gate.prefabScale ?? 1);
     g.rotation.y = Math.atan2(gate.nx, gate.nz);
     if (gate.appearance) {
       g.add(buildToyCheckpoint(gate.appearance));
       g.userData.keepFrame = true;
     } else {
-      const mat = new T.MeshStandardMaterial({ color: track.color, roughness: 0.6, emissive: track.color, emissiveIntensity: 0 });
-      mat.userData.nightGlow = { day: 0, night: GATE_NIGHT_GLOW };
-      for (const side of [-1, 1]) {
-        const pole = new T.Mesh(new T.CylinderGeometry(0.13, 0.2, 5.2, 10), mat);
-        pole.position.set((side * gate.width) / 2, 2.6, 0);
-        g.add(pole);
-      }
-      const banner = new T.Mesh(new T.BoxGeometry(gate.width, 0.35, 0.35), mat);
-      banner.position.y = 5.1;
-      g.add(banner);
+      g.add(buildCheckpointFrame(gate.width / (gate.prefabScale ?? 1), track.color));
     }
     const caption = gateCaption(track, gate, index, total);
     g.userData.label = caption;
@@ -337,7 +329,8 @@ export class CourseView extends T.Group {
   moveGateModel(index: number, gate: Checkpoint) {
     const g = this.gateModels[index];
     if (!g) return;
-    g.position.set(gate.x, Math.max(0, gate.y - 2.6), gate.z);
+    g.position.set(gate.x, gate.prefabScale === undefined ? Math.max(0, gate.y - 2.6) : gate.y - 2 * gate.prefabScale, gate.z);
+    g.scale.setScalar(gate.prefabScale ?? 1);
     g.rotation.y = Math.atan2(gate.nx, gate.nz);
   }
   /** Live editing: rebuild gate models so delete/duplicate relabels. */
@@ -601,48 +594,8 @@ export class CourseView extends T.Group {
             return m;
           };
           if (h.kind === "hammer") {
-            const rotor = new T.Group();
-            root.add(rotor);
-            rotor.add(box(7.2, 0.6, 0.9));
-            for (const side of [-1, 1]) {
-              rotor.add(box(1.6, 1.6, 1.5, side * 3.6));
-              const spike = new T.Mesh(
-                new T.ConeGeometry(0.65, 1.8, 16),
-                material,
-              );
-              spike.position.x = side * 5.1;
-              spike.rotation.z = (-side * Math.PI) / 2;
-              rotor.add(spike);
-              for (const dir of [
-                new T.Vector3(0, 1, 0),
-                new T.Vector3(0, -1, 0),
-                new T.Vector3(0, 0, 1),
-                new T.Vector3(0, 0, -1),
-              ]) {
-                const spike = new T.Mesh(
-                  new T.ConeGeometry(0.45, 1.3, 12),
-                  material,
-                );
-                spike.position.set(side * 3.6, dir.y * 1.4, dir.z * 1.4);
-                spike.quaternion.setFromUnitVectors(
-                  new T.Vector3(0, 1, 0),
-                  dir,
-                );
-                rotor.add(spike);
-              }
-            }
-            if (h.y > 0.3)
-              for (const side of [-1, 1]) {
-                root.add(box(0.6, h.y, 0.6, 0, -h.y / 2, side * 2.5));
-                root.add(box(1.6, 0.3, 1.6, 0, -h.y + 0.15, side * 2.5));
-              }
-            const axle = new T.Mesh(
-              new T.CylinderGeometry(0.25, 0.25, 5.6, 12),
-              material,
-            );
-            axle.rotation.x = Math.PI / 2;
-            root.add(axle);
-            this.hazards.push({ h, root, rotor });
+            const model = buildHammerMesh(h.y); root.add(model.root);
+            this.hazards.push({ h, root, rotor: model.rotor });
           } else if (h.kind === "fire") {
             root.add(box(12, 0.25, 0.6, 0, -1.2));
             const flames = new T.Group();
@@ -1505,5 +1458,70 @@ export function buildGrandstand() {
     row.receiveShadow = true;
     group.add(row);
   }
+  return group;
+}
+
+/** Shared complete resting hammer, including spikes, axle and support posts. */
+export function buildHammerMesh(height = 3.5) {
+  const root = new T.Group();
+  const material = new T.MeshStandardMaterial({
+    color: 0x52615a,
+    metalness: 0.7,
+    roughness: 0.5,
+  });
+  const box = (w: number, h: number, d: number, x = 0, y = 0, z = 0) => {
+    const mesh = new T.Mesh(new T.BoxGeometry(w, h, d), material);
+    mesh.position.set(x, y, z);
+    return mesh;
+  };
+
+  const rotor = new T.Group();
+  root.add(rotor);
+  rotor.add(box(7.2, 0.6, 0.9));
+  for (const side of [-1, 1]) {
+    rotor.add(box(1.6, 1.6, 1.5, side * 3.6));
+    const spike = new T.Mesh(new T.ConeGeometry(0.65, 1.8, 16), material);
+    spike.position.x = side * 5.1;
+    spike.rotation.z = (-side * Math.PI) / 2;
+    rotor.add(spike);
+    for (const dir of [
+      new T.Vector3(0, 1, 0),
+      new T.Vector3(0, -1, 0),
+      new T.Vector3(0, 0, 1),
+      new T.Vector3(0, 0, -1),
+    ]) {
+      const spike = new T.Mesh(new T.ConeGeometry(0.45, 1.3, 12), material);
+      spike.position.set(side * 3.6, dir.y * 1.4, dir.z * 1.4);
+      spike.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir);
+      rotor.add(spike);
+    }
+  }
+  if (height > 0.3)
+    for (const side of [-1, 1]) {
+      root.add(box(0.6, height, 0.6, 0, -height / 2, side * 2.5));
+      root.add(box(1.6, 0.3, 1.6, 0, -height + 0.15, side * 2.5));
+    }
+  const axle = new T.Mesh(
+    new T.CylinderGeometry(0.25, 0.25, 5.6, 12),
+    material,
+  );
+  axle.rotation.x = Math.PI / 2;
+  root.add(axle);
+  return { root, rotor };
+}
+
+/** Shared static gate frame for gameplay and the prefab editor. */
+export function buildCheckpointFrame(width = 24, color = 0xffd34d) {
+  const group = new T.Group();
+  const mat = new T.MeshStandardMaterial({ color: color, roughness: 0.6, emissive: color, emissiveIntensity: 0 });
+  mat.userData.nightGlow = { day: 0, night: GATE_NIGHT_GLOW };
+  for (const side of [-1, 1]) {
+    const pole = new T.Mesh(new T.CylinderGeometry(0.13, 0.2, 5.2, 10), mat);
+    pole.position.set((side * width) / 2, 2.6, 0);
+    group.add(pole);
+  }
+  const banner = new T.Mesh(new T.BoxGeometry(width, 0.35, 0.35), mat);
+  banner.position.y = 5.1;
+  group.add(banner);
   return group;
 }

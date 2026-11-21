@@ -5,6 +5,14 @@ const tagged = (pick: unknown, parent: unknown = null) => ({
   userData: { pick },
   parent,
 });
+it("picks individual instances and respects their locks", () => {
+  const batch = { userData: { instancePicks: [
+    { pick: { kind: "prefab", id: "ice-1" }, locked: true },
+    { pick: { kind: "prefab", id: "ice-2" }, locked: false },
+  ] } };
+  expect(resolveViewportPick([{ object: batch, instanceId: 0 }])).toBeNull();
+  expect(resolveViewportPick([{ object: batch, instanceId: 1 }])).toEqual({ kind: "prefab", id: "ice-2" });
+});
 it("builds a unique unlocked selection stack in camera-distance order", () => {
   const front = tagged({ kind: "solid", id: "front" });
   const rear = tagged({ kind: "prefab", id: "rear" });

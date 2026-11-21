@@ -88,95 +88,95 @@ export class PropView extends T.Group {
     }
   }
   private build(prop: PropState) {
-    const root = new T.Group(),
-      fire = new T.Group();
-    root.name = prop.definition.id;
-    root.scale.setScalar(prop.definition.scale ?? 1);
-    fire.name = `${prop.definition.id}-flames`;
-    // Visual-only pitch/roll inside the physics-driven root (yaw only).
-    const tilt = new T.Group();
-    tilt.name = "prop-tilt";
-    tilt.rotation.set(
-      prop.definition.angle ?? 0,
-      0,
-      prop.definition.roll ?? 0,
-    );
-    root.add(tilt);
-    this.add(root, fire);
-    const material = new T.MeshStandardMaterial({
-      color: prop.definition.kind === "barrel" ? 0xa13d21 : 0x526c59,
-      metalness: 0.5,
-      roughness: 0.7,
+    const { scene, root, fire } = buildPropModel(prop.definition);
+    this.add(scene);
+    this.models.set(prop, { root, fire, trash: [] });
+  }
+}
+export function buildPropModel(definition: PropState["definition"]) {
+  const scene = new T.Group();
+  const root = new T.Group(),
+    fire = new T.Group();
+  root.name = definition.id;
+  root.scale.setScalar(definition.scale ?? 1);
+  fire.name = `${definition.id}-flames`;
+  // Visual-only pitch/roll inside the physics-driven root (yaw only).
+  const tilt = new T.Group();
+  tilt.name = "prop-tilt";
+  tilt.rotation.set(definition.angle ?? 0, 0, definition.roll ?? 0);
+  root.add(tilt);
+  scene.add(root, fire);
+  const material = new T.MeshStandardMaterial({
+    color: definition.kind === "barrel" ? 0xa13d21 : 0x526c59,
+    metalness: 0.5,
+    roughness: 0.7,
+  });
+  const mesh = (
+    geometry: T.BufferGeometry,
+    mat: T.Material = material,
+    parent: T.Object3D = tilt,
+  ) => {
+    const m = new T.Mesh(geometry, mat);
+    m.castShadow = true;
+    m.receiveShadow = true;
+    parent.add(m);
+    return m;
+  };
+  if (definition.kind === "snowman") {
+    const snow = new T.MeshStandardMaterial({
+      color: 0xf3fbff,
+      roughness: 0.8,
     });
-    const mesh = (
-      geometry: T.BufferGeometry,
-      mat: T.Material = material,
-      parent: T.Object3D = tilt,
-    ) => {
-      const m = new T.Mesh(geometry, mat);
-      m.castShadow = true;
-      m.receiveShadow = true;
-      parent.add(m);
-      return m;
-    };
-    if (prop.definition.kind === "snowman") {
-      const snow = new T.MeshStandardMaterial({
-        color: 0xf3fbff,
-        roughness: 0.8,
-      });
-      const coal = new T.MeshStandardMaterial({ color: 0x182330 });
-      for (const [radius, y] of [
-        [1.15, -0.25],
-        [0.85, 1],
-        [0.6, 2],
-      ])
-        mesh(new T.SphereGeometry(radius, 18, 12), snow).position.y = y;
-      for (const x of [-0.22, 0.22])
-        mesh(new T.SphereGeometry(0.09, 8, 8), coal).position.set(
-          x,
-          2.1,
-          -0.55,
-        );
-      for (const y of [0.7, 1.1, 1.5])
-        mesh(new T.SphereGeometry(0.1, 8, 8), coal).position.set(0, y, -0.78);
-      const nose = mesh(
-        new T.ConeGeometry(0.13, 0.65, 10),
-        new T.MeshStandardMaterial({ color: 0xff851b }),
+    const coal = new T.MeshStandardMaterial({ color: 0x182330 });
+    for (const [radius, y] of [
+      [1.15, -0.25],
+      [0.85, 1],
+      [0.6, 2],
+    ])
+      mesh(new T.SphereGeometry(radius, 18, 12), snow).position.y = y;
+    for (const x of [-0.22, 0.22])
+      mesh(new T.SphereGeometry(0.09, 8, 8), coal).position.set(x, 2.1, -0.55);
+    for (const y of [0.7, 1.1, 1.5])
+      mesh(new T.SphereGeometry(0.1, 8, 8), coal).position.set(0, y, -0.78);
+    const nose = mesh(
+      new T.ConeGeometry(0.13, 0.65, 10),
+      new T.MeshStandardMaterial({ color: 0xff851b }),
+    );
+    nose.rotation.x = -Math.PI / 2;
+    nose.position.set(0, 1.95, -0.8);
+    mesh(new T.CylinderGeometry(0.7, 0.7, 0.12, 18), coal).position.y = 2.5;
+    mesh(new T.CylinderGeometry(0.43, 0.48, 0.55, 18), coal).position.y = 2.8;
+    for (const side of [-1, 1]) {
+      const arm = mesh(
+        new T.CylinderGeometry(0.06, 0.09, 1.5, 6),
+        new T.MeshStandardMaterial({ color: 0x705039 }),
       );
-      nose.rotation.x = -Math.PI / 2;
-      nose.position.set(0, 1.95, -0.8);
-      mesh(new T.CylinderGeometry(0.7, 0.7, 0.12, 18), coal).position.y = 2.5;
-      mesh(new T.CylinderGeometry(0.43, 0.48, 0.55, 18), coal).position.y = 2.8;
-      for (const side of [-1, 1]) {
-        const arm = mesh(
-          new T.CylinderGeometry(0.06, 0.09, 1.5, 6),
-          new T.MeshStandardMaterial({ color: 0x705039 }),
-        );
-        arm.rotation.z = side * 1.1;
-        arm.position.set(side * 1.1, 1.1, 0);
-      }
-    } else if (prop.definition.kind === "snowball") {
-      const snow = new T.MeshStandardMaterial({
-        color: 0xf3fbff,
-        roughness: 0.75,
-      });
-      mesh(new T.SphereGeometry(3.6, 24, 18), snow).position.y = -0.2;
-      mesh(new T.SphereGeometry(1.1, 14, 10), snow).position.set(2.2, 2.6, 1.4);
-      mesh(new T.SphereGeometry(0.9, 14, 10), snow).position.set(-2.4, 2.2, -1.2);
-    } else if (prop.definition.kind === "sign") {
-      const pole = mesh(
-        new T.BoxGeometry(0.13, 3.2, 0.13),
-        new T.MeshStandardMaterial({
-          color: 0x8b9697,
-          metalness: 0.65,
-          roughness: 0.5,
-        }),
-      );
-      const board = mesh(
-        new T.BoxGeometry(1.8, 0.9, 0.16),
-        new T.MeshStandardMaterial({ color: 0xe2b746 }),
-      );
-      board.position.y = 1;
+      arm.rotation.z = side * 1.1;
+      arm.position.set(side * 1.1, 1.1, 0);
+    }
+  } else if (definition.kind === "snowball") {
+    const snow = new T.MeshStandardMaterial({
+      color: 0xf3fbff,
+      roughness: 0.75,
+    });
+    mesh(new T.SphereGeometry(3.6, 24, 18), snow).position.y = -0.2;
+    mesh(new T.SphereGeometry(1.1, 14, 10), snow).position.set(2.2, 2.6, 1.4);
+    mesh(new T.SphereGeometry(0.9, 14, 10), snow).position.set(-2.4, 2.2, -1.2);
+  } else if (definition.kind === "sign") {
+    const pole = mesh(
+      new T.BoxGeometry(0.13, 3.2, 0.13),
+      new T.MeshStandardMaterial({
+        color: 0x8b9697,
+        metalness: 0.65,
+        roughness: 0.5,
+      }),
+    );
+    const board = mesh(
+      new T.BoxGeometry(1.8, 0.9, 0.16),
+      new T.MeshStandardMaterial({ color: 0xe2b746 }),
+    );
+    board.position.y = 1;
+    if (typeof document !== "undefined") {
       const canvas = document.createElement("canvas");
       canvas.width = 256;
       canvas.height = 128;
@@ -197,124 +197,109 @@ export class PropView extends T.Group {
         face.position.set(0, 1, side * 0.085);
         if (side < 0) face.rotation.y = Math.PI;
       }
-      const base = mesh(
-        new T.BoxGeometry(0.6, 0.2, 0.6),
-        new T.MeshStandardMaterial({ color: 0x6f716b, roughness: 1 }),
-        this,
-      );
-      base.position.set(
-        prop.definition.x,
-        prop.definition.ground + 0.05,
-        prop.definition.z,
-      );
-      // A short stump stays in the concrete socket after the post snaps.
-      const stump = mesh(
-        new T.BoxGeometry(0.14, 0.22, 0.14),
-        new T.MeshStandardMaterial({ color: 0x717b7c }),
-        this,
-      );
-      stump.position.set(
-        prop.definition.x,
-        prop.definition.ground + 0.2,
-        prop.definition.z,
-      );
-    } else if (prop.definition.kind === "gravestone") {
-      const seed = prop.definition.id
-        .split("")
-        .reduce((n, c) => n + c.charCodeAt(0), 0);
-      tilt.add(buildGravestoneMesh(seed));
-    } else if (prop.definition.kind === "pumpkin") {
-      tilt.add(buildPumpkinMesh());
-    } else if (prop.definition.kind === "candy-apple") {
-      tilt.add(buildCandyAppleMesh());
-    } else if (prop.definition.kind === "gumdrop-boulder") {
-      tilt.add(buildGumdropBoulderMesh());
-    } else if (prop.definition.kind === "peppermint-barrel") {
-      tilt.add(buildPeppermintBarrelMesh());
-    } else if (prop.definition.kind === "chocolate-crate") {
-      tilt.add(buildChocolateCrateMesh());
-    } else if (prop.definition.kind === "cotton-candy-cart") {
-      tilt.add(buildCottonCandyCartMesh());
-    } else if (prop.definition.kind === "lollipop-stand") {
-      const pop = buildLollipopStandMesh();
-      pop.position.y = -1.5;
-      tilt.add(pop);
-      const base = mesh(
-        new T.BoxGeometry(0.6, 0.2, 0.6),
-        new T.MeshStandardMaterial({ color: 0x6f716b, roughness: 1 }),
-        this,
-      );
-      base.position.set(
-        prop.definition.x,
-        prop.definition.ground + 0.05,
-        prop.definition.z,
-      );
-      const stump = mesh(
-        new T.CylinderGeometry(0.35, 0.35, 0.3, 12),
-        new T.MeshStandardMaterial({ color: 0xf6f2ea, roughness: 0.5 }),
-        this,
-      );
-      stump.position.set(
-        prop.definition.x,
-        prop.definition.ground + 0.2,
-        prop.definition.z,
-      );
-    } else if (prop.definition.kind === "christmas-ornament") {
-      tilt.add(buildChristmasOrnamentMesh());
-    } else if (prop.definition.kind === "christmas-snow-boulder") {
-      tilt.add(buildChristmasSnowBoulderMesh());
-    } else if (prop.definition.kind === "christmas-cracker-barrel") {
-      tilt.add(buildChristmasCrackerBarrelMesh());
-    } else if (prop.definition.kind === "christmas-gift-crate") {
-      tilt.add(buildChristmasGiftCrateMesh());
-    } else if (prop.definition.kind === "christmas-cocoa-cart") {
-      tilt.add(buildChristmasCocoaCartMesh());
-    } else if (prop.definition.kind === "cookie") {
-      tilt.add(buildCookieMesh());
-    } else if (prop.definition.kind === "cracker") {
-      tilt.add(buildCrackerMesh());
-    } else if (prop.definition.kind === "fruit") {
-      tilt.add(buildFruitMesh());
-    } else if (prop.definition.kind === "skull") {
-      tilt.add(buildSkullMesh(1));
+    }
+    const base = mesh(
+      new T.BoxGeometry(0.6, 0.2, 0.6),
+      new T.MeshStandardMaterial({ color: 0x6f716b, roughness: 1 }),
+      scene,
+    );
+    base.position.set(definition.x, definition.ground + 0.05, definition.z);
+    // A short stump stays in the concrete socket after the post snaps.
+    const stump = mesh(
+      new T.BoxGeometry(0.14, 0.22, 0.14),
+      new T.MeshStandardMaterial({ color: 0x717b7c }),
+      scene,
+    );
+    stump.position.set(definition.x, definition.ground + 0.2, definition.z);
+  } else if (definition.kind === "gravestone") {
+    const seed = definition.id
+      .split("")
+      .reduce((n, c) => n + c.charCodeAt(0), 0);
+    tilt.add(buildGravestoneMesh(seed));
+  } else if (definition.kind === "pumpkin") {
+    tilt.add(buildPumpkinMesh());
+  } else if (definition.kind === "candy-apple") {
+    tilt.add(buildCandyAppleMesh());
+  } else if (definition.kind === "gumdrop-boulder") {
+    tilt.add(buildGumdropBoulderMesh());
+  } else if (definition.kind === "peppermint-barrel") {
+    tilt.add(buildPeppermintBarrelMesh());
+  } else if (definition.kind === "chocolate-crate") {
+    tilt.add(buildChocolateCrateMesh());
+  } else if (definition.kind === "cotton-candy-cart") {
+    tilt.add(buildCottonCandyCartMesh());
+  } else if (definition.kind === "lollipop-stand") {
+    const pop = buildLollipopStandMesh();
+    pop.position.y = -1.5;
+    tilt.add(pop);
+    const base = mesh(
+      new T.BoxGeometry(0.6, 0.2, 0.6),
+      new T.MeshStandardMaterial({ color: 0x6f716b, roughness: 1 }),
+      scene,
+    );
+    base.position.set(definition.x, definition.ground + 0.05, definition.z);
+    const stump = mesh(
+      new T.CylinderGeometry(0.35, 0.35, 0.3, 12),
+      new T.MeshStandardMaterial({ color: 0xf6f2ea, roughness: 0.5 }),
+      scene,
+    );
+    stump.position.set(definition.x, definition.ground + 0.2, definition.z);
+  } else if (definition.kind === "christmas-ornament") {
+    tilt.add(buildChristmasOrnamentMesh());
+  } else if (definition.kind === "christmas-snow-boulder") {
+    tilt.add(buildChristmasSnowBoulderMesh());
+  } else if (definition.kind === "christmas-cracker-barrel") {
+    tilt.add(buildChristmasCrackerBarrelMesh());
+  } else if (definition.kind === "christmas-gift-crate") {
+    tilt.add(buildChristmasGiftCrateMesh());
+  } else if (definition.kind === "christmas-cocoa-cart") {
+    tilt.add(buildChristmasCocoaCartMesh());
+  } else if (definition.kind === "cookie") {
+    tilt.add(buildCookieMesh());
+  } else if (definition.kind === "cracker") {
+    tilt.add(buildCrackerMesh());
+  } else if (definition.kind === "fruit") {
+    tilt.add(buildFruitMesh());
+  } else if (definition.kind === "skull") {
+    tilt.add(buildSkullMesh(1));
+  } else {
+    const h = definition.kind === "trash" ? 1.3 : 1.4,
+      r = definition.kind === "trash" ? 0.48 : 0.5;
+    mesh(new T.CylinderGeometry(r, r, h, 24));
+    const dark = new T.MeshStandardMaterial({
+      color: 0x293431,
+      metalness: 0.65,
+      roughness: 0.6,
+    });
+    for (const y of [-h * 0.35, h * 0.35]) {
+      const ring = mesh(new T.TorusGeometry(r + 0.015, 0.035, 8, 24), dark);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = y;
+    }
+    if (definition.kind === "trash") {
+      const lid = mesh(new T.CylinderGeometry(0.51, 0.51, 0.08, 24), dark);
+      lid.position.y = h / 2;
+      lid.name = "trash-lid";
     } else {
-      const h = prop.definition.kind === "trash" ? 1.3 : 1.4,
-        r = prop.definition.kind === "trash" ? 0.48 : 0.5;
-      mesh(new T.CylinderGeometry(r, r, h, 24));
-      const dark = new T.MeshStandardMaterial({
-        color: 0x293431,
-        metalness: 0.65,
-        roughness: 0.6,
-      });
-      for (const y of [-h * 0.35, h * 0.35]) {
-        const ring = mesh(new T.TorusGeometry(r + 0.015, 0.035, 8, 24), dark);
-        ring.rotation.x = Math.PI / 2;
-        ring.position.y = y;
-      }
-      if (prop.definition.kind === "trash") {
-        const lid = mesh(new T.CylinderGeometry(0.51, 0.51, 0.08, 24), dark);
-        lid.position.y = h / 2;
-        lid.name = "trash-lid";
-      } else {
-        const band = mesh(
-          new T.CylinderGeometry(r + 0.005, r + 0.005, 0.23, 24),
-          new T.MeshStandardMaterial({ color: 0xd5b869 }),
-        );
-        band.position.y = 0;
-      }
+      const band = mesh(
+        new T.CylinderGeometry(r + 0.005, r + 0.005, 0.23, 24),
+        new T.MeshStandardMaterial({ color: 0xd5b869 }),
+      );
+      band.position.y = 0;
     }
-    const flame = flameMaterial();
-    for (let i = 0; i < 5; i++) {
-      const f = mesh(new T.PlaneGeometry(1.9, 4.6), flame, fire);
-      f.position.y = 1.6;
-      f.castShadow = false;
-      f.receiveShadow = false;
-      f.rotation.y = (i * Math.PI) / 5;
-    }
-    fire.visible = false;
-    this.models.set(prop, { root, fire, trash: [] });
   }
+  const flame = flameMaterial();
+  for (let i = 0; i < 5; i++) {
+    const f = mesh(new T.PlaneGeometry(1.9, 4.6), flame, fire);
+    f.position.y = 1.6;
+    f.castShadow = false;
+    f.receiveShadow = false;
+    f.rotation.y = (i * Math.PI) / 5;
+  }
+  fire.visible = false;
+  return { scene, root, fire };
 }
+
 export function buildGravestoneMesh(seed = 0) {
   const group = new T.Group();
   group.rotation.y =

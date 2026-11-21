@@ -91,7 +91,7 @@ export class TrackRun {
     for (const s of this.track.goldStars ?? [])
       if (
         !this.stars.has(s.id) &&
-        segmentDistance(previous, current, s) <= GOLD_STAR_RADIUS
+        segmentDistance(previous, current, s) <= GOLD_STAR_RADIUS * (s.resizeScale ?? 1)
       )
         this.stars.add(s.id);
     if (this.track.ring && this.bounced && !this.ringDone) {

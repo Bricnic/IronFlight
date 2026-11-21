@@ -23,6 +23,7 @@ export interface GameHarness {
     rings: number;
     selection: string | null;
     tool: string;
+    selectedObject?: Record<string, unknown>;
     preview: boolean;
     dirty: boolean;
     levels: string[];
@@ -46,6 +47,8 @@ export interface GameHarness {
   textureLoadErrors(): string[];
   loadedTextureIds(): string[];
   inspectPreview(): {
+    selectedPrefab?: string;
+    prefabs: { id: string; meshes: number; vertices: number; min: number[]; max: number[] }[];
     preview: boolean;
     gridVisible: boolean;
     solids: {
@@ -80,6 +83,7 @@ export interface GameHarness {
     remove(name: string): Promise<void>;
   };
   pause(value: boolean): void;
+  resizedPrefabs(): { id: string; scale: number; colliders: number }[];
   advanceFrames(frames: number, rate: number, input?: Input): void;
   driveFrames(
     frames: number,

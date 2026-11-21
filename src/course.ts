@@ -18,12 +18,13 @@ export function yawOffset(dx: number, dz: number, yaw: number) {
 /** Boost-pad footprint test in the pad's yawed frame. */
 export function onBoostPad(
   position: { x: number; y: number; z: number },
-  pad: { x: number; y?: number; z: number; yaw?: number },
+  pad: { x: number; y?: number; z: number; yaw?: number; resizeScale?: number },
 ) {
+  const scale = pad.resizeScale ?? 1;
   const padY = pad.y ?? 0;
-  if (position.y <= padY || position.y >= padY + 4) return false;
+  if (position.y <= padY || position.y >= padY + 4 * scale) return false;
   const o = yawOffset(position.x - pad.x, position.z - pad.z, -(pad.yaw ?? 0));
-  return Math.abs(o.x) < BOOST_PAD.w / 2 && Math.abs(o.z) < BOOST_PAD.d / 2;
+  return Math.abs(o.x) < BOOST_PAD.w * scale / 2 && Math.abs(o.z) < BOOST_PAD.d * scale / 2;
 }
 import { loopRingSolids, loopSupportSolids } from "./loop.ts";
 import { clipFootprint } from "./solid-clip.ts";

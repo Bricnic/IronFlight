@@ -257,6 +257,8 @@ export interface CustomSolid {
   pianoKey?: number;
 }
 export interface CustomPrefab {
+  /** Editor resize, independent of existing prefab-specific size parameters. */
+  resizeScale?: number;
   group?: string;
   name?: string;
   locked?: boolean;
@@ -276,6 +278,10 @@ export interface CustomPrefab {
   seed?: number;
   /** Ship departure: checkpoint count that launches it down the channel. */
   trigger?: number;
+}
+/** Some game systems interpret an omitted height as a hovering pivot. */
+export function prefabY(p: CustomPrefab) {
+  return p.y ?? (p.kind === "gold-star" || p.kind === "checkpoint" ? 2 : p.kind === "hammer" ? 3.5 : p.kind === "ghost" ? 3 : p.kind === "hot-air-balloon" ? 42 : 0);
 }
 export const COLLECTIBLE_KINDS = ["ring", "chest"] as const;
 export type CollectibleKind = (typeof COLLECTIBLE_KINDS)[number];
@@ -589,6 +595,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     check(errors, item?.locked === undefined || typeof item.locked === "boolean", `object ${i} locked must be a boolean`);
     check(errors, item?.name === undefined || (typeof item.name === "string" && item.name.trim().length > 0 && item.name.length <= 80), `object ${i} name must be 1-80 characters`);
   }
+  for (const p of prefabs) check(errors, p.resizeScale === undefined || (finite(p.resizeScale) && p.resizeScale >= 0.01 && p.resizeScale <= 100), `prefab ${p.id} resize scale must be between 0.01 and 100`);
   if (errors.length) throw new Error(`Invalid custom level: ${errors.join("; ")}`);
   return {
     name,
@@ -625,23 +632,24 @@ function hashColor(name: string) {
 }
 /** Adapt a validated level to a playable Track. */
 export function toTrack(level: CustomLevel): Track {
-  const gatePoints: CustomCheckpoint[] = [
+  const gatePoints: (CustomCheckpoint & { prefabScale?: number })[] = [
     ...level.checkpoints,
     ...level.prefabs
       .filter((p) => p.kind === "checkpoint")
-      .map(({ x, y, z, yaw }) => ({ x, y, z, yaw })),
+      .map(({ x, y, z, yaw, resizeScale }) => ({ x, y, z, yaw, prefabScale: resizeScale ?? 1 })),
   ];
   const path = [
     { x: level.spawn.x, z: level.spawn.z },
     ...gatePoints.map((p) => ({ x: p.x, z: p.z })),
   ];
   const checkpoints = gates(path).map((g, i) => {
-    const { y, yaw, appearance } = gatePoints[i];
+    const { y, yaw, appearance, prefabScale } = gatePoints[i];
     return {
       ...g,
       y: y ?? 2,
       ...(yaw === undefined ? {} : { yaw, nx: Math.sin(yaw), nz: Math.cos(yaw) }),
       ...(appearance ? { appearance, width: CHECKPOINT_WIDTHS[appearance] } : {}),
+      ...(prefabScale === undefined ? {} : { prefabScale, width: g.width * prefabScale, height: g.height * prefabScale }),
     };
   });
   const trampolines = level.prefabs
@@ -657,6 +665,7 @@ export function toTrack(level: CustomLevel): Track {
     .filter((p) => p.kind === "gold-star")
     .map((p) => ({
       id: p.id,
+      ...(p.resizeScale === undefined ? {} : { resizeScale: p.resizeScale }),
       x: p.x,
       y: p.y ?? 2,
       z: p.z,

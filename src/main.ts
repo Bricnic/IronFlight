@@ -1320,6 +1320,7 @@ async function boot() {
         remove: (name: string) => removeLevel(undefined, name),
       },
       editor: () => editorScreens.probe(),
+      resizedPrefabs: () => sim.resizedPrefabs.map(p => ({ id: p.prefab.id, scale: p.space.factor, colliders: p.space.colliders.size })),
       editorProject: (point: { x: number; y: number; z: number }) =>
         editorScreens.projectViewport(point),
       inspectPreview: () => editorScreens.inspectPreview(),

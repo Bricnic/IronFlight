@@ -124,3 +124,14 @@ Vehicle selection uses screenshots from the game camera in `public/vehicles/`. T
 The Dune Buggy, Rally Hatch, Racing Semi, Armored Scout, Ice Cream Van, and Baja Beetle were modeled from the Nano Banana 2 concepts in `visual-plan/refs/gemini/`. Their meshes use the shared four-wheel chassis and thirteen damage parts.
 
 The twenty themed vehicles use the same chassis and damage system. Their original Gemini images and generation briefs are in `visual-plan/refs/gemini/themed/`.
+
+
+## Editor models, resizing and angles
+
+The editor uses the game models for every prefab in both static preview and wireframe. Frame selection fits the camera to the selected geometry.
+
+Choose Resize, then drag on a flat face of a selected solid or prefab. The closest edge or corner follows the pointer while the opposite side stays fixed. Solids resize along the chosen axes; prefabs and grouped selections resize proportionally, including their collision shapes, interactions and hazard areas. Each drag is one Undo step. Prefab Size is a multiplier; existing prefab-specific Scale values remain compatible.
+
+All editor angle fields display and accept degrees, including negative angles and multiple turns. Level JSON continues to store radians.
+
+`e2e/editor-prefab-gallery.spec.ts` creates a new level and places all 118 prefab types individually, capturing wireframe and preview screenshots under `artifacts/prefab-gallery`. The resize and degree browser tests cover rotated face drags, Undo, saved prefab gameplay sizes, and 45, 90, 135, -45, -90, -135, 180, 360 and 720 degrees on all three solid axes.
