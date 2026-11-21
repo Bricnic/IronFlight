@@ -65,7 +65,7 @@ import { formatDelta, objectiveCopy, progressCopy, progressFraction } from "./ru
 import { createDebugMenu } from "./debug-menu";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
-<aside><div class="eyebrow">THE ARENA IS YOURS</div><h1>BIG TRUCK.<br>BAD IDEAS.</h1><p class="intro">Three ways across. One way to find out.</p><div id="routes">${ROUTES.map((r) => `<button class="route" data-stage="${r.id}" style="--route:#${r.color.toString(16)}"><small>${r.difficulty}</small><strong>${r.name}<span>↗</span></strong><em>${r.gapEnd - 12}m gap <span>·</span> ${r.hazards} hazard${r.hazards > 1 ? "s" : ""}</em></button>`).join("")}</div><button id="lab-toggle" class="lab-toggle">Destruction lab <span>⚒</span></button>
+<aside><div class="eyebrow">THE ARENA IS YOURS</div><h1>BIG TRUCK.<br>BAD IDEAS.</h1><p class="intro">Three ways across. One way to find out.</p><div id="routes">${ROUTES.map((r) => `<button class="route" data-stage="${r.id}" style="--route:#${r.color.toString(16)}"><small>${r.difficulty}</small><strong>${r.name}<span>↗</span></strong><em>${r.gapEnd - 12}m gap <span>·</span> ${r.hazards} hazard${r.hazards > 1 ? "s" : ""}</em></button>`).join("")}</div>
 <section id="lab" hidden><div class="eyebrow">SURGICAL DAMAGE TOOLS</div><label for="target">Target part</label><select id="target">${PARTS.map((p) => `<option value="${p.id}">${p.id}</option>`).join("")}</select><div class="tool-grid"><button id="dent">Dent panel</button><button id="destroy">Destroy part</button><button id="sever">Sever chassis</button><button id="restore">Restore truck</button></div><p>Each tool applies real damage. Detached pieces keep their momentum.</p></section></aside>
 <div id="status"><span id="state-label">READY TO SEND IT</span><strong id="state-copy">Build speed. Hold your line.</strong><div id="run-progress" hidden></div><div class="progress"><i id="progress"></i></div></div>
 <section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span></div></section>
@@ -75,10 +75,7 @@ async function boot() {
   // Navigation occupies the header, not the 3D viewport. Only lab tools use a drawer.
   const header = document.querySelector("header")!,
     panel = document.querySelector("aside")!;
-  header.append(
-    document.getElementById("routes")!,
-    document.getElementById("lab-toggle")!,
-  );
+  header.append(document.getElementById("routes")!);
   panel.querySelectorAll(":scope > :not(#lab)").forEach((e) => e.remove());
   panel.id = "lab-panel";
   await initPhysics();
@@ -137,7 +134,7 @@ async function boot() {
   header.insertAdjacentHTML(
     "beforeend",
     `<span id="weather-night" class="weather-badge" hidden>NIGHT</span><span id="weather-rain" class="weather-badge" hidden>RAIN</span>
-    <button id="level-select-button" class="header-action"><img src="/icons/level-select.png" width="24" height="24" alt=""><span>Level select</span></button>
+    <button id="level-select-button" class="header-action"><img src="/icons/level-select.png" width="24" height="24" alt=""><span>Select level</span></button>
     <button id="vehicle-select-button" class="header-action"><img src="/icons/select-vehicle.png" width="24" height="24" alt=""><span>Select vehicle</span></button>
     <button id="level-editor-button" class="header-action"><img src="/icons/level-editor.png" width="24" height="24" alt=""><span>Level editor</span></button>
     <button id="settings-button" class="header-action"><img src="/icons/settings.png" width="24" height="24" alt=""><span>Settings</span></button>`,
@@ -183,8 +180,6 @@ async function boot() {
       .forEach((b) =>
         b.classList.toggle("selected", b.dataset.stage === stage),
       );
-    $("lab-toggle").textContent =
-      stage === "lab" ? "Back to stunt routes" : "Destruction lab";
     view.render();
     hud();
   }
@@ -212,7 +207,6 @@ async function boot() {
     $("lab").hidden = true;
     panel.hidden = true;
     $("routes").hidden = !getTrack(id).legacy;
-    $("lab-toggle").textContent = "Destruction lab";
     document
       .querySelectorAll<HTMLElement>("[data-stage]")
       .forEach((b) =>
@@ -1251,8 +1245,6 @@ async function boot() {
               )
             : select(b.dataset.stage as Stage)),
     );
-  $("lab-toggle").onclick = () =>
-    sim.stage === "lab" ? showLevelSelect() : select("lab");
   ($("target") as HTMLSelectElement).onchange = (e) =>
     lab.select((e.target as HTMLSelectElement).value);
   for (const [id, tool] of [

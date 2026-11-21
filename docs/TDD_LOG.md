@@ -406,3 +406,8 @@ Final verification: 149 tests across six focused unit suites, TypeScript and the
 ## Level-card medal size and personal best
 
 RED: the seeded card browser test found a 9px earned-medal label against 10px PLAY text. Level-card medals now match PLAY's size and weight. Personal bests move directly above PLAY, read `Best: 35.3s`, and use the earned gold/silver/bronze color. Legacy difficulty remains on the left; unplayed cards retain NO TIME SET. Best records and result-screen precision are unchanged. Browser coverage checks gold, silver, bronze, completed-without-medal and unplayed states, exact color matching, right alignment, and narrow-screen fit. Best-time/collection unit suites and production build pass; card screenshots inspected.
+
+
+## Collection artwork space and persistent level navigation
+
+RED: browser checks found the collection description still present and the level-navigation button hidden on menu screens. Collection cards retain a 358px footprint, dedicate the recovered description/OPEN space to the image, and contain the entire artwork without cropping. Progress is reduced to gold and star ratios. Select level is always visible in the header; the old lab/back-to-routes toggle is removed, while the lab entry remains in the level-selection menu. Browser coverage exercises desktop/mobile artwork, compact progress, navigation through settings/vehicles/editor/play/lab, previous level-card best times, startup and narrow-screen storage fallback. Screenshots show the complete HAPPY BIRTHDAY headline and the simplified lab header.

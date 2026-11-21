@@ -153,7 +153,7 @@ test("a ghost wreck shows retry and level select", async ({ page }) => {
   expect(
     await page.evaluate(() => window.__game!.snapshot().run?.status),
   ).toBe("running");
-  await page.getByRole("button", { name: "Level select", exact: true }).click();
+  await page.getByRole("button", { name: "Select level", exact: true }).click();
   await expect(page.locator("#level-select")).toBeVisible();
   await expect(page.locator("#collection-title")).toHaveText("Spooky Places");
   await expect(page.locator(".track-card")).toHaveCount(4);

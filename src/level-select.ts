@@ -59,7 +59,7 @@ export function createLevelSelect(
     const card = document.createElement("article");
     card.className = "collection-card";
     card.dataset.collection = collection.id;
-    card.innerHTML = `<button class="collection-pick" aria-label="Open ${collection.name}"><div class="collection-image"><img src="${collection.art}" alt="${collection.name} artwork"></div><div class="collection-body"><h2>${collection.name}</h2><p class="collection-theme">${collection.theme}</p><div class="collection-stats"><span class="collection-levels"></span><span class="collection-gold"></span><span class="collection-stars"></span></div><span class="play-word">OPEN ↗</span></div></button>`;
+    card.innerHTML = `<button class="collection-pick" aria-label="Open ${collection.name}"><div class="collection-image"><img src="${collection.art}" alt="${collection.name} artwork"></div><div class="collection-body"><h2>${collection.name}</h2><div class="collection-stats"><span class="collection-gold"></span><span class="collection-stars"></span></div></div></button>`;
     card.querySelector("button")!.onclick = () => {
       selectedCollection = i;
       openCollection(collection);
@@ -289,14 +289,12 @@ export function createLevelSelect(
       const card = collectionCards.get(collection.id)!;
       const golds = goldCount(collection, scores);
       const { lit, total } = starProgress(collection, starBank);
-      card.querySelector(".collection-levels")!.textContent =
-        `${collection.trackIds.length} levels · ${unlockedCount(collection, scores)} unlocked`;
       card.querySelector(".collection-gold")!.textContent =
-        `● ${golds}/${collection.trackIds.length} gold · ${collection.trackIds.length - golds} remaining`;
+        `🟡${golds}/${collection.trackIds.length} gold`;
       card.querySelector(".collection-gold")!.className =
         `collection-gold${golds === collection.trackIds.length ? " complete" : ""}`;
       card.querySelector(".collection-stars")!.textContent =
-        `★ ${lit}/${total} stars · ${total - lit} remaining`;
+        `⭐${lit}/${total} stars`;
     }
     if (activeCollection && !tracksSection.hidden)
       refreshTrackCards(activeCollection);

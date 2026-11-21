@@ -14,9 +14,7 @@ test("normal startup shows the collection grid and keeps the simulation paused",
   );
   for (const c of LEVEL_COLLECTIONS) {
     const card = page.locator(`[data-collection="${c.id}"]`);
-    await expect(card.locator(".collection-levels")).toContainText(
-      `${c.trackIds.length} levels`,
-    );
+    await expect(card.locator(".collection-stats > span")).toHaveCount(2);
     await expect(card.locator(".collection-gold")).toContainText("gold");
     await expect(card.locator(".collection-stars")).toContainText("stars");
     await expect(
@@ -85,7 +83,7 @@ test("selecting a track starts its real attempt; restart and menu preserve playe
   expect(
     await page.evaluate(() => window.__game!.snapshot().tuning.turningPower),
   ).toBe(0.6);
-  await page.getByRole("button", { name: "Level select", exact: true }).click();
+  await page.getByRole("button", { name: "Select level", exact: true }).click();
   await expect(page.locator("#level-select")).toBeVisible();
 });
 
