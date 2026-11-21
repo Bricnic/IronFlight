@@ -10,6 +10,31 @@ function pair() {
   s.select({ kind: "prefab", id: b.id }, true);
   return { s, a, b };
 }
+it("moves a formal group's location without changing member offsets, including default heights", () => {
+  const { s, a, b } = pair(); s.groupSelected("Platform");
+  a.x = 0; a.y = 2; delete b.y;
+  expect(s.selectedGroup()?.name).toBe("Platform");
+  s.moveSelectedGroup({ x: 10, y: 5, z: -4 });
+  expect(a).toMatchObject({ x: 10, y: 7, z: -4 });
+  expect(b).toMatchObject({ x: 30, y: 5, z: 26 });
+  s.undo(); expect(s.level.prefabs[0].y).toBeUndefined();
+  s.redo(); expect(s.level.prefabs[0].y).toBe(5);
+  s.setSelectionLocked(true); s.moveSelectedGroup({ y: 10 });
+  expect(s.level.prefabs[0].y).toBe(5);
+});
+it("does not give an ordinary multiselection a formal group location", () => {
+  const { s, a } = pair();
+  expect(s.selectedGroup()).toBeNull();
+  const before = a.x; s.moveSelectedGroup({ x: 10 }); expect(a.x).toBe(before);
+});
+it("constrains vertical movement and grid snapping to Y without changing off-grid X/Z", () => {
+  const { s, a, b } = pair(); s.groupSelected("Vertical");
+  a.x = 1.3; a.z = 3.7; a.y = 2; b.y = 6;
+  const origin = s.selectionPositions();
+  s.beginGesture(); s.moveSelectedFrom(origin, { x: 0, y: 4.2, z: 0 }, true, ["y"]); s.endGesture();
+  expect(a).toMatchObject({ x: 1.3, y: 5, z: 3.7 }); expect(b.y).toBe(10);
+  s.undo(); expect(s.level.solids.find(p => p.id === a.id)?.y).toBe(2);
+});
 it("groups mixed selections, persists, moves and locks the whole group with undo", () => {
   const { s, a, b } = pair();
   const group = s.groupSelected("Ice platform");

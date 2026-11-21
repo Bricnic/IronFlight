@@ -65,22 +65,22 @@ export class EditorStore {
     if (patch.spacing !== undefined && (!Number.isFinite(patch.spacing) || patch.spacing <= 0)) return;
     Object.assign(this.grid, patch); this.emit(false);
   }
-  selectionPositions() {
-    return this.selectedEntries().map(selection => {
+  selectionPositions(entries = this.selectedEntries()) {
+    return entries.map(selection => {
       const object = this.selectedItem(selection)!;
       return { selection, hasY: object.item.y !== undefined, x: object.item.x, y: object.item.y ?? (object.kind === "prefab" ? prefabY(object.item) : object.kind === "checkpoint" ? 2 : object.kind === "target" ? this.level.mode === "demolition" ? 1.5 : 1.7 : 0), z: object.item.z };
     });
   }
   /** Apply absolute drag positions from the grab snapshot, avoiding cumulative rounding drift. */
-  moveSelectedFrom(origins: ReturnType<EditorStore["selectionPositions"]>, delta: { x: number; z: number }, snap: boolean) {
+  moveSelectedFrom(origins: ReturnType<EditorStore["selectionPositions"]>, delta: { x: number; y?: number; z: number }, snap: boolean, snapAxes: GridAxis[] = ["x", "y", "z"]) {
     if (origins.some(p => this.isLocked(p.selection))) return;
     const changes = origins.map(p => {
       const object = this.selectedItem(p.selection)!;
-      const position = { x: p.x + delta.x, y: p.y, z: p.z + delta.z };
+      const position = { x: p.x + delta.x, y: p.y + (delta.y ?? 0), z: p.z + delta.z };
       const snapping = snap && (object.kind === "solid" || object.kind === "prefab");
       if (snapping)
-        for (const axis of ["x", "y", "z"] as const) position[axis] = snapCoordinate(position[axis], this.grid.spacing);
-      return { item: object.item, position: { ...position, y: snapping || p.hasY ? position.y : undefined } };
+        for (const axis of snapAxes) position[axis] = snapCoordinate(position[axis], this.grid.spacing);
+      return { item: object.item, position: { ...position, y: snapping && snapAxes.includes("y") || p.hasY || delta.y !== undefined ? position.y : undefined } };
     }).filter(({ item, position }) => item.x !== position.x || item.y !== position.y || item.z !== position.z);
     if (!changes.length) return;
     this.pushHistory(); for (const { item, position } of changes) Object.assign(item, position);
@@ -255,6 +255,16 @@ export class EditorStore {
   }
   selectedEntries(): Selection[] {
     return this.selections.length ? this.selections : this.selection ? [this.selection] : [];
+  }
+  selectedGroup() {
+    const entries = this.selectedEntries(), name = entries[0] && this.selectedItem(entries[0])?.item.group;
+    if (!name || entries.some(s => this.selectedItem(s)?.item.group !== name)) return null;
+    return { name, members: this.allEntries().filter(s => this.selectedItem(s)?.item.group === name) };
+  }
+  moveSelectedGroup(delta: Partial<{ x: number; y: number; z: number }>) {
+    const group = this.selectedGroup();
+    if (!group || Object.values(delta).some(value => !Number.isFinite(value))) return;
+    this.moveSelectedFrom(this.selectionPositions(group.members), { x: delta.x ?? 0, y: delta.y, z: delta.z ?? 0 }, false);
   }
   isSelected(selection: Selection) {
     return this.selectedEntries().some(s => selectionKey(s) === selectionKey(selection));

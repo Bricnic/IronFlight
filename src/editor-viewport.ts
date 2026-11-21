@@ -341,7 +341,18 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       ndc,
     };
   };
-  let drag: { planeY: number; offX: number; offZ: number; x: number; z: number; origins: ReturnType<EditorStore["selectionPositions"]> } | null = null;
+  let drag: { planeY: number; offX: number; offZ: number; x: number; z: number; grabY: number; vertical: boolean; start: T.Vector3; verticalPlane: T.Plane; origins: ReturnType<EditorStore["selectionPositions"]> } | null = null;
+  let shiftClick: { selection: NonNullable<EditorSelection>; point: T.Vector3 } | null = null;
+  const startObjectDrag = (point: T.Vector3, vertical: boolean) => {
+    const item = store.selectedItem()!.item;
+    const origins = store.selectionPositions();
+    const primary = origins.find(p => pickKey(p.selection) === pickKey(store.selection))!;
+    const normal = camera.getWorldDirection(new T.Vector3()); normal.y = 0; normal.normalize();
+    drag = { planeY: point.y, offX: point.x - item.x, offZ: point.z - item.z,
+      x: item.x, z: item.z, grabY: point.y - primary.y, vertical, start: point.clone(),
+      verticalPlane: new T.Plane().setFromNormalAndCoplanarPoint(normal, point), origins };
+    store.beginGesture();
+  };
   let rotateAxis: RotatorAxis | null = null;
   let pan = false;
   let panButton = 0;
@@ -356,6 +367,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   let resizing: { solid: CustomSolid; box: ResizeBox; handle: ResizeHandle; q: T.Quaternion; plane: T.Plane; start: T.Vector3; changed: boolean; lastFactor: number } | null = null;
   let prefabResize: { original: import("./custom-level").CustomPrefab; matrix: T.Matrix4; inverse: T.Matrix4; box: ResizeBox; handle: ResizeHandle; plane: T.Plane; start: T.Vector3; changed: boolean; lastFactor: number } | null = null;
   const canStart = (e: PointerEvent) => {
+    shiftClick = null;
     pendingClick = null;
     if (e.button === 1 || (e.buttons & 4)) {
       if (!middleOrbit) store.endGesture();
@@ -449,8 +461,12 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       store.beginGesture(); renderer.domElement.setPointerCapture(e.pointerId);
       return false;
     }
-    if (store.tool === "select" && (e.shiftKey || e.ctrlKey || e.metaKey) && selection) {
+    if (store.tool === "select" && (e.ctrlKey || e.metaKey) && selection) {
       pendingClick = null; store.select(selection, true); return false;
+    }
+    if (store.tool === "select" && e.shiftKey && selection && point) {
+      pendingClick = null; shiftClick = { selection, point: point.clone() };
+      renderer.domElement.setPointerCapture(e.pointerId); return false;
     }
     if (!selection || !point) {
       cycle.reset(); pendingClick = null;
@@ -479,15 +495,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       renderer.domElement.setPointerCapture(e.pointerId);
       return false;
     }
-    const item = store.selectedItem()?.item;
-    drag = {
-      planeY: point.y,
-      offX: item ? point.x - item.x : 0,
-      offZ: item ? point.z - item.z : 0,
-      x: item?.x ?? 0, z: item?.z ?? 0,
-      origins: store.selectionPositions(),
-    };
-    store.beginGesture();
+    startObjectDrag(point, false);
     renderer.domElement.setPointerCapture(e.pointerId);
     return false;
   };
@@ -500,6 +508,12 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   );
   renderer.domElement.addEventListener("pointermove", (e) => {
     if (middleOrbit) return;
+    if (shiftClick) {
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) < 4) return;
+      const { selection, point } = shiftClick; shiftClick = null; moved = true;
+      if (!store.isSelected(selection)) store.select(selection); else store.selection = selection;
+      startObjectDrag(point, true);
+    }
     if (clipDrag && store.clip) {
       raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
       const hit = planeHit(raycaster.ray.origin, raycaster.ray.direction, clipDrag.y);
@@ -613,6 +627,19 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     }
     if (!drag || !moved) return;
     raycaster.setFromCamera(ndcAt(e.clientX, e.clientY), camera);
+    if (drag.vertical !== e.shiftKey) {
+      const primary = store.selectionPositions().find(p => pickKey(p.selection) === pickKey(store.selection))!;
+      const y = primary.y + drag.grabY;
+      const plane = e.shiftKey ? new T.Plane().setFromNormalAndCoplanarPoint(drag.verticalPlane.normal, new T.Vector3(primary.x, y, primary.z)) : new T.Plane(new T.Vector3(0, 1, 0), -y);
+      const point = raycaster.ray.intersectPlane(plane, new T.Vector3());
+      if (point) startObjectDrag(point, e.shiftKey);
+      return;
+    }
+    if (drag.vertical) {
+      const hit = raycaster.ray.intersectPlane(drag.verticalPlane, new T.Vector3());
+      if (hit) store.moveSelectedFrom(drag.origins, { x: 0, y: hit.y - drag.start.y, z: 0 }, store.grid.snap && !e.ctrlKey, ["y"]);
+      return;
+    }
     const hit = planeHit(
       raycaster.ray.origin,
       raycaster.ray.direction,
@@ -623,6 +650,10 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   });
   const endGesture = (e: PointerEvent) => {
     if (middleOrbit) { middleOrbit = false; return; }
+    if (shiftClick) {
+      if (e.type === "pointerup" && e.button === 0) store.select(shiftClick.selection, true);
+      shiftClick = null; return;
+    }
     if (prefabResize) {
       const cancel = e.type === "pointercancel" && prefabResize.changed;
       prefabResize = null; store.endGesture(); if (cancel) store.undo(); return;
@@ -1000,6 +1031,26 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     },
     cameraTarget() {
       return { x: target.x, y: target.y, z: target.z };
+    },
+    groupCenter(name: string) {
+      const keys = new Set(store.allEntries().filter(s => store.selectedItem(s)?.item.group === name).map(pickKey));
+      const bounds = new T.Box3(); group?.updateWorldMatrix(true, true);
+      group?.traverse(o => {
+        if (!(o instanceof T.Mesh) || o.parent?.userData.arrowOf || o.parent?.userData.ignoreBounds) return;
+        o.geometry.computeBoundingBox(); if (!o.geometry.boundingBox) return;
+        if (o instanceof T.InstancedMesh && o.userData.instancePicks) {
+          for (const [i, item] of o.userData.instancePicks.entries()) if (keys.has(pickKey(item.pick))) {
+            const matrix = new T.Matrix4(); o.getMatrixAt(i, matrix);
+            bounds.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld.clone().multiply(matrix)));
+          }
+          return;
+        }
+        let node: T.Object3D | null = o;
+        while (node && !node.userData.pick) node = node.parent;
+        if (node && keys.has(pickKey(node.userData.pick))) bounds.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld));
+      });
+      if (bounds.isEmpty()) return null;
+      const center = bounds.getCenter(new T.Vector3()); return { x: center.x, y: center.y, z: center.z };
     },
     resize,
     dispose() {

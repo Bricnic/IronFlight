@@ -470,7 +470,18 @@ export function createLevelEditor(
     const kinds = new Set(selected.map(objectKindKey));
     props.append(el("p", { class: "prop-hint", "data-selection-kind": "" }, `Kind: ${kinds.size === 1 ? objectKindKey(selected[0]).split(":").at(-1) : "(various)"}`));
     const locked = store.selectedEntries().some(s => store.isLocked(s));
+    const group = store.selectedGroup(), center = group && viewport.groupCenter(group.name);
+    if (group && center) {
+      props.append(el("h3", {}, "Group location"));
+      props.append(el("p", { class: "prop-hint" }, "Center of the whole group. Position changes move every member together."));
+      for (const axis of ["x", "y", "z"] as const)
+        numberField(props, axis.toUpperCase(), axis, center[axis], value => {
+          const current = viewport.groupCenter(group.name);
+          if (current && store.selectedGroup()?.name === group.name) store.moveSelectedGroup({ [axis]: value - current[axis] });
+        }).disabled = locked;
+    }
     for (const field of editableProperties(selected, store.level.mode)) {
+      if (center && ["x", "y", "z"].includes(field.key)) continue;
       const { value, mixed } = commonProperty(selected, field.key, store.level);
       const commit = (value: unknown) => store.updateSelectionProperties({ [field.key]: value });
       if (!field.type) {
@@ -604,7 +615,7 @@ export function createLevelEditor(
     }
     selectionControls(current);
     const selected = store.selectedEntries().map(s => store.selectedItem(s)!).filter(Boolean);
-    if (selected.length > 1) { bulkProps(selected); return; }
+    if (selected.length > 1 || store.selectedGroup()) { bulkProps(selected); return; }
     if (current.item.group) {
       const groupRow = el("label", { class: "prop-row" }, "Group ");
       const groupName = el("input", { type: "text", "aria-label": "Group name", maxlength: "80" });
@@ -944,8 +955,8 @@ export function createLevelEditor(
         ? "Place a destructible demolition target"
         : "Place a collectible: a ring like Scrapyard Sweep, or a treasure chest";
     refreshList();
-    refreshProps();
     viewport.render(store.level, store.selection, store.preview);
+    refreshProps();
   }
   store.onChange(refresh);
   nameInput.addEventListener("input", () => store.updateName(nameInput.value));
