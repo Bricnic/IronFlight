@@ -218,63 +218,72 @@
       "kind": "birthday-candle",
       "x": 12,
       "y": 16.05,
-      "z": 8
+      "z": 8,
+      "resizeScale": 3
     },
     {
       "id": "candle-1",
       "kind": "birthday-candle",
       "x": -236,
       "y": 0.3,
-      "z": -75
+      "z": -75,
+      "resizeScale": 3
     },
     {
       "id": "candle-2",
       "kind": "birthday-candle",
       "x": -236,
       "y": 0.3,
-      "z": 75
+      "z": 75,
+      "resizeScale": 3
     },
     {
       "id": "candle-3",
       "kind": "birthday-candle",
       "x": -125,
       "y": 0.3,
-      "z": -136
+      "z": -136,
+      "resizeScale": 3
     },
     {
       "id": "candle-4",
       "kind": "birthday-candle",
       "x": 125,
       "y": 0.3,
-      "z": -136
+      "z": -136,
+      "resizeScale": 3
     },
     {
       "id": "candle-5",
       "kind": "birthday-candle",
       "x": 236,
       "y": 0.3,
-      "z": -75
+      "z": -75,
+      "resizeScale": 3
     },
     {
       "id": "candle-6",
       "kind": "birthday-candle",
       "x": 236,
       "y": 0.3,
-      "z": 75
+      "z": 75,
+      "resizeScale": 3
     },
     {
       "id": "candle-7",
       "kind": "birthday-candle",
       "x": -125,
       "y": 0.3,
-      "z": 136
+      "z": 136,
+      "resizeScale": 3
     },
     {
       "id": "candle-8",
       "kind": "birthday-candle",
       "x": 125,
       "y": 0.3,
-      "z": 136
+      "z": 136,
+      "resizeScale": 3
     },
     {
       "id": "food-1",
@@ -365,126 +374,144 @@
       "kind": "birthday-candle",
       "x": 264,
       "y": 0.05,
-      "z": -75
+      "z": -75,
+      "resizeScale": 3
     },
     {
       "id": "candle-10",
       "kind": "birthday-candle",
       "x": 264,
       "y": 0.05,
-      "z": 75
+      "z": 75,
+      "resizeScale": 3
     },
     {
       "id": "candle-11",
       "kind": "birthday-candle",
       "x": -264,
       "y": 0.05,
-      "z": -75
+      "z": -75,
+      "resizeScale": 3
     },
     {
       "id": "candle-12",
       "kind": "birthday-candle",
       "x": -264,
       "y": 0.05,
-      "z": 75
+      "z": 75,
+      "resizeScale": 3
     },
     {
       "id": "candle-13",
       "kind": "birthday-candle",
       "x": -125,
       "y": 0.05,
-      "z": 164
+      "z": 164,
+      "resizeScale": 3
     },
     {
       "id": "candle-14",
       "kind": "birthday-candle",
       "x": 125,
       "y": 0.05,
-      "z": 164
+      "z": 164,
+      "resizeScale": 3
     },
     {
       "id": "candle-15",
       "kind": "birthday-candle",
       "x": -125,
       "y": 0.05,
-      "z": -164
+      "z": -164,
+      "resizeScale": 3
     },
     {
       "id": "candle-16",
       "kind": "birthday-candle",
       "x": 125,
       "y": 0.05,
-      "z": -164
+      "z": -164,
+      "resizeScale": 3
     },
     {
       "id": "candle-17",
       "kind": "birthday-candle",
       "x": -32,
       "y": 8.05,
-      "z": -16
+      "z": -16,
+      "resizeScale": 3
     },
     {
       "id": "candle-18",
       "kind": "birthday-candle",
       "x": 32,
       "y": 8.05,
-      "z": -16
+      "z": -16,
+      "resizeScale": 3
     },
     {
       "id": "candle-19",
       "kind": "birthday-candle",
       "x": -32,
       "y": 8.05,
-      "z": 16
+      "z": 16,
+      "resizeScale": 3
     },
     {
       "id": "candle-20",
       "kind": "birthday-candle",
       "x": 32,
       "y": 8.05,
-      "z": 16
+      "z": 16,
+      "resizeScale": 3
     },
     {
       "id": "candle-21",
       "kind": "birthday-candle",
       "x": 264,
       "y": 0.05,
-      "z": 164
+      "z": 164,
+      "resizeScale": 3
     },
     {
       "id": "candle-22",
       "kind": "birthday-candle",
       "x": -264,
       "y": 0.05,
-      "z": 164
+      "z": 164,
+      "resizeScale": 3
     },
     {
       "id": "candle-23",
       "kind": "birthday-candle",
       "x": 264,
       "y": 0.05,
-      "z": -164
+      "z": -164,
+      "resizeScale": 3
     },
     {
       "id": "candle-24",
       "kind": "birthday-candle",
       "x": -264,
       "y": 0.05,
-      "z": -164
+      "z": -164,
+      "resizeScale": 3
     },
     {
       "id": "candle-25",
       "kind": "birthday-candle",
       "x": -236,
       "y": 0.05,
-      "z": 12
+      "z": 12,
+      "resizeScale": 3
     },
     {
       "id": "candle-26",
       "kind": "birthday-candle",
       "x": -236,
       "y": 0.05,
-      "z": -12
+      "z": -12,
+      "resizeScale": 3
     },
     {
       "id": "card-2",

@@ -859,6 +859,7 @@ export function placeInLevel(
       x: placement.x,
       z: placement.z,
       ...(placement.y === undefined ? {} : { y: placement.y }),
+      ...(placement.kind === "birthday-candle" ? { resizeScale: 3 } : {}),
     };
     return { ...level, prefabs: [...level.prefabs, prefab] };
   }

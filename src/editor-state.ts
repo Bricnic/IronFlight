@@ -393,6 +393,7 @@ export class EditorStore {
       kind,
       x,
       z,
+      ...(kind === "birthday-candle" ? { resizeScale: 3 } : {}),
     };
     this.level.prefabs.push(prefab);
     this.selection = { kind: "prefab", id: prefab.id };
