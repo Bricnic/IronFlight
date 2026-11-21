@@ -13,7 +13,7 @@ beforeAll(async () => {
 
 const levelJson = () =>
   JSON.parse(
-    readFileSync("levels/official/Booster Gap.json", "utf8"),
+    readFileSync("levels/official/toybox-adventures/Booster Gap.json", "utf8"),
   ) as {
     solids: { id: string; kind: string; name: string; x: number; y: number; z: number; w: number; h: number; d: number; color: number }[];
     checkpoints: { name: string }[];
@@ -86,7 +86,7 @@ it("fails a truck that falls into the gap", () => {
 
 it("keeps background shape bases on the lava from anywhere on the route", () => {
   const level = JSON.parse(
-    readFileSync("levels/official/Booster Gap.json", "utf8"),
+    readFileSync("levels/official/toybox-adventures/Booster Gap.json", "utf8"),
   ) as {
     backgroundTemplate: string;
     spawn: { x: number; z: number };

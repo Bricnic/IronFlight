@@ -46,8 +46,11 @@ type Level = {
   limit: number;
 };
 
-const load = (file: string): Level =>
-  JSON.parse(readFileSync(`levels/official/${file}`, "utf8"));
+const load = (file: string): Level => {
+  const track = officialFileTracks.find((t) => t.sourceFile?.endsWith(`/${file}`));
+  if (!track?.sourceFile) throw new Error(`Unknown official level: ${file}`);
+  return JSON.parse(readFileSync(track.sourceFile, "utf8"));
+};
 
 function distToPath(x: number, z: number, path: { x: number; z: number }[]): number {
   let best = Infinity;

@@ -82,6 +82,15 @@ export function createLevelEditor(
     "aria-label": "Level name",
     maxlength: "64",
   }) as HTMLInputElement;
+  const folderInput = el("input", {
+    id: "editor-folder",
+    value: "",
+    "aria-label": "Save folder, relative to levels",
+    placeholder: "Folder (optional)",
+    maxlength: "200",
+  }) as HTMLInputElement;
+  folderInput.title =
+    "Subdirectory under levels/ for this save, e.g. official/sweet-celebrations. Empty saves to the top level.";
   const levelPicker = el("select", {
     id: "editor-levels",
     "aria-label": "Open level",
@@ -131,6 +140,7 @@ export function createLevelEditor(
   const error = el("span", { id: "editor-error", role: "alert" });
   top.append(
     nameInput,
+    folderInput,
     levelPicker,
     refreshLevelsButton,
     newButton,
@@ -264,15 +274,35 @@ export function createLevelEditor(
     return listLevels()
       .then((names) => {
         // Picker order is its own concern: the store union is disk-first,
-        // the dropdown reads a-z like the object list.
+        // the dropdown reads a-z like the object list, grouped by folder
+        // at any depth (generalized recursive subdirectories).
         const sorted = [...names].sort((a, b) =>
           a.localeCompare(b, undefined, { sensitivity: "base", numeric: true }),
         );
         const selected = levelPicker.value;
         levelPicker.innerHTML = "";
         levelPicker.append(el("option", { value: "" }, "Open level…"));
-        for (const name of sorted)
+        const groups = new Map<string, string[]>();
+        for (const name of sorted) {
+          const slash = name.lastIndexOf("/");
+          const folder = slash < 0 ? "" : name.slice(0, slash);
+          if (!groups.has(folder)) groups.set(folder, []);
+          groups.get(folder)!.push(name);
+        }
+        const orderedFolders = [...groups.keys()].sort((a, b) =>
+          a.localeCompare(b, undefined, { sensitivity: "base", numeric: true }),
+        );
+        // Top-level entries stay ungrouped; every nested folder gets its own group.
+        for (const name of groups.get("") ?? [])
           levelPicker.append(el("option", { value: name }, name));
+        for (const folder of orderedFolders) {
+          if (!folder) continue;
+          const group = document.createElement("optgroup");
+          group.label = folder;
+          for (const name of groups.get(folder)!)
+            group.append(el("option", { value: name }, name.slice(folder.length + 1)));
+          levelPicker.append(group);
+        }
         if (sorted.includes(selected)) levelPicker.value = selected;
       })
       .catch((e: Error) => showError(e.message));
@@ -844,6 +874,7 @@ export function createLevelEditor(
     pasteButton.disabled = !!store.clip || !store.canPaste;
     for (const button of [saveButton, playtestButton, randomButton, addSolid, addPrefab, addCheckpoint, addTarget, addRing, duplicateButton, removeButton, spawnButton]) button.disabled = !!store.clip;
     nameInput.disabled = !!store.clip;
+    folderInput.disabled = !!store.clip;
     if (document.activeElement !== nameInput) nameInput.value = store.level.name;
     if (!store.dirty) unsaved.hidden = true;
     showStatus(store.dirty ? "Unsaved changes" : "Saved");
@@ -867,6 +898,11 @@ export function createLevelEditor(
   store.onChange(refresh);
   nameInput.addEventListener("input", () => store.updateName(nameInput.value));
   refreshLevelsButton.addEventListener("click", () => void refreshLevels());
+  const folderForPath = (path: string | undefined) => {
+    if (!path) return "";
+    const slash = path.lastIndexOf("/");
+    return slash < 0 ? "" : path.slice(0, slash);
+  };
   levelPicker.addEventListener("change", () => {
     const name = levelPicker.value;
     if (!name) return;
@@ -874,6 +910,7 @@ export function createLevelEditor(
       .then((level) => {
         expandedKinds.clear(); expandedGroups.clear();
         store.openLevel(level);
+        folderInput.value = folderForPath(level.sourcePath);
         viewport.frameSpawn(store.level);
         showStatus(`Opened ${name}`);
         levelPicker.value = "";
@@ -883,17 +920,43 @@ export function createLevelEditor(
   newButton.addEventListener("click", () => {
     expandedKinds.clear(); expandedGroups.clear();
     store.openBlank(nameInput.value.trim() || "Untitled");
+    // Fresh levels default to the top level; nesting is opt-in per save,
+    // so a previously opened folder must not silently capture them.
+    folderInput.value = "";
     viewport.frameSpawn(store.level);
     showStatus("New level");
   });
   function doSave(after: () => void) {
     try {
       const valid = validateCustomLevel(store.level);
+      const folder = folderInput.value.trim().replace(/^\/+|\/+$/g, "");
+      const SEGMENT = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,63}$/;
+      if (folder && !folder.split("/").every((p) => SEGMENT.test(p))) {
+        showError(
+          "Folder must be slash-separated names of letters, numbers, spaces, - or _",
+        );
+        return;
+      }
+      if (valid.sourcePath) {
+        // Renames keep their file: only an edited folder moves the save,
+        // preserving the filename while the display name stays slash-free.
+        const currentFolder = folderForPath(valid.sourcePath);
+        if (folder !== currentFolder) {
+          const file = valid.sourcePath.slice(currentFolder ? currentFolder.length + 1 : 0);
+          valid.sourcePath = folder ? `${folder}/${file}` : file;
+        }
+      } else {
+        valid.sourcePath = folder ? `${folder}/${valid.name}` : valid.name;
+      }
       saveLevel(undefined, valid)
         .then((saved) => {
           store.level.sourcePath = saved.sourcePath;
+          folderInput.value = folderForPath(saved.sourcePath);
           store.markSaved();
-          showStatus(`Saved ${valid.name}`);
+          const where = saved.sourcePath ?? valid.name;
+          showStatus(
+            where === valid.name ? `Saved ${valid.name}` : `Saved ${valid.name} (${where})`,
+          );
           return refreshLevels();
         })
         .then(after)
@@ -952,6 +1015,7 @@ export function createLevelEditor(
         );
         expandedKinds.clear(); expandedGroups.clear();
         store.openLevel(level);
+        folderInput.value = folderForPath(level.sourcePath);
         viewport.frameSpawn(store.level);
         randomModal.hidden = true;
         showStatus(`Generated ${name}`);
@@ -969,11 +1033,25 @@ export function createLevelEditor(
       showError(e instanceof Error ? e.message : "Invalid level");
       return;
     }
+    const folder = folderInput.value.trim().replace(/^\/+|\/+$/g, "");
+    if (valid.sourcePath) {
+      const currentFolder = folderForPath(valid.sourcePath);
+      if (folder !== currentFolder) {
+        const file = valid.sourcePath.slice(currentFolder ? currentFolder.length + 1 : 0);
+        valid.sourcePath = folder ? `${folder}/${file}` : file;
+      }
+    } else {
+      valid.sourcePath = folder ? `${folder}/${valid.name}` : valid.name;
+    }
     saveLevel(undefined, valid)
       .then((saved) => {
         store.level.sourcePath = saved.sourcePath;
+        folderInput.value = folderForPath(saved.sourcePath);
         store.markSaved();
-        showStatus(`Saved ${saved.name}`);
+        const where = saved.sourcePath ?? saved.name;
+        showStatus(
+          where === saved.name ? `Saved ${saved.name}` : `Saved ${saved.name} (${where})`,
+        );
         onPlaytest(toTrack(saved).id as `custom:${string}`);
       })
       .catch((e: Error) => showError(e.message));
@@ -1064,6 +1142,7 @@ export function createLevelEditor(
     /** Adopt an externally-saved level (e.g. after in-game placement). */
     syncStore(level: CustomLevel) {
       store.openLevel(structuredClone(level));
+      folderInput.value = folderForPath(level.sourcePath);
       refresh();
     },
     hide() {

@@ -35,12 +35,12 @@ beforeAll(async () => {
   await initPhysics();
   for (const file of FILES)
     registerCustomTrack(
-      officialFileTracks.find((t) => t.sourceFile === `levels/official/${file}`)!,
+      officialFileTracks.find((t) => t.sourceFile?.endsWith(`/${file}`))!,
     );
 });
 
 function trackId(file: string) {
-  return officialFileTracks.find((t) => t.sourceFile === `levels/official/${file}`)!.id;
+  return officialFileTracks.find((t) => t.sourceFile?.endsWith(`/${file}`))!.id;
 }
 function segDist(
   px: number, pz: number, ax: number, az: number, bx: number, bz: number,
@@ -78,8 +78,16 @@ type LevelJson = {
   prefabs: { id: string; kind: string; x: number; y?: number; z: number }[];
   solids?: { id: string; kind: string; name?: string; x: number; z: number }[];
 };
-const levelJson = (file: string): LevelJson =>
-  JSON.parse(readFileSync(`levels/official/${file}`, "utf8"));
+const levelJson = (file: string): LevelJson => {
+  if (!file.includes("/")) {
+    const source = officialFileTracks.find((t) =>
+      t.sourceFile?.endsWith(`/${file}`),
+    )?.sourceFile;
+    if (!source) throw new Error(`Unknown official level: ${file}`);
+    return JSON.parse(readFileSync(source, "utf8"));
+  }
+  return JSON.parse(readFileSync(`levels/official/${file}`, "utf8"));
+};
 /** Static placement asserts: one standard-fields star, off-line, near its landmark. */
 function expectStarGeometry(file: string, expectedStar: Vec, expectedLandmarkId: string) {
   const level = levelJson(file);
@@ -481,8 +489,10 @@ it("every official level JSON hides exactly one gold-star prefab", () => {
     expect(stars[0].id, `${file} star id`).toBe(STAR_ID);
   }
   // No official JSON outside the lineup may hide (or miss) a star either.
-  for (const file of readdirSync("levels/official")) {
-    if (file === "order.json" || !file.endsWith(".json")) continue;
-    expect(seen.has(`/official/${file}`), `${file} is listed in order.json`).toBe(true);
+  for (const entry of readdirSync("levels/official", { recursive: true })) {
+    const rel = String(entry).replaceAll("\\", "/");
+    if (!rel.endsWith(".json")) continue;
+    if (rel === "order.json") continue;
+    expect(seen.has(`/official/${rel}`), `${rel} is listed in order.json`).toBe(true);
   }
 });

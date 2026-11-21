@@ -8,7 +8,7 @@ import {
   unlink,
 } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { resolve, sep } from "node:path";
+import { dirname, resolve, sep } from "node:path";
 import type { IncomingMessage } from "node:http";
 import { validateTuning, TUNING_KEYS, type Tuning } from "./src/tuning-schema";
 import { validateCustomLevel } from "./src/custom-level";
@@ -234,6 +234,7 @@ function customLevels(): Plugin {
           try {
             await mkdir(levelsDir, { recursive: true });
             const file = levelFile(name);
+            await mkdir(dirname(file), { recursive: true });
             await writeFile(
               file + ".tmp",
               JSON.stringify(valid, null, 2) + "\n",

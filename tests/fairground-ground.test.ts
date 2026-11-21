@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import original from "../levels/official/Fairground.json";
+import original from "../levels/official/stunt-parks/Fairground.json";
 import clone from "../levels/Fairground-Clone.json";
 import type { CustomSolid } from "../src/custom-level";
 

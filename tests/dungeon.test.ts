@@ -19,7 +19,7 @@ import {
 import { buildTreasureChest, chestStats } from "../src/course-view";
 import { objectiveCopy } from "../src/run-copy";
 import { validateTracks } from "../src/tracks";
-import original from "../levels/official/Dungeon.json";
+import original from "../levels/official/spooky-places/Dungeon.json";
 import clone from "../levels/Clone Dungeon.json";
 import {
   PREFAB_KINDS,

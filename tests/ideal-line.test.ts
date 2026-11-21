@@ -54,7 +54,7 @@ it("measures demolition by its demolish-target tour", () => {
 it("exits 0 above --min and 1 below it", () => {
   const pass = execFileSync(
     process.execPath,
-    [SCRIPT, "levels/official/Tabletop Brawl.json", "--min", "30"],
+    [SCRIPT, "levels/official/toybox-adventures/Tabletop Brawl.json", "--min", "30"],
     { encoding: "utf8" },
   );
   expect(Number(pass.trim())).toBeGreaterThanOrEqual(30);
@@ -62,7 +62,7 @@ it("exits 0 above --min and 1 below it", () => {
   try {
     execFileSync(
       process.execPath,
-      [SCRIPT, "levels/official/Tabletop Brawl.json", "--min", "999"],
+      [SCRIPT, "levels/official/toybox-adventures/Tabletop Brawl.json", "--min", "999"],
       { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
     );
   } catch {
@@ -74,7 +74,7 @@ it("exits 0 above --min and 1 below it", () => {
 it("reports --json with the file and seconds", () => {
   const out = execFileSync(
     process.execPath,
-    [SCRIPT, "levels/official/Sharkbite Run.json", "--json"],
+    [SCRIPT, "levels/official/outdoor-adventures/Sharkbite Run.json", "--json"],
     { encoding: "utf8" },
   );
   const parsed = JSON.parse(out);

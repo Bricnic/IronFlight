@@ -18,7 +18,7 @@ function race() {
 
 type Solid = { id: string; kind: string; x: number; y: number; z: number; w: number; h: number; d: number; color: number; angle?: number };
 const levelJson = () =>
-  JSON.parse(readFileSync("levels/official/Slime Surge.json", "utf8")) as {
+  JSON.parse(readFileSync("levels/official/industrial-mayhem/Slime Surge.json", "utf8")) as {
     solids: Solid[];
     prefabs: { id: string; kind: string; x: number; y?: number; z: number }[];
     checkpoints: { x: number; z: number }[];

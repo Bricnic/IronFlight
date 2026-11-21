@@ -10,7 +10,7 @@ const id = "custom:tabletop-brawl";
 export function driveTabletopBrawlToCompletion(vehicleId?: string): number {
   registerCustomTrack(officialFileTracks.find((t) => t.id === id)!);
   const level = JSON.parse(
-    readFileSync("levels/official/Tabletop Brawl.json", "utf8"),
+    readFileSync("levels/official/toybox-adventures/Tabletop Brawl.json", "utf8"),
   ) as { collectibles: { x: number; z: number }[] };
   const route = level.collectibles.map(({ x, z }) => [x, z, 14, 5]);
   let elapsed = 0;

@@ -157,7 +157,9 @@ it("rotates yawed boxes like the engine, so true butt joints scan clean", () => 
 
 it("official lineup has no coplanar top-face suspects", () => {
   const dir = new URL("../levels/official/", import.meta.url);
-  const files = readdirSync(dir).filter((f) => f.endsWith(".json") && f !== "order.json");
+  const files = readdirSync(dir, { recursive: true })
+    .map((f) => String(f).replaceAll("\\", "/"))
+    .filter((f) => f.endsWith(".json") && f !== "order.json");
   expect(files.length).toBeGreaterThan(0);
   for (const f of files) {
     const level = JSON.parse(readFileSync(new URL(f, dir), "utf8")) as ZLevel;

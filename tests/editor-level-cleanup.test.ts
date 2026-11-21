@@ -4,7 +4,7 @@ import { validateCustomLevel } from "../src/custom-level";
 import { scanLevel } from "../scripts/level-zfight.mjs";
 
 it("Amber Undertow has no overlapping coplanar tiles, including same-color tiles", () => {
-  const level = validateCustomLevel(JSON.parse(readFileSync("levels/official/Amber Undertow.json", "utf8")));
+  const level = validateCustomLevel(JSON.parse(readFileSync("levels/official/industrial-mayhem/Amber Undertow.json", "utf8")));
   // Give every tile a different scan color so identical materials cannot mask overlaps.
   const solids = level.solids.filter(s => s.kind === "tile").map((s, color) => ({ ...s, color, footprint: s.footprint?.map(p => ({ ...p })) }));
   expect(scanLevel({ solids }).suspects).toEqual([]);
@@ -14,7 +14,7 @@ it("Amber Undertow has no overlapping coplanar tiles, including same-color tiles
 });
 
 it("North Pole Summit organizes each ice patch into its own persistent group", () => {
-  const level = validateCustomLevel(JSON.parse(readFileSync("levels/official/North Pole Summit.json", "utf8")));
+  const level = validateCustomLevel(JSON.parse(readFileSync("levels/official/winter-wonderland/North Pole Summit.json", "utf8")));
   const ice = level.prefabs.filter(p => p.kind === "fragile-ice");
   expect(ice).toHaveLength(5073);
   const patches = new Map<string, Set<string | undefined>>();

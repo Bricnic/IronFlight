@@ -13,7 +13,7 @@ beforeAll(async () => {
 
 const levelJson = () =>
   JSON.parse(
-    readFileSync("levels/official/Pumpkin Pass.json", "utf8"),
+    readFileSync("levels/official/spooky-places/Pumpkin Pass.json", "utf8"),
   ) as {
     solids: { id: string; kind: string; x: number; y: number; z: number; w: number; h: number; d: number }[];
     checkpoints: { name: string }[];
@@ -87,7 +87,7 @@ it("snaps a truck parked in the trackside shears", () => {
 
 it("keeps background shape bases on the lava from anywhere on the route", () => {
   const level = JSON.parse(
-    readFileSync("levels/official/Pumpkin Pass.json", "utf8"),
+    readFileSync("levels/official/spooky-places/Pumpkin Pass.json", "utf8"),
   ) as {
     backgroundTemplate: string;
     spawn: { x: number; z: number };

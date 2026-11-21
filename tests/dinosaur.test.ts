@@ -27,9 +27,9 @@ function dinoPrefabs(file: string): DinoPrefab[] {
 }
 
 it("keeps every level dinosaur at the large Jurassic scale", () => {
-  const files = readdirSync("levels/official").filter((f) =>
-    f.endsWith(".json"),
-  );
+  const files = readdirSync("levels/official", { recursive: true })
+    .map((f) => String(f).replaceAll("\\", "/"))
+    .filter((f) => f.endsWith(".json"));
   expect(files.length).toBeGreaterThan(0);
   let dinos = 0;
   for (const file of files) {

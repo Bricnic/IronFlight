@@ -39,7 +39,9 @@ import {
   type CustomTrackId,
   type TrackId,
 } from "./tracks";
-import { stepTrackId } from "./official-levels";
+import { stepUnlockedTrackId } from "./official-levels";
+import { LEVEL_COLLECTIONS } from "./level-collections";
+import { UnlockSeen, unlockedIds } from "./level-unlocks";
 import {
   listLevels,
   saveLevel,
@@ -124,6 +126,14 @@ async function boot() {
     getItem: (key) => localStorage.getItem(key),
     setItem: (key, value) => localStorage.setItem(key, value),
   });
+  const unlockSeen = new UnlockSeen({
+    getItem: (key) => localStorage.getItem(key),
+    setItem: (key, value) => localStorage.setItem(key, value),
+  });
+  const unlockedSet = () =>
+    new Set(
+      LEVEL_COLLECTIONS.flatMap((c) => unlockedIds(c, scores)),
+    );
   header.insertAdjacentHTML(
     "beforeend",
     `<span id="weather-night" class="weather-badge" hidden>NIGHT</span><span id="weather-rain" class="weather-badge" hidden>RAIN</span>
@@ -220,7 +230,7 @@ async function boot() {
     vehicleScreens?.hide();
     editorScreens?.hide();
     settingsScreens?.hide();
-    screens.show();
+    screens.show(sim.trackRun?.track.id);
     panel.hidden = true;
   }
   function showLevelEditor() {
@@ -276,7 +286,7 @@ async function boot() {
   function stepLevel(dir: 1 | -1) {
     const run = sim.trackRun;
     startOfficial(
-      stepTrackId(run?.track.id, dir),
+      stepUnlockedTrackId(run?.track.id, dir, unlockedSet()),
       run?.track.legacy ? (run.variant as "easy" | "medium" | "hard") : "easy",
       !paused,
     );
@@ -292,6 +302,7 @@ async function boot() {
     showLevelSelect,
     () => stepLevel(1),
     starBank,
+    unlockSeen,
   );
   $("level-select-button").onclick = showLevelSelect;
   vehicleScreens = createVehicleSelect(
@@ -1159,11 +1170,19 @@ async function boot() {
         recordedRun !== sim.trackRun
       ) {
         recordedRun = sim.trackRun;
+        const before = unlockedSet();
         const pb = scores.record(s.run);
+        const unlockedNames: string[] = [];
+        if (s.run.status === "completed") {
+          for (const id of unlockedSet())
+            if (!before.has(id)) unlockedNames.push(getTrack(id).name);
+        }
         surface = "result";
         resultStartedAt = sim.time;
         keys.clear();
-        screens.showResult(s.run, pb);
+        screens.showResult(s.run, pb, unlockedNames);
+        if (unlockedNames.length)
+          fireConfetti({ colors: GOLD_CONFETTI, count: CONFETTI_COUNT * 3 });
         if (s.run.status === "failed") screens.reveal(0);
       }
       // Celebrate intermediate gates; the final gate gets the result screen.

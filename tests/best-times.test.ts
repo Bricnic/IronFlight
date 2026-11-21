@@ -3,7 +3,7 @@ import { BestTimes } from "../src/best-times";
 import { TrackRun } from "../src/track-run";
 import { getTrack } from "../src/tracks";
 import { registerCustomTrack, toTrack, validateCustomLevel } from "../src/custom-level";
-import fairground from "../levels/official/Fairground.json";
+import fairground from "../levels/official/stunt-parks/Fairground.json";
 const result = (
   time: number,
   status: "completed" | "failed" = "completed",

@@ -19,6 +19,7 @@ import {
   dungeonHazards,
 } from "../src/dungeon-hazards";
 import { buildDungeonModel } from "../src/dungeon-view";
+import { officialFileTracks } from "../src/official-levels";
 
 beforeAll(initPhysics);
 
@@ -134,8 +135,12 @@ for (const [file, kind, tops] of [
   ["Birthday Table Loop.json", "birthday-cake-table", [8, 16]],
 ] as const) {
   it(`${file} loads with its cake centerpiece and tier tops ${tops.join("/")}`, () => {
+    const source = officialFileTracks.find((t) =>
+      t.sourceFile?.endsWith(`/${file}`),
+    )?.sourceFile;
+    if (!source) throw new Error(`Unknown official level: ${file}`);
     const level = validateCustomLevel(
-      JSON.parse(readFileSync(`levels/official/${file}`, "utf8")),
+      JSON.parse(readFileSync(source, "utf8")),
     );
     // The mud-rock box tiers are gone, replaced by one cake prefab.
     expect(

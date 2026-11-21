@@ -6,7 +6,7 @@ import { driveRingChaseToCompletion } from "./ring-chase-drive";
 beforeAll(initPhysics);
 
 const id = "custom:ring-chase";
-const file = "levels/official/Ring Chase.json";
+const file = "levels/official/stunt-parks/Ring Chase.json";
 
 type Level = {
   name: string;

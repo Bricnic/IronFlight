@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { driveTrack } from "./course-driver";
-import official from "../levels/official/Fairground.json" with { type: "json" };
+import official from "../levels/official/stunt-parks/Fairground.json" with { type: "json" };
 import sourceDefaults from "../src/tuning-defaults.json" with { type: "json" };
 
 test.setTimeout(300000);

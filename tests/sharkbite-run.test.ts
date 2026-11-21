@@ -8,7 +8,7 @@ import { driveSharkbiteRunToCompletion } from "./sharkbite-run-drive";
 
 beforeAll(initPhysics);
 
-const file = "levels/official/Sharkbite Run.json";
+const file = "levels/official/outdoor-adventures/Sharkbite Run.json";
 
 type Level = {
   name: string;

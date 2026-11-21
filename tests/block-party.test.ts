@@ -12,7 +12,7 @@ beforeAll(async () => {
 });
 
 const levelJson = () =>
-  JSON.parse(readFileSync("levels/official/Block Party.json", "utf8")) as {
+  JSON.parse(readFileSync("levels/official/toybox-adventures/Block Party.json", "utf8")) as {
     solids: { id: string; kind: string; x: number; y: number; z: number; w: number; h: number; d: number }[];
     checkpoints: { name: string; x: number; z: number }[];
     limit: number;
@@ -88,7 +88,7 @@ it("two red wyvern bites wreck a parked truck", () => {
 
 it("keeps background shape bases on the lava from anywhere on the route", () => {
   const level = JSON.parse(
-    readFileSync("levels/official/Block Party.json", "utf8"),
+    readFileSync("levels/official/toybox-adventures/Block Party.json", "utf8"),
   ) as {
     backgroundTemplate: string;
     spawn: { x: number; z: number };

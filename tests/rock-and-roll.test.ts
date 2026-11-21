@@ -11,7 +11,7 @@ import {
 
 beforeAll(initPhysics);
 
-const file = "levels/official/Rock and Roll.json";
+const file = "levels/official/toybox-adventures/Rock and Roll.json";
 
 type Level = {
   name: string;

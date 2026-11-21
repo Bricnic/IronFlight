@@ -6,7 +6,7 @@ import { driveVolcanoLoopToCompletion } from "./volcano-loop-drive";
 
 beforeAll(initPhysics);
 
-const file = "levels/official/Volcano Loop.json";
+const file = "levels/official/industrial-mayhem/Volcano Loop.json";
 
 type Level = {
   name: string;

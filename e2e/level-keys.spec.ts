@@ -2,32 +2,62 @@ import { test, expect } from "@playwright/test";
 
 test.slow();
 
-test("N and P step through levels with wraparound", async ({ page }) => {
-  // 64 level switches across the full 38-level lineup need headroom.
+test("N and P step through unlocked levels in collection order", async ({ page }) => {
+  // 30 level switches across the 14 unlocked tracks (2 per collection).
   test.setTimeout(960000);
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   const trackId = () =>
     page.evaluate(() => window.__game!.snapshot().run?.trackId);
+  // Fresh profile: 2 unlocked per collection in collection order.
+  const unlocked = [
+    "custom:birthday-cake-circuit",
+    "custom:birthday-table-loop",
+    "custom:tinsel-town",
+    "custom:mistletoe-mile",
+    "custom:dungeon",
+    "haunted-hollow",
+    "custom:block-party",
+    "custom:toybox-road",
+    "triple-loop",
+    "custom:fairground",
+    "foundry-run",
+    "inferno-vault",
+    "canyon-plunge",
+    "sky-slide",
+  ];
   await page.evaluate(() => {
     const g = window.__game!;
     g.pause(true);
     g.startTrack("triple-loop");
   });
   await expect.poll(trackId, { timeout: 15000 }).toBe("triple-loop");
+  // N from Stunt 01 crosses into Stunt 02, then Industrial 01 (locked
+  // ring-chase is skipped).
+  await page.keyboard.press("n");
+  await expect.poll(trackId, { timeout: 15000 }).toBe("custom:fairground");
   await page.keyboard.press("n");
   await expect.poll(trackId, { timeout: 15000 }).toBe("foundry-run");
   await page.keyboard.press("p");
+  await expect.poll(trackId, { timeout: 15000 }).toBe("custom:fairground");
+  await page.keyboard.press("p");
   await expect.poll(trackId, { timeout: 15000 }).toBe("triple-loop");
+  // Full forward loop from the start, then backward, with wraparound.
   await page.evaluate(() => {
-    window.__game!.startTrack("sky-slide");
+    window.__game!.startTrack("custom:birthday-cake-circuit");
   });
-  await expect.poll(trackId, { timeout: 15000 }).toBe("sky-slide");
-  for (const id of ["custom:fairground", "custom:dungeon", "custom:jurassic-junction", "custom:emberfall-causeway", "custom:chompworks", "custom:machine-gauntlet", "custom:amber-undertow", "custom:fireside-sonata", "custom:pumpkin-pass", "custom:booster-gap", "custom:evil-tube-run", "custom:slime-surge", "custom:ring-chase", "custom:block-party", "custom:frostfire-pass", "custom:volcano-loop", "custom:toybox-road", "custom:gumdrop-meadows", "custom:lollipop-loop", "custom:peppermint-pass", "custom:chocolate-chasm", "custom:sugar-rush-summit", "custom:tinsel-town", "custom:mistletoe-mile", "custom:nutcracker-run", "custom:sleigh-bell-sprint", "custom:north-pole-summit", "custom:tabletop-brawl", "custom:sharkbite-run", "custom:rock-and-roll", "triple-loop", "foundry-run"]) {
+  await expect.poll(trackId, { timeout: 15000 }).toBe(
+    "custom:birthday-cake-circuit",
+  );
+  for (const id of [...unlocked.slice(1), unlocked[0]]) {
     await page.keyboard.press("n");
     await expect.poll(trackId, { timeout: 15000 }).toBe(id);
   }
-  for (const id of ["triple-loop", "custom:rock-and-roll", "custom:sharkbite-run", "custom:tabletop-brawl", "custom:north-pole-summit", "custom:sleigh-bell-sprint", "custom:nutcracker-run", "custom:mistletoe-mile", "custom:tinsel-town", "custom:sugar-rush-summit", "custom:chocolate-chasm", "custom:peppermint-pass", "custom:lollipop-loop", "custom:gumdrop-meadows", "custom:toybox-road", "custom:volcano-loop", "custom:frostfire-pass", "custom:block-party", "custom:ring-chase", "custom:slime-surge", "custom:evil-tube-run", "custom:booster-gap", "custom:pumpkin-pass", "custom:fireside-sonata", "custom:amber-undertow", "custom:machine-gauntlet", "custom:chompworks", "custom:emberfall-causeway", "custom:jurassic-junction", "custom:dungeon", "custom:fairground", "sky-slide"]) {
+  for (const id of [
+    unlocked.at(-1),
+    ...unlocked.slice(1, -1).reverse(),
+    unlocked[0],
+  ]) {
     await page.keyboard.press("p");
     await expect.poll(trackId, { timeout: 15000 }).toBe(id);
   }
@@ -42,11 +72,13 @@ test("C opens the vehicle select screen", async ({ page }) => {
   ).toBeVisible();
   await page.keyboard.press("l");
   await expect(
-    page.getByRole("heading", { name: "Choose your track.", exact: true }),
+    page.getByRole("heading", { name: "Choose your collection.", exact: true }),
   ).toBeVisible();
 });
 
-test("L returns to level select from an active run", async ({ page }) => {
+test("L returns to the current track's collection from an active run", async ({
+  page,
+}) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await page.evaluate(() => {
@@ -57,7 +89,10 @@ test("L returns to level select from an active run", async ({ page }) => {
   await expect(page.locator("#level-select")).toBeHidden();
   await page.keyboard.press("l");
   await expect(page.locator("#level-select")).toBeVisible();
+  await expect(page.locator("#collection-title")).toHaveText(
+    "Industrial Mayhem",
+  );
   await expect(
-    page.getByRole("heading", { name: "Choose your track.", exact: true }),
-  ).toBeVisible();
+    page.locator('[data-track="foundry-run"] .track-play'),
+  ).toBeFocused();
 });

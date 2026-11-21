@@ -5,7 +5,7 @@ import { driveToyboxRoadToCompletion } from "./toybox-road-drive";
 
 beforeAll(initPhysics);
 
-const file = "levels/official/Toybox Road.json";
+const file = "levels/official/toybox-adventures/Toybox Road.json";
 
 type Level = {
   name: string;

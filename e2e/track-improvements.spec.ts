@@ -1,32 +1,40 @@
 import { test, expect } from "@playwright/test";
 // The sinking-chassis camera soak exceeds the default 90s under SwiftShader.
 test.slow();
-test("arrow keys navigate the responsive level grid, Space plays, and L returns", async ({
+test("arrow keys navigate collections and tracks, Space plays, and L returns", async ({
   page,
 }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
+  const collections = page.locator(".collection-pick");
+  await expect(collections.nth(0)).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(collections.nth(1)).toBeFocused();
+  const columns = await page
+    .locator("#level-select .collection-grid")
+    .evaluate((e) => getComputedStyle(e).gridTemplateColumns.split(" ").length);
+  await page.keyboard.press("ArrowDown");
+  await expect(collections.nth(1 + columns)).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(collections.nth(1)).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(collections.nth(0)).toBeFocused();
+  // Space opens the focused collection; arrows then move across its tracks.
+  await page.keyboard.press("Space");
   const cards = page.locator(".track-play");
   await expect(cards.nth(0)).toBeFocused();
   await page.keyboard.press("ArrowRight");
   await expect(cards.nth(1)).toBeFocused();
-  const columns = await page
-    .locator("#level-select .track-grid")
-    .evaluate((e) => getComputedStyle(e).gridTemplateColumns.split(" ").length);
-  await page.keyboard.press("ArrowDown");
-  await expect(cards.nth(1 + columns)).toBeFocused();
-  await page.keyboard.press("ArrowUp");
-  await expect(cards.nth(1)).toBeFocused();
-  await page.keyboard.press("ArrowLeft");
-  await expect(cards.nth(0)).toBeFocused();
-  await page.keyboard.press("ArrowRight");
   await page.keyboard.press("Space");
   await expect(page.locator("#level-select")).toBeHidden();
   expect(
     await page.evaluate(() => window.__game!.snapshot().run?.trackId),
-  ).toBe("foundry-run");
+  ).toBe("custom:birthday-table-loop");
   await page.keyboard.press("l");
   await expect(page.locator("#level-select")).toBeVisible();
+  await expect(page.locator("#collection-title")).toHaveText(
+    "Sweet Celebrations",
+  );
   await expect(cards.nth(1)).toBeFocused();
 });
 

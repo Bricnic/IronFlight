@@ -1,64 +1,31 @@
 import { driveTrack } from "./course-driver";
 import { test, expect } from "@playwright/test";
-import { TRACKS } from "../src/tracks";
-test("normal startup shows the illustrated official lineup and keeps the simulation paused", async ({
+import { LEVEL_COLLECTIONS } from "../src/level-collections";
+test("normal startup shows the collection grid and keeps the simulation paused", async ({
   page,
 }, info) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await expect(
-    page.getByRole("heading", { name: "Choose your track.", exact: true }),
+    page.getByRole("heading", { name: "Choose your collection.", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".track-card h2")).toHaveText([
-    ...TRACKS.map((track) => track.name),
-    "Fairground",
-    "Dungeon",
-    "Jurassic Junction",
-    "Emberfall Causeway",
-    "Chompworks",
-    "Machine Gauntlet",
-    "Amber Undertow",
-    "Fireside Sonata",
-    "Pumpkin Pass",
-    "Booster Gap",
-    "Evil Tube Run",
-    "Slime Surge",
-    "Ring Chase",
-    "Block Party",
-    "Frostfire Pass",
-    "Volcano Loop",
-    "Toybox Road",
-    "Gumdrop Meadows",
-    "Lollipop Loop",
-    "Peppermint Pass",
-    "Chocolate Chasm",
-    "Sugar Rush Summit",
-    "Tinsel Town",
-    "Mistletoe Mile",
-    "Nutcracker Run",
-    "Sleigh Bell Sprint",
-    "North Pole Summit",
-    "Tabletop Brawl",
-    "Sharkbite Run",
-    "Rock and Roll",
-    "Shipyard",
-    "Spider Hollow",
-    "Screwball Run",
-    "Birthday Cake Circuit",
-    "Birthday Table Loop",
-    "Bouncy House",
-  ]);
-  for (const t of TRACKS) {
+  await expect(page.locator(".collection-card h2")).toHaveText(
+    LEVEL_COLLECTIONS.map((c) => c.name),
+  );
+  for (const c of LEVEL_COLLECTIONS) {
+    const card = page.locator(`[data-collection="${c.id}"]`);
+    await expect(card.locator(".collection-levels")).toContainText(
+      `${c.trackIds.length} levels`,
+    );
+    await expect(card.locator(".collection-gold")).toContainText("gold");
+    await expect(card.locator(".collection-stars")).toContainText("stars");
     await expect(
-      page.getByRole("button", { name: `Play ${t.name}`, exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("img", { name: `${t.name} route preview`, exact: true }),
+      card.getByRole("img", { name: `${c.name} artwork`, exact: true }),
     ).toBeVisible();
   }
   expect(
     await page
-      .locator(".track-card img")
+      .locator(".collection-card img")
       .evaluateAll((images) =>
         images.every(
           (i) =>
@@ -67,6 +34,24 @@ test("normal startup shows the illustrated official lineup and keeps the simulat
         ),
       ),
   ).toBe(true);
+  // Opening a collection shows its tracks in unlock order: the first two
+  // playable, the rest locked with a lock overlay.
+  await page.locator('[data-collection="sweet-celebrations"] button').click();
+  await expect(page.locator("#collection-title")).toHaveText(
+    "Sweet Celebrations",
+  );
+  await expect(page.locator(".track-card h2")).toHaveText([
+    "Birthday Cake Circuit",
+    "Birthday Table Loop",
+    "Bouncy House",
+    "Gumdrop Meadows",
+    "Lollipop Loop",
+    "Peppermint Pass",
+    "Chocolate Chasm",
+    "Sugar Rush Summit",
+  ]);
+  await expect(page.locator(".track-card.locked")).toHaveCount(6);
+  await expect(page.locator(".track-lock")).toHaveCount(6);
   const time = await page.evaluate(() => window.__game!.snapshot().time);
   await page.keyboard.down("w");
   await page.waitForTimeout(400);
@@ -79,6 +64,7 @@ test("selecting a track starts its real attempt; restart and menu preserve playe
 }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
+  await page.locator('[data-collection="industrial-mayhem"] button').click();
   await page
     .getByRole("button", { name: "Play Foundry Run", exact: true })
     .click();
@@ -108,6 +94,7 @@ test("a completed UI-selected course awards a medal and reloads its best time", 
 }, info) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
+  await page.locator('[data-collection="industrial-mayhem"] button').click();
   await page
     .getByRole("button", { name: "Play Foundry Run", exact: true })
     .click();
@@ -126,6 +113,7 @@ test("a completed UI-selected course awards a medal and reloads its best time", 
   await expect(card.locator(".best-time")).not.toHaveText("NO TIME SET");
   await page.reload();
   await page.waitForFunction(() => !!window.__game);
+  await page.locator('[data-collection="industrial-mayhem"] button').click();
   await expect(card.locator(".best-time")).toContainText(
     result.state.run!.elapsed.toFixed(2),
   );
@@ -148,12 +136,14 @@ test("level selection fits narrow screens and works when storage is blocked", as
   });
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
-  await expect(page.locator(".track-card")).toHaveCount(44);
+  await expect(page.locator(".collection-card")).toHaveCount(7);
   expect(
     await page
       .locator("#level-select")
       .evaluate((e) => e.scrollWidth <= e.clientWidth),
   ).toBe(true);
+  await page.locator('[data-collection="industrial-mayhem"] button').click();
+  await expect(page.locator(".track-card")).toHaveCount(10);
   await page
     .getByRole("button", { name: "Play Inferno Vault", exact: true })
     .scrollIntoViewIfNeeded();
@@ -171,6 +161,7 @@ test("keyboard Space starts a focused track and arrow controls then drive it", a
 }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
+  await page.locator('[data-collection="industrial-mayhem"] button').click();
   await page
     .getByRole("button", { name: "Play Foundry Run", exact: true })
     .focus();
@@ -192,12 +183,13 @@ test("an expired arena shows a timeout result and cannot save a medal", async ({
 }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
+  await page.locator('[data-collection="industrial-mayhem"] button').click();
   await page
-    .getByRole("button", { name: "Play Scrapyard Sweep", exact: true })
+    .getByRole("button", { name: "Play Inferno Vault", exact: true })
     .click();
   await page.evaluate(() => {
     window.__game!.pause(true);
-    window.__game!.advanceFrames(460, 16, {});
+    window.__game!.advanceFrames(600, 16, {});
   });
   const run = await page.evaluate(() => window.__game!.snapshot().run);
   expect(run?.status).toBe("failed");
@@ -212,6 +204,6 @@ test("an expired arena shows a timeout result and cannot save a medal", async ({
   );
   await page.locator("#result-level-select").click();
   await expect(
-    page.locator('[data-track="scrapyard-sweep"] .best-time'),
+    page.locator('[data-track="inferno-vault"] .best-time'),
   ).toHaveText("NO TIME SET");
 });

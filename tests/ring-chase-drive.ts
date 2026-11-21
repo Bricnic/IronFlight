@@ -10,7 +10,7 @@ const id = "custom:ring-chase";
 export function driveRingChaseToCompletion(vehicleId?: string): number {
   registerCustomTrack(officialFileTracks.find((t) => t.id === id)!);
   const level = JSON.parse(
-    readFileSync("levels/official/Ring Chase.json", "utf8"),
+    readFileSync("levels/official/stunt-parks/Ring Chase.json", "utf8"),
   ) as { collectibles: { x: number; z: number }[] };
   const route = level.collectibles.map(({ x, z }) => [x, z, 14, 5]);
   let elapsed = 0;

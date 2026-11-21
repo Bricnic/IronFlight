@@ -110,6 +110,7 @@ test("level select shows banked and unbanked star states", async ({
   await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
   await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   // triple-loop is NOT relocated, so a legacy found-only save still lights it.
+  await page.locator('[data-collection="stunt-parks"] button').click();
   const card = page.locator('.track-card[data-track="triple-loop"]');
   await expect(card.locator(".star-unlit")).toHaveCount(1);
   await expect(card.locator(".star-lit")).toHaveCount(0);
@@ -129,6 +130,7 @@ test("level select shows banked and unbanked star states", async ({
   );
   await page.reload();
   await page.waitForFunction(() => !!window.__game);
+  await page.locator('[data-collection="stunt-parks"] button').click();
   const relit = page.locator('.track-card[data-track="triple-loop"]');
   await expect(relit.locator(".star-lit")).toHaveCount(1);
   await expect(relit.locator(".star-unlit")).toHaveCount(0);

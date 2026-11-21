@@ -53,7 +53,7 @@ prefabs, plus one top-down minimap concept per level:
   under `validateBackgroundTemplate`.
 - Lethals: insta-kill strike entries; strike geometry at car-body height
   (~y 1.0-2.2 above deck); animated views.
-- Levels: `levels/official/<Name>.json`, `mode` from config, >=1 checkpoint
+- Levels: `levels/official/<collection>/<Name>.json`, `mode` from config, >=1 checkpoint
   (5 recommended), >=1 solid, medals `0 < gold < silver < bronze`,
   `goldMin <= gold <= goldMax`, `bronze <= limit`, varied difficulty across
   the set (narrowing road width, more lethals, longer ideal lines), all kinds

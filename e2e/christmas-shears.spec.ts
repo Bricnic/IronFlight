@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 // out along the blade axis only overlaps the far edge: it must still be
 // destroyed. Positions derive from the shipped level, not hardcoded coords.
 const level = JSON.parse(
-  readFileSync("levels/official/Nutcracker Run.json", "utf8"),
+  readFileSync("levels/official/winter-wonderland/Nutcracker Run.json", "utf8"),
 ) as { prefabs: Shear[] };
 type Shear = { id: string; kind: string; x: number; z: number; y?: number; yaw?: number };
 const shear = (level.prefabs as Shear[]).find((p) => p.kind === "christmas-icicle-shears")!;

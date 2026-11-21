@@ -4,14 +4,14 @@ import { blankLevel } from "../src/custom-level";
 
 test("playtesting an edited official level stays in the game without reloading", async ({ page }) => {
   test.slow();
-  const file = "levels/official/Amber Undertow.json";
+  const file = "levels/official/industrial-mayhem/Amber Undertow.json";
   const original = await readFile(file);
   try {
     await page.goto("/");
     await page.waitForFunction(() => !!window.__game);
     await page.getByRole("button", { name: "Level editor", exact: true }).click();
-    await page.locator("#editor-levels").selectOption("official/Amber Undertow");
-    await expect(page.locator("#editor-status")).toContainText("Opened official/Amber Undertow");
+    await page.locator("#editor-levels").selectOption("official/industrial-mayhem/Amber Undertow");
+    await expect(page.locator("#editor-status")).toContainText("Opened official/industrial-mayhem/Amber Undertow");
     await page.locator("#editor-solid-kind").selectOption("barrier");
     await page.locator("#editor-add-solid").click();
     const solids = await page.evaluate(() => window.__game!.editor().solids);
@@ -46,7 +46,7 @@ test("editor browses nested levels and saves to the original file", async ({ pag
     await page.waitForFunction(() => !!window.__game);
     await page.getByRole("button", { name: "Level editor", exact: true }).click();
     const picker = page.locator("#editor-levels");
-    await expect(picker.locator('option[value="official/Fairground"]')).toHaveCount(1);
+    await expect(picker.locator('option[value="official/stunt-parks/Fairground"]')).toHaveCount(1);
     await expect(picker.locator(`option[value="${path}"]`)).toHaveCount(1);
     await expect(picker.locator('option[value="official/order"]')).toHaveCount(0);
     await picker.selectOption(path);

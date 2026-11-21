@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
 const dungeon = JSON.parse(
-  readFileSync("levels/official/Dungeon.json", "utf8"),
+  readFileSync("levels/official/spooky-places/Dungeon.json", "utf8"),
 ) as { prefabs: Trap[] };
 
 type Trap = { id: string; kind: string; x: number; z: number; y?: number };

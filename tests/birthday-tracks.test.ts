@@ -35,8 +35,11 @@ type Level = {
   limit: number;
 };
 
-const load = (file: string): Level =>
-  JSON.parse(readFileSync(`levels/official/${file}`, "utf8"));
+const load = (file: string): Level => {
+  const track = officialFileTracks.find((t) => t.sourceFile?.endsWith(`/${file}`));
+  if (!track?.sourceFile) throw new Error(`Unknown official level: ${file}`);
+  return JSON.parse(readFileSync(track.sourceFile, "utf8"));
+};
 
 for (const spec of TRACKS) {
   it(`${spec.file} is a valid birthday race with a 30s+ ideal line`, () => {
@@ -234,7 +237,9 @@ it("lists the birthday tracks last in build order", () => {
     file: string;
     thumbnail: string;
   }[];
-  expect(order.slice(-3).map((e) => e.file)).toEqual(TRACKS.map((t) => `/official/${t.file}`));
+  expect(order.slice(-3).map((e) => e.file)).toEqual(
+    TRACKS.map((t) => `/official/sweet-celebrations/${t.file}`),
+  );
   for (const e of order.slice(-3)) {
     expect(e.thumbnail.startsWith("/tracks/")).toBe(true);
     expect(e.thumbnail.endsWith(".png")).toBe(true);

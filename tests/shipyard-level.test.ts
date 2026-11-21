@@ -11,7 +11,7 @@ import {
 
 beforeAll(initPhysics);
 
-const file = "levels/official/Shipyard.json";
+const file = "levels/official/industrial-mayhem/Shipyard.json";
 
 type Level = {
   name: string;

@@ -4,7 +4,7 @@ import {
   DUNGEON_STRIKE,
   SNAP_CYCLE,
 } from "../src/dungeon-hazards";
-import original from "../levels/official/Dungeon.json";
+import original from "../levels/official/spooky-places/Dungeon.json";
 import {
   toTrack,
   validateCustomLevel,

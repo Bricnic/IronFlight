@@ -11,11 +11,11 @@ import type { CustomTrackId } from "../src/tracks";
 // and at least 40% must read as ice. Set COVERAGE_CAL=1 to dump threshold
 // histograms instead of asserting.
 const TRACKS = [
-  { file: "Tinsel Town.json", id: "custom:tinsel-town", slug: "tinsel-town" },
-  { file: "Mistletoe Mile.json", id: "custom:mistletoe-mile", slug: "mistletoe-mile" },
-  { file: "Nutcracker Run.json", id: "custom:nutcracker-run", slug: "nutcracker-run" },
-  { file: "Sleigh Bell Sprint.json", id: "custom:sleigh-bell-sprint", slug: "sleigh-bell-sprint" },
-  { file: "North Pole Summit.json", id: "custom:north-pole-summit", slug: "north-pole-summit" },
+  { file: "winter-wonderland/Tinsel Town.json", id: "custom:tinsel-town", slug: "tinsel-town" },
+  { file: "winter-wonderland/Mistletoe Mile.json", id: "custom:mistletoe-mile", slug: "mistletoe-mile" },
+  { file: "winter-wonderland/Nutcracker Run.json", id: "custom:nutcracker-run", slug: "nutcracker-run" },
+  { file: "winter-wonderland/Sleigh Bell Sprint.json", id: "custom:sleigh-bell-sprint", slug: "sleigh-bell-sprint" },
+  { file: "winter-wonderland/North Pole Summit.json", id: "custom:north-pole-summit", slug: "north-pole-summit" },
 ] as const;
 
 type XY = { x: number; z: number };

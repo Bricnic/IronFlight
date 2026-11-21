@@ -12,7 +12,7 @@ import {
 
 beforeAll(initPhysics);
 
-const file = "levels/official/Spider Hollow.json";
+const file = "levels/official/spooky-places/Spider Hollow.json";
 
 type Level = {
   name: string;

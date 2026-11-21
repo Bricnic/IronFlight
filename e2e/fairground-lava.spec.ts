@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import level from "../levels/official/Fairground.json" with { type: "json" };
+import level from "../levels/official/stunt-parks/Fairground.json" with { type: "json" };
 
 test.setTimeout(180000);
 test.use({ viewport: { width: 1100, height: 820 } });

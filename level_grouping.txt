@@ -1,0 +1,95 @@
+Suggested Official Level Groups
+===============================
+
+Each official level has one primary group, chosen by its scenery, props and
+overall theme. Levels that blend themes can also receive secondary tags.
+Race, collection and demolition modes should remain separate filters.
+
+1. Sweet Celebrations (8 levels)
+-------------------------------
+Birthday parties and candy worlds, featuring cakes, candles, sweets and
+colorful decorations.
+
+- Birthday Cake Circuit
+- Birthday Table Loop
+- Bouncy House
+- Gumdrop Meadows
+- Lollipop Loop
+- Peppermint Pass
+- Chocolate Chasm
+- Sugar Rush Summit
+
+2. Winter Wonderland (6 levels)
+-------------------------------
+Christmas villages, frozen lakes and snowy mountain courses. Frostfire Pass
+belongs here for its alpine setting and snowman, despite its fire hazards.
+
+- Tinsel Town
+- Mistletoe Mile
+- Nutcracker Run
+- Sleigh Bell Sprint
+- North Pole Summit
+- Frostfire Pass
+
+3. Spooky Places (4 levels)
+--------------------------
+Haunted landscapes and dungeon environments, with ghosts, gravestones,
+skulls, Halloween decorations and sinister creatures.
+
+- Dungeon
+- Haunted Hollow
+- Pumpkin Pass
+- Spider Hollow
+
+4. Toybox Adventures (10 levels)
+--------------------------------
+Oversized toys, household objects and tabletop obstacle courses. Dinosaur
+levels fit here as adventures among giant toy creatures and colored tracks.
+
+- Block Party
+- Toybox Road
+- Tabletop Brawl
+- Fireside Sonata
+- Booster Gap
+- Rock and Roll
+- Screwball Run
+- Jurassic Junction
+- Emberfall Causeway
+- Chompworks
+
+5. Stunt Parks (3 levels)
+-------------------------
+Purpose-built stunt and amusement parks centered on loops, rings, rides and
+arena attractions.
+
+- Triple Loop
+- Fairground
+- Ring Chase
+
+6. Industrial Mayhem (10 levels)
+--------------------------------
+Machinery, hazardous infrastructure and urban environments. This group
+combines industrial fire, lava and slime courses with city, scrapyard and
+waterfront settings.
+
+- Foundry Run
+- Inferno Vault
+- Machine Gauntlet
+- Amber Undertow
+- Evil Tube Run
+- Slime Surge
+- Volcano Loop
+- Skyline Circuit
+- Scrapyard Sweep
+- Shipyard
+
+7. Outdoor Adventures (3 levels)
+--------------------------------
+Courses defined by natural terrain and traversal: canyon drops, mountain
+rapids, desert obstacles and water crossings.
+
+- Canyon Plunge
+- Sky Slide
+- Sharkbite Run
+
+Total: 44 official levels across 7 groups.

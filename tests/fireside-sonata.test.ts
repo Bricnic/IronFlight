@@ -14,7 +14,7 @@ beforeAll(async () => {
 
 const levelJson = () =>
   JSON.parse(
-    readFileSync("levels/official/Fireside Sonata.json", "utf8"),
+    readFileSync("levels/official/toybox-adventures/Fireside Sonata.json", "utf8"),
   ) as {
     solids: { id: string; w: number; d: number; pianoKey?: number }[];
     limit: number;
@@ -86,7 +86,7 @@ it("launches a truck that touches the table hydrant", () => {
 });
 it("keeps background shape bases on the lava from anywhere on the route", () => {
   const level = JSON.parse(
-    readFileSync("levels/official/Fireside Sonata.json", "utf8"),
+    readFileSync("levels/official/toybox-adventures/Fireside Sonata.json", "utf8"),
   ) as {
     backgroundTemplate: string;
     spawn: { x: number; z: number };

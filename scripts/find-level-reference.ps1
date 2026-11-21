@@ -138,10 +138,15 @@ if ($PSCmdlet.ParameterSetName -eq 'Record') {
     }
     $official = Join-Path $levelsDirectory 'official'
     $order = Get-Content -LiteralPath (Join-Path $official 'order.json') -Raw | ConvertFrom-Json
-    if ("/official/$LevelFile" -notin $order.file -or !(Test-Path -LiteralPath (Join-Path $official $LevelFile) -PathType Leaf)) {
+    $match = @($order | Where-Object { $_.file -eq "/official/$LevelFile" -or $_.file -like "*/$LevelFile" })
+    if ($match.Count -eq 0) {
         throw 'Record an image only after adding its level to the official lineup.'
     }
-    $levelPath = Join-Path $official $LevelFile
+    $relative = $match[0].file -replace '^/official/', ''
+    $levelPath = Join-Path $official $relative
+    if (!(Test-Path -LiteralPath $levelPath -PathType Leaf)) {
+        throw 'Record an image only after adding its level to the official lineup.'
+    }
     $idealOut = & node (Join-Path $PSScriptRoot 'ideal-line.mjs') $levelPath --min 30 2>&1
     if ($LASTEXITCODE -ne 0) { throw ($idealOut -join "`n") }
 

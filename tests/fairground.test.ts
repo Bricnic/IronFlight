@@ -9,7 +9,7 @@ import {
   type CustomSolid,
 } from "../src/custom-level";
 import { bumperDamage, CAROUSEL_OMEGA } from "../src/fairground";
-import original from "../levels/official/Fairground.json";
+import original from "../levels/official/stunt-parks/Fairground.json";
 import clone from "../levels/Fairground-Clone.json";
 beforeAll(initPhysics);
 function fixture(

@@ -8,7 +8,7 @@ import { driveTabletopBrawlToCompletion } from "./tabletop-brawl-drive";
 
 beforeAll(initPhysics);
 
-const file = "levels/official/Tabletop Brawl.json";
+const file = "levels/official/toybox-adventures/Tabletop Brawl.json";
 
 type Level = {
   name: string;

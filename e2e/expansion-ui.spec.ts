@@ -9,18 +9,23 @@ async function startCourse(page: Page, id: TrackId) {
     g.startTrack(trackId);
   }, id);
 }
-test("menu counts thirty-eight places with per-mode labels", async ({ page }) => {
+test("menu counts forty-four tracks with per-mode labels", async ({ page }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
   await expect(
     page.locator("#level-select .track-select-intro"),
-  ).toContainText("38 places to send it.");
-  await expect(page.locator(".track-card")).toHaveCount(38);
+  ).toContainText("44 tracks across 7 collections.");
+  await expect(page.locator(".collection-card")).toHaveCount(7);
   const mode = (id: string) =>
     page.locator(`[data-track="${id}"] .track-mode`);
+  await page.locator('[data-collection="spooky-places"] button').click();
   await expect(mode("haunted-hollow")).toHaveText("DEMOLITION");
+  await page.locator("#collection-back").click();
+  await page.locator('[data-collection="outdoor-adventures"] button').click();
   await expect(mode("sky-slide")).toHaveText("SLIDE RUN");
   await expect(mode("canyon-plunge")).toHaveText("CHECKPOINT RACE");
+  await page.locator("#collection-back").click();
+  await page.locator('[data-collection="industrial-mayhem"] button').click();
   await expect(mode("scrapyard-sweep")).toHaveText("120s COLLECTION");
 });
 test("graveyard HUD counts smashed stones and warns about ghosts", async ({
@@ -150,7 +155,8 @@ test("a ghost wreck shows retry and level select", async ({ page }) => {
   ).toBe("running");
   await page.getByRole("button", { name: "Level select", exact: true }).click();
   await expect(page.locator("#level-select")).toBeVisible();
-  await expect(page.locator(".track-card")).toHaveCount(38);
+  await expect(page.locator("#collection-title")).toHaveText("Spooky Places");
+  await expect(page.locator(".track-card")).toHaveCount(4);
 });
 test("narrow screens fit play and result", async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
