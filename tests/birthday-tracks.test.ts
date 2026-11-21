@@ -232,15 +232,18 @@ it("the three birthday tracks use every prior birthday kind plus the castle", ()
     expect(kinds, kind).toContain(kind);
 });
 
-it("lists the birthday tracks last in build order", () => {
+it("lists the birthday tracks as one contiguous build-order block", () => {
   const order = JSON.parse(readFileSync("levels/official/order.json", "utf8")) as {
     file: string;
     thumbnail: string;
   }[];
-  expect(order.slice(-3).map((e) => e.file)).toEqual(
+  const files = order.map((e) => e.file);
+  const at = files.indexOf(`/official/sweet-celebrations/${TRACKS[0].file}`);
+  expect(at).toBeGreaterThanOrEqual(0);
+  expect(files.slice(at, at + TRACKS.length)).toEqual(
     TRACKS.map((t) => `/official/sweet-celebrations/${t.file}`),
   );
-  for (const e of order.slice(-3)) {
+  for (const e of order.slice(at, at + TRACKS.length)) {
     expect(e.thumbnail.startsWith("/tracks/")).toBe(true);
     expect(e.thumbnail.endsWith(".png")).toBe(true);
   }

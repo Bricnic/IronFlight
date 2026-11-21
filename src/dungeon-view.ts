@@ -20,6 +20,7 @@ import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDin
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
 import { buildSpider, poseSpider } from "./hollow-view";
+import { buildBat, buildCaterpillar, buildFairy, buildFirefly, buildMoth, buildMushroom, poseBat, poseCaterpillar, poseFairy, poseFirefly, poseMoth, poseMushroom } from "./mystic-view";
 import { buildMailbox, buildSpeedTube, buildTeeterTotter, poseMailbox } from "./screwball-view";
 import { buildBalloon, buildBirthdayCandle, buildBirthdayCake, buildBirthdayCard, buildBouncyCastle, poseBalloon, poseBirthdayCard } from "./birthday-view";
 import { buildLimeChomper } from "./toy-track-view";
@@ -30,6 +31,7 @@ import { buildChristmasDecor } from "./christmas-view";
 import { buildCandyLethal, poseCandyLethal } from "./candy-lethal-view";
 import { buildChristmasLethal, poseChristmasLethal } from "./christmas-lethal-view";
 import { assignCandleLights, buildCandleLightPool, CANDLE_LIGHT_COUNT, type CandleSource } from "./candle-lights";
+import { assignMysticLights, buildMysticLightPool, type MysticSource } from "./mystic-lights";
 import type { Simulation } from "./simulation";
 
 const standard = (color: number, metalness = 0.15, roughness = 0.55) =>
@@ -49,6 +51,12 @@ type Model = {
   mailbox?: ReturnType<typeof buildMailbox>;
   balloon?: ReturnType<typeof buildBalloon>;
   card?: ReturnType<typeof buildBirthdayCard>;
+  caterpillar?: ReturnType<typeof buildCaterpillar>;
+  moth?: ReturnType<typeof buildMoth>;
+  bat?: ReturnType<typeof buildBat>;
+  mushroom?: ReturnType<typeof buildMushroom>;
+  fairy?: ReturnType<typeof buildFairy>;
+  firefly?: ReturnType<typeof buildFirefly>;
 };
 /** Authoring primitives are merged per material and moving assembly after construction. */
 function consolidate(root: T.Group) {
@@ -97,6 +105,12 @@ const labelMessages: Record<string, [string, string]> = {
   "lime-chomper": ["LIME CHOMPER", "CROSS WHEN THE JAWS ARE OPEN"],
   boulder: ["BOULDER DASH", "ROLLS WHEN CLOSE / SLOW OR DODGE"],
   spider: ["WEB SPINNER", "STICKY SILK / RUNS YOU DOWN"],
+  "cave-caterpillar": ["CAVE CATERPILLAR", "GIANT CRAWLER / TOUCH IS VENOM"],
+  "cave-moth": ["DUST MOTH", "GREEN SPRINKLES / DODGE THE DUST"],
+  "cave-bat": ["CAVE BAT", "HARMLESS / SPOOKS WHEN CLOSE"],
+  "glow-mushroom": ["GLOWCAP", "CAVE LIGHT / LOVELY AND HARMLESS"],
+  "cave-fairy": ["CAVE FAIRY", "CAVE LIGHT / LOVELY AND HARMLESS"],
+  firefly: ["FIREFLY", "CAVE LIGHT / LOVELY AND HARMLESS"],
   "speed-tube": ["SPEED TUBE", "NO STEERING / 1.5X OUT"],
   "teeter-totter": ["TEETER-TOTTER", "TIMED CROSSING / MIND THE GAP"],
   mailbox: ["EVIL MAILBOX", "DO NOT TOUCH / SERIOUSLY"],
@@ -1044,6 +1058,21 @@ export function buildDungeonModel(h: DungeonHazard): Model {
   } else if (h.kind === "spider") {
     model.spider = buildSpider(root);
     root.add(buildDungeonLabel(h, 7));
+  } else if (h.kind === "cave-caterpillar") {
+    model.caterpillar = buildCaterpillar(root);
+    root.add(buildDungeonLabel(h, 6));
+  } else if (h.kind === "cave-moth") {
+    model.moth = buildMoth(root);
+    root.add(buildDungeonLabel(h, 14));
+  } else if (h.kind === "cave-bat") {
+    // Ambient decor carries no warning label (like candles and jail cells).
+    model.bat = buildBat(root);
+  } else if (h.kind === "glow-mushroom") {
+    model.mushroom = buildMushroom(root, Math.abs(Math.round(h.x + h.z)) % 5);
+  } else if (h.kind === "cave-fairy") {
+    model.fairy = buildFairy(root);
+  } else if (h.kind === "firefly") {
+    model.firefly = buildFirefly(root);
   } else if (h.kind === "speed-tube") {
     buildSpeedTube(root);
     root.add(buildDungeonLabel(h, 8));
@@ -1096,6 +1125,7 @@ export class DungeonView extends T.Group {
   private builtTrack?: Simulation["courseTrack"];
   private models: Model[] = [];
   private candlePool: T.PointLight[] = [];
+  private mysticPool: T.PointLight[] = [];
   /** Live editing: shift one hazard model by delta. */
   moveModel(id: string, dx: number, dy: number, dz: number) {
     const m = this.models.find((m) => m.h.id === id);
@@ -1297,6 +1327,39 @@ export class DungeonView extends T.Group {
         if (sp) poseSpider(m.spider, m.root, m.h.x, m.h.z, sp, s.time);
         continue;
       }
+      if (m.h.kind === "cave-caterpillar" && m.caterpillar) {
+        const cat = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.caterpillar;
+        if (cat) poseCaterpillar(m.caterpillar, m.root, m.h.y ?? 0, cat, s.time, s.weather.night);
+        continue;
+      }
+      if (m.h.kind === "cave-moth" && m.moth) {
+        const mo = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.moth;
+        if (mo) poseMoth(m.moth, m.root, m.h, mo, s.time, s.weather.night);
+        continue;
+      }
+      if (m.h.kind === "cave-bat" && m.bat) {
+        const bat = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.bat;
+        if (bat) poseBat(m.bat, m.root, m.h, bat, s.time, s.weather.night);
+        continue;
+      }
+      if (m.h.kind === "glow-mushroom" && m.mushroom) {
+        poseMushroom(m.mushroom, m.root, m.h, s.time, s.weather.night);
+        continue;
+      }
+      if (m.h.kind === "cave-fairy" && m.fairy) {
+        poseFairy(m.fairy, m.root, m.h, s.time, s.weather.night);
+        continue;
+      }
+      if (m.h.kind === "firefly" && m.firefly) {
+        poseFirefly(m.firefly, m.root, m.h, s.time, s.weather.night);
+        continue;
+      }
       if (m.h.kind === "teeter-totter") {
         const body = s.dungeon.mechanisms.find(
           ({ h }) => h.id === m.h.id,
@@ -1401,6 +1464,15 @@ export class DungeonView extends T.Group {
       s.weather.night,
       s.time,
     );
+    if (this.mysticPool.length === 0) this.mysticPool = buildMysticLightPool();
+    for (const light of this.mysticPool) if (!light.parent) this.add(light);
+    assignMysticLights(
+      this.mysticPool,
+      this.mysticSources(),
+      new T.Vector3(focus.x, focus.y, focus.z),
+      s.weather.night,
+      s.time,
+    );
   }
   candleSources(): CandleSource[] {
     return this.models
@@ -1419,12 +1491,37 @@ export class DungeonView extends T.Group {
       total: CANDLE_LIGHT_COUNT,
     };
   }
+  mysticSources(): MysticSource[] {
+    const colors: Record<string, number> = {
+      "glow-mushroom": 0x4ff5e0,
+      "cave-fairy": 0xff6fe0,
+      firefly: 0xffd23b,
+      "cave-moth": 0x80ec27,
+      "cave-caterpillar": 0x80ec27,
+    };
+    return this.models
+      .filter((m) => m.h.kind in colors)
+      .map((m) => ({
+        id: m.h.id,
+        x: m.root.position.x,
+        z: m.root.position.z,
+        y: m.root.position.y,
+        phase: m.h.phase,
+        color: colors[m.h.kind],
+      }));
+  }
+  mysticLightStats() {
+    return {
+      active: this.mysticPool.filter((l) => l.visible).length,
+      total: this.mysticPool.length,
+    };
+  }
   inspect() {
     return this.models.map((m) => ({
       id: m.h.id,
       kind: m.h.kind,
       triangles: m.triangles,
-      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || !!m.spider || !!m.mailbox || !!m.balloon || !!m.card || m.h.kind === "ship" || m.h.kind === "teeter-totter" || (!!m.machine && m.h.kind !== "start-gate"),
+      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || !!m.spider || !!m.mailbox || !!m.balloon || !!m.card || !!m.caterpillar || !!m.moth || !!m.bat || !!m.mushroom || !!m.fairy || !!m.firefly || m.h.kind === "ship" || m.h.kind === "teeter-totter" || (!!m.machine && m.h.kind !== "start-gate"),
     }));
   }
 }

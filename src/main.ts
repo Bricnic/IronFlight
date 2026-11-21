@@ -6,7 +6,7 @@ import { createLevelEditor } from "./level-editor";
 import { shouldSyncFromSession } from "./editor-state";
 import { createSettings } from "./settings-screen";
 import { loadSettings } from "./settings";
-import { randomWeather } from "./weather";
+import { isPermanentNight, levelWeather, randomWeather } from "./weather";
 import { loadedTextureIds, textureLoadErrors } from "./materials";
 import * as T from "three";
 import { solidQuaternion } from "./euler";
@@ -152,9 +152,10 @@ async function boot() {
     document.getElementById("weather-night")!.hidden = !sim.weather.night;
     document.getElementById("weather-rain")!.hidden = !sim.weather.rain;
   }
-  /** Fresh night/rain roll on every level start when randomized. */
-  function applyLevelWeather() {
-    if (loadSettings().randomizeAtmosphere) sim.weather = randomWeather();
+  /** Stored flags (or a fresh roll when randomized) for the incoming track. */
+  function applyLevelWeather(backgroundTemplate?: string) {
+    const stored = loadSettings();
+    sim.weather = levelWeather(stored, stored.randomizeAtmosphere, randomWeather(), backgroundTemplate);
     paintWeatherBadges();
   }
   function select(stage: Stage) {
@@ -166,7 +167,11 @@ async function boot() {
     settingsScreens?.hide();
     recordedRun = undefined;
     applyStoredVehicle();
-    applyLevelWeather();
+    applyLevelWeather(
+      ["lab", "easy", "medium", "hard"].includes(stage)
+        ? undefined
+        : getTrack(stage as CustomTrackId).backgroundTemplate,
+    );
     sim.reset(stage);
     view.resetTruck();
     clock.reset();
@@ -191,7 +196,7 @@ async function boot() {
   ) {
     if (vehicle) sim.vehicleId = getVehicle(vehicle).id;
     else applyStoredVehicle();
-    applyLevelWeather();
+    applyLevelWeather(getTrack(id).backgroundTemplate);
     sim.startTrack(id, lane);
     view.resetTruck();
     clock.reset();
@@ -215,8 +220,15 @@ async function boot() {
     view.render(true);
     hud();
   }
+  /** Menus show stored Settings weather: forced track atmospheres (mystic night) end at the menu. */
+  function restoreMenuWeather() {
+    const stored = loadSettings();
+    sim.weather = { night: stored.night, rain: stored.rain };
+    paintWeatherBadges();
+  }
   function showLevelSelect() {
     surface = "menu";
+    restoreMenuWeather();
     clearConfetti();
     exitEdit();
     keys.clear();
@@ -229,6 +241,8 @@ async function boot() {
   }
   function showLevelEditor() {
     surface = "menu";
+    // Note: no weather restore here; the editor keeps the live track's
+    // atmosphere for WYSIWYG playtests (startOfficial re-resolves anyway).
     clearConfetti();
     exitEdit();
     keys.clear();
@@ -245,6 +259,7 @@ async function boot() {
   }
   function showVehicleSelect() {
     surface = "menu";
+    restoreMenuWeather();
     clearConfetti();
     exitEdit();
     keys.clear();
@@ -257,6 +272,7 @@ async function boot() {
   }
   function showSettings() {
     surface = "menu";
+    restoreMenuWeather();
     clearConfetti();
     exitEdit();
     keys.clear();
@@ -318,6 +334,8 @@ async function boot() {
     showLevelSelect,
     (weather) => {
       sim.weather = { ...weather };
+      if (isPermanentNight(sim.courseTrack?.backgroundTemplate))
+        sim.weather.night = true;
       paintWeatherBadges();
     },
     (show) => view.setObjectHelpVisible(show),
@@ -552,9 +570,10 @@ async function boot() {
         z: prefab.z,
         ...(prefab.y === undefined ? {} : { y: prefab.y }),
       });
-    else if (prefab.kind === "fragile-ice")
+    else if (prefab.kind === "fragile-ice" || prefab.kind === "rickety-plank")
       sim.fragileIce.addTile({
         id: prefab.id,
+        kind: prefab.kind,
         x: prefab.x,
         z: prefab.z,
         ...(prefab.y === undefined ? {} : { y: prefab.y }),

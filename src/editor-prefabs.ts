@@ -54,6 +54,10 @@ export function buildEditorPrefab(p: CustomPrefab, preview: boolean): T.Group {
     const ice = new T.Mesh(new T.BoxGeometry(4.98, 0.3, 4.98), new T.MeshStandardMaterial({ color: 0x3f8fd2, roughness: 0.35, metalness: 0.05 }));
     ice.position.y = -0.13; root.add(ice);
     for (const [i, length] of [3.6, 2.9, 2.2].entries()) { const crack = new T.Mesh(new T.BoxGeometry(length, 0.02, 0.09), new T.MeshStandardMaterial({ color: 0xffffff })); crack.rotation.y = [0.3, 1.35, 2.4][i]; crack.position.y = 0.03; root.add(crack); }
+  } else if (p.kind === "rickety-plank") {
+    const deck = new T.Mesh(new T.BoxGeometry(4.98, 0.3, 4.98), new T.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.85, metalness: 0 }));
+    deck.position.y = -0.13; root.add(deck);
+    for (const z of [-1.6, 0, 1.6]) { const gap = new T.Mesh(new T.BoxGeometry(4.98, 0.02, 0.12), new T.MeshStandardMaterial({ color: 0x2a1a0c })); gap.position.set(0, 0.03, z); root.add(gap); }
   } else if (p.kind === "checkpoint") { const frame = buildCheckpointFrame(); frame.position.y = -2; root.add(frame); }
   else if (p.kind === "hammer") {
     root.add(buildHammerMesh(p.y ?? 3.5).root);

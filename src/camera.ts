@@ -32,6 +32,7 @@ export class ChaseCamera {
     dt: number,
     snap = false,
     sinking = false,
+    roll = 0,
   ) {
     const forward = new Vector3(0, 0, 1).applyQuaternion(rotation),
       heading = Math.atan2(forward.x, forward.z);
@@ -81,6 +82,8 @@ export class ChaseCamera {
           ),
         ),
     );
+    // Mystic venom rolls the world upside down while poisoned.
+    if (roll) this.camera.rotateZ(roll);
     this.camera.updateMatrixWorld();
   }
 }

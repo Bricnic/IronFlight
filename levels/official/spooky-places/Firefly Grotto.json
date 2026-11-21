@@ -1,0 +1,1519 @@
+{
+  "name": "Firefly Grotto",
+  "mode": "race",
+  "spawn": {
+    "x": 0,
+    "y": 2,
+    "z": -180,
+    "yaw": -0.8621700546672264
+  },
+  "checkpoints": [
+    {
+      "name": "Grotto Floor",
+      "x": -70,
+      "y": 2,
+      "z": -30
+    },
+    {
+      "name": "Climb Base",
+      "x": 0,
+      "y": 2,
+      "z": 20
+    },
+    {
+      "name": "Far Landing",
+      "x": 150,
+      "y": 8,
+      "z": 60
+    },
+    {
+      "name": "Lower Grotto",
+      "x": 150,
+      "y": 2,
+      "z": 140
+    },
+    {
+      "name": "Firefly Rest",
+      "x": 40,
+      "y": 2,
+      "z": 180
+    }
+  ],
+  "solids": [
+    {
+      "id": "fg-ground-w",
+      "kind": "ground",
+      "x": -82,
+      "y": -0.6,
+      "z": -20,
+      "w": 275,
+      "h": 1.2,
+      "d": 500,
+      "color": 1712176,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-ground-e",
+      "kind": "ground",
+      "x": 187,
+      "y": -0.6,
+      "z": -20,
+      "w": 65,
+      "h": 1.2,
+      "d": 500,
+      "color": 1712176,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-ground-s",
+      "kind": "ground",
+      "x": 105,
+      "y": -0.6,
+      "z": -109,
+      "w": 100,
+      "h": 1.2,
+      "d": 302,
+      "color": 1712176,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-ground-n",
+      "kind": "ground",
+      "x": 105,
+      "y": -0.6,
+      "z": 169,
+      "w": 100,
+      "h": 1.2,
+      "d": 182,
+      "color": 1712176,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-rift",
+      "kind": "lava",
+      "x": 105,
+      "y": -2.5,
+      "z": 60,
+      "w": 100,
+      "h": 1,
+      "d": 36,
+      "color": 16734751
+    },
+    {
+      "id": "fg-rift-wn",
+      "kind": "barrier",
+      "x": 55,
+      "y": -1.75,
+      "z": 60,
+      "w": 2,
+      "h": 4.5,
+      "d": 36,
+      "color": 3816021,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-rift-en",
+      "kind": "barrier",
+      "x": 155,
+      "y": -1.75,
+      "z": 60,
+      "w": 2,
+      "h": 4.5,
+      "d": 36,
+      "color": 3816021,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-a-d0",
+      "kind": "road",
+      "x": -5.08,
+      "y": 0.25,
+      "z": -175.65,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.05,
+      "yaw": -0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d1",
+      "kind": "road",
+      "x": -15.23,
+      "y": 0.26,
+      "z": -166.95,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.05,
+      "yaw": -0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d2",
+      "kind": "road",
+      "x": -25.38,
+      "y": 0.26,
+      "z": -158.24,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.05,
+      "yaw": -0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d3",
+      "kind": "road",
+      "x": -35.54,
+      "y": 0.26,
+      "z": -149.54,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.05,
+      "yaw": -0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d4",
+      "kind": "road",
+      "x": -45.69,
+      "y": 0.27,
+      "z": -140.84,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.05,
+      "yaw": -0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d5",
+      "kind": "road",
+      "x": -55.84,
+      "y": 0.27,
+      "z": -132.13,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.05,
+      "yaw": -0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d6",
+      "kind": "road",
+      "x": -63.57,
+      "y": 0.28,
+      "z": -125.16,
+      "w": 24,
+      "h": 0.03,
+      "d": 11.34,
+      "yaw": -0.7185,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d7",
+      "kind": "road",
+      "x": -67.62,
+      "y": 0.28,
+      "z": -118.91,
+      "w": 24,
+      "h": 0.03,
+      "d": 11.34,
+      "yaw": -0.4311,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d8",
+      "kind": "road",
+      "x": -69.73,
+      "y": 0.28,
+      "z": -111.76,
+      "w": 24,
+      "h": 0.03,
+      "d": 11.34,
+      "yaw": -0.1437,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d9",
+      "kind": "road",
+      "x": -70,
+      "y": 0.29,
+      "z": -101.58,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.52,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d10",
+      "kind": "road",
+      "x": -70,
+      "y": 0.29,
+      "z": -88.64,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.52,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d11",
+      "kind": "road",
+      "x": -70,
+      "y": 0.3,
+      "z": -75.71,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.52,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d12",
+      "kind": "road",
+      "x": -70,
+      "y": 0.3,
+      "z": -62.78,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.52,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d13",
+      "kind": "road",
+      "x": -70,
+      "y": 0.3,
+      "z": -49.85,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.52,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d14",
+      "kind": "road",
+      "x": -69.67,
+      "y": 0.31,
+      "z": -39.28,
+      "w": 24,
+      "h": 0.03,
+      "d": 12.3,
+      "yaw": 0.1584,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d15",
+      "kind": "road",
+      "x": -67.12,
+      "y": 0.31,
+      "z": -31.48,
+      "w": 24,
+      "h": 0.03,
+      "d": 12.3,
+      "yaw": 0.4753,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d16",
+      "kind": "road",
+      "x": -62.26,
+      "y": 0.31,
+      "z": -24.87,
+      "w": 24,
+      "h": 0.03,
+      "d": 12.3,
+      "yaw": 0.7921,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d17",
+      "kind": "road",
+      "x": -54.19,
+      "y": 0.32,
+      "z": -18.7,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.53,
+      "yaw": 0.9505,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d18",
+      "kind": "road",
+      "x": -44.33,
+      "y": 0.32,
+      "z": -11.67,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.53,
+      "yaw": 0.9505,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d19",
+      "kind": "road",
+      "x": -34.48,
+      "y": 0.33,
+      "z": -4.63,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.53,
+      "yaw": 0.9505,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d20",
+      "kind": "road",
+      "x": -24.63,
+      "y": 0.33,
+      "z": 2.41,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.53,
+      "yaw": 0.9505,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d21",
+      "kind": "road",
+      "x": -14.78,
+      "y": 0.34,
+      "z": 9.44,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.53,
+      "yaw": 0.9505,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-a-d22",
+      "kind": "road",
+      "x": -4.93,
+      "y": 0.34,
+      "z": 16.48,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.53,
+      "yaw": 0.9505,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-tun0-wl0",
+      "kind": "barrier",
+      "x": -23.91,
+      "y": 5,
+      "z": -177.74,
+      "w": 3,
+      "h": 10,
+      "d": 20.03,
+      "yaw": -0.8871,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-tun0-wl1",
+      "kind": "barrier",
+      "x": -37.41,
+      "y": 5,
+      "z": -166.74,
+      "w": 3,
+      "h": 10,
+      "d": 20.03,
+      "yaw": -0.8871,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-tun0-wl2",
+      "kind": "barrier",
+      "x": -50.91,
+      "y": 5,
+      "z": -155.74,
+      "w": 3,
+      "h": 10,
+      "d": 20.03,
+      "yaw": -0.8871,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-tun0-wl3",
+      "kind": "barrier",
+      "x": -64.41,
+      "y": 5,
+      "z": -144.74,
+      "w": 3,
+      "h": 10,
+      "d": 20.03,
+      "yaw": -0.8871,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-tun0-wr0",
+      "kind": "barrier",
+      "x": -5.59,
+      "y": 5,
+      "z": -155.26,
+      "w": 3,
+      "h": 10,
+      "d": 20.03,
+      "yaw": -0.8871,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-tun0-wr1",
+      "kind": "barrier",
+      "x": -19.09,
+      "y": 5,
+      "z": -144.26,
+      "w": 3,
+      "h": 10,
+      "d": 20.03,
+      "yaw": -0.8871,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-tun0-wr2",
+      "kind": "barrier",
+      "x": -32.59,
+      "y": 5,
+      "z": -133.26,
+      "w": 3,
+      "h": 10,
+      "d": 20.03,
+      "yaw": -0.8871,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-tun0-wr3",
+      "kind": "barrier",
+      "x": -46.09,
+      "y": 5,
+      "z": -122.26,
+      "w": 3,
+      "h": 10,
+      "d": 20.03,
+      "yaw": -0.8871,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-tun0-roof",
+      "kind": "barrier",
+      "x": -35,
+      "y": 10,
+      "z": -150,
+      "w": 34,
+      "h": 2,
+      "d": 73.66,
+      "yaw": -0.8871,
+      "color": 6316175,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-up-r0",
+      "kind": "ramp",
+      "x": 6.25,
+      "y": 0.62,
+      "z": 24.38,
+      "w": 20,
+      "h": 0.4,
+      "d": 21.07,
+      "yaw": 0.9601,
+      "angle": -0.0967,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-up-r1",
+      "kind": "ramp",
+      "x": 18.75,
+      "y": 2.1,
+      "z": 33.13,
+      "w": 20,
+      "h": 0.4,
+      "d": 21.07,
+      "yaw": 0.9601,
+      "angle": -0.0967,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-up-r2",
+      "kind": "ramp",
+      "x": 31.25,
+      "y": 3.58,
+      "z": 41.88,
+      "w": 20,
+      "h": 0.4,
+      "d": 21.07,
+      "yaw": 0.9601,
+      "angle": -0.0967,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-up-r3",
+      "kind": "ramp",
+      "x": 43.75,
+      "y": 5.06,
+      "z": 50.63,
+      "w": 20,
+      "h": 0.4,
+      "d": 21.07,
+      "yaw": 0.9601,
+      "angle": -0.0967,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-apr-d0",
+      "kind": "road",
+      "x": 55,
+      "y": 6.31,
+      "z": 56.25,
+      "w": 12,
+      "h": 0.03,
+      "d": 14.37,
+      "yaw": 1.3258,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-apr-d1",
+      "kind": "road",
+      "x": 65,
+      "y": 6.32,
+      "z": 58.75,
+      "w": 12,
+      "h": 0.03,
+      "d": 14.37,
+      "yaw": 1.3258,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-ext-d0",
+      "kind": "road",
+      "x": 145,
+      "y": 6.32,
+      "z": 60,
+      "w": 14,
+      "h": 0.03,
+      "d": 14,
+      "yaw": 1.5708,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-ext-d1",
+      "kind": "road",
+      "x": 155,
+      "y": 6.33,
+      "z": 60,
+      "w": 14,
+      "h": 0.03,
+      "d": 14,
+      "yaw": 1.5708,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-ext-d2",
+      "kind": "road",
+      "x": 165,
+      "y": 6.33,
+      "z": 60,
+      "w": 14,
+      "h": 0.03,
+      "d": 14,
+      "yaw": 1.5708,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-pad-s",
+      "kind": "road",
+      "x": 155,
+      "y": 6.35,
+      "z": 73,
+      "w": 30,
+      "h": 0.03,
+      "d": 27,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-down-r0",
+      "kind": "ramp",
+      "x": 154.38,
+      "y": 5.06,
+      "z": 91,
+      "w": 20,
+      "h": 0.4,
+      "d": 19.57,
+      "yaw": -0.089,
+      "angle": 0.1049,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-down-r1",
+      "kind": "ramp",
+      "x": 153.13,
+      "y": 3.58,
+      "z": 105,
+      "w": 20,
+      "h": 0.4,
+      "d": 19.57,
+      "yaw": -0.089,
+      "angle": 0.1049,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-down-r2",
+      "kind": "ramp",
+      "x": 151.88,
+      "y": 2.1,
+      "z": 119,
+      "w": 20,
+      "h": 0.4,
+      "d": 19.57,
+      "yaw": -0.089,
+      "angle": 0.1049,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-down-r3",
+      "kind": "ramp",
+      "x": 150.63,
+      "y": 0.62,
+      "z": 133,
+      "w": 20,
+      "h": 0.4,
+      "d": 19.57,
+      "yaw": -0.089,
+      "angle": 0.1049,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d0",
+      "kind": "road",
+      "x": 144.47,
+      "y": 0.37,
+      "z": 143.87,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.2,
+      "yaw": -0.9601,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d1",
+      "kind": "road",
+      "x": 133.41,
+      "y": 0.37,
+      "z": 151.61,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.2,
+      "yaw": -0.9601,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d2",
+      "kind": "road",
+      "x": 122.35,
+      "y": 0.38,
+      "z": 159.36,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.2,
+      "yaw": -0.9601,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d3",
+      "kind": "road",
+      "x": 111.28,
+      "y": 0.38,
+      "z": 167.1,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.2,
+      "yaw": -0.9601,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d4",
+      "kind": "road",
+      "x": 103.82,
+      "y": 0.38,
+      "z": 172.2,
+      "w": 24,
+      "h": 0.03,
+      "d": 7.72,
+      "yaw": -1.048,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d5",
+      "kind": "road",
+      "x": 99.68,
+      "y": 0.39,
+      "z": 174.12,
+      "w": 24,
+      "h": 0.03,
+      "d": 7.72,
+      "yaw": -1.2239,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d6",
+      "kind": "road",
+      "x": 95.27,
+      "y": 0.39,
+      "z": 175.29,
+      "w": 24,
+      "h": 0.03,
+      "d": 7.72,
+      "yaw": -1.3997,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d7",
+      "kind": "road",
+      "x": 86.38,
+      "y": 0.4,
+      "z": 176.14,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.96,
+      "yaw": -1.4877,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d8",
+      "kind": "road",
+      "x": 73.13,
+      "y": 0.4,
+      "z": 177.24,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.96,
+      "yaw": -1.4877,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d9",
+      "kind": "road",
+      "x": 59.88,
+      "y": 0.4,
+      "z": 178.34,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.96,
+      "yaw": -1.4877,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-b-d10",
+      "kind": "road",
+      "x": 46.63,
+      "y": 0.41,
+      "z": 179.45,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.96,
+      "yaw": -1.4877,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "fg-pier-1",
+      "kind": "support",
+      "x": 70,
+      "y": 0,
+      "z": 50,
+      "w": 3,
+      "h": 12,
+      "d": 3,
+      "color": 9071162
+    },
+    {
+      "id": "fg-pier-2",
+      "kind": "support",
+      "x": 100,
+      "y": 0,
+      "z": 50,
+      "w": 3,
+      "h": 12,
+      "d": 3,
+      "color": 9071162
+    },
+    {
+      "id": "fg-pier-3",
+      "kind": "support",
+      "x": 100,
+      "y": 0,
+      "z": 70,
+      "w": 3,
+      "h": 12,
+      "d": 3,
+      "color": 9071162
+    },
+    {
+      "id": "fg-pier-4",
+      "kind": "support",
+      "x": 166,
+      "y": -0.1,
+      "z": 60,
+      "w": 3,
+      "h": 12,
+      "d": 3,
+      "color": 9071162
+    },
+    {
+      "id": "fg-arch-l",
+      "kind": "barrier",
+      "x": 58,
+      "y": 6,
+      "z": 48,
+      "w": 4,
+      "h": 16,
+      "d": 4,
+      "color": 3816021,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-arch-r",
+      "kind": "barrier",
+      "x": 58,
+      "y": 6,
+      "z": 72,
+      "w": 4,
+      "h": 16,
+      "d": 4,
+      "color": 3816021,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "fg-arch-top",
+      "kind": "barrier",
+      "x": 58,
+      "y": 15.5,
+      "z": 60,
+      "w": 4,
+      "h": 3,
+      "d": 28,
+      "color": 3816021,
+      "texture": "cave_wall_01",
+      "name": "Bridge Arch"
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "fg-tun0-tsh-0",
+      "kind": "glow-mushroom",
+      "x": -23.63,
+      "z": -172.81,
+      "y": 0
+    },
+    {
+      "id": "fg-tun0-tsh-1",
+      "kind": "glow-mushroom",
+      "x": -28.37,
+      "z": -141.86,
+      "y": 0
+    },
+    {
+      "id": "fg-tun0-tsh-2",
+      "kind": "glow-mushroom",
+      "x": -59.63,
+      "z": -143.47,
+      "y": 0
+    },
+    {
+      "id": "fg-plank-0",
+      "kind": "rickety-plank",
+      "x": 72.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-1",
+      "kind": "rickety-plank",
+      "x": 77.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-2",
+      "kind": "rickety-plank",
+      "x": 82.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-3",
+      "kind": "rickety-plank",
+      "x": 87.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-4",
+      "kind": "rickety-plank",
+      "x": 92.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-5",
+      "kind": "rickety-plank",
+      "x": 97.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-6",
+      "kind": "rickety-plank",
+      "x": 102.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-7",
+      "kind": "rickety-plank",
+      "x": 107.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-8",
+      "kind": "rickety-plank",
+      "x": 112.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-9",
+      "kind": "rickety-plank",
+      "x": 117.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-10",
+      "kind": "rickety-plank",
+      "x": 122.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-11",
+      "kind": "rickety-plank",
+      "x": 127.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-12",
+      "kind": "rickety-plank",
+      "x": 132.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-plank-13",
+      "kind": "rickety-plank",
+      "x": 137.5,
+      "z": 60,
+      "y": 6
+    },
+    {
+      "id": "fg-bridgefire-0",
+      "kind": "firefly",
+      "x": 72,
+      "z": 60,
+      "y": 9
+    },
+    {
+      "id": "fg-bridgefire-1",
+      "kind": "firefly",
+      "x": 86,
+      "z": 60,
+      "y": 9
+    },
+    {
+      "id": "fg-bridgefire-2",
+      "kind": "firefly",
+      "x": 100,
+      "z": 60,
+      "y": 9
+    },
+    {
+      "id": "fg-bridgefire-3",
+      "kind": "firefly",
+      "x": 114,
+      "z": 60,
+      "y": 9
+    },
+    {
+      "id": "fg-bridgefire-4",
+      "kind": "firefly",
+      "x": 128,
+      "z": 60,
+      "y": 9
+    },
+    {
+      "id": "fg-bridgefire-5",
+      "kind": "firefly",
+      "x": 142,
+      "z": 60,
+      "y": 9
+    },
+    {
+      "id": "fg-cat-1",
+      "kind": "cave-caterpillar",
+      "x": -40,
+      "z": -70
+    },
+    {
+      "id": "fg-moth-1",
+      "kind": "cave-moth",
+      "x": 120,
+      "z": 80,
+      "y": 0
+    },
+    {
+      "id": "fg-roost-bat-0",
+      "kind": "cave-bat",
+      "x": 56,
+      "z": 60,
+      "y": 12.5
+    },
+    {
+      "id": "fg-roost-bat-1",
+      "kind": "cave-bat",
+      "x": 58,
+      "z": 60,
+      "y": 13.5
+    },
+    {
+      "id": "fg-roost-bat-2",
+      "kind": "cave-bat",
+      "x": 60,
+      "z": 60,
+      "y": 12.5
+    },
+    {
+      "id": "fg-roost-bat-3",
+      "kind": "cave-bat",
+      "x": 56,
+      "z": 62,
+      "y": 13.5
+    },
+    {
+      "id": "fg-roost-bat-4",
+      "kind": "cave-bat",
+      "x": 58,
+      "z": 62,
+      "y": 12.5
+    },
+    {
+      "id": "fg-grove-s0-mush-0",
+      "kind": "glow-mushroom",
+      "x": -25.98,
+      "z": -161,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-s0-mush-1",
+      "kind": "glow-mushroom",
+      "x": -21.68,
+      "z": -153.48,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-s0-mush-2",
+      "kind": "glow-mushroom",
+      "x": -30.34,
+      "z": -153.52,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-s0-fairy",
+      "kind": "cave-fairy",
+      "x": -26,
+      "z": -156,
+      "y": 3
+    },
+    {
+      "id": "fg-grove-s0-fire-0",
+      "kind": "firefly",
+      "x": -32,
+      "z": -158,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-s0-fire-1",
+      "kind": "firefly",
+      "x": -26,
+      "z": -153,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-s0-fire-2",
+      "kind": "firefly",
+      "x": -20,
+      "z": -158,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-s1-mush-0",
+      "kind": "glow-mushroom",
+      "x": 18.02,
+      "z": -160,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-s1-mush-1",
+      "kind": "glow-mushroom",
+      "x": 22.32,
+      "z": -152.48,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-s1-mush-2",
+      "kind": "glow-mushroom",
+      "x": 13.66,
+      "z": -152.52,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-s1-fairy",
+      "kind": "cave-fairy",
+      "x": 18,
+      "z": -155,
+      "y": 3
+    },
+    {
+      "id": "fg-grove-s1-fire-0",
+      "kind": "firefly",
+      "x": 12,
+      "z": -157,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-s1-fire-1",
+      "kind": "firefly",
+      "x": 18,
+      "z": -152,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-s1-fire-2",
+      "kind": "firefly",
+      "x": 24,
+      "z": -157,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-a-mush-0",
+      "kind": "glow-mushroom",
+      "x": -104.2,
+      "z": -72.72,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-a-mush-1",
+      "kind": "glow-mushroom",
+      "x": -97.28,
+      "z": -74.2,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-a-mush-2",
+      "kind": "glow-mushroom",
+      "x": -95.8,
+      "z": -67.28,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-a-mush-3",
+      "kind": "glow-mushroom",
+      "x": -102.72,
+      "z": -65.8,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-a-fairy",
+      "kind": "cave-fairy",
+      "x": -100,
+      "z": -70,
+      "y": 3
+    },
+    {
+      "id": "fg-grove-a-fire-0",
+      "kind": "firefly",
+      "x": -106,
+      "z": -72,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-a-fire-1",
+      "kind": "firefly",
+      "x": -100,
+      "z": -67,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-a-fire-2",
+      "kind": "firefly",
+      "x": -94,
+      "z": -72,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-b-mush-0",
+      "kind": "glow-mushroom",
+      "x": 25.8,
+      "z": -22.72,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-b-mush-1",
+      "kind": "glow-mushroom",
+      "x": 32.72,
+      "z": -24.2,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-b-mush-2",
+      "kind": "glow-mushroom",
+      "x": 34.2,
+      "z": -17.28,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-b-mush-3",
+      "kind": "glow-mushroom",
+      "x": 27.28,
+      "z": -15.8,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-b-fairy",
+      "kind": "cave-fairy",
+      "x": 30,
+      "z": -20,
+      "y": 3
+    },
+    {
+      "id": "fg-grove-b-fire-0",
+      "kind": "firefly",
+      "x": 24,
+      "z": -22,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-b-fire-1",
+      "kind": "firefly",
+      "x": 30,
+      "z": -17,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-b-fire-2",
+      "kind": "firefly",
+      "x": 36,
+      "z": -22,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-c-mush-0",
+      "kind": "glow-mushroom",
+      "x": 115.8,
+      "z": 167.28,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-c-mush-1",
+      "kind": "glow-mushroom",
+      "x": 122.72,
+      "z": 165.8,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-c-mush-2",
+      "kind": "glow-mushroom",
+      "x": 124.2,
+      "z": 172.72,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-c-mush-3",
+      "kind": "glow-mushroom",
+      "x": 117.28,
+      "z": 174.2,
+      "y": 0
+    },
+    {
+      "id": "fg-grove-c-fairy",
+      "kind": "cave-fairy",
+      "x": 120,
+      "z": 170,
+      "y": 3
+    },
+    {
+      "id": "fg-grove-c-fire-0",
+      "kind": "firefly",
+      "x": 114,
+      "z": 168,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-c-fire-1",
+      "kind": "firefly",
+      "x": 120,
+      "z": 173,
+      "y": 2
+    },
+    {
+      "id": "fg-grove-c-fire-2",
+      "kind": "firefly",
+      "x": 126,
+      "z": 168,
+      "y": 2
+    },
+    {
+      "id": "fg-grotfire-0",
+      "kind": "firefly",
+      "x": -90,
+      "z": -110,
+      "y": 2
+    },
+    {
+      "id": "fg-grotfire-1",
+      "kind": "firefly",
+      "x": -78,
+      "z": -110,
+      "y": 3
+    },
+    {
+      "id": "fg-grotfire-2",
+      "kind": "firefly",
+      "x": -66,
+      "z": -110,
+      "y": 4
+    },
+    {
+      "id": "fg-grotfire-3",
+      "kind": "firefly",
+      "x": -54,
+      "z": -110,
+      "y": 2
+    },
+    {
+      "id": "fg-grotfire-4",
+      "kind": "firefly",
+      "x": -42,
+      "z": -110,
+      "y": 3
+    },
+    {
+      "id": "fg-grotfire-5",
+      "kind": "firefly",
+      "x": -90,
+      "z": -70,
+      "y": 4
+    },
+    {
+      "id": "fg-grotfire-6",
+      "kind": "firefly",
+      "x": -78,
+      "z": -70,
+      "y": 2
+    },
+    {
+      "id": "fg-grotfire-7",
+      "kind": "firefly",
+      "x": -66,
+      "z": -70,
+      "y": 3
+    },
+    {
+      "id": "fg-grotfire-8",
+      "kind": "firefly",
+      "x": -54,
+      "z": -70,
+      "y": 4
+    },
+    {
+      "id": "fg-grotfire-9",
+      "kind": "firefly",
+      "x": -42,
+      "z": -70,
+      "y": 2
+    },
+    {
+      "id": "gold-star-1",
+      "kind": "gold-star",
+      "x": 50,
+      "z": 55,
+      "y": 7.9
+    }
+  ],
+  "medals": {
+    "gold": 75,
+    "silver": 110,
+    "bronze": 150
+  },
+  "limit": 200,
+  "underground": true,
+  "backgroundTemplate": "mystic-cave"
+}

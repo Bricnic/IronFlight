@@ -1,0 +1,29 @@
+{
+  "name": "mystic-cave",
+  "sky": { "top": 658980, "horizon": 1316636 },
+  "fog": { "color": 658980, "near": 40, "far": 220 },
+  "sun": { "color": 5591676, "intensity": 0.55 },
+  "hemi": { "sky": 2634584, "ground": 197380, "intensity": 0.85 },
+  "env": 0.3,
+  "underground": true,
+  "shapes": [
+    {
+      "kind": "rock-wall",
+      "texture": "cave_wall_01",
+      "count": 14,
+      "radius": 130,
+      "y": 0,
+      "size": [50, 90],
+      "seed": 601
+    },
+    {
+      "kind": "mountain",
+      "count": 10,
+      "radius": 380,
+      "y": -8,
+      "size": [80, 140],
+      "seed": 602,
+      "color": 1776416
+    }
+  ]
+}

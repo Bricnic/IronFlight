@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import {
@@ -50,6 +50,10 @@ import {
   CACTI_PATCH,
   ROCKER,
   BOULDER,
+  BAT,
+  CATERPILLAR,
+  MOTH,
+  wanderDestination,
   CANDY_ARCH,
   CANDY_TRUNK,
   CANDY_CHOCOLATE,
@@ -136,6 +140,28 @@ type Mechanism = {
   bouncy?: {
     bounces: number;
     lastBounce: number;
+  };
+  caterpillar?: {
+    home: { x: number; z: number };
+    pos: { x: number; z: number };
+    yaw: number;
+    dest: { x: number; z: number };
+    trips: number;
+  };
+  moth?: {
+    home: { x: number; z: number };
+    pos: { x: number; y: number; z: number };
+    yaw: number;
+    dest: { x: number; z: number };
+    trips: number;
+    sprinkleAt: number;
+    motes: { x: number; z: number; y: number }[];
+    piles: { x: number; z: number; until: number }[];
+  };
+  bat?: {
+    fled: boolean;
+    fledAt: number;
+    fleeYaw: number;
   };
 };
 export class DungeonPhysics {
@@ -372,6 +398,38 @@ export class DungeonPhysics {
       // No colliders: the web is a drag zone and the spider kills by contact
       // distance, like a dinosaur bite without the lunge.
       m.spider = { pos: { x: h.x, z: h.z }, yaw: h.yaw ?? 0, hunting: false };
+    } else if (h.kind === "cave-caterpillar") {
+      // No colliders: the giant crawls by zone math and poisons by touch.
+      const seed = birthdayCardSeed(
+        this.sim.courseTrack?.custom?.name ?? this.sim.courseTrack?.id ?? "",
+        h.id,
+      );
+      m.caterpillar = {
+        home: { x: h.x, z: h.z },
+        pos: { x: h.x, z: h.z },
+        yaw: h.yaw ?? 0,
+        dest: wanderDestination(h.x, h.z, seed, 0, CATERPILLAR.wanderRadius),
+        trips: 0,
+      };
+    } else if (h.kind === "cave-moth") {
+      // No colliders: the flyer cruises by zone math; dust and crash poison.
+      const seed = birthdayCardSeed(
+        this.sim.courseTrack?.custom?.name ?? this.sim.courseTrack?.id ?? "",
+        h.id,
+      );
+      m.moth = {
+        home: { x: h.x, z: h.z },
+        pos: { x: h.x, y: (h.y ?? 0) + MOTH.cruiseHeight, z: h.z },
+        yaw: h.yaw ?? 0,
+        dest: wanderDestination(h.x, h.z, seed, 0, MOTH.wanderRadius),
+        trips: 0,
+        sprinkleAt: 0,
+        motes: [],
+        piles: [],
+      };
+    } else if (h.kind === "cave-bat") {
+      // Perched decor: no colliders, flees on approach, never harms.
+      m.bat = { fled: false, fledAt: 0, fleeYaw: h.yaw ?? 0 };
     } else if (h.kind === "speed-tube") {
       // Pure zone math: no colliders, the shell is visual only.
       m.tube = { inside: false, cruise: 0 };
@@ -793,6 +851,22 @@ export class DungeonPhysics {
       m.card.pos.x += dx;
       m.card.pos.z += dz;
     }
+    if (m.caterpillar) {
+      m.caterpillar.home.x += dx;
+      m.caterpillar.home.z += dz;
+      m.caterpillar.pos.x += dx;
+      m.caterpillar.pos.z += dz;
+      m.caterpillar.dest.x += dx;
+      m.caterpillar.dest.z += dz;
+    }
+    if (m.moth) {
+      m.moth.home.x += dx;
+      m.moth.home.z += dz;
+      m.moth.pos.x += dx;
+      m.moth.pos.z += dz;
+      m.moth.dest.x += dx;
+      m.moth.dest.z += dz;
+    }
     if (m.body) {
       const p = m.body.translation();
       m.body.setTranslation({ x: p.x + dx, y: p.y + dy, z: p.z + dz }, true);
@@ -1147,6 +1221,114 @@ export class DungeonPhysics {
       sp.pos.x += (sdx / carDist) * Math.min(step, carDist);
       sp.pos.z += (sdz / carDist) * Math.min(step, carDist);
       sp.yaw = Math.atan2(sdx, sdz);
+    }
+  }
+  /** Giant caterpillar: crawls within 100u of home; touch poisons. */
+  private updateCaterpillar(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const c = m.caterpillar!;
+    const h = m.h;
+    const baseY = h.y ?? 0;
+    const dx = c.dest.x - c.pos.x, dz = c.dest.z - c.pos.z;
+    const dist = Math.hypot(dx, dz);
+    const step = CATERPILLAR.speed * DT;
+    if (dist <= Math.max(step, 0.5)) {
+      c.pos.x = c.dest.x;
+      c.pos.z = c.dest.z;
+      c.trips++;
+      const seed = birthdayCardSeed(
+        s.courseTrack?.custom?.name ?? s.courseTrack?.id ?? "",
+        h.id,
+      );
+      c.dest = wanderDestination(c.home.x, c.home.z, seed, c.trips, CATERPILLAR.wanderRadius);
+    } else {
+      c.pos.x += (dx / dist) * step;
+      c.pos.z += (dz / dist) * step;
+      c.yaw = Math.atan2(dx, dz);
+    }
+    if (s.status !== "driving") return;
+    if (
+      Math.hypot(p.x - c.pos.x, p.z - c.pos.z) <= CATERPILLAR.touch &&
+      Math.abs(p.y - baseY) <= CATERPILLAR.dy
+    ) {
+      m.contacts++;
+      s.applyPoison("cave-caterpillar");
+    }
+  }
+  /** Dust moth: cruises waypoints, sprinkles falling dust; dust, piles and
+   * direct crashes all poison. */
+  private updateMoth(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const mo = m.moth!;
+    const h = m.h;
+    const groundY = h.y ?? 0;
+    const cruiseY = groundY + MOTH.cruiseHeight;
+    const dx = mo.dest.x - mo.pos.x, dz = mo.dest.z - mo.pos.z;
+    const dist = Math.hypot(dx, dz);
+    const step = MOTH.speed * DT;
+    if (dist <= Math.max(step, 0.5)) {
+      mo.pos.x = mo.dest.x;
+      mo.pos.z = mo.dest.z;
+      mo.trips++;
+      const seed = birthdayCardSeed(
+        s.courseTrack?.custom?.name ?? s.courseTrack?.id ?? "",
+        h.id,
+      );
+      mo.dest = wanderDestination(mo.home.x, mo.home.z, seed, mo.trips, MOTH.wanderRadius);
+    } else {
+      mo.pos.x += (dx / dist) * step;
+      mo.pos.z += (dz / dist) * step;
+      mo.yaw = Math.atan2(dx, dz);
+    }
+    mo.pos.y = cruiseY;
+    if (s.status === "driving" && s.time >= mo.sprinkleAt) {
+      mo.sprinkleAt = s.time + MOTH.sprinklePeriod;
+      mo.motes.push({ x: mo.pos.x, z: mo.pos.z, y: mo.pos.y });
+    }
+    for (const mote of mo.motes) mote.y -= MOTH.fallSpeed * DT;
+    for (const mote of mo.motes.filter((mt) => mt.y <= groundY + 0.2))
+      mo.piles.push({ x: mote.x, z: mote.z, until: s.time + MOTH.pileLife });
+    mo.motes = mo.motes.filter((mt) => mt.y > groundY + 0.2);
+    mo.piles = mo.piles.filter((pl) => pl.until > s.time);
+    if (s.status !== "driving") return;
+    const bodyDist = Math.hypot(p.x - mo.pos.x, p.y - mo.pos.y, p.z - mo.pos.z);
+    if (bodyDist <= MOTH.crash) {
+      m.contacts++;
+      s.applyPoison("cave-moth");
+      return;
+    }
+    for (const mote of mo.motes) {
+      if (
+        Math.hypot(p.x - mote.x, p.z - mote.z) <= MOTH.dustTouch &&
+        Math.abs(mote.y - (p.y + 1)) <= 2.5
+      ) {
+        m.contacts++;
+        s.applyPoison("cave-moth-dust");
+        return;
+      }
+    }
+    for (const pile of mo.piles) {
+      if (
+        Math.hypot(p.x - pile.x, p.z - pile.z) <= MOTH.dustTouch &&
+        Math.abs(p.y - groundY) <= 2
+      ) {
+        m.contacts++;
+        s.applyPoison("cave-moth-pile");
+        return;
+      }
+    }
+  }
+  /** Cave bat: perched until the truck nears, then flees; harmless. */
+  private updateBat(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const b = m.bat!;
+    if (b.fled || s.status !== "driving") return;
+    const dx = p.x - m.h.x, dy = p.y - (m.h.y ?? 0), dz = p.z - m.h.z;
+    if (Math.hypot(dx, dy, dz) <= BAT.fleeRadius) {
+      b.fled = true;
+      b.fledAt = s.time;
+      b.fleeYaw = Math.atan2(-dx, -dz);
+      m.contacts++;
     }
   }
   /** Straight speed tube: locked ride at 1.5x entry pace, shot out the end. */
@@ -1670,6 +1852,18 @@ export class DungeonPhysics {
         this.updateSpider(m, p);
         continue;
       }
+      if (h.kind === "cave-caterpillar") {
+        this.updateCaterpillar(m, p);
+        continue;
+      }
+      if (h.kind === "cave-moth") {
+        this.updateMoth(m, p);
+        continue;
+      }
+      if (h.kind === "cave-bat") {
+        this.updateBat(m, p);
+        continue;
+      }
       if (h.kind === "birthday-candle") {
         this.updateBirthdayCandle(m, p);
         continue;
@@ -1770,11 +1964,14 @@ export class DungeonPhysics {
           jumps?: number;
           telegraphing?: boolean;
           tilt?: number;
+          trips?: number;
+          piles?: number;
+          fled?: boolean;
         } = {
           id: m.h.id,
           kind: m.h.kind,
-          x: machine?.x ?? bodyPos?.x ?? m.pelican?.pos.x ?? m.card?.pos.x ?? m.h.x,
-          z: machine?.z ?? bodyPos?.z ?? m.pelican?.pos.z ?? m.card?.pos.z ?? m.h.z,
+          x: machine?.x ?? bodyPos?.x ?? m.pelican?.pos.x ?? m.card?.pos.x ?? m.caterpillar?.pos.x ?? m.moth?.pos.x ?? m.h.x,
+          z: machine?.z ?? bodyPos?.z ?? m.pelican?.pos.z ?? m.card?.pos.z ?? m.caterpillar?.pos.z ?? m.moth?.pos.z ?? m.h.z,
           colliders: m.colliders.length + (machine?.colliders ?? 0),
           contacts: machine?.contacts ?? m.contacts,
           striking: machine?.striking ?? (m.h.kind === "lime-chomper"
@@ -1797,7 +1994,9 @@ export class DungeonPhysics {
                           ? !!m.balloon?.hooked && !m.balloon.popped
                         : m.h.kind === "birthday-card"
                           ? birthdayCardStriking(this.sim.time + m.h.phase)
-                          : m.h.kind === "speed-tube"
+                          : isMystic(m.h.kind)
+                            ? false
+                            : m.h.kind === "speed-tube"
                         ? !!m.tube?.inside
                         : m.h.kind === "mailbox"
                           ? m.mailbox?.started !== undefined && !m.mailbox.exploded
@@ -1832,6 +2031,12 @@ export class DungeonPhysics {
           entry.jumps = m.card.jumps;
           entry.telegraphing = m.card.next !== undefined;
         }
+        if (m.caterpillar) entry.trips = m.caterpillar.trips;
+        if (m.moth) {
+          entry.trips = m.moth.trips;
+          entry.piles = m.moth.piles.length;
+        }
+        if (m.bat) entry.fled = m.bat.fled;
         if (m.h.kind === "teeter-totter")
           entry.tilt =
             TEETER.restTilt +

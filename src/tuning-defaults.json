@@ -19,5 +19,6 @@
   "primaryColor": 15096097,
   "secondaryColor": 7044439,
   "canyonTopSpeed": 1,
-  "slideWaterSpeed": 2.5
+  "slideWaterSpeed": 2.5,
+  "headlightDim": 1
 }

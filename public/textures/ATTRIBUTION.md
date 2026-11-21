@@ -21,3 +21,11 @@ stylized look better than photoscanned stone.
 
 - Sponge crumb speckle, chocolate streaks, frosting swirl: generated at
   runtime on `<canvas>` with deterministic fills. No third-party source.
+
+## Gemini-generated (mystic caves)
+
+- `cave_wall_01_diffuse` — user-supplied Gemini cave wall, tessellated.
+- `glow_moss_01_diffuse`, `crystal_vein_01_diffuse` — generated with
+  `scripts/gemini-image.mjs` (gemini-2.5-flash-image, seamless prompts).
+  Normal/roughness maps derived from diffuse luminance (Sobel).
+  See `manifest.json` for file hashes.

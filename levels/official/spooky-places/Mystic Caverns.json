@@ -1,0 +1,1517 @@
+{
+  "name": "Mystic Caverns",
+  "mode": "race",
+  "spawn": {
+    "x": 0,
+    "y": 2,
+    "z": -190,
+    "yaw": 0
+  },
+  "checkpoints": [
+    {
+      "name": "Tunnel Mouth",
+      "x": 0,
+      "y": 2,
+      "z": -100
+    },
+    {
+      "name": "Cavern Bend",
+      "x": 70,
+      "y": 2,
+      "z": -40
+    },
+    {
+      "name": "Shoulder Base",
+      "x": 120,
+      "y": 2,
+      "z": 50
+    },
+    {
+      "name": "Loop Falls",
+      "x": 0,
+      "y": 2,
+      "z": 150
+    },
+    {
+      "name": "Deep Exit",
+      "x": -80,
+      "y": 2,
+      "z": -80
+    }
+  ],
+  "solids": [
+    {
+      "id": "mc-ground",
+      "kind": "ground",
+      "x": 20,
+      "y": -0.6,
+      "z": -20,
+      "w": 440,
+      "h": 1.2,
+      "d": 500,
+      "color": 1712176,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d0",
+      "kind": "road",
+      "x": 0,
+      "y": 0.02,
+      "z": -183.57,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.42,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d1",
+      "kind": "road",
+      "x": 0,
+      "y": 0.02,
+      "z": -170.72,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.42,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d2",
+      "kind": "road",
+      "x": 0,
+      "y": 0.03,
+      "z": -157.87,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.42,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d3",
+      "kind": "road",
+      "x": 0,
+      "y": 0.03,
+      "z": -145.01,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.42,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d4",
+      "kind": "road",
+      "x": 0,
+      "y": 0.04,
+      "z": -132.16,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.42,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d5",
+      "kind": "road",
+      "x": 0,
+      "y": 0.04,
+      "z": -119.3,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.42,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d6",
+      "kind": "road",
+      "x": 0.29,
+      "y": 0.04,
+      "z": -108.87,
+      "w": 24,
+      "h": 0.03,
+      "d": 12.06,
+      "yaw": 0.1437,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d7",
+      "kind": "road",
+      "x": 2.56,
+      "y": 0.05,
+      "z": -101.18,
+      "w": 24,
+      "h": 0.03,
+      "d": 12.06,
+      "yaw": 0.4311,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d8",
+      "kind": "road",
+      "x": 6.92,
+      "y": 0.05,
+      "z": -94.45,
+      "w": 24,
+      "h": 0.03,
+      "d": 12.06,
+      "yaw": 0.7185,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d9",
+      "kind": "road",
+      "x": 14.48,
+      "y": 0.06,
+      "z": -87.59,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.86,
+      "yaw": 0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d10",
+      "kind": "road",
+      "x": 23.88,
+      "y": 0.06,
+      "z": -79.53,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.86,
+      "yaw": 0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d11",
+      "kind": "road",
+      "x": 33.28,
+      "y": 0.06,
+      "z": -71.47,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.86,
+      "yaw": 0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d12",
+      "kind": "road",
+      "x": 42.68,
+      "y": 0.07,
+      "z": -63.42,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.86,
+      "yaw": 0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d13",
+      "kind": "road",
+      "x": 52.08,
+      "y": 0.07,
+      "z": -55.36,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.86,
+      "yaw": 0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d14",
+      "kind": "road",
+      "x": 61.48,
+      "y": 0.08,
+      "z": -47.3,
+      "w": 24,
+      "h": 0.03,
+      "d": 16.86,
+      "yaw": 0.8622,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d15",
+      "kind": "road",
+      "x": 67.41,
+      "y": 0.08,
+      "z": -42.15,
+      "w": 24,
+      "h": 0.03,
+      "d": 6.14,
+      "yaw": 0.803,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d16",
+      "kind": "road",
+      "x": 69.65,
+      "y": 0.08,
+      "z": -39.72,
+      "w": 24,
+      "h": 0.03,
+      "d": 6.14,
+      "yaw": 0.6846,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d17",
+      "kind": "road",
+      "x": 71.59,
+      "y": 0.09,
+      "z": -37.03,
+      "w": 24,
+      "h": 0.03,
+      "d": 6.14,
+      "yaw": 0.5663,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d18",
+      "kind": "road",
+      "x": 75.84,
+      "y": 0.09,
+      "z": -29.49,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.79,
+      "yaw": 0.5071,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d19",
+      "kind": "road",
+      "x": 82.63,
+      "y": 0.1,
+      "z": -17.26,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.79,
+      "yaw": 0.5071,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d20",
+      "kind": "road",
+      "x": 89.43,
+      "y": 0.1,
+      "z": -5.03,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.79,
+      "yaw": 0.5071,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d21",
+      "kind": "road",
+      "x": 96.22,
+      "y": 0.1,
+      "z": 7.2,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.79,
+      "yaw": 0.5071,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d22",
+      "kind": "road",
+      "x": 103.01,
+      "y": 0.11,
+      "z": 19.43,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.79,
+      "yaw": 0.5071,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d23",
+      "kind": "road",
+      "x": 109.81,
+      "y": 0.11,
+      "z": 31.66,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.79,
+      "yaw": 0.5071,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-a-d24",
+      "kind": "road",
+      "x": 116.6,
+      "y": 0.12,
+      "z": 43.89,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.79,
+      "yaw": 0.5071,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d0",
+      "kind": "road",
+      "x": 83.36,
+      "y": 0.12,
+      "z": 131.47,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.31,
+      "yaw": -1.3521,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d1",
+      "kind": "road",
+      "x": 70.09,
+      "y": 0.12,
+      "z": 134.42,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.31,
+      "yaw": -1.3521,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d2",
+      "kind": "road",
+      "x": 56.82,
+      "y": 0.13,
+      "z": 137.37,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.31,
+      "yaw": -1.3521,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d3",
+      "kind": "road",
+      "x": 43.55,
+      "y": 0.13,
+      "z": 140.32,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.31,
+      "yaw": -1.3521,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d4",
+      "kind": "road",
+      "x": 30.28,
+      "y": 0.14,
+      "z": 143.27,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.31,
+      "yaw": -1.3521,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d5",
+      "kind": "road",
+      "x": 17.01,
+      "y": 0.14,
+      "z": 146.22,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.31,
+      "yaw": -1.3521,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d6",
+      "kind": "road",
+      "x": 7.04,
+      "y": 0.14,
+      "z": 148.23,
+      "w": 24,
+      "h": 0.03,
+      "d": 10.47,
+      "yaw": -1.4731,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d7",
+      "kind": "road",
+      "x": 0.28,
+      "y": 0.15,
+      "z": 148.07,
+      "w": 24,
+      "h": 0.03,
+      "d": 10.47,
+      "yaw": -1.715,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d8",
+      "kind": "road",
+      "x": -6.24,
+      "y": 0.15,
+      "z": 146.3,
+      "w": 24,
+      "h": 0.03,
+      "d": 10.47,
+      "yaw": -1.9569,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d9",
+      "kind": "road",
+      "x": -15.08,
+      "y": 0.16,
+      "z": 141.62,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.88,
+      "yaw": -2.0779,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d10",
+      "kind": "road",
+      "x": -26.64,
+      "y": 0.16,
+      "z": 135.2,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.88,
+      "yaw": -2.0779,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d11",
+      "kind": "road",
+      "x": -38.21,
+      "y": 0.16,
+      "z": 128.77,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.88,
+      "yaw": -2.0779,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d12",
+      "kind": "road",
+      "x": -49.77,
+      "y": 0.17,
+      "z": 122.35,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.88,
+      "yaw": -2.0779,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d13",
+      "kind": "road",
+      "x": -61.33,
+      "y": 0.17,
+      "z": 115.93,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.88,
+      "yaw": -2.0779,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d14",
+      "kind": "road",
+      "x": -72.9,
+      "y": 0.18,
+      "z": 109.5,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.88,
+      "yaw": -2.0779,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d15",
+      "kind": "road",
+      "x": -82.06,
+      "y": 0.18,
+      "z": 104.08,
+      "w": 24,
+      "h": 0.03,
+      "d": 12.11,
+      "yaw": -2.2223,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d16",
+      "kind": "road",
+      "x": -87.7,
+      "y": 0.18,
+      "z": 98.32,
+      "w": 24,
+      "h": 0.03,
+      "d": 12.11,
+      "yaw": -2.511,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d17",
+      "kind": "road",
+      "x": -91.46,
+      "y": 0.19,
+      "z": 91.2,
+      "w": 24,
+      "h": 0.03,
+      "d": 12.11,
+      "yaw": -2.7998,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d18",
+      "kind": "road",
+      "x": -93.86,
+      "y": 0.19,
+      "z": 80.68,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.21,
+      "yaw": -2.9442,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d19",
+      "kind": "road",
+      "x": -96.51,
+      "y": 0.2,
+      "z": 67.44,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.21,
+      "yaw": -2.9442,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d20",
+      "kind": "road",
+      "x": -99.16,
+      "y": 0.2,
+      "z": 54.19,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.21,
+      "yaw": -2.9442,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d21",
+      "kind": "road",
+      "x": -101.81,
+      "y": 0.2,
+      "z": 40.95,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.21,
+      "yaw": -2.9442,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d22",
+      "kind": "road",
+      "x": -104.46,
+      "y": 0.21,
+      "z": 27.7,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.21,
+      "yaw": -2.9442,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d23",
+      "kind": "road",
+      "x": -107.11,
+      "y": 0.21,
+      "z": 14.46,
+      "w": 24,
+      "h": 0.03,
+      "d": 18.21,
+      "yaw": -2.9442,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d24",
+      "kind": "road",
+      "x": -108.82,
+      "y": 0.22,
+      "z": 5.27,
+      "w": 24,
+      "h": 0.03,
+      "d": 8.49,
+      "yaw": -3.0369,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d25",
+      "kind": "road",
+      "x": -108.89,
+      "y": 0.22,
+      "z": 0.09,
+      "w": 24,
+      "h": 0.03,
+      "d": 8.49,
+      "yaw": 3.0609,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d26",
+      "kind": "road",
+      "x": -107.99,
+      "y": 0.22,
+      "z": -5.02,
+      "w": 24,
+      "h": 0.03,
+      "d": 8.49,
+      "yaw": 2.8755,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d27",
+      "kind": "road",
+      "x": -104.93,
+      "y": 0.23,
+      "z": -13.53,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.49,
+      "yaw": 2.7828,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d28",
+      "kind": "road",
+      "x": -100.39,
+      "y": 0.23,
+      "z": -25.61,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.49,
+      "yaw": 2.7828,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d29",
+      "kind": "road",
+      "x": -95.86,
+      "y": 0.24,
+      "z": -37.7,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.49,
+      "yaw": 2.7828,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d30",
+      "kind": "road",
+      "x": -91.33,
+      "y": 0.24,
+      "z": -49.79,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.49,
+      "yaw": 2.7828,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d31",
+      "kind": "road",
+      "x": -86.8,
+      "y": 0.24,
+      "z": -61.87,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.49,
+      "yaw": 2.7828,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-b-d32",
+      "kind": "road",
+      "x": -82.27,
+      "y": 0.25,
+      "z": -73.96,
+      "w": 24,
+      "h": 0.03,
+      "d": 17.49,
+      "yaw": 2.7828,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-tun0-wl0",
+      "kind": "barrier",
+      "x": -14.5,
+      "y": 5,
+      "z": -185,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-wl1",
+      "kind": "barrier",
+      "x": -14.5,
+      "y": 5,
+      "z": -165,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-wl2",
+      "kind": "barrier",
+      "x": -14.5,
+      "y": 5,
+      "z": -145,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-wl3",
+      "kind": "barrier",
+      "x": -14.5,
+      "y": 5,
+      "z": -125,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-wl4",
+      "kind": "barrier",
+      "x": -14.5,
+      "y": 5,
+      "z": -105,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-wr0",
+      "kind": "barrier",
+      "x": 14.5,
+      "y": 5,
+      "z": -185,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-wr1",
+      "kind": "barrier",
+      "x": 14.5,
+      "y": 5,
+      "z": -165,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-wr2",
+      "kind": "barrier",
+      "x": 14.5,
+      "y": 5,
+      "z": -145,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-wr3",
+      "kind": "barrier",
+      "x": 14.5,
+      "y": 5,
+      "z": -125,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-wr4",
+      "kind": "barrier",
+      "x": 14.5,
+      "y": 5,
+      "z": -105,
+      "w": 3,
+      "h": 10,
+      "d": 23,
+      "yaw": 0,
+      "color": 7368872,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-tun0-roof",
+      "kind": "barrier",
+      "x": 0,
+      "y": 10,
+      "z": -145,
+      "w": 34,
+      "h": 2,
+      "d": 104,
+      "yaw": 0,
+      "color": 6316175,
+      "texture": "cave_wall_01"
+    },
+    {
+      "id": "mc-up-r0",
+      "kind": "ramp",
+      "x": 123.67,
+      "y": 0.87,
+      "z": 56.33,
+      "w": 20,
+      "h": 0.4,
+      "d": 20.3,
+      "yaw": 0.5248,
+      "angle": -0.134,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-up-r1",
+      "kind": "ramp",
+      "x": 131,
+      "y": 2.84,
+      "z": 69,
+      "w": 20,
+      "h": 0.4,
+      "d": 20.3,
+      "yaw": 0.5248,
+      "angle": -0.134,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-up-r2",
+      "kind": "ramp",
+      "x": 138.33,
+      "y": 4.81,
+      "z": 81.67,
+      "w": 20,
+      "h": 0.4,
+      "d": 20.3,
+      "yaw": 0.5248,
+      "angle": -0.134,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-peak",
+      "kind": "road",
+      "x": 128,
+      "y": 6.04,
+      "z": 100,
+      "w": 32,
+      "h": 0.03,
+      "d": 28,
+      "yaw": 0,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-down-r0",
+      "kind": "ramp",
+      "x": 108,
+      "y": 4.32,
+      "z": 118,
+      "w": 20,
+      "h": 0.4,
+      "d": 20.03,
+      "yaw": -0.9828,
+      "angle": 0.2024,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-down-r1",
+      "kind": "ramp",
+      "x": 96,
+      "y": 1.36,
+      "z": 126,
+      "w": 20,
+      "h": 0.4,
+      "d": 20.03,
+      "yaw": -0.9828,
+      "angle": 0.2024,
+      "color": 13162704,
+      "texture": "glow_moss_01"
+    },
+    {
+      "id": "mc-rock-core",
+      "kind": "container",
+      "x": 30,
+      "y": 0,
+      "z": 40,
+      "w": 26,
+      "h": 16,
+      "d": 26,
+      "color": 3816021,
+      "texture": "cave_wall_01",
+      "name": "Central Rock"
+    },
+    {
+      "id": "mc-crystal-1",
+      "kind": "barrier",
+      "x": 20,
+      "y": 0,
+      "z": 50,
+      "w": 4,
+      "h": 12,
+      "d": 4,
+      "color": 6965914,
+      "texture": "crystal_vein_01",
+      "name": "Crystal Spire"
+    },
+    {
+      "id": "mc-crystal-2",
+      "kind": "barrier",
+      "x": 150,
+      "y": 0,
+      "z": 115,
+      "w": 3,
+      "h": 8,
+      "d": 3,
+      "color": 6965914,
+      "texture": "crystal_vein_01"
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "mc-tun0-tsh-0",
+      "kind": "glow-mushroom",
+      "x": -10.5,
+      "z": -185,
+      "y": 0
+    },
+    {
+      "id": "mc-tun0-tsh-1",
+      "kind": "glow-mushroom",
+      "x": 10.5,
+      "z": -165,
+      "y": 0
+    },
+    {
+      "id": "mc-tun0-tsh-2",
+      "kind": "glow-mushroom",
+      "x": -10.5,
+      "z": -145,
+      "y": 0
+    },
+    {
+      "id": "mc-tun0-tsh-3",
+      "kind": "glow-mushroom",
+      "x": 10.5,
+      "z": -125,
+      "y": 0
+    },
+    {
+      "id": "mc-tun0-tsh-4",
+      "kind": "glow-mushroom",
+      "x": -10.5,
+      "z": -105,
+      "y": 0
+    },
+    {
+      "id": "mc-cat-1",
+      "kind": "cave-caterpillar",
+      "x": 60,
+      "z": 130
+    },
+    {
+      "id": "mc-moth-1",
+      "kind": "cave-moth",
+      "x": -40,
+      "z": 60,
+      "y": 0
+    },
+    {
+      "id": "mc-roost-bat-0",
+      "kind": "cave-bat",
+      "x": -8,
+      "z": -108,
+      "y": 7.5
+    },
+    {
+      "id": "mc-roost-bat-1",
+      "kind": "cave-bat",
+      "x": -6,
+      "z": -108,
+      "y": 8.5
+    },
+    {
+      "id": "mc-roost-bat-2",
+      "kind": "cave-bat",
+      "x": -4,
+      "z": -108,
+      "y": 7.5
+    },
+    {
+      "id": "mc-roost-bat-3",
+      "kind": "cave-bat",
+      "x": -8,
+      "z": -106,
+      "y": 8.5
+    },
+    {
+      "id": "mc-roost-bat-4",
+      "kind": "cave-bat",
+      "x": -6,
+      "z": -106,
+      "y": 7.5
+    },
+    {
+      "id": "mc-grove-s0-mush-0",
+      "kind": "glow-mushroom",
+      "x": -5.98,
+      "z": -177,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-s0-mush-1",
+      "kind": "glow-mushroom",
+      "x": -1.68,
+      "z": -169.48,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-s0-mush-2",
+      "kind": "glow-mushroom",
+      "x": -10.34,
+      "z": -169.52,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-s0-fairy",
+      "kind": "cave-fairy",
+      "x": -6,
+      "z": -172,
+      "y": 3
+    },
+    {
+      "id": "mc-grove-s0-fire-0",
+      "kind": "firefly",
+      "x": -12,
+      "z": -174,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-s0-fire-1",
+      "kind": "firefly",
+      "x": -6,
+      "z": -169,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-s0-fire-2",
+      "kind": "firefly",
+      "x": 0,
+      "z": -174,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-s1-mush-0",
+      "kind": "glow-mushroom",
+      "x": 6.02,
+      "z": -170,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-s1-mush-1",
+      "kind": "glow-mushroom",
+      "x": 10.32,
+      "z": -162.48,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-s1-mush-2",
+      "kind": "glow-mushroom",
+      "x": 1.66,
+      "z": -162.52,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-s1-fairy",
+      "kind": "cave-fairy",
+      "x": 6,
+      "z": -165,
+      "y": 3
+    },
+    {
+      "id": "mc-grove-s1-fire-0",
+      "kind": "firefly",
+      "x": 0,
+      "z": -167,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-s1-fire-1",
+      "kind": "firefly",
+      "x": 6,
+      "z": -162,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-s1-fire-2",
+      "kind": "firefly",
+      "x": 12,
+      "z": -167,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-a-mush-0",
+      "kind": "glow-mushroom",
+      "x": -29.2,
+      "z": -62.72,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-a-mush-1",
+      "kind": "glow-mushroom",
+      "x": -22.28,
+      "z": -64.2,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-a-mush-2",
+      "kind": "glow-mushroom",
+      "x": -20.8,
+      "z": -57.28,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-a-mush-3",
+      "kind": "glow-mushroom",
+      "x": -27.72,
+      "z": -55.8,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-a-fairy",
+      "kind": "cave-fairy",
+      "x": -25,
+      "z": -60,
+      "y": 3
+    },
+    {
+      "id": "mc-grove-a-fire-0",
+      "kind": "firefly",
+      "x": -31,
+      "z": -62,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-a-fire-1",
+      "kind": "firefly",
+      "x": -25,
+      "z": -57,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-a-fire-2",
+      "kind": "firefly",
+      "x": -19,
+      "z": -62,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-b-mush-0",
+      "kind": "glow-mushroom",
+      "x": 35.8,
+      "z": 97.28,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-b-mush-1",
+      "kind": "glow-mushroom",
+      "x": 42.72,
+      "z": 95.8,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-b-mush-2",
+      "kind": "glow-mushroom",
+      "x": 44.2,
+      "z": 102.72,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-b-mush-3",
+      "kind": "glow-mushroom",
+      "x": 37.28,
+      "z": 104.2,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-b-fairy",
+      "kind": "cave-fairy",
+      "x": 40,
+      "z": 100,
+      "y": 3
+    },
+    {
+      "id": "mc-grove-b-fire-0",
+      "kind": "firefly",
+      "x": 34,
+      "z": 98,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-b-fire-1",
+      "kind": "firefly",
+      "x": 40,
+      "z": 103,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-b-fire-2",
+      "kind": "firefly",
+      "x": 46,
+      "z": 98,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-peak-mush-0",
+      "kind": "glow-mushroom",
+      "x": 130.54,
+      "z": 96.1,
+      "y": 6
+    },
+    {
+      "id": "mc-grove-peak-mush-1",
+      "kind": "glow-mushroom",
+      "x": 121.46,
+      "z": 91.9,
+      "y": 6
+    },
+    {
+      "id": "mc-grove-peak-fairy",
+      "kind": "cave-fairy",
+      "x": 126,
+      "z": 94,
+      "y": 9
+    },
+    {
+      "id": "mc-grove-peak-fire-0",
+      "kind": "firefly",
+      "x": 120,
+      "z": 92,
+      "y": 8
+    },
+    {
+      "id": "mc-grove-peak-fire-1",
+      "kind": "firefly",
+      "x": 126,
+      "z": 97,
+      "y": 8
+    },
+    {
+      "id": "mc-grove-peak-fire-2",
+      "kind": "firefly",
+      "x": 132,
+      "z": 92,
+      "y": 8
+    },
+    {
+      "id": "mc-grove-c-mush-0",
+      "kind": "glow-mushroom",
+      "x": -99.2,
+      "z": 42.28,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-c-mush-1",
+      "kind": "glow-mushroom",
+      "x": -90.55,
+      "z": 42.73,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-c-mush-2",
+      "kind": "glow-mushroom",
+      "x": -95.26,
+      "z": 49.99,
+      "y": 0
+    },
+    {
+      "id": "mc-grove-c-fairy",
+      "kind": "cave-fairy",
+      "x": -95,
+      "z": 45,
+      "y": 3
+    },
+    {
+      "id": "mc-grove-c-fire-0",
+      "kind": "firefly",
+      "x": -101,
+      "z": 43,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-c-fire-1",
+      "kind": "firefly",
+      "x": -95,
+      "z": 48,
+      "y": 2
+    },
+    {
+      "id": "mc-grove-c-fire-2",
+      "kind": "firefly",
+      "x": -89,
+      "z": 43,
+      "y": 2
+    },
+    {
+      "id": "mc-tunfire-0",
+      "kind": "firefly",
+      "x": -8,
+      "z": -180,
+      "y": 3
+    },
+    {
+      "id": "mc-tunfire-1",
+      "kind": "firefly",
+      "x": 8,
+      "z": -164,
+      "y": 3
+    },
+    {
+      "id": "mc-tunfire-2",
+      "kind": "firefly",
+      "x": -8,
+      "z": -148,
+      "y": 3
+    },
+    {
+      "id": "mc-tunfire-3",
+      "kind": "firefly",
+      "x": 8,
+      "z": -132,
+      "y": 3
+    },
+    {
+      "id": "mc-tunfire-4",
+      "kind": "firefly",
+      "x": -8,
+      "z": -116,
+      "y": 3
+    },
+    {
+      "id": "mc-tunfire-5",
+      "kind": "firefly",
+      "x": 8,
+      "z": -100,
+      "y": 3
+    },
+    {
+      "id": "gold-star-1",
+      "kind": "gold-star",
+      "x": 140,
+      "z": 90,
+      "y": 7.9
+    }
+  ],
+  "medals": {
+    "gold": 85,
+    "silver": 125,
+    "bronze": 170
+  },
+  "limit": 230,
+  "underground": true,
+  "backgroundTemplate": "mystic-cave"
+}

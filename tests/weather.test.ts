@@ -1,6 +1,6 @@
 import { beforeAll, expect, it } from "vitest";
 import { loadSettings, saveSettings } from "../src/settings";
-import { DEFAULT_WEATHER, randomWeather, type WeatherFlags } from "../src/weather";
+import { DEFAULT_WEATHER, levelWeather, randomWeather, type WeatherFlags } from "../src/weather";
 import { Simulation, initPhysics } from "../src/simulation";
 
 beforeAll(initPhysics);
@@ -94,4 +94,34 @@ it("starts simulations with clear daytime weather", () => {
   } finally {
     sim.dispose();
   }
+});
+
+it("restores stored settings when leaving a mystic track", () => {
+  // Lavabridge Abyss -> triple loop (or previous to Bouncy House) with
+  // daytime Settings must come back to day, keeping stored rain.
+  expect(
+    levelWeather({ night: false, rain: true }, false, { night: true, rain: true }, "pastoral-hills"),
+  ).toEqual({ night: false, rain: true });
+  expect(
+    levelWeather({ night: false, rain: false }, false, { night: false, rain: false }, undefined),
+  ).toEqual({ night: false, rain: false });
+});
+
+it("forces night on mystic tracks regardless of settings or rolls", () => {
+  expect(
+    levelWeather({ night: false, rain: false }, false, { night: false, rain: false }, "mystic-cave"),
+  ).toEqual({ night: true, rain: false });
+  // Even a daytime random roll stays night in the caves (rain still applies).
+  expect(
+    levelWeather({ night: false, rain: false }, true, { night: false, rain: true }, "mystic-cave"),
+  ).toEqual({ night: true, rain: true });
+});
+
+it("honors random rolls on ordinary tracks", () => {
+  expect(
+    levelWeather({ night: false, rain: false }, true, { night: true, rain: true }, "pastoral-hills"),
+  ).toEqual({ night: true, rain: true });
+  expect(
+    levelWeather({ night: true, rain: true }, true, { night: false, rain: false }, "pastoral-hills"),
+  ).toEqual({ night: false, rain: false });
 });

@@ -17,6 +17,9 @@ export const TEXTURE_IDS = [
   "bark_brown_01",
   "snow_01",
   "marble_01",
+  "cave_wall_01",
+  "glow_moss_01",
+  "crystal_vein_01",
 ] as const;
 export type TextureId = (typeof TEXTURE_IDS)[number];
 export const PROP_PREFAB_KINDS = [
@@ -166,6 +169,12 @@ export type BirthdayKind = (typeof BIRTHDAY_PREFAB_KINDS)[number];
 export function isBirthday(kind: string): kind is BirthdayKind {
   return (BIRTHDAY_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Mystic prefabs: cave crawlers, dust moths, fleeing bats and glow decor. */
+export const MYSTIC_PREFAB_KINDS = ["cave-caterpillar", "cave-moth", "cave-bat", "glow-mushroom", "cave-fairy", "firefly"] as const;
+export type MysticKind = (typeof MYSTIC_PREFAB_KINDS)[number];
+export function isMystic(kind: string): kind is MysticKind {
+  return (MYSTIC_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 /** Hollow prefabs: the web-spinning spider that runs down stuck trucks. */
 export const HOLLOW_PREFAB_KINDS = ["spider"] as const;
 export type HollowKind = (typeof HOLLOW_PREFAB_KINDS)[number];
@@ -189,6 +198,7 @@ export const DUNGEON_PREFAB_KINDS = [
   "rocker",
   "boulder",
   ...SHIPYARD_PREFAB_KINDS,
+  ...MYSTIC_PREFAB_KINDS,
   ...HOLLOW_PREFAB_KINDS,
   ...TOYBOX_PREFAB_KINDS,
   ...BIRTHDAY_PREFAB_KINDS,
@@ -207,7 +217,7 @@ export function isGoldStar(kind: string): kind is GoldStarKind {
 }
 export const LOOSE_BLOCK_PREFAB_KINDS = ["loose-blocks", "glass-pane"] as const;
 export const BURNING_COALS_PREFAB_KINDS = ["burning-coals"] as const;
-export const FRAGILE_ICE_PREFAB_KINDS = ["fragile-ice"] as const;
+export const FRAGILE_ICE_PREFAB_KINDS = ["fragile-ice", "rickety-plank"] as const;
 export const PREFAB_KINDS = [
   ...PROP_PREFAB_KINDS,
   ...COMIC_PREFAB_KINDS,
@@ -281,7 +291,7 @@ export interface CustomPrefab {
 }
 /** Some game systems interpret an omitted height as a hovering pivot. */
 export function prefabY(p: CustomPrefab) {
-  return p.y ?? (p.kind === "gold-star" || p.kind === "checkpoint" ? 2 : p.kind === "hammer" ? 3.5 : p.kind === "ghost" ? 3 : p.kind === "hot-air-balloon" ? 42 : 0);
+  return p.y ?? (p.kind === "gold-star" || p.kind === "checkpoint" ? 2 : p.kind === "hammer" ? 3.5 : p.kind === "ghost" ? 3 : p.kind === "cave-fairy" ? 3 : p.kind === "firefly" ? 2 : p.kind === "cave-bat" ? 4 : p.kind === "hot-air-balloon" ? 42 : 0);
 }
 export const COLLECTIBLE_KINDS = ["ring", "chest"] as const;
 export type CollectibleKind = (typeof COLLECTIBLE_KINDS)[number];

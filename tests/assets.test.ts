@@ -16,7 +16,7 @@ it("local Poly Haven material maps match their recorded hashes", () => {
   const manifest = JSON.parse(
     readFileSync("public/textures/manifest.json", "utf8"),
   );
-  expect(manifest.assets.map((a: { id: string }) => a.id)).toEqual([
+  const polyHaven = [
     "asphalt_02",
     "grass_ground",
     "green_metal_rust",
@@ -32,10 +32,18 @@ it("local Poly Haven material maps match their recorded hashes", () => {
     "bark_brown_01",
     "snow_01",
     "marble_01",
-  ]);
+  ];
+  const ids = manifest.assets.map((a: { id: string }) => a.id);
+  expect(ids.slice(0, polyHaven.length)).toEqual(polyHaven);
   for (const asset of manifest.assets) {
-    expect(asset.license).toBe("CC0");
-    expect(asset.source).toMatch(/^https:\/\/polyhaven.com\/a\//);
+    const generated = !polyHaven.includes(asset.id);
+    if (generated) {
+      // Repo-generated textures (e.g. Gemini): recorded hashes, no source URL.
+      expect(asset.license).toBe("Generated");
+    } else {
+      expect(asset.license).toBe("CC0");
+      expect(asset.source).toMatch(/^https:\/\/polyhaven.com\/a\//);
+    }
     expect(Object.keys(asset.maps)).toEqual(["diffuse", "normal", "roughness"]);
     for (const map of Object.values(asset.maps) as {
       file: string;

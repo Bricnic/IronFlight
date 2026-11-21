@@ -4,7 +4,7 @@ import { TRACK_IDS } from "../src/tracks";
 import { customSlug } from "../src/custom-level";
 
 /**
- * Gold-star spawn-visibility sweep: every track (8 legacy + 36 official)
+ * Gold-star spawn-visibility sweep: every track (8 legacy + 39 official)
  * must hide its star from the spawn camera.
  *
  * The probe (window.__game.starHiddenFromSpawn) loads the track, settles
@@ -29,10 +29,10 @@ const officialIds = order.map(({ file }) => {
 });
 const TRACK_LIST = [...TRACK_IDS, ...officialIds];
 
-test("covers all 44 tracks", async () => {
+test("covers all 47 tracks", async () => {
   expect(TRACK_IDS).toHaveLength(8);
-  expect(officialIds).toHaveLength(36);
-  expect(new Set(TRACK_LIST).size).toBe(44);
+  expect(officialIds).toHaveLength(39);
+  expect(new Set(TRACK_LIST).size).toBe(47);
 });
 
 for (const id of TRACK_LIST) {

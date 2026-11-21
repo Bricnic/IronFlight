@@ -16,3 +16,27 @@ export function parseWeatherFlags(value: unknown): WeatherFlags {
 export function randomWeather(rng: () => number = Math.random): WeatherFlags {
   return { night: rng() < 0.5, rain: rng() < 0.5 };
 }
+/** Background templates stuck in permanent night (mystic caves). */
+export const PERMANENT_NIGHT_TEMPLATES = ["mystic-cave"];
+/** True when the track's background never sees daylight. */
+export function isPermanentNight(backgroundTemplate?: string) {
+  return (
+    backgroundTemplate !== undefined &&
+    PERMANENT_NIGHT_TEMPLATES.includes(backgroundTemplate)
+  );
+}
+/**
+ * Weather for an incoming level: stored flags (or a fresh roll when
+ * randomizing), with permanent night enforced for mystic tracks. Leaving a
+ * mystic track restores whatever Settings currently specifies.
+ */
+export function levelWeather(
+  stored: WeatherFlags,
+  randomize: boolean,
+  roll: WeatherFlags,
+  backgroundTemplate?: string,
+): WeatherFlags {
+  const next = randomize ? { ...roll } : { night: stored.night, rain: stored.rain };
+  if (isPermanentNight(backgroundTemplate)) next.night = true;
+  return next;
+}

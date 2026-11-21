@@ -20,11 +20,13 @@ export const TUNING_KEYS = [
   "gravity",
   "primaryColor",
   "secondaryColor",
+  "headlightDim",
 ] as const;
 export type Tuning = Record<(typeof TUNING_KEYS)[number], number>;
 export function tuningRange(key: keyof Tuning) {
   if (key === "primaryColor" || key === "secondaryColor")
     return { min: 0, max: 0xffffff, step: 1 };
+  if (key === "headlightDim") return { min: 0.1, max: 1, step: 0.1 };
   return key === "maxSteeringAngle"
     ? { min: 5, max: 90, step: 1 }
     : {

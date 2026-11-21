@@ -166,13 +166,16 @@ it("every prefab kind rotates its model with yaw", () => {
     try {
       const views = buildViews(sim);
       // Instanced tiles carry no named node: read the sheet matrix instead.
-      if (kind === "fragile-ice") {
+      if (kind === "fragile-ice" || kind === "rickety-plank") {
         const ice = views.find(
           (v): v is FragileIceView => v instanceof FragileIceView,
         )!;
         const i = ice.tileIndex(ID);
         const m = new T.Matrix4();
-        ice.sheets!.getMatrixAt(i, m);
+        (kind === "rickety-plank" ? ice.plankSheets! : ice.sheets!).getMatrixAt(
+          kind === "rickety-plank" ? ice.plankSlotOf(i) : ice.iceSlotOf(i),
+          m,
+        );
         const got = norm(
           new T.Euler().setFromQuaternion(
             new T.Quaternion().setFromRotationMatrix(m),
@@ -277,6 +280,12 @@ const PHYSICS_EXEMPT = new Map<string, string>([
     "christmas-toy-chomper",
     "NO_COLLIDERS: radial snap-strike zone; model carries yaw",
   ],
+  ["cave-caterpillar", "NO_COLLIDERS: radial touch zone plus planar chase; model carries yaw"],
+  ["cave-moth", "NO_COLLIDERS: radial dust/crash zones plus planar chase; model carries yaw"],
+  ["cave-bat", "NO_COLLIDERS: radial flee trigger, harmless; model carries yaw"],
+  ["glow-mushroom", "NO_COLLIDERS: static glow decor; model carries yaw"],
+  ["cave-fairy", "NO_COLLIDERS: wandering glow decor; model carries yaw"],
+  ["firefly", "NO_COLLIDERS: wandering glow decor; model carries yaw"],
   [
     "christmas-yeti-jaws",
     "NO_COLLIDERS: radial snap-strike zone; model carries yaw",

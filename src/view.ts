@@ -33,7 +33,8 @@ import { SkidView } from "./skids";
 import { LoopView } from "./loop-view";
 import { BackgroundView } from "./background-view";
 import { getBackgroundTemplate, resolveMood } from "./backgrounds";
-import { bodyBounds, buildHeadlightRig, setHeadlightRig } from "./headlights";
+import { bodyBounds, buildHeadlightRig, MYSTIC_HEADLIGHT_DIM, setHeadlightDim, setHeadlightRig } from "./headlights";
+import { isPermanentNight } from "./weather";
 import { buildWheelSpray, updateWheelSpray } from "./wheel-spray";
 /** Beyond this camera distance a gold star is unrecognizable: spawn-hidden by definition. */
 export const STAR_RECOGNITION_RANGE = 150;
@@ -792,7 +793,13 @@ export class GameView {
     this.sun.color.setHex(mood.sun.color);
     this.scene.environmentIntensity = mood.env;
     this.applyEnvironment(mood, s.weather.night || s.weather.rain);
-    if (this.headlightRig) setHeadlightRig(this.headlightRig, s.weather.night);
+    if (this.headlightRig) {
+      setHeadlightRig(this.headlightRig, s.weather.night);
+      setHeadlightDim(
+        this.headlightRig,
+        s.tuning.headlightDim * (isPermanentNight(s.courseTrack?.backgroundTemplate) ? MYSTIC_HEADLIGHT_DIM : 1),
+      );
+    }
     const root = s.previousPosition.clone().lerp(s.body.translation(), alpha),
       q = s.previousRotation
         .clone()
@@ -816,10 +823,21 @@ export class GameView {
     for (const jet of this.nitro.children)
       ((jet as T.Mesh).material as T.ShaderMaterial).uniforms.time.value =
         s.time;
-    this.renderer.domElement.style.filter =
+    // Mystic venom: cloudy green filter, fading over the last 0.4s.
+    const poisonMix = s.poisoned
+      ? Math.min(1, (s.poisonUntil - s.time) / 0.4)
+      : 0;
+    const fogFilter =
       s.activeComic.effect === "fog"
         ? `blur(${Math.min(7, s.activeComic.effectUntil - s.time) * 1.1}px) contrast(.75)`
         : "";
+    const poisonFilter =
+      poisonMix > 0
+        ? `blur(${(3 * poisonMix).toFixed(2)}px) contrast(${(1 - 0.35 * poisonMix).toFixed(2)}) hue-rotate(${(90 * poisonMix).toFixed(0)}deg) saturate(1.4)`
+        : "";
+    this.renderer.domElement.style.filter = [fogFilter, poisonFilter]
+      .filter(Boolean)
+      .join(" ");
     const shape = new T.Vector3(
       ...(potionScale(s.activeComic.effect) as [number, number, number]),
     );
@@ -960,6 +978,7 @@ export class GameView {
         this.snapCamera || snap,
         // Any lava sink pans the camera above the surface (was inferno-only).
         !!s.parts.get("chassis-front")?.lava,
+        poisonMix * Math.PI,
       );
     if (this.overview && s.skidStrokes.length) {
       const bounds = new T.Box3();

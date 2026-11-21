@@ -95,17 +95,24 @@ export function applyRotator(
     roll: current.roll + (axis === "roll" ? dx * 0.01 : 0),
   };
 }
-/** Grab-style world-axis pan of the orbit target. */
+/** Grab-style pan of the orbit target, relative to the camera yaw `theta`.
+ * Dragging right moves the world right on screen and dragging down moves it
+ * down, whatever the orbit angle: horizontal drags run along screen-right
+ * projected on the ground, vertical drags along screen-forward (xz) or
+ * world-up (xy). */
 export function applyPan(
   target: { x: number; y: number; z: number },
   dx: number,
   dy: number,
   scale: number,
   plane: PanPlane,
+  theta = 0,
 ) {
-  target.x -= dx * scale;
-  if (plane === "xz") target.z -= dy * scale;
-  else target.y += dy * scale;
+  const rightX = Math.cos(theta), rightZ = -Math.sin(theta);
+  const fwdX = -Math.sin(theta), fwdZ = -Math.cos(theta);
+  target.x += (-rightX * dx + (plane === "xz" ? fwdX * dy : 0)) * scale;
+  target.z += (-rightZ * dx + (plane === "xz" ? fwdZ * dy : 0)) * scale;
+  if (plane === "xy") target.y += dy * scale;
 }
 /** Yaw that faces `from` toward `to` under the engine forward convention. */
 export function lookYaw(
@@ -148,7 +155,7 @@ function attachOrbit(
   const panPixels = (dx: number, dy: number, plane?: PanPlane) => {
     const scale = spherical.radius / 400;
     if (plane) {
-      applyPan(target, dx, dy, scale, plane);
+      applyPan(target, dx, dy, scale, plane, spherical.theta);
       return;
     }
     const right = new T.Vector3().setFromMatrixColumn(camera.matrix, 0);

@@ -10,6 +10,8 @@ export const FRAGILE_ICE_SIZE = 5;
 export const FRAGILE_ICE_SHATTER_CHANCE = 0.1;
 /** Seconds of freezing water before the truck is a wreck, like the water prefab. */
 export const FRAGILE_ICE_SINK_SECONDS = 2.5;
+/** Rickety planks groan, then give way behind a moving truck. */
+export const RICKETY_COLLAPSE_DELAY = 0.6;
 /** Freezing water burns like the water prefab: 45% of each part per second. */
 const FRAGILE_ICE_DAMAGE_RATE = 0.45;
 /** Visible water surface below the rim. */
@@ -26,6 +28,7 @@ const SENSOR_W = FRAGILE_ICE_SIZE - 0.1;
 
 export type FragileIceTile = {
   id: string;
+  kind: "fragile-ice" | "rickety-plank";
   x: number;
   z: number;
   y?: number;
@@ -36,9 +39,10 @@ export type FragileIceTile = {
 export function fragileIceHazards(track?: Track): FragileIceTile[] {
   if (!track?.custom) return [];
   return track.custom.prefabs
-    .filter((p) => p.kind === "fragile-ice")
+    .filter((p) => p.kind === "fragile-ice" || p.kind === "rickety-plank")
     .map((p) => ({
       id: p.id,
+      kind: p.kind as FragileIceTile["kind"],
       x: p.x,
       z: p.z,
       ...(p.y === undefined ? {} : { y: p.y }),
@@ -52,6 +56,7 @@ export type FragileIceState = {
   sensor: R.Collider;
   shattered: boolean;
   armed: boolean;
+  armedAt: number;
   wheels: number;
   sinking: number;
   contacts: number;
@@ -100,6 +105,7 @@ export class FragileIce {
       sensor,
       shattered: false,
       armed: false,
+      armedAt: 0,
       wheels: 0,
       sinking: 0,
       contacts: 0,
@@ -140,7 +146,7 @@ export class FragileIce {
     t.shattered = true;
     t.armed = false;
     t.contacts++;
-    this.sim.damageEvents.push({ source: "fragile-ice", part: "chassis-front", time: this.sim.time });
+    this.sim.damageEvents.push({ source: t.h.kind, part: "chassis-front", time: this.sim.time });
   }
   private intersects(sensor: R.Collider) {
     for (const state of this.sim.parts.values())
@@ -155,7 +161,11 @@ export class FragileIce {
   sinking = 0;
   private sink() {
     const s = this.sim;
-    const dunked = this.tiles.filter((t) => t.shattered && this.intersects(t.sensor));
+    // Rickety planks span lava or chasms: falling through meets that fate,
+    // never freezing water.
+    const dunked = this.tiles.filter(
+      (t) => t.h.kind === "fragile-ice" && t.shattered && this.intersects(t.sensor),
+    );
     for (const t of this.tiles) {
       if (t.shattered && this.intersects(t.sensor)) {
         t.contacts++;
@@ -193,6 +203,17 @@ export class FragileIce {
     for (const t of this.tiles) {
       t.wheels = counts.get(t) ?? 0;
       if (t.shattered) continue;
+      if (t.h.kind === "rickety-plank") {
+        // Groan on first touch, give way shortly after: at speed the deck
+        // collapses behind the truck; stopping on it drops straight through.
+        if (t.wheels >= 1 && !t.armed) {
+          t.armed = true;
+          t.armedAt = s.time;
+        }
+        if (t.armed && s.time - t.armedAt >= RICKETY_COLLAPSE_DELAY)
+          this.shatter(t);
+        continue;
+      }
       // One roll per visit: re-arms only after dropping below two wheels.
       if (t.wheels >= 2) {
         if (!t.armed) {
@@ -208,6 +229,7 @@ export class FragileIce {
   snapshot() {
     return this.tiles.map((t) => ({
       id: t.h.id,
+      kind: t.h.kind,
       x: t.h.x,
       z: t.h.z,
       shattered: t.shattered,

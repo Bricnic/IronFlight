@@ -446,6 +446,56 @@ export const SPIDER = {
   /** The hunt breaks off past the web plus this leash. */
   leash: 8,
 } as const;
+/** Giant caterpillar: crawls to random destinations within 100u of home;
+ * touch poisons the truck. */
+export const CATERPILLAR = {
+  /** Wander disc radius around the spawn location. */
+  wanderRadius: 100,
+  /** Crawl speed; slow enough to dodge, fast enough to menace. */
+  speed: 4,
+  /** Touch distance that poisons. */
+  touch: 3.4,
+  /** Vertical gate around the caterpillar's height. */
+  dy: 3,
+} as const;
+/** Dust moth: pelican-like flyer sprinkling poisonous green dust. */
+export const MOTH = {
+  /** Cruise height above its placed y. */
+  cruiseHeight: 10,
+  /** Flight speed between waypoints within 100u of home. */
+  speed: 14,
+  /** Waypoint disc radius around the spawn location. */
+  wanderRadius: 100,
+  /** Sprinkle cadence while flying. */
+  sprinklePeriod: 1.2,
+  /** Falling mote descent speed. */
+  fallSpeed: 3,
+  /** Touch radius of a falling mote or ground pile. */
+  dustTouch: 2.6,
+  /** Ground piles linger this long before fading. */
+  pileLife: 3,
+  /** Direct body-crash distance that poisons. */
+  crash: 4,
+} as const;
+/** Cave bat: harmless decor; perched clusters flee when the truck nears. */
+export const BAT = {
+  /** Flee trigger radius around the perch. */
+  fleeRadius: 18,
+  /** Escape flight speed. */
+  fleeSpeed: 16,
+} as const;
+/** Mystic poison: 25% of original integrity over 3s + 1 lost part. */
+export const POISON = {
+  duration: 3,
+  fraction: 0.25,
+} as const;
+/** Uniform-disc destination within a radius of home for one trip. */
+export function wanderDestination(homeX: number, homeZ: number, seed: number, trip: number, radius: number) {
+  const rng = mulberry32((seed ^ Math.imul(trip + 0x9e37, 0x85ebca6b)) >>> 0);
+  const r = Math.sqrt(rng()) * radius;
+  const a = rng() * Math.PI * 2;
+  return { x: homeX + Math.cos(a) * r, z: homeZ + Math.sin(a) * r };
+}
 /** Deterministic RNG for seeded prefabs (pelican spots in tests). */
 export function mulberry32(seed: number) {
   let a = seed >>> 0;

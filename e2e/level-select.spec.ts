@@ -50,6 +50,19 @@ test("normal startup shows the collection grid and keeps the simulation paused",
   ]);
   await expect(page.locator(".track-card.locked")).toHaveCount(6);
   await expect(page.locator(".track-lock")).toHaveCount(6);
+  // Spooky Places ends with the three mystic caves in unlock order.
+  await page.locator("#collection-back").click();
+  await page.locator('[data-collection="spooky-places"] button').click();
+  await expect(page.locator("#collection-title")).toHaveText("Spooky Places");
+  await expect(page.locator(".track-card h2")).toHaveText([
+    "Dungeon",
+    "Haunted Hollow",
+    "Pumpkin Pass",
+    "Spider Hollow",
+    "Mystic Caverns",
+    "Firefly Grotto",
+    "Lavabridge Abyss",
+  ]);
   const time = await page.evaluate(() => window.__game!.snapshot().time);
   await page.keyboard.down("w");
   await page.waitForTimeout(400);

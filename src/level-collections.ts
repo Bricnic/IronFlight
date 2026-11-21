@@ -62,6 +62,9 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
       "haunted-hollow",
       "custom:pumpkin-pass",
       "custom:spider-hollow",
+      "custom:mystic-caverns",
+      "custom:firefly-grotto",
+      "custom:lavabridge-abyss",
     ],
   },
   {

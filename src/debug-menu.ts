@@ -57,6 +57,7 @@ export async function createDebugMenu(sim: Simulation) {
     handbrakePower: "Handbrake multiplier",
     shadowDarkness: "Truck shadow darkness",
     gravity: "Gravity strength",
+    headlightDim: "Headlight dimness (caves dim further)",
   };
   const sliderKeys = (Object.keys(labels) as (keyof typeof labels)[])
     .sort((a, b) => labels[a].localeCompare(labels[b]));

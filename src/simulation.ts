@@ -27,7 +27,8 @@ import { Quaternion, Vector3 } from "three";
 import { solidQuaternion } from "./euler";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
-import { DEFAULT_WEATHER, type WeatherFlags } from "./weather";
+import { DEFAULT_WEATHER, isPermanentNight, type WeatherFlags } from "./weather";
+import { POISON } from "./dungeon-hazards";
 /** Wet-asphalt grip multiplier: softer yaw bite, longer slides. */
 export const RAIN_GRIP_SCALE = 0.55;
 import { type PartState } from "./damage";
@@ -141,6 +142,10 @@ export class Simulation {
   smolderDamageTaken = 0;
   smolderRemaining = 0;
   private smolderTriggered = false;
+  /** Mystic venom: upside-down cloudy vision until this time. */
+  poisonUntil = 0;
+  poisonRemaining = 0;
+  poisonTaken = 0;
   inFlames = false;
   private lastSmokeAt = -Infinity;
   get scorch() {
@@ -259,6 +264,8 @@ export class Simulation {
     this.courseTrack = ["lab", "easy", "medium", "hard"].includes(stage)
       ? undefined
       : getTrack(stage);
+    if (isPermanentNight(this.courseTrack?.backgroundTemplate))
+      this.weather.night = true;
     this.activeHazards = this.courseTrack
       ? courseHazards(this.courseTrack)
       : stage === "lab"
@@ -281,6 +288,9 @@ export class Simulation {
     this.smolderDamageTaken = 0;
     this.smolderRemaining = 0;
     this.smolderTriggered = false;
+    this.poisonUntil = 0;
+    this.poisonRemaining = 0;
+    this.poisonTaken = 0;
     this.inFlames = false;
     this.lastSmokeAt = -Infinity;
     this.steeringAngle = 0;
@@ -1028,6 +1038,7 @@ export class Simulation {
         this.fireDamage(part.id, part.hp * 0.01 * DT * barrelExposure);
     }
     this.updateSmolder();
+    this.updatePoison();
     if (this.inFlames || this.smolderRemaining > 1e-9)
       this.lastSmokeAt = this.time;
     if (this.damageEvents.length > 64)
@@ -1463,6 +1474,41 @@ export class Simulation {
       (health - this.remainingHealth()) / this.fullHealth;
     this.smolderRemaining = Math.max(0, this.smolderRemaining - fraction);
   }
+  /** Mystic venom: 3s of inverted cloudy vision, 25% DoT, one lost part.
+   * Touching while already poisoned extends the vision without event spam. */
+  applyPoison(source: string) {
+    if (this.status !== "driving") return;
+    const fresh = !this.poisoned;
+    this.poisonUntil = this.time + POISON.duration;
+    if (fresh) {
+      // The shed part counts toward the 25% budget, like smolder math.
+      const before = this.remainingHealth();
+      this.breakRandomPart(source);
+      const shed = (before - this.remainingHealth()) / this.fullHealth;
+      this.poisonRemaining = Math.max(0, POISON.fraction - shed);
+      this.damageEvents.push({ source, part: "chassis-front", time: this.time });
+    }
+  }
+  get poisoned() {
+    return this.time < this.poisonUntil;
+  }
+  private updatePoison() {
+    if (this.poisonRemaining <= 1e-9) {
+      this.poisonRemaining = 0;
+      return;
+    }
+    const fraction = Math.min(this.poisonRemaining, (POISON.fraction / POISON.duration) * DT);
+    const health = this.remainingHealth();
+    const ratio =
+      health > 0 ? Math.min(1, (fraction * this.fullHealth) / health) : 0;
+    const amounts = [...this.parts].map(
+      ([id, p]) => [id, p.health * ratio] as const,
+    );
+    for (const [id, amount] of amounts) this.damage(id, amount);
+    this.poisonTaken +=
+      (health - this.remainingHealth()) / this.fullHealth;
+    this.poisonRemaining = Math.max(0, this.poisonRemaining - fraction);
+  }
   damage(id: string, amount: number, point = new Vector3(0.2, 0.2, 0.2)) {
     const state = this.parts.get(id);
     if (!state || !Number.isFinite(amount) || amount < 0)
@@ -1557,6 +1603,9 @@ export class Simulation {
       fireDamageTaken: this.fireDamageTaken,
       smolderDamageTaken: this.smolderDamageTaken,
       smolderRemaining: this.smolderRemaining,
+      poisonUntil: this.poisonUntil,
+      poisonRemaining: this.poisonRemaining,
+      poisonTaken: this.poisonTaken,
       inFlames: this.inFlames,
       smoking: this.smoking,
       smokeStrength: this.smokeStrength,

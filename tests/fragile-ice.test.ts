@@ -269,7 +269,7 @@ it("supports live add, move and remove", () => {
   const sim = fixture([]);
   try {
     expect(sim.fragileIce.tiles).toHaveLength(0);
-    sim.fragileIce.addTile({ id: "ice-live", x: 30, z: 30 });
+    sim.fragileIce.addTile({ id: "ice-live", kind: "fragile-ice", x: 30, z: 30 });
     expect(sim.fragileIce.tiles).toHaveLength(1);
     sim.fragileIce.moveTile("ice-live", 40, 0, 40);
     expect(sim.fragileIce.tiles[0].h.x).toBe(40);

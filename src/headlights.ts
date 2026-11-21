@@ -53,6 +53,18 @@ export function bodyBounds(root: T.Object3D, rig?: T.Object3D | null): T.Box3 {
   return bounds;
 }
 
+/** Mystic caves keep headlights dim so the glow decor reads. */
+export const MYSTIC_HEADLIGHT_DIM = 0.35;
+/** Scale spot intensity, cone opacity and bulb emissive by dim (0.1-1). */
+export function setHeadlightDim(rig: T.Group, dim: number) {
+  rig.traverse((o) => {
+    if (o instanceof T.SpotLight) o.intensity = 3500 * dim;
+    else if (o instanceof T.Mesh && o.name === "headlight-cone")
+      (o.material as T.MeshBasicMaterial).opacity = 0.06 * dim;
+    else if (o instanceof T.Mesh && o.name === "headlight-bulb")
+      (o.material as T.MeshStandardMaterial).emissiveIntensity = 3 * dim;
+  });
+}
 /** Toggle every light, cone and bulb in the rig together. */
 export function setHeadlightRig(rig: T.Group, on: boolean) {
   rig.traverse((o) => {

@@ -375,6 +375,81 @@
           "bytes": 91848
         }
       }
+    },
+    {
+      "id": "cave_wall_01",
+      "source": "Gemini 2.5-flash-image (user-supplied cave wall, tessellated)",
+      "license": "Generated",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/cave_wall_01_diffuse.jpg",
+          "url": "Gemini 2.5-flash-image (user-supplied cave wall, tessellated)",
+          "sha256": "879c90582899138dec4f414554996dc8f1a75f7cd6aaeb9ae5a2538090a6c2b9",
+          "bytes": 299973
+        },
+        "normal": {
+          "file": "/textures/cave_wall_01_normal.jpg",
+          "url": "Gemini 2.5-flash-image (user-supplied cave wall, tessellated)",
+          "sha256": "5a4dd130437c5553851368cf53dc64bb39fbb1d6db6b72825ca753369a004568",
+          "bytes": 563831
+        },
+        "roughness": {
+          "file": "/textures/cave_wall_01_roughness.jpg",
+          "url": "Gemini 2.5-flash-image (user-supplied cave wall, tessellated)",
+          "sha256": "ef7a87e1bbebe6d3c72cb12f9b1777c64981c25cf90c65ecda6985de12a928ba",
+          "bytes": 175232
+        }
+      }
+    },
+    {
+      "id": "glow_moss_01",
+      "source": "Gemini 2.5-flash-image (mystic caves, seamless moss prompt)",
+      "license": "Generated",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/glow_moss_01_diffuse.jpg",
+          "url": "Gemini 2.5-flash-image (mystic caves, seamless moss prompt)",
+          "sha256": "5aa9e39e63a68007ecefb102062e71b177c5978aa368a8ea434475de33cb84fd",
+          "bytes": 186868
+        },
+        "normal": {
+          "file": "/textures/glow_moss_01_normal.jpg",
+          "url": "Gemini 2.5-flash-image (mystic caves, seamless moss prompt)",
+          "sha256": "4662be96f5cf344cc74e8250ffa59a0608106862b761ef2bbf994ecc85533ebc",
+          "bytes": 338357
+        },
+        "roughness": {
+          "file": "/textures/glow_moss_01_roughness.jpg",
+          "url": "Gemini 2.5-flash-image (mystic caves, seamless moss prompt)",
+          "sha256": "8ffde1e9397bb8765669511993b3c3196e1145ac28ef744f4ca17d793bb769c0",
+          "bytes": 82280
+        }
+      }
+    },
+    {
+      "id": "crystal_vein_01",
+      "source": "Gemini 2.5-flash-image (mystic caves, seamless crystal prompt)",
+      "license": "Generated",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/crystal_vein_01_diffuse.jpg",
+          "url": "Gemini 2.5-flash-image (mystic caves, seamless crystal prompt)",
+          "sha256": "edc3760a75099c4d3585756e0919e5bd155e2775740497d69e06450ba1dde541",
+          "bytes": 103732
+        },
+        "normal": {
+          "file": "/textures/crystal_vein_01_normal.jpg",
+          "url": "Gemini 2.5-flash-image (mystic caves, seamless crystal prompt)",
+          "sha256": "6c08930e36c14a23b9d459ecaaed972b53bc99d5379f8792aea42b3c9785d862",
+          "bytes": 208574
+        },
+        "roughness": {
+          "file": "/textures/crystal_vein_01_roughness.jpg",
+          "url": "Gemini 2.5-flash-image (mystic caves, seamless crystal prompt)",
+          "sha256": "10ab121c5e866ba36d4e189f8a540e49b238393a8896e97c2a82d5817bbe01a4",
+          "bytes": 40223
+        }
+      }
     }
   ]
 }
