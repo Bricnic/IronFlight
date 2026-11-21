@@ -3,6 +3,10 @@ import * as T from "three";
 /** Capped real-light pool: mystic glow decor shares 8 colored point lights. */
 export const MYSTIC_LIGHT_COUNT = 8;
 export const MYSTIC_LIGHT_BASE = 26;
+export const MYSTIC_SOURCE_COLORS: Record<string, number> = {
+  "glow-mushroom": 0x4ff5e0, "cave-fairy": 0xff6fe0, firefly: 0xffd23b,
+  "cave-moth": 0x80ec27, "cave-caterpillar": 0x80ec27,
+};
 
 export interface MysticSource {
   id: string;

@@ -264,7 +264,7 @@ export class Simulation {
     this.courseTrack = ["lab", "easy", "medium", "hard"].includes(stage)
       ? undefined
       : getTrack(stage);
-    if (isPermanentNight(this.courseTrack?.backgroundTemplate))
+    if (isPermanentNight(this.courseTrack?.backgroundTemplate, this.courseTrack?.custom?.forceNight))
       this.weather.night = true;
     this.activeHazards = this.courseTrack
       ? courseHazards(this.courseTrack)

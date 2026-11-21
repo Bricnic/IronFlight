@@ -47,10 +47,14 @@ export interface GameHarness {
   textureLoadErrors(): string[];
   loadedTextureIds(): string[];
   inspectPreview(): {
+    lighting: { game: boolean; night: boolean; rain: boolean; sun: number; hemi: number; env: number } | null;
+    checkpoints: { index: number; meshes: number }[];
+    spawn: { name?: string; meshes: number; visible: boolean };
     selectedPrefab?: string;
     prefabs: { id: string; meshes: number; vertices: number; min: number[]; max: number[] }[];
     preview: boolean;
     gridVisible: boolean;
+    grid: { spacing: number; snap: boolean; show: boolean; x: boolean; y: boolean; z: boolean; axes: string[] };
     solids: {
       id: string;
       textured: boolean;

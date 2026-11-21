@@ -5,6 +5,14 @@ const tagged = (pick: unknown, parent: unknown = null) => ({
   userData: { pick },
   parent,
 });
+it("explicit override picks locked children and batched instances without changing their locks", () => {
+  const pick = { kind: "solid", id: "locked" };
+  const locked = { userData: { pick, locked: true } };
+  expect(resolveViewportStack([{ object: tagged(undefined, locked) }], true)[0]?.selection).toEqual(pick);
+  const batch = { userData: { instancePicks: [{ pick, locked: true }] } };
+  expect(resolveViewportStack([{ object: batch, instanceId: 0 }], true)[0]?.selection).toEqual(pick);
+  expect(locked.userData.locked).toBe(true);
+});
 it("picks individual instances and respects their locks", () => {
   const batch = { userData: { instancePicks: [
     { pick: { kind: "prefab", id: "ice-1" }, locked: true },

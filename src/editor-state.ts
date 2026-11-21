@@ -12,6 +12,7 @@ import {
 import { previewClip, type ClipRect } from "./editor-clip";
 import { editableProperties, objectKindKey, propertyValue } from "./editor-properties";
 import { Euler, Quaternion, Vector3 } from "three";
+import { DEFAULT_EDITOR_GRID, snapCoordinate, type EditorGridSettings, type GridAxis } from "./editor-grid";
 export type EditorSelection =
   | { kind: "solid"; id: string }
   | { kind: "prefab"; id: string }
@@ -47,6 +48,7 @@ export class EditorStore {
   clip: { targets: string[]; cutters: ClipRect[]; cutterId?: string } | null = null;
   tool: EditorTool = "select";
   preview = false;
+  grid = { ...DEFAULT_EDITOR_GRID };
   dirty = false;
   private listeners = new Set<() => void>();
   private past: Snapshot[] = [];
@@ -57,6 +59,41 @@ export class EditorStore {
   } | null = null;
   constructor(name: string) {
     this.level = blankLevel(name);
+  }
+  updateGrid(patch: Partial<EditorGridSettings>) {
+    if (patch.spacing !== undefined && (!Number.isFinite(patch.spacing) || patch.spacing <= 0)) return;
+    Object.assign(this.grid, patch); this.emit(false);
+  }
+  selectionPositions() {
+    return this.selectedEntries().map(selection => {
+      const object = this.selectedItem(selection)!;
+      return { selection, hasY: object.item.y !== undefined, x: object.item.x, y: object.item.y ?? (object.kind === "prefab" ? prefabY(object.item) : object.kind === "checkpoint" ? 2 : object.kind === "target" ? this.level.mode === "demolition" ? 1.5 : 1.7 : 0), z: object.item.z };
+    });
+  }
+  /** Apply absolute drag positions from the grab snapshot, avoiding cumulative rounding drift. */
+  moveSelectedFrom(origins: ReturnType<EditorStore["selectionPositions"]>, delta: { x: number; z: number }, snap: boolean) {
+    if (origins.some(p => this.isLocked(p.selection))) return;
+    const changes = origins.map(p => {
+      const object = this.selectedItem(p.selection)!;
+      const position = { x: p.x + delta.x, y: p.y, z: p.z + delta.z };
+      const snapping = snap && (object.kind === "solid" || object.kind === "prefab");
+      if (snapping)
+        for (const axis of ["x", "y", "z"] as const) position[axis] = snapCoordinate(position[axis], this.grid.spacing);
+      return { item: object.item, position: { ...position, y: snapping || p.hasY ? position.y : undefined } };
+    }).filter(({ item, position }) => item.x !== position.x || item.y !== position.y || item.z !== position.z);
+    if (!changes.length) return;
+    this.pushHistory(); for (const { item, position } of changes) Object.assign(item, position);
+    this.emit();
+  }
+  snapSelectedToGrid(axes: GridAxis[] = ["x", "y", "z"]) {
+    const changes = this.selectionPositions().filter(p => (p.selection.kind === "solid" || p.selection.kind === "prefab") && !this.isLocked(p.selection)).map(p => {
+      const item = this.selectedItem(p.selection)!.item;
+      const patch = Object.fromEntries(axes.map(axis => [axis, snapCoordinate(p[axis], this.grid.spacing)]));
+      return { item, patch };
+    }).filter(({ item, patch }) => Object.entries(patch).some(([axis, value]) => item[axis as GridAxis] !== value));
+    if (!changes.length) return;
+    this.pushHistory(); for (const { item, patch } of changes) Object.assign(item, patch);
+    this.emit();
   }
   get canUndo() {
     return this.past.length > 0;
@@ -180,8 +217,8 @@ export class EditorStore {
     this.level.name = name;
     this.emit();
   }
-  select(selection: EditorSelection, additive = false) {
-    if (selection && this.isLocked(selection)) return;
+  select(selection: EditorSelection, additive = false, includeLocked = false) {
+    if (selection && this.isLocked(selection) && !includeLocked) return;
     this.selectionKindFilter = undefined;
     const members = selection ? this.membersOf(selection) : [];
     const keys = new Set(members.map(selectionKey));
@@ -539,7 +576,7 @@ export class EditorStore {
   }
   updateLevel(
     patch: Partial<
-      Pick<CustomLevel, "mode" | "limit" | "underground"> & {
+      Pick<CustomLevel, "mode" | "limit" | "underground" | "forceNight" | "previewGameLighting"> & {
         gold: number;
         silver: number;
         bronze: number;
@@ -550,6 +587,8 @@ export class EditorStore {
     if (patch.mode) this.level.mode = patch.mode;
     if (patch.underground !== undefined)
       this.level.underground = patch.underground;
+    if (patch.forceNight !== undefined) this.level.forceNight = patch.forceNight;
+    if (patch.previewGameLighting !== undefined) this.level.previewGameLighting = patch.previewGameLighting;
     if (patch.limit !== undefined) {
       if (Number.isNaN(patch.limit)) delete this.level.limit;
       else this.level.limit = patch.limit;

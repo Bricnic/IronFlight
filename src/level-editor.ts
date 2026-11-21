@@ -1,4 +1,5 @@
 import { partitionListKinds } from "./editor-list";
+import { isPermanentNight } from "./weather";
 import { degreesToRadians, radiansToDegrees } from "./editor-angles";
 import { commonProperty, editableProperties, objectKindKey, objectKindLabel, type SelectedObject } from "./editor-properties";
 import { EditorStore, selectionKey, type EditorSelection } from "./editor-state";
@@ -554,6 +555,36 @@ export function createLevelEditor(
     );
     undergroundRow.append(underground);
     props.append(undergroundRow);
+    for (const [key, label, checked] of [
+      ["previewGameLighting", "Preview game lighting", !!level.previewGameLighting],
+      ["forceNight", "Force night", isPermanentNight(level.backgroundTemplate, level.forceNight)],
+    ] as const) {
+      const row = el("label", { class: "prop-row" }, label + " ");
+      const input = el("input", { type: "checkbox", "data-prop": key }) as HTMLInputElement;
+      input.checked = checked;
+      input.addEventListener("change", () => store.updateLevel({ [key]: input.checked }));
+      row.append(input); props.append(row);
+    }
+    section("World grid");
+    const spacingRow = el("label", { class: "prop-row" }, "Spacing ");
+    const spacing = el("input", { id: "editor-grid-spacing", type: "number", min: "0.01", step: "any", value: String(store.grid.spacing) }) as HTMLInputElement;
+    spacing.addEventListener("change", () => { store.updateGrid({ spacing: Number(spacing.value) }); spacing.value = String(store.grid.spacing); });
+    spacingRow.append(spacing); props.append(spacingRow);
+    for (const [key, label] of [["show", "Show world grid"], ["snap", "Snap to world grid"], ["x", "Draw X lines (red)"], ["y", "Draw Y lines (green)"], ["z", "Draw Z lines (blue)"]] as const) {
+      const row = el("label", { class: "prop-row" }, label + " ");
+      const input = el("input", { id: `editor-grid-${key}`, type: "checkbox" }) as HTMLInputElement;
+      input.checked = store.grid[key]; input.addEventListener("change", () => store.updateGrid({ [key]: input.checked }));
+      row.append(input); props.append(row);
+    }
+    const snappable = store.selectedEntries().some(s => (s.kind === "solid" || s.kind === "prefab") && !store.isLocked(s));
+    if (snappable) {
+      const buttons = el("div", { class: "editor-group-actions" });
+      for (const [key, label, axes] of [["all", "Snap XYZ", ["x", "y", "z"]], ["x", "Snap X", ["x"]], ["y", "Snap Y", ["y"]], ["z", "Snap Z", ["z"]]] as const) {
+        const button = el("button", { id: `editor-snap-${key}` }, label);
+        button.addEventListener("click", () => store.snapSelectedToGrid([...axes])); buttons.append(button);
+      }
+      props.append(buttons);
+    }
     const current = store.selectedItem();
     if (!current) {
       props.append(el("p", { class: "prop-hint" }, "Select an object to edit it."));

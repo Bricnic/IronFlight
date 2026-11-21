@@ -153,9 +153,9 @@ async function boot() {
     document.getElementById("weather-rain")!.hidden = !sim.weather.rain;
   }
   /** Stored flags (or a fresh roll when randomized) for the incoming track. */
-  function applyLevelWeather(backgroundTemplate?: string) {
+  function applyLevelWeather(backgroundTemplate?: string, forceNight?: boolean) {
     const stored = loadSettings();
-    sim.weather = levelWeather(stored, stored.randomizeAtmosphere, randomWeather(), backgroundTemplate);
+    sim.weather = levelWeather(stored, stored.randomizeAtmosphere, randomWeather(), backgroundTemplate, forceNight);
     paintWeatherBadges();
   }
   function select(stage: Stage) {
@@ -171,6 +171,7 @@ async function boot() {
       ["lab", "easy", "medium", "hard"].includes(stage)
         ? undefined
         : getTrack(stage as CustomTrackId).backgroundTemplate,
+      ["lab", "easy", "medium", "hard"].includes(stage) ? undefined : getTrack(stage as CustomTrackId).custom?.forceNight,
     );
     sim.reset(stage);
     view.resetTruck();
@@ -196,7 +197,7 @@ async function boot() {
   ) {
     if (vehicle) sim.vehicleId = getVehicle(vehicle).id;
     else applyStoredVehicle();
-    applyLevelWeather(getTrack(id).backgroundTemplate);
+    applyLevelWeather(getTrack(id).backgroundTemplate, getTrack(id).custom?.forceNight);
     sim.startTrack(id, lane);
     view.resetTruck();
     clock.reset();
@@ -334,7 +335,7 @@ async function boot() {
     showLevelSelect,
     (weather) => {
       sim.weather = { ...weather };
-      if (isPermanentNight(sim.courseTrack?.backgroundTemplate))
+      if (isPermanentNight(sim.courseTrack?.backgroundTemplate, sim.courseTrack?.custom?.forceNight))
         sim.weather.night = true;
       paintWeatherBadges();
     },

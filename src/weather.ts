@@ -19,7 +19,8 @@ export function randomWeather(rng: () => number = Math.random): WeatherFlags {
 /** Background templates stuck in permanent night (mystic caves). */
 export const PERMANENT_NIGHT_TEMPLATES = ["mystic-cave"];
 /** True when the track's background never sees daylight. */
-export function isPermanentNight(backgroundTemplate?: string) {
+export function isPermanentNight(backgroundTemplate?: string, forceNight?: boolean) {
+  if (forceNight !== undefined) return forceNight;
   return (
     backgroundTemplate !== undefined &&
     PERMANENT_NIGHT_TEMPLATES.includes(backgroundTemplate)
@@ -35,8 +36,9 @@ export function levelWeather(
   randomize: boolean,
   roll: WeatherFlags,
   backgroundTemplate?: string,
+  forceNight?: boolean,
 ): WeatherFlags {
   const next = randomize ? { ...roll } : { night: stored.night, rain: stored.rain };
-  if (isPermanentNight(backgroundTemplate)) next.night = true;
+  if (isPermanentNight(backgroundTemplate, forceNight)) next.night = true;
   return next;
 }

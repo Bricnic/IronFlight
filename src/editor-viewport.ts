@@ -11,6 +11,16 @@ import type { EditorSelection, EditorStore } from "./editor-state";
 import { magneticTileMaterial, pbr, slimeMaterial } from "./materials";
 import { buildEditorPrefab, buildEditorIceBatch } from "./editor-prefabs";
 import { buildToyCheckpoint } from "./toy-track-view";
+import { buildCheckpointFrame, applyNightGlow } from "./course-view";
+import { createTruck } from "./truck";
+import { getBackgroundTemplate, resolveMood } from "./backgrounds";
+import { buildSkyEnvScene } from "./sky-env";
+import { loadSettings, QUALITY } from "./settings";
+import { levelWeather, isPermanentNight } from "./weather";
+import { buildWorldGrid, snapCoordinate } from "./editor-grid";
+import { buildEditorLocalLights } from "./editor-lighting";
+import { buildHeadlightRig, setHeadlightRig, setHeadlightDim, MYSTIC_HEADLIGHT_DIM } from "./headlights";
+import { DEFAULT_TUNING } from "./tuning";
 import { scaleSolidUVs } from "./solid-uv";
 import { validRect, type ClipRect } from "./editor-clip";
 type ViewportHit = { object: unknown; distance?: number; point?: T.Vector3; instanceId?: number };
@@ -24,7 +34,7 @@ const pickKey = (pick: EditorSelection) => !pick ? "" :
   `${pick.kind}:${"id" in pick ? pick.id : "index" in pick ? pick.index : ""}`;
 /** One candidate per logical object, ordered from the camera into the scene.
  * Fill, wireframe, children and exit faces must not add duplicate stops. */
-export function resolveViewportStack(hits: ViewportHit[]) {
+export function resolveViewportStack(hits: ViewportHit[], includeLocked = false) {
   const stack: { selection: NonNullable<EditorSelection>; hit: ViewportHit }[] = [];
   const seen = new Set<string>();
   for (const hit of [...hits].sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0))) {
@@ -35,7 +45,7 @@ export function resolveViewportStack(hits: ViewportHit[]) {
         parent?: unknown;
       };
       const instance = hit.instanceId === undefined ? undefined : record.userData?.instancePicks?.[hit.instanceId];
-      if (record.userData?.locked || instance?.locked) break;
+      if (!includeLocked && (record.userData?.locked || instance?.locked)) break;
       const pick = instance?.pick ?? record.userData?.pick;
       if (pick != null) {
         const selection = pick, key = pickKey(selection);
@@ -149,6 +159,7 @@ function attachOrbit(
     draw();
   };
   let dragging = false;
+  let middleHeld = false;
   let panning = false;
   let px = 0;
   let py = 0;
@@ -166,18 +177,28 @@ function attachOrbit(
   dom.addEventListener("pointerdown", (e) => {
     if (canStart && !canStart(e)) return;
     dragging = true;
+    middleHeld = !!(e.buttons & 4);
     panning = e.button !== 1 && (e.shiftKey || e.button === 2);
     px = e.clientX;
     py = e.clientY;
     dom.setPointerCapture(e.pointerId);
   });
   dom.addEventListener("pointermove", (e) => {
+    // Mouse chords produce pointermove (not another pointerdown).
+    if (!middleHeld && (e.buttons & 4)) {
+      if (canStart && !canStart(e)) return;
+      if (!dragging) { px = e.clientX; py = e.clientY; }
+      dragging = true;
+    }
+    middleHeld = !!(e.buttons & 4);
     if (!dragging) return;
     const dx = e.clientX - px;
     const dy = e.clientY - py;
     px = e.clientX;
     py = e.clientY;
-    if (panning) {
+    if ((e.buttons & 4) && (e.buttons & 3)) {
+      panPixels(dx, dy, panPlaneForButton(e.buttons & 1 ? 0 : 2));
+    } else if (panning && !middleHeld) {
       panPixels(dx, dy);
     } else {
       spherical.theta -= dx * 0.008;
@@ -190,6 +211,7 @@ function attachOrbit(
   });
   const stop = () => {
     dragging = false;
+    middleHeld = false;
   };
   dom.addEventListener("pointerup", stop);
   dom.addEventListener("pointercancel", stop);
@@ -240,17 +262,62 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   const environment = environmentGenerator.fromScene(environmentScene, 0.04);
   scene.environment = environment.texture;
   environmentScene.dispose(); environmentGenerator.dispose();
-  const grid = new T.GridHelper(400, 40, 0x3a5a5a, 0x22393e);
+  let grid = buildWorldGrid(store.grid);
+  let gridKey = JSON.stringify(store.grid);
   const axes = new T.AxesHelper(10);
   scene.add(grid, axes);
   // Preview-only lighting; the wireframe pass uses unlit materials.
-  scene.add(new T.HemisphereLight(0xffffff, 0x334455, 0.9));
+  const hemi = new T.HemisphereLight(0xffffff, 0x334455, 0.9);
+  scene.add(hemi);
   const sun = new T.DirectionalLight(0xffffff, 1.6);
   sun.position.set(40, 80, 20);
   scene.add(sun);
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -110, right: 110, top: 110, bottom: -110, far: 250 });
+  sun.shadow.bias = -0.0005;
+  renderer.shadowMap.type = T.PCFSoftShadowMap;
+  let skyEnvironment: { key: string; texture: T.Texture } | null = null;
+  let lighting: { game: boolean; night: boolean; rain: boolean; sun: number; hemi: number; env: number } | null = null;
+  const applyLighting = (level: CustomLevel, preview: boolean) => {
+    const game = preview && !!level.previewGameLighting;
+    const settings = loadSettings();
+    const weather = levelWeather(settings, false, settings, level.backgroundTemplate, level.forceNight);
+    const mood = resolveMood(getBackgroundTemplate(level.backgroundTemplate), weather);
+    const quality = QUALITY[settings.video];
+    renderer.toneMapping = game ? T.ACESFilmicToneMapping : T.NoToneMapping;
+    renderer.toneMappingExposure = game ? 1.25 : 1;
+    renderer.shadowMap.enabled = game && quality.shadows;
+    sun.castShadow = game;
+    sun.position.set(...(game ? [-45, 80, -25] : [40, 80, 20]) as [number, number, number]);
+    sun.color.setHex(game ? mood.sun.color : 0xffffff);
+    sun.intensity = game ? mood.sun.intensity : 1.6;
+    hemi.color.setHex(game ? mood.hemi.sky : 0xffffff);
+    hemi.groundColor.setHex(game ? mood.hemi.ground : 0x334455);
+    hemi.intensity = game ? mood.hemi.intensity : 0.9;
+    scene.environmentIntensity = game ? mood.env : 1;
+    scene.background = game ? new T.Color(mood.fog.color) : null;
+    scene.fog = game ? new T.Fog(mood.fog.color, mood.fog.near * quality.fogScale, mood.fog.far * quality.fogScale) : null;
+    const baked = game && (weather.night || weather.rain);
+    const key = baked ? `${mood.sky.top}:${mood.sky.horizon}` : "room";
+    if (skyEnvironment?.key !== key) {
+      skyEnvironment?.texture.dispose(); skyEnvironment = null;
+      if (baked) {
+        const generator = new T.PMREMGenerator(renderer);
+        const sky = buildSkyEnvScene(mood.sky.top, mood.sky.horizon);
+        skyEnvironment = { key, texture: generator.fromScene(sky, 0.04).texture };
+        sky.traverse(o => { if (o instanceof T.Mesh) { o.geometry.dispose(); (o.material as T.Material).dispose(); } });
+        generator.dispose();
+      }
+    }
+    scene.environment = skyEnvironment?.texture ?? environment.texture;
+    lighting = { game, night: weather.night, rain: weather.rain, sun: sun.intensity, hemi: hemi.intensity, env: scene.environmentIntensity };
+  };
   const camera = new T.PerspectiveCamera(55, 1, 0.1, 2000);
   const target = new T.Vector3(0, 0, 0);
-  const draw = () => renderer.render(scene, camera);
+  const draw = () => {
+    grid.position.set(snapCoordinate(target.x, store.grid.spacing), store.grid.y ? snapCoordinate(target.y, store.grid.spacing) : 0, snapCoordinate(target.z, store.grid.spacing));
+    renderer.render(scene, camera);
+  };
   let group: T.Group | null = null;
   const raycaster = new T.Raycaster();
   const ndcAt = (clientX: number, clientY: number) => {
@@ -260,19 +327,19 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       -((clientY - rect.top) / rect.height) * 2 + 1,
     );
   };
-  const pickAt = (clientX: number, clientY: number) => {
+  const pickAt = (clientX: number, clientY: number, includeLocked = false) => {
     const ndc = ndcAt(clientX, clientY);
     raycaster.setFromCamera(ndc, camera);
     const hits = group
       ? raycaster.intersectObjects(group.children, true)
       : [];
-    const stack = resolveViewportStack(hits);
+    const stack = resolveViewportStack(hits, includeLocked);
     return {
       stack,
       ndc,
     };
   };
-  let drag: { planeY: number; offX: number; offZ: number } | null = null;
+  let drag: { planeY: number; offX: number; offZ: number; x: number; z: number; origins: ReturnType<EditorStore["selectionPositions"]> } | null = null;
   let rotateAxis: RotatorAxis | null = null;
   let pan = false;
   let panButton = 0;
@@ -288,11 +355,18 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   let prefabResize: { original: import("./custom-level").CustomPrefab; matrix: T.Matrix4; inverse: T.Matrix4; box: ResizeBox; handle: ResizeHandle; plane: T.Plane; start: T.Vector3; changed: boolean; lastFactor: number } | null = null;
   const canStart = (e: PointerEvent) => {
     pendingClick = null;
-    if (e.button === 1) {
+    if (e.button === 1 || (e.buttons & 4)) {
+      if (!middleOrbit) store.endGesture();
+      drag = null; rotateAxis = null; pan = false; resizing = null; prefabResize = null; clipDrag = null;
       middleOrbit = true;
       downEmpty = false;
       cycle.reset();
       return true;
+    }
+    if (e.button === 0 && e.shiftKey && (e.ctrlKey || e.metaKey)) {
+      const selection = pickAt(e.clientX, e.clientY, true).stack[0]?.selection;
+      if (selection) store.select(selection, true, true);
+      cycle.reset(); return false;
     }
     // A non-middle click ends a look session without selecting anything.
     if (store.tool === "look") {
@@ -408,6 +482,8 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       planeY: point.y,
       offX: item ? point.x - item.x : 0,
       offZ: item ? point.z - item.z : 0,
+      x: item?.x ?? 0, z: item?.z ?? 0,
+      origins: store.selectionPositions(),
     };
     store.beginGesture();
     renderer.domElement.setPointerCapture(e.pointerId);
@@ -541,7 +617,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       drag.planeY,
     );
     if (hit)
-      store.updateSelected({ x: hit.x - drag.offX, z: hit.z - drag.offZ });
+      store.moveSelectedFrom(drag.origins, { x: hit.x - drag.offX - drag.x, z: hit.z - drag.offZ - drag.z }, store.grid.snap && !e.ctrlKey);
   });
   const endGesture = (e: PointerEvent) => {
     if (middleOrbit) { middleOrbit = false; return; }
@@ -631,7 +707,13 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       const clip = store.clipPreview();
       if (clip) { level = { ...level, solids: clip.solids }; preview = true; }
       previewOn = preview;
-      grid.visible = !preview;
+      applyLighting(level, preview);
+      const nextGridKey = JSON.stringify(store.grid);
+      if (nextGridKey !== gridKey) {
+        grid.traverse(o => { if (o instanceof T.LineSegments) { o.geometry.dispose(); (o.material as T.Material).dispose(); } });
+        scene.remove(grid); grid = buildWorldGrid(store.grid); scene.add(grid); gridKey = nextGridKey;
+      }
+      grid.visible = !preview && store.grid.show;
       axes.visible = !preview;
       generation++;
       if (settleTimer) {
@@ -675,8 +757,8 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       for (const [i, cp] of level.checkpoints.entries()) {
         const previous = level.checkpoints[i - 1] ?? level.spawn;
         const yaw = cp.yaw ?? Math.atan2(cp.x - previous.x, cp.z - previous.z);
-        if (preview && cp.appearance) {
-          const frame = buildToyCheckpoint(cp.appearance);
+        if (preview) {
+          const frame = cp.appearance ? buildToyCheckpoint(cp.appearance) : buildCheckpointFrame();
           frame.position.set(cp.x, Math.max(0, (cp.y ?? 2) - 2.6), cp.z);
           frame.rotation.y = yaw;
           frame.userData.pick = { kind: "checkpoint", index: i };
@@ -773,16 +855,27 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           marker.scale.setScalar(1.6);
         group.add(marker);
       }
-      const spawn = new T.Mesh(
+      const spawn = preview ? createTruck() : new T.Mesh(
         new T.ConeGeometry(1, 2.5, 4),
         new T.MeshBasicMaterial({ color: 0xffa762, wireframe: true }),
       );
-      spawn.position.set(level.spawn.x, level.spawn.y + 1.5, level.spawn.z);
+      spawn.position.set(level.spawn.x, level.spawn.y + (preview ? 0 : 1.5), level.spawn.z);
       spawn.rotation.y = level.spawn.yaw;
       spawn.userData.pick = { kind: "spawn" };
-      if (preview) spawn.layers.set(1); // gizmos hide in preview
       spawn.userData.locked = !!level.spawn.locked;
+      if (preview && level.previewGameLighting) {
+        const headlights = buildHeadlightRig();
+        headlights.userData.ignoreBounds = true;
+        setHeadlightRig(headlights, lighting!.night);
+        setHeadlightDim(headlights, DEFAULT_TUNING.headlightDim * (isPermanentNight(level.backgroundTemplate, level.forceNight) ? MYSTIC_HEADLIGHT_DIM : 1));
+        spawn.getObjectByName("hood")?.add(headlights);
+      }
       group.add(spawn);
+      if (preview && level.previewGameLighting) {
+        group.traverse(o => { if (o instanceof T.Mesh && !o.parent?.userData.ignoreBounds) { o.castShadow = true; o.receiveShadow = true; } });
+        applyNightGlow(group, lighting!.night);
+        group.add(buildEditorLocalLights(level, target, lighting!.night));
+      }
       scene.add(group);
       draw();
       // Textures pop in asynchronously; redraw until they arrive.
@@ -852,6 +945,16 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       });
       return {
         preview: previewOn,
+        lighting,
+        checkpoints: (group?.children ?? []).filter(o => o.userData.pick?.kind === "checkpoint" && o.layers.test(camera.layers)).map(o => {
+          let meshes = 0; o.traverse(child => { if (child instanceof T.Mesh) meshes++; });
+          return { index: o.userData.pick.index as number, meshes };
+        }),
+        spawn: (() => {
+          const root = group?.children.find(o => o.userData.pick?.kind === "spawn");
+          let meshes = 0; root?.traverse(o => { if (o instanceof T.Mesh) meshes++; });
+          return { name: root?.name, meshes, visible: !!root?.layers.test(camera.layers) };
+        })(),
         selectedPrefab: store.selection?.kind === "prefab" ? store.selection.id : undefined,
         prefabs: (group?.children ?? []).filter(o => o.userData.pick?.kind === "prefab").map(root => {
           let meshes = 0, vertices = 0;
@@ -860,6 +963,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
           return { id: root.userData.pick.id as string, meshes, vertices, min: bounds.min.toArray(), max: bounds.max.toArray() };
         }),
         gridVisible: grid.visible,
+        grid: { ...store.grid, axes: grid.children.map(o => o.name) },
         solids,
         prefabArrows,
         centerPick: resolveViewportPick(hits),
@@ -882,7 +986,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       for (const model of group.children) {
         const pick = model.userData.pick as EditorSelection;
         if (pick && store.isSelected(pick)) model.traverse(o => {
-          if (!(o instanceof T.Mesh) || !o.visible || o.parent?.userData.arrowOf || !o.layers.isEnabled(0)) return;
+          if (!(o instanceof T.Mesh) || !o.visible || o.parent?.userData.arrowOf || o.parent?.userData.ignoreBounds || !o.layers.isEnabled(0)) return;
           o.geometry.computeBoundingBox();
           bounds.union(o.geometry.boundingBox!.clone().applyMatrix4(o.matrixWorld));
         });
@@ -894,6 +998,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     },
     resize,
     dispose() {
+      skyEnvironment?.texture.dispose();
       environment.dispose();
       if (settleTimer) clearTimeout(settleTimer);
       renderer.dispose();

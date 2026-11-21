@@ -149,3 +149,9 @@ The Select level header button stays available on every screen. Open Destruction
 
 
 In the level editor, middle-mouse drag always orbits the camera, including over unlocked objects and while using another tool. Shift does not turn middle-drag into a pan. Rotator uses left drag for yaw and right drag for pitch; roll remains editable in its degree field.
+
+Hold middle+left to pan along the ground, or middle+right to pan vertically. Either button order works; releasing the secondary button returns to orbit. Ctrl+Shift+click includes locked objects in the selection without unlocking them.
+
+Preview includes checkpoint frames and a static monster truck at spawn. Enable **Preview game lighting** in Level settings to use the gameplay light colors, exposure, environment and fog. **Force night** overrides the background's permanent-night rule; existing mystic-cave levels retain night until explicitly changed. Turning it off allows the weather chosen in Settings.
+
+The editor's **World grid** controls spacing (five units by default), visibility and red X / green Y / blue Z lines. **Snap XYZ**, **Snap X**, **Snap Y** and **Snap Z** round each selected solid or prefab independently to the nearest world coordinate. Enable **Snap to world grid** for snapped dragging; hold Control for smooth movement. Snapping respects locks and supports undo. Grid controls are editor preferences for the current session; preview hides grid lines.

@@ -31,7 +31,7 @@ import { buildChristmasDecor } from "./christmas-view";
 import { buildCandyLethal, poseCandyLethal } from "./candy-lethal-view";
 import { buildChristmasLethal, poseChristmasLethal } from "./christmas-lethal-view";
 import { assignCandleLights, buildCandleLightPool, CANDLE_LIGHT_COUNT, type CandleSource } from "./candle-lights";
-import { assignMysticLights, buildMysticLightPool, type MysticSource } from "./mystic-lights";
+import { assignMysticLights, buildMysticLightPool, MYSTIC_SOURCE_COLORS, type MysticSource } from "./mystic-lights";
 import type { Simulation } from "./simulation";
 
 const standard = (color: number, metalness = 0.15, roughness = 0.55) =>
@@ -1492,13 +1492,7 @@ export class DungeonView extends T.Group {
     };
   }
   mysticSources(): MysticSource[] {
-    const colors: Record<string, number> = {
-      "glow-mushroom": 0x4ff5e0,
-      "cave-fairy": 0xff6fe0,
-      firefly: 0xffd23b,
-      "cave-moth": 0x80ec27,
-      "cave-caterpillar": 0x80ec27,
-    };
+    const colors = MYSTIC_SOURCE_COLORS;
     return this.models
       .filter((m) => m.h.kind in colors)
       .map((m) => ({

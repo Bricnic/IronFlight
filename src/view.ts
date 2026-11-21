@@ -797,7 +797,7 @@ export class GameView {
       setHeadlightRig(this.headlightRig, s.weather.night);
       setHeadlightDim(
         this.headlightRig,
-        s.tuning.headlightDim * (isPermanentNight(s.courseTrack?.backgroundTemplate) ? MYSTIC_HEADLIGHT_DIM : 1),
+        s.tuning.headlightDim * (isPermanentNight(s.courseTrack?.backgroundTemplate, s.courseTrack?.custom?.forceNight) ? MYSTIC_HEADLIGHT_DIM : 1),
       );
     }
     const root = s.previousPosition.clone().lerp(s.body.translation(), alpha),

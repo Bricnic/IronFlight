@@ -338,6 +338,10 @@ export interface CustomLevel {
   limit?: number;
   /** Underground levels render with dark cavern air, fog and torchlight. */
   underground?: boolean;
+  /** Override the background's permanent-night rule; false permits Settings weather. */
+  forceNight?: boolean;
+  /** Use the gameplay lighting rig in the editor preview. */
+  previewGameLighting?: boolean;
   /** Background template name; resolved against levels/backgrounds/. */
   backgroundTemplate?: string;
 }
@@ -398,6 +402,10 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     "backgroundTemplate must be 1-64 chars of letters, numbers, spaces, - or _",
   );
   const underground = (level as CustomLevel)?.underground;
+  const forceNight = (level as CustomLevel)?.forceNight;
+  const previewGameLighting = (level as CustomLevel)?.previewGameLighting;
+  for (const [key, value] of Object.entries({ forceNight, previewGameLighting }))
+    check(errors, value === undefined || typeof value === "boolean", `${key} must be a boolean`);
   check(
     errors,
     underground === undefined || typeof underground === "boolean",
@@ -624,6 +632,8 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     medals: { ...medals },
     ...(limit === undefined ? {} : { limit }),
     ...(underground === undefined ? {} : { underground }),
+    ...(forceNight === undefined ? {} : { forceNight }),
+    ...(previewGameLighting === undefined ? {} : { previewGameLighting }),
     ...(backgroundTemplate === undefined ? {} : { backgroundTemplate }),
   };
 }
