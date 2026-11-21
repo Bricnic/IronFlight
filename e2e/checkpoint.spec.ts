@@ -15,7 +15,7 @@ async function crossGate(page: Page, index: number) {
       Math.atan2(gate.nx, gate.nz),
     );
       for (let f = 0; f < 240 && (g.snapshot().run?.checkpoint ?? 0) <= i; f++)
-        g.advanceFrames(1, 1, { throttle: 1 });
+        g.driveFrames(1, 1, () => ({ throttle: 1 }), false);
       return g.snapshot().run;
     },
     [index, TRACK] as const,
@@ -25,6 +25,8 @@ async function crossGate(page: Page, index: number) {
 async function startRace(page: Page) {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   await page.evaluate((track) => {
     const g = window.__game!;
     g.startTrack(track);
@@ -52,6 +54,8 @@ test("checkpoint banner shows ahead/behind deltas against the best", async ({
   );
   await page.reload();
   await page.waitForFunction(() => !!window.__game);
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   await page.evaluate((track) => {
     const g = window.__game!;
     g.startTrack(track);

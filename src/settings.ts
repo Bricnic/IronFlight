@@ -15,6 +15,7 @@ export const QUALITY: Record<VideoQuality, QualitySpec> = {
   low: { pixelRatio: 0.75, shadows: false, far: 350, fogScale: 0.6 },
 };
 export interface GameSettings {
+  showObjectHelp: boolean;
   video: VideoQuality;
   night: boolean;
   rain: boolean;
@@ -41,6 +42,7 @@ export function loadSettings(
       if (isTier(video))
         return {
           video,
+          showObjectHelp: (parsed as { showObjectHelp?: unknown } | null)?.showObjectHelp === true,
           ...parseWeatherFlags(parsed),
           randomizeAtmosphere:
             (parsed as { randomizeAtmosphere?: unknown } | null)
@@ -50,15 +52,20 @@ export function loadSettings(
   } catch {
     // Corrupt JSON falls through to the default.
   }
-  return { video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false };
+  return { video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false };
 }
 export function saveSettings(
   video: VideoQuality,
   weather: WeatherFlags = DEFAULT_WEATHER,
   randomizeAtmosphere = false,
   storage: SettingsStorage = globalThis.localStorage,
+  showObjectHelp = loadSettings(storage).showObjectHelp,
 ): GameSettings {
-  const settings = { video, ...weather, randomizeAtmosphere };
+  const settings = { video, ...weather, randomizeAtmosphere, showObjectHelp };
   storage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   return settings;
+}
+export function saveObjectHelp(show: boolean, storage: SettingsStorage = globalThis.localStorage) {
+  const settings = loadSettings(storage);
+  return saveSettings(settings.video, { night: settings.night, rain: settings.rain }, settings.randomizeAtmosphere, storage, show);
 }

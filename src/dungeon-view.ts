@@ -1,3 +1,4 @@
+import { markObjectHelp } from "./object-help";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { pbr } from "./materials";
@@ -150,7 +151,7 @@ export function buildDungeonLabel(h: DungeonHazard, topY: number): T.Sprite {
   );
   label.scale.set(6, 1.5, 1);
   label.position.set(0, topY, 0);
-  return label;
+  return markObjectHelp(label);
 }
 const boneMat = () =>
   new T.MeshStandardMaterial({

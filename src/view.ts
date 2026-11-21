@@ -1,3 +1,4 @@
+import { setObjectHelpVisibility, objectHelpStats } from "./object-help";
 import { ComicView } from "./comic-view";
 import { ResizedPrefabView } from "./resized-prefab-view";
 import { basePrefabSimulation } from "./prefab-space";
@@ -699,9 +700,11 @@ export class GameView {
   removeFragileIceModel(id: string) {
     this.fragileIce.removeModel(id);
   }
+  setObjectHelpVisible(show: boolean) { setObjectHelpVisibility(this.scene, show); }
   stats() {
     const [lightA, lightB] = this.lightIntensities();
     return {
+      objectHelp: objectHelpStats(this.scene),
       vehicleId: this.simulation.vehicleId,
       lights: { a: lightA, b: lightB },
       headlights: { on: this.simulation.weather.night && this.headlightRig !== null },

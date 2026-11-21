@@ -21,10 +21,10 @@ async function collectStar(page: Page) {
         Math.sin(desired - heading),
         Math.cos(desired - heading),
       );
-      g.advanceFrames(1, 1, {
+      g.driveFrames(1, 1, () => ({
         throttle: 1,
         steer: Math.max(-1, Math.min(1, error * 2)),
-      });
+      }), false);
       if ((g.snapshot().run?.stars.length ?? 0) > 0) break;
     }
     return g.snapshot().run;
@@ -34,6 +34,8 @@ async function collectStar(page: Page) {
 async function startRace(page: Page) {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   await page.evaluate((track) => {
     const g = window.__game!;
     g.startTrack(track);
@@ -105,6 +107,8 @@ test("level select shows banked and unbanked star states", async ({
 }) => {
   await page.goto("/");
   await page.waitForFunction(() => !!window.__game);
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   // triple-loop is NOT relocated, so a legacy found-only save still lights it.
   const card = page.locator('.track-card[data-track="triple-loop"]');
   await expect(card.locator(".star-unlit")).toHaveCount(1);

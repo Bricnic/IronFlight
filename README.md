@@ -138,3 +138,6 @@ All editor angle fields display and accept degrees, including negative angles an
 
 
 The right property panel includes Lock/Unlock and Select all of this kind. Multi-selection hides the object name and edits shared properties in bulk: common values are shown directly, differing values show `(various)`, and entering a value applies it to every selected object in one Undo step. Inspector coordinates and angles are absolute; viewport gestures preserve relative placement. Matching-kind selection skips locked objects. User groups still lock together. The object list collapses kinds with three or more instances by default, with user groups displayed inside those kind sections. Duplicate, Delete selected and Edit spawn sit below Copy/Paste and above the list.
+
+
+Object help labels are off by default. Enable Show object help text in Settings to display instructional billboards above hazards; the choice applies immediately and is remembered independently of video quality and weather. Confetti keeps animating after a successful finish while gameplay remains frozen, and clears when entering a menu.

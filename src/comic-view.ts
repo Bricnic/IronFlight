@@ -1,3 +1,4 @@
+import { markObjectHelp } from "./object-help";
 import * as T from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
@@ -151,7 +152,7 @@ export function buildComicLabel(h: ComicHazard, topY: number): T.Sprite {
   );
   label.scale.set(6, 1.5, 1);
   label.position.set(0, topY, 0);
-  return label;
+  return markObjectHelp(label);
 }
 export function buildComicModel(h: ComicHazard): Model {
   const root = new T.Group();

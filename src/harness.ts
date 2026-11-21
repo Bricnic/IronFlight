@@ -126,6 +126,7 @@ export interface GameHarness {
     lavaScorch: number;
   };
   stats(): {
+    objectHelp: { total: number; visible: number };
     fairground: { triangles: number; carouselTriangles: number; carousels: number; bumpers: number; balloons: number; bananas: number };
     vehicleId: string;
     lights: { a: number; b: number };

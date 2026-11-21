@@ -1,6 +1,7 @@
 import {
   loadSettings,
   saveSettings,
+  saveObjectHelp,
   type VideoQuality,
 } from "./settings";
 import type { WeatherFlags } from "./weather";
@@ -26,11 +27,12 @@ export function createSettings(
   onVideo: (tier: VideoQuality) => void,
   onBack: () => void,
   onWeather: (weather: WeatherFlags) => void,
+  onObjectHelp: (show: boolean) => void,
 ) {
   const screen = document.createElement("main");
   screen.id = "settings-screen";
   screen.hidden = true;
-  screen.innerHTML = `<div class="settings-intro"><div><div class="eyebrow">IRON FLIGHT / SETUP</div><h1>Settings.</h1><p>Tune the game to your machine.</p></div><div class="menu-actions"><button id="settings-back">Level select</button></div></div><section class="settings-section" aria-label="Video"><h2>Video</h2><div class="settings-grid" role="radiogroup" aria-label="Video quality"></div><p class="selection-footnote">Applies instantly and is remembered.</p></section><section class="settings-section" aria-label="Weather"><h2>Weather</h2><div class="settings-grid" role="group" aria-label="Weather mutators"></div><p class="selection-footnote">Night and rain apply to every track and can combine. Randomize re-rolls them on every level and retry.</p></section>`;
+  screen.innerHTML = `<div class="settings-intro"><div><div class="eyebrow">IRON FLIGHT / SETUP</div><h1>Settings.</h1></div><div class="menu-actions"><button id="settings-back">Level select</button></div></div><section class="settings-section" aria-label="Video"><h2>Video</h2><div class="settings-grid" role="radiogroup" aria-label="Video quality"></div><p class="selection-footnote">Applies instantly and is remembered.</p></section><section class="settings-section" aria-label="Weather"><h2>Weather</h2><div class="settings-grid" role="group" aria-label="Weather mutators"></div><p class="selection-footnote">Night and rain apply to every track and can combine. Randomize re-rolls them on every level and retry.</p></section>`;
   const grids = screen.querySelectorAll<HTMLElement>(".settings-grid");
   const grid = grids[0]!;
   const weatherGrid = grids[1]!;
@@ -88,6 +90,18 @@ export function createSettings(
     paintWeather(weather, randomizeAtmosphere);
   };
   weatherGrid.append(randomCard);
+  const helpSection = document.createElement("section");
+  helpSection.className = "settings-section";
+  helpSection.setAttribute("aria-label", "Object help");
+  helpSection.innerHTML = `<h2>Object help</h2><div class="settings-grid"><article class="settings-card" data-setting="object-help"><button class="vehicle-pick" role="switch" aria-label="Show object help text" aria-checked="false"><div class="track-card-body"><div class="track-card-heading"><h2>Show object help text</h2><span class="best-medal picked">ON</span></div><p>Show labels explaining how to interact with objects.</p></div></button></article></div>`;
+  const helpCard = helpSection.querySelector<HTMLElement>("article")!;
+  const helpButton = helpCard.querySelector("button")!;
+  const paintHelp = (show: boolean) => { helpCard.classList.toggle("selected", show); helpButton.setAttribute("aria-checked", String(show)); };
+  helpButton.onclick = () => {
+    const show = !loadSettings().showObjectHelp;
+    saveObjectHelp(show); onObjectHelp(show); paintHelp(show);
+  };
+  screen.append(helpSection);
   host.append(screen);
   screen.querySelector<HTMLButtonElement>("#settings-back")!.onclick = onBack;
   function paintWeather(flags: WeatherFlags, randomizeAtmosphere: boolean) {
@@ -116,6 +130,7 @@ export function createSettings(
     show() {
       const stored = loadSettings();
       paint(stored.video);
+      paintHelp(stored.showObjectHelp);
       paintWeather(
         { night: stored.night, rain: stored.rain },
         stored.randomizeAtmosphere,

@@ -41,7 +41,7 @@ test("settings page toggles video quality live", async ({ page }) => {
   const stored = await page.evaluate(() =>
     localStorage.getItem("iron-flight-settings-v1"),
   );
-  expect(JSON.parse(stored!)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: false });
+  expect(JSON.parse(stored!)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: false, showObjectHelp: false });
   await page.locator("#settings-back").click();
   await expect(page.locator("#settings-screen")).toBeHidden();
 });

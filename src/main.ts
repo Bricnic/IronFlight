@@ -1,3 +1,4 @@
+import { confettiDelta } from "./confetti";
 import { resultOpacity } from "./result-reveal";
 import { createLevelSelect } from "./level-select";
 import { createVehicleSelect } from "./vehicle-select";
@@ -212,6 +213,7 @@ async function boot() {
   }
   function showLevelSelect() {
     surface = "menu";
+    clearConfetti();
     exitEdit();
     keys.clear();
     clock.reset();
@@ -223,6 +225,7 @@ async function boot() {
   }
   function showLevelEditor() {
     surface = "menu";
+    clearConfetti();
     exitEdit();
     keys.clear();
     clock.reset();
@@ -238,6 +241,7 @@ async function boot() {
   }
   function showVehicleSelect() {
     surface = "menu";
+    clearConfetti();
     exitEdit();
     keys.clear();
     clock.reset();
@@ -249,6 +253,7 @@ async function boot() {
   }
   function showSettings() {
     surface = "menu";
+    clearConfetti();
     exitEdit();
     keys.clear();
     clock.reset();
@@ -310,6 +315,7 @@ async function boot() {
       sim.weather = { ...weather };
       paintWeatherBadges();
     },
+    (show) => view.setObjectHelpVisible(show),
   );
   paintWeatherBadges();
   $("settings-button").onclick = showSettings;
@@ -975,20 +981,25 @@ async function boot() {
       ctx.restore();
     }
   }
-  // Confetti runs on sim time so pausing freezes the burst mid-flight.
-  function stepConfetti() {
+  function clearConfetti() {
+    confettiPieces = [];
+    confettiRun = sim.trackRun;
+    confettiLast = sim.time;
+    const canvas = $("confetti") as HTMLCanvasElement;
+    canvas.hidden = true;
+    canvas.getContext("2d")!.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  // In-game pauses freeze the burst; completed runs use the frame clock.
+  function stepConfetti(frameDelta?: number) {
     // A retry swaps in a fresh run object and rewinds sim time: drop the
     // previous run's burst like the checkpoint banner does, instead of
     // freezing it on a stale clock until the next checkpoint fires.
     if (sim.trackRun !== confettiRun) {
-      confettiRun = sim.trackRun;
-      confettiPieces = [];
-      ($("confetti") as HTMLCanvasElement).hidden = true;
-      confettiLast = sim.time;
+      clearConfetti();
       return;
     }
     if (!confettiPieces.length) return;
-    const dt = Math.min(0.05, sim.time - confettiLast);
+    const dt = confettiDelta(sim.time - confettiLast, frameDelta, surface === "result" && sim.trackRun?.status === "completed");
     if (dt <= 0) return;
     confettiLast = sim.time;
     confettiPieces = confettiPieces.filter((p) => p.life > 0);
@@ -1001,7 +1012,7 @@ async function boot() {
       p.life -= dt;
     }
     if (confettiPieces.length) drawConfetti();
-    else ($("confetti") as HTMLCanvasElement).hidden = true;
+    else clearConfetti();
   }
   const CONFETTI_COLORS = ["#ffa762", "#f6edde", "#f0ca69", "#ff8a7a", "#8be28b", "#7ec8e3"];
   const CONFETTI_COUNT = 140;
@@ -1073,8 +1084,8 @@ async function boot() {
     }
     fireConfetti();
   }
-  function hud() {
-    stepConfetti();
+  function hud(frameDelta?: number) {
+    stepConfetti(frameDelta);
     placementBar.hidden = !(
       surface === "play" && !!sim.courseTrack?.custom
     );
@@ -1483,7 +1494,7 @@ async function boot() {
     view.render(false, clock.alpha);
     if (captureCamera && cameraTrace.length < 2000)
       cameraTrace.push(cameraSample());
-    hud();
+    hud(dt);
     requestAnimationFrame(frame);
   }
   select("easy");

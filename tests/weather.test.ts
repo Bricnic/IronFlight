@@ -21,6 +21,7 @@ it("defaults to clear daytime weather", () => {
     night: false,
     rain: false,
     randomizeAtmosphere: false,
+    showObjectHelp: false,
   });
 });
 
@@ -36,8 +37,9 @@ it("round-trips weather flags through storage", () => {
       video: "high",
       ...weather,
       randomizeAtmosphere: false,
+    showObjectHelp: false,
     });
-    expect(loadSettings(storage)).toEqual({ video: "high", ...weather, randomizeAtmosphere: false });
+    expect(loadSettings(storage)).toEqual({ video: "high", ...weather, randomizeAtmosphere: false, showObjectHelp: false });
   }
 });
 
@@ -52,6 +54,7 @@ it("repairs invalid stored weather flags to off", () => {
     night: false,
     rain: false,
     randomizeAtmosphere: false,
+    showObjectHelp: false,
   });
   storage.setItem(
     "iron-flight-settings-v1",
@@ -62,6 +65,7 @@ it("repairs invalid stored weather flags to off", () => {
     night: false,
     rain: false,
     randomizeAtmosphere: false,
+    showObjectHelp: false,
   });
 });
 
