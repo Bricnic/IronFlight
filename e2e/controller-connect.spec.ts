@@ -2,12 +2,16 @@ import { test, expect } from "@playwright/test";
 
 declare global {
   interface Window {
+    __setProFocus(focused: boolean): void;
     __proTest: { packets: { id: number; data: number[] }[]; cancelled: boolean; frame(right: number, shared?: number, left?: number): void; disconnect(): void; getRequests(): number };
   }
 }
 test.slow();
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
+    let focused = true;
+    Object.defineProperty(document, "hasFocus", { value: () => focused, configurable: true });
+    window.__setProFocus = value => { focused = value; window.dispatchEvent(new Event(value ? "focus" : "blur")); };
     Object.defineProperty(navigator, "getGamepads", { value: () => [] });
     const hid = new EventTarget(), device = new EventTarget(); let requests = 0;
     const packets: { id: number; data: number[] }[] = [];
@@ -27,7 +31,7 @@ test.beforeEach(async ({ page }) => {
         packets.push({ id, data: Array.from(data) });
         const bytes = new Uint8Array(48); bytes[12] = 0x80; bytes[13] = data[9];
         queueMicrotask(() => emit(0x21, bytes));
-        if (data[9] === 0x03) queueMicrotask(() => frame(0));
+        if (data[9] === 0x03 && data[10] === 0x30) queueMicrotask(() => frame(0));
       },
     });
     Object.assign(hid, { requestDevice: async () => { requests++; return mock.cancelled ? [] : [device]; }, getDevices: async () => [device] });
@@ -85,4 +89,33 @@ test("keyboard driving remains active with a connected controller selected", asy
   }
   await page.keyboard.up("ArrowDown");
   expect(await page.evaluate(() => window.__game!.snapshot().signedSpeed)).toBeLessThan(-0.5);
+});
+
+test("focus changes restore simple reports, resume direct input and clean up on page exit", async ({ page }) => {
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("button", { name: "Connect Pro Controller", exact: true }).click();
+  await expect(page.locator("#input-status")).toContainText("Controller connected");
+  await page.evaluate(() => window.__setProFocus(false));
+  await expect(page.locator("#input-status")).toContainText("paused");
+  expect(await page.evaluate(() => window.__proTest.packets.at(-1)?.data.slice(9, 11))).toEqual([3, 0x3f]);
+  const backgroundSpeed = await page.evaluate(() => {
+    window.__game!.select("easy"); window.__proTest.frame(0x80); window.__game!.advanceFrames(120, 1);
+    return Math.abs(window.__game!.snapshot().signedSpeed);
+  });
+  expect(backgroundSpeed).toBeLessThan(0.5);
+  await page.evaluate(() => window.__setProFocus(true));
+  await expect.poll(() => page.evaluate(() => window.__proTest.packets.at(-1)?.data.slice(9, 11))).toEqual([3, 0x30]);
+  const speed = await page.evaluate(() => { window.__proTest.frame(0x80); window.__game!.advanceFrames(120, 1); return window.__game!.snapshot().signedSpeed; });
+  expect(speed).toBeGreaterThan(1);
+  expect(await page.evaluate(() => window.__proTest.getRequests())).toBe(1);
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.locator('[data-input="keyboard"] button').click();
+  await page.evaluate(() => window.__game!.driveFrames(0, 1, () => ({}), false));
+  await expect(page.locator("#input-status")).toContainText("paused");
+  expect(await page.evaluate(() => window.__proTest.packets.at(-1)?.data.slice(9, 11))).toEqual([3, 0x3f]);
+  await page.locator('[data-input="controller"] button').click();
+  await page.evaluate(() => window.__game!.driveFrames(0, 1, () => ({}), false));
+  await expect(page.locator("#input-status")).toContainText("Controller connected");
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pagehide")));
+  await expect.poll(() => page.evaluate(() => window.__proTest.packets.at(-1)?.data.slice(9, 11))).toEqual([3, 0x3f]);
 });

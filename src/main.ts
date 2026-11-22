@@ -110,6 +110,17 @@ async function boot() {
   let settingsScreens: ReturnType<typeof createSettings>;
   let pauseScreens: ReturnType<typeof createPauseMenu>;
   let inputMode: InputDevice = "keyboard";
+  let controllerForeground: boolean | undefined;
+  function syncControllerForeground() {
+    inputMode = loadSettings().input;
+    const active = inputMode === "controller" && document.hasFocus() && document.visibilityState !== "hidden";
+    controllerForeground = active;
+    void proController.setForeground(active);
+  }
+  window.addEventListener("focus", syncControllerForeground);
+  window.addEventListener("blur", syncControllerForeground);
+  document.addEventListener("visibilitychange", syncControllerForeground);
+  window.addEventListener("pagehide", () => { void proController.disconnect(); });
   let pauseResumePaused = false;
   let padStartWas = false;
   const controllerMenuInput = new ControllerMenuInput();
@@ -386,6 +397,7 @@ async function boot() {
   );
   paintWeatherBadges();
   $("settings-button").onclick = () => showSettings();
+  syncControllerForeground();
   if (loadSettings().input === "controller") void proController.reconnect();
   pauseScreens = createPauseMenu(app, {
     onResume: closePause,
@@ -1164,7 +1176,7 @@ async function boot() {
   }
   /** Start/look/menu sticks; runs every frame, even while paused. */
   function pollController(frameDelta?: number) {
-    const pad = inputMode === "controller" ? pollPad() : null;
+    const pad = controllerForeground ? pollPad() : null;
     const startNow = padStartPressed(pad);
     if (startNow && !padStartWas) {
       if (pauseScreens.isVisible()) closePause();
@@ -1198,7 +1210,7 @@ async function boot() {
     }
   }
   function hud(frameDelta?: number) {
-    inputMode = loadSettings().input;
+    syncControllerForeground();
     pollController(frameDelta);
     stepConfetti(frameDelta);
     placementBar.hidden = !(
@@ -1447,7 +1459,7 @@ async function boot() {
   const input = (): Input => {
     const signedSpeed = sim.snapshot(false).signedSpeed;
     const keyboard = drivingInput(keys, signedSpeed);
-    if (inputMode === "controller") {
+    if (controllerForeground) {
       const pad = pollPad();
       if (pad) return combineDrivingInput(padDriving(pad, signedSpeed), keyboard);
     }

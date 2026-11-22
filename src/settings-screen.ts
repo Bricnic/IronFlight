@@ -124,6 +124,7 @@ export function createSettings(
   connectPro.disabled = !proController.supported;
   connectPro.onclick = async () => {
     saveInput("controller"); paintInput("controller");
+    void proController.setForeground(document.hasFocus() && document.visibilityState !== "hidden");
     await proController.connect(); paintInputStatus();
   };
   inputSection.append(connectPro, connectHelp);
@@ -142,6 +143,7 @@ export function createSettings(
     card.querySelector("button")!.onclick = () => {
       saveInput(device.id);
       paintInput(device.id);
+      void proController.setForeground(device.id === "controller" && document.hasFocus() && document.visibilityState !== "hidden");
     };
     inputGrid.append(card);
     inputCards.set(device.id, card);

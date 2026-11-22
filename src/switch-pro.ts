@@ -38,7 +38,7 @@ export function decodeProReport(reportId: number, data: DataView, calibration = 
     }),
   };
 }
-type State = "idle" | "requesting" | "initializing" | "connected" | "waiting" | "disconnected" | "error";
+type State = "idle" | "requesting" | "initializing" | "connected" | "waiting" | "suspended" | "disconnected" | "error";
 type Status = { state: State; message: string };
 const isPro = (d: ProHidDevice) => d.vendorId === 0x057e && d.productId === 0x2009;
 function reports(device: ProHidDevice, kind: "inputReports" | "outputReports" = "outputReports") {
@@ -54,6 +54,11 @@ export class ProControllerConnection {
   private value: PadState | null = null;
   private lastFrame: number | null = null;
   private ready = false;
+  private foreground = true;
+  private foregroundTask = Promise.resolve();
+  private closing = Promise.resolve();
+  private fullMode = false;
+  private modePacketSize = 11;
   private counter = 0;
   private calibration = defaults();
   private message: Status = { state: "idle", message: "" };
@@ -61,15 +66,15 @@ export class ProControllerConnection {
   private waiters = new Set<(event: ProHidInput | Error) => void>();
   private pending: Promise<boolean> | null = null;
   private step = "idle";
-  private sent: { reportId: number; command: number; bytes: number }[] = [];
+  private sent: { reportId: number; command: number; bytes: number; mode?: number }[] = [];
   private received = new Map<number, { count: number; bytes: number }>();
   private deviceInfo: { name: string; vendor: number; product: number; inputs: { reportId: number; bytes: number }[]; outputs: { reportId: number; bytes: number }[] } | null = null;
-  diagnostics() { return { ...this.status(), step: this.step, device: this.deviceInfo, sent: this.sent, received: [...this.received].map(([reportId, value]) => ({ reportId, ...value })) }; }
+  diagnostics() { return { ...this.status(), step: this.step, device: this.deviceInfo, input: this.value ? { axes: this.value.axes.map(v => Math.round(v * 1000) / 1000), pressed: this.value.buttons.flatMap((b, i) => b.pressed ? [i] : []) } : null, sent: this.sent, received: [...this.received].map(([reportId, value]) => ({ reportId, ...value })) }; }
   constructor(private access?: ProHidAccess, private now = () => Date.now()) {
     this.supported = !!access;
     access?.addEventListener("disconnect", ({ device }) => {
       if (device !== this.current) return;
-      this.release(); this.change("disconnected", "Controller disconnected. Reconnect it, then choose Connect Pro Controller.");
+      void this.release(false); this.change("disconnected", "Controller disconnected. Reconnect it, then choose Connect Pro Controller.");
     });
     access?.addEventListener("connect", ({ device }) => {
       if (isPro(device) && this.message.state === "disconnected") void this.reconnect();
@@ -84,7 +89,39 @@ export class ProControllerConnection {
     if (this.message.state === "connected" && !this.pad()) return { state: "waiting", message: "Controller opened, but input stopped. Focus the game and press a controller button, or reconnect." };
     return this.message;
   }
-  pad(): PadState | null { return this.ready && this.current?.opened && this.lastFrame !== null && this.now() - this.lastFrame < 1000 ? this.value : null; }
+  pad(): PadState | null { return this.foreground && this.ready && this.current?.opened && this.lastFrame !== null && this.now() - this.lastFrame < 1000 ? this.value : null; }
+  /** Keep the Bluetooth link open, but return ordinary reports to Windows outside the game. */
+  setForeground(active: boolean): Promise<void> {
+    if (active === this.foreground) return this.foregroundTask;
+    this.foreground = active;
+    return this.updateForeground();
+  }
+  private updateForeground(): Promise<void> {
+    const active = this.foreground;
+    this.value = null; this.lastFrame = null;
+    this.foregroundTask = this.foregroundTask.then(async () => {
+      const device = this.current;
+      if (!this.ready || !device?.opened || active !== this.foreground) return;
+      try {
+        this.value = null; this.lastFrame = null;
+        await this.subcommand(3, [active ? 0x30 : 0x3f]);
+        this.fullMode = active;
+        if (active && !this.value) await this.wait(e => e.reportId === 0x30 && !!decodeProReport(e.reportId, e.data), 4000);
+        if (device !== this.current || active !== this.foreground) return;
+        this.step = active ? "ready" : "simple input mode";
+        this.change(active ? "connected" : "suspended", active ? `Controller connected: ${device.productName}. Direct input is active.` : "Direct controller input paused. Windows-compatible reports are active until you return to the game.");
+      } catch (error) {
+        if (device !== this.current) return;
+        await this.release();
+        this.change("error", `Could not change controller reporting mode: ${error instanceof Error ? error.message : String(error)} Reconnect the controller.`);
+      }
+    });
+    return this.foregroundTask;
+  }
+  async disconnect() {
+    await this.release();
+    this.step = "idle"; this.change("idle", "Direct controller connection closed.");
+  }
   id(): string | null { return this.pad() ? `${this.current!.productName || "Pro Controller"} (direct connection)` : null; }
   connect(): Promise<boolean> {
     if (this.pending) return this.pending;
@@ -107,7 +144,7 @@ export class ProControllerConnection {
       const devices = choose ? await this.access.requestDevice({ filters: [{ vendorId: 0x057e, productId: 0x2009 }] }) : await this.access.getDevices();
       const device = devices.find(isPro);
       if (!device) { if (choose) this.change("idle", "No controller selected. Choose Connect Pro Controller to try again."); return false; }
-      await this.release(); this.current = device; this.counter = 0; this.calibration = defaults();
+      await this.release(); this.current = device; this.counter = 0; this.calibration = defaults(); this.modePacketSize = 11;
       this.sent = []; this.received.clear(); this.step = "opening controller";
       const describe = (kind: "inputReports" | "outputReports") => reports(device, kind).map(r => ({ reportId: r.reportId, bytes: (r.items ?? []).reduce((n, i) => n + i.reportSize * i.reportCount, 0) / 8 }));
       this.deviceInfo = { name: device.productName, vendor: device.vendorId, product: device.productId, inputs: describe("inputReports"), outputs: describe("outputReports") };
@@ -123,6 +160,7 @@ export class ProControllerConnection {
       }
       // Some Pro-compatible devices do not acknowledge LED commands until the
       // input stream has been enabled. Establish usable input first.
+      this.fullMode = true;
       await this.subcommand(0x03, [0x30]);
       this.step = "waiting for full input reports";
       if (!this.value) await this.wait(e => e.reportId === 0x30 && !!decodeProReport(e.reportId, e.data), 4000);
@@ -133,7 +171,9 @@ export class ProControllerConnection {
       this.step = "waiting for full input reports";
       if (!this.value) await this.wait(e => e.reportId === 0x30 && !!decodeProReport(e.reportId, e.data), 4000);
       if (!this.current?.opened || !this.value) throw new Error("No controller input received. Focus the game and press a controller button.");
-      this.ready = true; this.step = "ready"; this.change("connected", `Controller connected: ${device.productName || "Pro Controller"}. Direct input is active.`);
+      this.ready = true; this.step = "ready";
+      if (!this.foreground) await this.updateForeground();
+      else this.change("connected", `Controller connected: ${device.productName || "Pro Controller"}. Direct input is active.`);
       return true;
     } catch (error) {
       const disconnected = this.message.state === "disconnected"; await this.release();
@@ -151,9 +191,9 @@ export class ProControllerConnection {
     const packet = new Uint8Array(Math.max(size, contents.length)); packet.set(contents); return packet;
   }
   private subcommand(command: number, data: number[], timeout = 1500, attempts = 2) {
-    this.step = ({ 0x30: "player-light setup", 0x40: "motion setup", 0x03: "full input mode", 0x10: "stick calibration" } as Record<number, string>)[command] ?? "controller setup";
+    this.step = command === 3 && data[0] === 0x3f ? "simple input mode" : ({ 0x30: "player-light setup", 0x40: "motion setup", 0x03: "full input mode", 0x10: "stick calibration" } as Record<number, string>)[command] ?? "controller setup";
     const bytes = Uint8Array.from([0, 0, 1, 0x40, 0x40, 0, 1, 0x40, 0x40, command, ...data]);
-    return this.send(0x01, bytes, e => command === 3 && e.reportId === 0x30 && !!decodeProReport(e.reportId, e.data) || e.reportId === 0x21 && e.data.byteLength >= 14 && e.data.getUint8(13) === command && !!(e.data.getUint8(12) & 0x80), timeout, attempts);
+    return this.send(0x01, bytes, e => command === 3 && data[0] === 0x30 && e.reportId === 0x30 && !!decodeProReport(e.reportId, e.data) || command === 3 && data[0] === 0x3f && e.reportId === 0x3f && e.data.byteLength >= 11 || e.reportId === 0x21 && e.data.byteLength >= 14 && e.data.getUint8(13) === command && !!(e.data.getUint8(12) & 0x80), timeout, attempts);
   }
   private async send(id: number, contents: Uint8Array<ArrayBuffer>, matches: (e: ProHidInput) => boolean, timeout = 1500, attempts = 2) {
     for (let attempt = 0; ; attempt++) {
@@ -165,8 +205,11 @@ export class ProControllerConnection {
           const size = Math.ceil((descriptor?.items ?? []).reduce((n, item) => n + item.reportCount * item.reportSize, 0) / 8) || 48;
           const padded = new Uint8Array(Math.max(size, packet.length)); padded.set(packet); packet = padded;
         }
-        this.sent.push({ reportId: id, command: id === 1 ? contents[9] : contents[0], bytes: packet.byteLength });
-        await this.wait(matches, timeout, () => this.current!.sendReport(id, packet)); return;
+        this.sent.push({ reportId: id, command: id === 1 ? contents[9] : contents[0], bytes: packet.byteLength, mode: id === 1 && contents[9] === 3 ? contents[10] : undefined });
+        this.sent = this.sent.slice(-64);
+        await this.wait(matches, timeout, () => this.current!.sendReport(id, packet));
+        if (id === 1 && contents[9] === 3) this.modePacketSize = packet.length;
+        return;
       } catch (error) { if (!this.current || attempt + 1 >= attempts) throw error; }
     }
   }
@@ -192,12 +235,27 @@ export class ProControllerConnection {
     if (value) { this.value = value; this.lastFrame = this.now(); }
     for (const listener of [...this.waiters]) listener(event);
   };
-  private release() {
+  private release(restore = true) {
     this.ready = false; this.value = null; this.lastFrame = null;
     for (const listener of [...this.waiters]) listener(new Error("Controller disconnected."));
     const old = this.current; this.current = null;
+    const restoreMode = restore && this.fullMode; this.fullMode = false;
     old?.removeEventListener("inputreport", this.input);
-    return old?.opened ? old.close().catch(() => {}) : Promise.resolve();
+    if (!old?.opened) return this.closing;
+    const bytes = new Uint8Array(this.modePacketSize);
+    bytes.set([this.counter++ & 15, 0, 1, 0x40, 0x40, 0, 1, 0x40, 0x40, 3, 0x3f]);
+    this.closing = this.closing.then(async () => {
+      if (restoreMode) {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          this.sent.push({ reportId: 1, command: 3, mode: 0x3f, bytes: bytes.length }); this.sent = this.sent.slice(-64);
+          await Promise.race([old.sendReport(1, bytes).catch(() => {}), new Promise<void>(resolve => { timer = setTimeout(resolve, 500); })]);
+        } catch { /* Closing must still release the device if a write throws. */ }
+        finally { clearTimeout(timer); }
+      }
+      await old.close().catch(() => {});
+    });
+    return this.closing;
   }
 }
 const access = typeof navigator === "undefined" ? undefined : (navigator as Navigator & { hid?: ProHidAccess }).hid;

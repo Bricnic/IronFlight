@@ -16,7 +16,7 @@ function fixture(ack = true) {
       if (!ack) return;
       const reply = new Uint8Array(48); reply[12] = 0x80; reply[13] = bytes[9];
       queueMicrotask(() => input?.({ reportId: 0x21, data: new DataView(reply.buffer) }));
-      if (bytes[9] === 0x03) queueMicrotask(() => input?.({ reportId: 0x30, data: report() }));
+      if (bytes[9] === 0x03 && bytes[10] === 0x30) queueMicrotask(() => input?.({ reportId: 0x30, data: report() }));
     }),
   };
   const access: ProHidAccess = {
@@ -26,6 +26,55 @@ function fixture(ack = true) {
   return { device, access, frame: (data: DataView) => input?.({ reportId: 0x30, data }), disconnect: () => disconnect?.({ device }) };
 }
 afterEach(() => vi.useRealTimers());
+it("uses simple reports while unfocused and resumes fresh full reports on return", async () => {
+  const f = fixture(), c = new ProControllerConnection(f.access);
+  await c.connect(); f.frame(report([0x80, 0, 0]));
+  const suspended = c.setForeground(false);
+  expect(c.pad()).toBeNull(); await suspended;
+  expect(c.status().state).toBe("suspended");
+  expect(vi.mocked(f.device.sendReport).mock.calls.at(-1)?.[1].slice(9, 11)).toEqual(Uint8Array.of(3, 0x3f));
+  await c.setForeground(true);
+  expect(c.status().state).toBe("connected");
+  expect(c.pad()?.buttons[7].pressed).toBe(false);
+});
+it("restores simple input before closing, and closes even if that write fails", async () => {
+  const f = fixture(), c = new ProControllerConnection(f.access);
+  await c.connect();
+  await c.disconnect();
+  const sends = vi.mocked(f.device.sendReport);
+  expect(sends.mock.calls.at(-1)?.[1].slice(9, 11)).toEqual(Uint8Array.of(3, 0x3f));
+  expect(sends.mock.invocationCallOrder.at(-1)!).toBeLessThan(vi.mocked(f.device.close).mock.invocationCallOrder[0]);
+  expect(c.pad()).toBeNull();
+  await c.connect(); sends.mockRejectedValueOnce(new Error("Disconnected"));
+  await c.disconnect(); expect(f.device.opened).toBe(false);
+});
+it("ends in full input mode after a rapid blur/focus without losing its connection", async () => {
+  const f = fixture(), c = new ProControllerConnection(f.access);
+  await c.connect();
+  await Promise.all([c.setForeground(false), c.setForeground(true)]);
+  expect(c.pad()).not.toBeNull();
+  expect(vi.mocked(f.device.sendReport).mock.calls.at(-1)?.[1].slice(9, 11)).toEqual(Uint8Array.of(3, 0x30));
+});
+it("finishes a connection in simple mode if the game lost focus during setup", async () => {
+  const f = fixture(), c = new ProControllerConnection(f.access);
+  await c.setForeground(false); expect(await c.connect()).toBe(true);
+  expect(c.status().state).toBe("suspended"); expect(c.pad()).toBeNull();
+  await c.setForeground(true); expect(c.pad()).not.toBeNull();
+});
+it("preserves live input across repeated foreground notifications without extra mode writes", async () => {
+  const f = fixture(), c = new ProControllerConnection(f.access);
+  await c.connect(); f.frame(report([0x80, 0, 0]));
+  const sent = vi.mocked(f.device.sendReport).mock.calls.length;
+  for (let i = 0; i < 5; i++) await c.setForeground(true);
+  expect(c.pad()?.buttons[7].pressed).toBe(true);
+  expect(f.device.sendReport).toHaveBeenCalledTimes(sent);
+});
+it("bounds cleanup time if the operating system never completes the restore write", async () => {
+  vi.useFakeTimers(); const f = fixture(), c = new ProControllerConnection(f.access);
+  await c.connect(); vi.mocked(f.device.sendReport).mockImplementationOnce(() => new Promise(() => {}));
+  const closing = c.disconnect(); await vi.advanceTimersByTimeAsync(501); await closing;
+  expect(f.device.opened).toBe(false);
+});
 it("decodes packed sticks, Nintendo A/ZR/ZL, Plus and d-pad into the driving scheme", () => {
   const data = report([0x88, 0x02, 0x82]);
   const state = decodeProReport(0x30, data)!;
