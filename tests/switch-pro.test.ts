@@ -31,6 +31,7 @@ it("decodes packed sticks, Nintendo A/ZR/ZL, Plus and d-pad into the driving sch
   const state = decodeProReport(0x30, data)!;
   expect(state.axes).toEqual([0, 0, 0, 0]);
   for (const index of [0, 6, 7, 9, 12]) expect(state.buttons[index].pressed).toBe(true);
+  expect(decodeProReport(0x30, report([0x04, 0, 0]))?.buttons[1].pressed).toBe(true);
   expect(decodeProReport(0x3f, data)).toBeNull(); expect(decodeProReport(0x30, new DataView(new ArrayBuffer(2)))).toBeNull();
 });
 it("actively requests access, enables full reports and sets a steady player light before ready", async () => {

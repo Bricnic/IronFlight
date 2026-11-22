@@ -83,6 +83,16 @@ it("matches down-arrow drive behavior at full left-trigger pressure", () => {
   }
 });
 
+it("makes B match Space, overriding acceleration and reverse while preserving steering", () => {
+  for (const speed of [-10, 0, 10]) {
+    for (const trigger of [6, 7]) {
+      const input = pad({ axes: [-1, 0, 0, 0], buttons: buttons({ 1: 1, 0: trigger === 7 ? 1 : 0, [trigger]: 1 }) });
+      expect(padDriving(input, speed)).toEqual(drivingInput(new Set([" ", "a", "w"]), speed));
+    }
+  }
+  expect(padDriving(pad({ buttons: buttons({ 7: 1 }) }))).toMatchObject({ throttle: 1, handbrake: 0 });
+});
+
 it("reads right-stick look with a deadzone", () => {
   expect(padLook(pad({ axes: [0, 0, 1, -1] }))).toEqual({ dx: 1, dy: -1 });
   expect(padLook(pad({ axes: [0, 0, 0.1, 0.1] }))).toEqual({ dx: 0, dy: 0 });

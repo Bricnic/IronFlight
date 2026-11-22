@@ -5,6 +5,7 @@ import { directionalDrive } from "./controls";
 /** Standard-mapping button indices used by the controller scheme. */
 export const PAD_BUTTON = {
   action: 0,
+  handbrake: 1,
   leftTrigger: 6,
   rightTrigger: 7,
   start: 9,
@@ -71,14 +72,15 @@ function trigger(pad: PadState | null, index: number): number {
 /**
  * Controller driving: left stick steers (left is positive like the A key),
  * ZR accelerates analog, ZL brakes/reverses analog, A is a digital alternative
- * accelerator. No pad reads as all zeros.
+ * accelerator. B applies the same handbrake as Space. No pad reads as all zeros.
  */
 export function padDriving(pad: PadState | null, signedSpeed = 0): Input {
   const forward = Math.max(trigger(pad, PAD_BUTTON.rightTrigger), pad?.buttons[PAD_BUTTON.action]?.pressed ? 1 : 0);
   const direction = forward - trigger(pad, PAD_BUTTON.leftTrigger);
+  const handbrake = Number(pressed(pad, PAD_BUTTON.handbrake));
   return {
-    ...directionalDrive(direction, signedSpeed),
-    handbrake: 0,
+    ...(handbrake ? { throttle: 0, brake: 0 } : directionalDrive(direction, signedSpeed)),
+    handbrake,
     steer: -axis(pad, 0) || 0,
   };
 }

@@ -80,3 +80,21 @@ test("game-over options support stick navigation, A retry and B level select", a
   await wreck(); await control(page, 0, 0, 1);
   await expect(page.locator("#track-result")).toBeHidden(); await expect(page.locator("#level-select")).toBeVisible();
 });
+
+test("B handbrakes during gameplay and releasing it restores controller acceleration", async ({ page }) => {
+  const speeds = await page.evaluate(() => {
+    const g = window.__game!, p = window.__menuPad;
+    g.select("easy"); g.pause(true);
+    p.buttons[7] = { pressed: true, value: 1 };
+    p.buttons[1] = { pressed: true, value: 1 };
+    g.advanceFrames(120, 1);
+    const held = Math.abs(g.snapshot().signedSpeed);
+    p.buttons[1] = { pressed: false, value: 0 };
+    g.advanceFrames(120, 1);
+    return { held, released: g.snapshot().signedSpeed };
+  });
+  expect(speeds.held).toBeLessThan(0.5);
+  expect(speeds.released).toBeGreaterThan(1);
+  await expect(page.locator("#level-select")).toBeHidden();
+  await expect(page.locator("#pause-menu")).toBeHidden();
+});
