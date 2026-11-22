@@ -74,6 +74,7 @@ import { formatDelta, objectiveCopy, progressCopy, progressFraction } from "./ru
 import { isStarRelocated } from "./gold-star-migrations";
 
 import { createDebugMenu } from "./debug-menu";
+import { createLevelHUD } from "./level-hud";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
 <aside><div class="eyebrow">THE ARENA IS YOURS</div><h1>BIG TRUCK.<br>BAD IDEAS.</h1><p class="intro">Three ways across. One way to find out.</p><div id="routes">${ROUTES.map((r) => `<button class="route" data-stage="${r.id}" style="--route:#${r.color.toString(16)}"><small>${r.difficulty}</small><strong>${r.name}<span>↗</span></strong><em>${r.gapEnd - 12}m gap <span>·</span> ${r.hazards} hazard${r.hazards > 1 ? "s" : ""}</em></button>`).join("")}</div>
@@ -150,6 +151,7 @@ async function boot() {
     getItem: (key) => localStorage.getItem(key),
     setItem: (key, value) => localStorage.setItem(key, value),
   });
+  const levelHUD = createLevelHUD(app, scores, starBank);
   const unlockSeen = new UnlockSeen({
     getItem: (key) => localStorage.getItem(key),
     setItem: (key, value) => localStorage.setItem(key, value),
@@ -413,7 +415,7 @@ async function boot() {
   app.insertAdjacentHTML(
     "beforeend",
     `<div id="placement-bar" hidden>
-      <button id="edit-toggle">Edit</button>
+      <button id="edit-toggle" hidden>Edit</button>
       <select id="place-kind" aria-label="Placement palette">
         <option value="brick">brick</option>
         <option value="wall">wall</option>
@@ -1216,7 +1218,7 @@ async function boot() {
     pollController(frameDelta);
     stepConfetti(frameDelta);
     placementBar.hidden = !(
-      surface === "play" && !!sim.courseTrack?.custom
+      surface === "play" && editing && !!sim.courseTrack?.custom
     );
     placementBar.classList.toggle("idle", !editing);
     const s = sim.snapshot(false),
@@ -1277,6 +1279,11 @@ async function boot() {
     $("handbrake-label").textContent = s.run?.wings && s.run.status === "running" ? "FLAP WINGS" : "HANDBRAKE";
     if (s.run) {
       const track = getTrack(s.run.trackId);
+      // Bank pickups before completion/unlock checks, including a star at the finish.
+      for (const id of s.run.stars) {
+        const def = track.goldStars?.find(g => g.id === id);
+        starBank.collect(s.run.trackId, id, def ? { x: def.x, y: def.y, z: def.z } : undefined);
+      }
       $("state-label").textContent = track.name.toUpperCase();
       $("state-copy").textContent = objectiveCopy(track);
       $("steer-label").textContent =
@@ -1323,16 +1330,6 @@ async function boot() {
           starRun = sim.trackRun;
           starSeen = s.run.stars.length;
         } else if (s.run.stars.length > starSeen) {
-          for (const id of s.run.stars) {
-            const def = getTrack(s.run.trackId).goldStars?.find(
-              (g) => g.id === id,
-            );
-            starBank.collect(
-              s.run.trackId,
-              id,
-              def ? { x: def.x, y: def.y, z: def.z } : undefined,
-            );
-          }
           starSeen = s.run.stars.length;
           showStarBanner();
         }
@@ -1360,6 +1357,7 @@ async function boot() {
     }
     if (surface === "result" && s.run?.status === "failed")
       screens.reveal(resultOpacity(sim.time - resultStartedAt));
+    levelHUD.update(sim.trackRun?.track, s, surface === "play" && !editing && !editorScreens?.isVisible() && !pauseScreens?.isVisible());
   }
   document
     .querySelectorAll<HTMLButtonElement>("[data-stage]")

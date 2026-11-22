@@ -100,6 +100,40 @@ select:focus-visible {
   position: fixed;
   inset: 84px 0 62px;
 }
+#level-hud {
+  position: absolute;
+  top: 100px;
+  left: 18px;
+  width: 220px;
+  padding: 10px;
+  background: #14232bdf;
+  border: 1px solid #52666e;
+  border-top: 2px solid #fda46c;
+  pointer-events: none;
+}
+#hud-minimap { width: 100%; height: auto; cursor: default; }
+#level-hud .map-key { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; color: #b4c6ca; }
+#level-hud .map-key span:first-child { color: #80edaa; }
+#level-hud .map-key span:nth-child(2) { color: #e8f3f5; }
+#level-hud .map-key span:nth-child(3) { color: #ffdb53; }
+#level-hud .map-key span:last-child { color: #ff986c; }
+#level-hud dl { margin: 9px 0 0; border-top: 1px solid #ffffff22; padding-top: 7px; font-size: 12px; }
+#level-hud dl > div { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+#level-hud dt { color: #b4c6ca; }
+#level-hud dd { margin: 0; font-weight: 700; }
+#level-hud [data-medal="gold"], #hud-gold-star.found { color: #ffdb53; }
+#level-hud [data-medal="silver"] { color: #c9dce7; }
+#level-hud [data-medal="bronze"] { color: #dfa17b; }
+@media (max-width: 650px) {
+  #level-hud { top: 132px; left: 10px; width: 166px; padding: 8px; }
+  #level-hud .map-key { font-size: 8px; }
+  #level-hud dl { font-size: 11px; }
+}
+@media (max-height: 600px) and (min-width: 651px) {
+  #level-hud { width: 160px; padding: 7px; top: 92px; left: 10px; }
+  #level-hud .map-key { font-size: 8px; }
+  #level-hud dl { font-size: 11px; }
+}
 canvas {
   display: block;
   touch-action: none;
