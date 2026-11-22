@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { drivingInput } from "../src/controls";
+import { combineDrivingInput, drivingInput } from "../src/controls";
 import {
   PAD_DEADZONE,
   connectedPadId,
@@ -97,6 +97,15 @@ it("reads right-stick look with a deadzone", () => {
   expect(padLook(pad({ axes: [0, 0, 1, -1] }))).toEqual({ dx: 1, dy: -1 });
   expect(padLook(pad({ axes: [0, 0, 0.1, 0.1] }))).toEqual({ dx: 0, dy: 0 });
   expect(padLook(null)).toEqual({ dx: 0, dy: 0 });
+});
+
+it("Space and B preserve acceleration for wing flaps, including mixed input", () => {
+  const keyboard = drivingInput(new Set(["w", " ", "a"]), 10, true);
+  const controller = padDriving(pad({ axes: [-1, 0, 0, 0], buttons: buttons({ 7: 1, 1: 1 }) }), 10, true);
+  expect(controller).toEqual(keyboard);
+  expect(keyboard).toMatchObject({ throttle: 1, handbrake: 1, brake: 0, steer: 1 });
+  expect(combineDrivingInput({ handbrake: 1 }, { throttle: 1 }, true)).toMatchObject({ throttle: 1, handbrake: 1 });
+  expect(combineDrivingInput({ throttle: 1 }, { handbrake: 1 }, true)).toMatchObject({ throttle: 1, handbrake: 1 });
 });
 
 it("reads Start, action and d-pad menu buttons", () => {

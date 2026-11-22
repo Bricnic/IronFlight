@@ -57,6 +57,9 @@ export async function createDebugMenu(sim: Simulation) {
     handbrakePower: "Handbrake multiplier",
     shadowDarkness: "Truck shadow darkness",
     gravity: "Gravity strength",
+    flightJumpStrength: "Flight jump strength (with wings)",
+    flightLookPower: "Flight mouse / right-stick look power",
+    flightSteerPower: "Flight left / right steering power",
     headlightDim: "Headlight dimness (caves dim further)",
   };
   const sliderKeys = (Object.keys(labels) as (keyof typeof labels)[])

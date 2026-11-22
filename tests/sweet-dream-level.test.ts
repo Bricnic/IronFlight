@@ -5,7 +5,7 @@ import { officialFileTracks } from "../src/official-levels";
 import { registerCustomTrack, validateCustomLevel } from "../src/custom-level";
 import { getTrack } from "../src/tracks";
 import { collectionById } from "../src/level-collections";
-import { driveSweetDreamToCompletion } from "./sweet-dream-drive";
+import { driveSweetDreamToCompletion, flySweetDreamToCherry } from "./sweet-dream-drive";
 
 beforeAll(initPhysics);
 
@@ -31,13 +31,19 @@ it("registers the dream level last in Sweet Celebrations with art and hints", ()
   expect(track.goldStars).toHaveLength(1);
 });
 
-it("drives to completion, collecting wings late and the star mid-flight", () => {
-  const { elapsed, wingsAt, stars } = driveSweetDreamToCompletion();
+it("drives to completion, collecting wings late", () => {
+  const { elapsed, wingsAt } = driveSweetDreamToCompletion();
   expect(elapsed).toBeLessThan(240);
   expect(wingsAt, "wings at least 10s from the start").toBeGreaterThanOrEqual(
     10,
   );
-  expect(stars).toContain("gold-star-1");
+});
+
+it("flaps from flat ground to collect the relocated star on the cake's red cherry without a ramp", () => {
+  const result = flySweetDreamToCherry();
+  expect(result.stars).toContain("gold-star-1");
+  expect(result.flaps).toBeGreaterThan(1);
+  expect(result.position.y).toBeGreaterThan(40);
 });
 
 it("keeps every dream prefab base out of structural solid volumes", () => {

@@ -81,7 +81,7 @@ app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON
 <section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span></div></section>
 <div id="status"><span id="state-label">READY TO SEND IT</span><strong id="state-copy">Build speed. Hold your line.</strong><div id="run-progress" hidden></div><span id="wings-badge" class="weather-badge" hidden>WINGS</span><div class="progress"><i id="progress"></i></div></div>
 <div id="checkpoint-banner" hidden><strong>CHECKPOINT!</strong><span id="checkpoint-delta" hidden></span></div><canvas id="confetti" hidden></canvas>
-<footer><div class="controls"><span><kbd>W / UP</kbd> GAS</span><span><kbd>S / DOWN</kbd> BRAKE / REV</span><span><kbd>A/D / LEFT/RIGHT</kbd> <span id="steer-label">STEER</span></span><span><kbd>R</kbd> RESTART</span><span><kbd>L</kbd> LEVEL SELECT</span><span><kbd>SPACE</kbd> HANDBRAKE</span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
+<footer><div class="controls"><span><kbd>W / UP</kbd> GAS</span><span><kbd>S / DOWN</kbd> BRAKE / REV</span><span><kbd>A/D / LEFT/RIGHT</kbd> <span id="steer-label">STEER</span></span><span><kbd>R</kbd> RESTART</span><span><kbd>L</kbd> LEVEL SELECT</span><span><kbd>SPACE</kbd> <span id="handbrake-label">HANDBRAKE</span></span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
 async function boot() {
   // Navigation occupies the header, not the 3D viewport. Only lab tools use a drawer.
   const header = document.querySelector("header")!,
@@ -1274,6 +1274,7 @@ async function boot() {
     const wingsBadge = $("wings-badge");
     wingsBadge.hidden = !s.run?.wings;
     wingsBadge.textContent = s.flying ? "FLYING" : "WINGS";
+    $("handbrake-label").textContent = s.run?.wings && s.run.status === "running" ? "FLAP WINGS" : "HANDBRAKE";
     if (s.run) {
       const track = getTrack(s.run.trackId);
       $("state-label").textContent = track.name.toUpperCase();
@@ -1461,21 +1462,23 @@ async function boot() {
   });
   window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => keys.clear());
-  /** Mouse drag px per frame for full flight deflection. */
-  const FLIGHT_MOUSE_PX = 240;
+  /** Mouse displacement is angular, while a held stick supplies a turn rate. */
+  const FLIGHT_MOUSE_RADIANS_PER_PX = 0.003;
   const input = (): Input => {
     const signedSpeed = sim.snapshot(false).signedSpeed;
-    const keyboard = drivingInput(keys, signedSpeed);
+    const wings = !!sim.trackRun?.wings && sim.trackRun.status === "running";
+    const keyboard = drivingInput(keys, signedSpeed, wings);
     const pad = controllerForeground ? pollPad() : null;
     const base = pad
-      ? combineDrivingInput(padDriving(pad, signedSpeed), keyboard)
+      ? combineDrivingInput(padDriving(pad, signedSpeed, wings), keyboard, wings)
       : keyboard;
     // Dream flight: mouse drags plus the right stick orient while airborne.
-    if (!sim.flying) return base;
-    let airYaw = -view.flightMouse.x / FLIGHT_MOUSE_PX;
-    let airPitch = -view.flightMouse.y / FLIGHT_MOUSE_PX;
+    const airYawDelta = -view.flightMouse.x * FLIGHT_MOUSE_RADIANS_PER_PX;
+    const airPitchDelta = -view.flightMouse.y * FLIGHT_MOUSE_RADIANS_PER_PX;
     view.flightMouse.x = 0;
     view.flightMouse.y = 0;
+    if (!sim.flying) return base;
+    let airYaw = 0, airPitch = 0;
     if (pad) {
       const look = padLook(pad);
       airYaw += -look.dx;
@@ -1483,6 +1486,8 @@ async function boot() {
     }
     return {
       ...base,
+      airYawDelta,
+      airPitchDelta,
       airYaw: Math.max(-1, Math.min(1, airYaw)),
       airPitch: Math.max(-1, Math.min(1, airPitch)),
     };

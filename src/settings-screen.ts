@@ -133,8 +133,8 @@ export function createSettings(
   inputSection.append(controllerDetails);
   const inputCards = new Map<InputDevice, HTMLElement>();
   for (const device of [
-    { id: "keyboard", name: "Keyboard", blurb: "WASD or arrows drive, Space handbrakes, mouse drag orbits the camera." },
-    { id: "controller", name: "Controller or keyboard", blurb: "Left stick steers, ZR accelerates, ZL brakes then reverses, A also accelerates, B handbrakes, Y resets the level, right stick looks, Start pauses. Keyboard controls remain active while the controller is connected." },
+    { id: "keyboard", name: "Keyboard", blurb: "WASD or arrows drive and steer in flight. Space handbrakes, or flaps when equipped with wings. Mouse drag looks, or steers in flight." },
+    { id: "controller", name: "Controller or keyboard", blurb: "Left stick steers on the ground and in flight, ZR accelerates, ZL brakes then reverses, A also accelerates, B handbrakes or flaps with wings, Y resets the level, right stick looks or steers in flight, Start pauses. Keyboard controls remain active while the controller is connected." },
   ] as const) {
     const card = document.createElement("article");
     card.className = "settings-card";

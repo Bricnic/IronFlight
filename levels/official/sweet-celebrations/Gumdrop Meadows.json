@@ -1,6 +1,5 @@
 {
   "name": "Gumdrop Meadows",
-  "backgroundTemplate": "candy-meadows",
   "mode": "race",
   "spawn": {
     "x": -230,
@@ -377,9 +376,9 @@
     {
       "id": "gm-decor-1-1",
       "kind": "lollipop-stand",
-      "x": -44.5,
+      "x": -44.163244227344215,
       "y": 0,
-      "z": 0,
+      "z": -4.244701871759605,
       "yaw": 1.7
     },
     {
@@ -624,5 +623,6 @@
     "silver": 75,
     "bronze": 110
   },
-  "limit": 150
+  "limit": 150,
+  "backgroundTemplate": "candy-meadows"
 }

@@ -37,6 +37,8 @@ Press backtick (`) for **Playtest tuning**. The current defaults live in `src/tu
 
 Steering rate, maximum tire angle (5–90 degrees) and actual turning power (0.1–10x) are independent. Gravity spans 0.1–10x. Primary and secondary color wheels recolor the paint and metal trim/rims, with brightness and hex entry; burn darkening remains applied. Acceleration, top speed, boost, coasting friction, brake power, dragon damage, hammer speed, handbrake strength and shadow darkness are also tunable.
 
+With dream wings equipped, tap Space or controller B to flap upward from the ground or in the air; release before the next flap. Acceleration remains available during flaps. A/D, Left/Right and the left stick smoothly steer the airborne car and its flight path. Mouse drag and the right stick steer yaw/pitch with stronger look response. Debug tuning offers independent flight jump strength, mouse/right-stick look power, and left/right steering power (0.1–10x), saved with the other tuning values.
+
 Canyon Plunge has a separate **Canyon Plunge top speed** slider (1–10x), multiplied by the global top-speed setting. Its starting ramp extends thirty meters behind the truck, with ten hydrants staggered across the descent. Triple Loop's loop surfaces use translucent plastic so the truck remains visible.
 
 Sky Slide's **Sky Slide water speed** slider sets a minimum flow speed from 100–1,000 displayed MPH (1–10x), defaulting to 250 MPH (2.5x). Twenty snowmen occupy every fifth segment of the channel. Impacts scatter snow and detach a random part, nudging the truck toward the edge. A/D strafe on the water; normal steering resumes on solid ground. The trampoline launches forward through an upright golden ring, including at maximum water speed.

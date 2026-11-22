@@ -1,6 +1,5 @@
 {
   "name": "Chocolate Chasm",
-  "backgroundTemplate": "candy-meadows",
   "mode": "race",
   "spawn": {
     "x": -170,
@@ -401,9 +400,9 @@
     {
       "id": "cc-decor-0-5",
       "kind": "lollipop-stand",
-      "x": -6.77,
+      "x": -0.8883244254735896,
       "y": 0,
-      "z": -94.05,
+      "z": -95.88859134117966,
       "yaw": 3.5
     },
     {
@@ -457,9 +456,9 @@
     {
       "id": "cc-decor-1-1",
       "kind": "lollipop-stand",
-      "x": 3.61,
+      "x": 8.711964464335272,
       "y": 0,
-      "z": -73.27,
+      "z": -72.80769845955781,
       "yaw": 1.7
     },
     {
@@ -899,5 +898,6 @@
     "silver": 220,
     "bronze": 320
   },
-  "limit": 340
+  "limit": 340,
+  "backgroundTemplate": "candy-meadows"
 }
