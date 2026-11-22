@@ -9,7 +9,7 @@ import {
   type CustomSolid,
   type SolidKind,
 } from "./custom-level";
-import { previewClip, type ClipRect } from "./editor-clip";
+import { autoClipOrder, previewAutoClip, previewClip, type ClipRect } from "./editor-clip";
 import { editableProperties, objectKindKey, propertyValue } from "./editor-properties";
 import { Euler, Quaternion, Vector3 } from "three";
 import { DEFAULT_EDITOR_GRID, snapCoordinate, type EditorGridSettings, type GridAxis } from "./editor-grid";
@@ -392,6 +392,38 @@ export class EditorStore {
   }
   applyClip() {
     const result = this.clipPreview();
+    if (!result?.affected.length || result.issues.length) return false;
+    this.pushHistory();
+    this.level.solids = result.solids;
+    this.solidSelection = result.retained.map((s) => s.id);
+    this.selectionKindFilter = undefined;
+    this.selections = result.retained.map(s => ({ kind: "solid", id: s.id }));
+    this.selection = result.retained[0] ? { kind: "solid", id: result.retained[0].id } : null;
+    this.clip = null; this.tool = "select"; this.emit();
+    return true;
+  }
+  /**
+   * Auto-clip candidates: 2+ shift-selected solids while the clip tool is
+   * active, none belonging to a group. Sorted alphabetically (cutter order).
+   */
+  autoClipTargets(): CustomSolid[] | null {
+    if (!this.clip) return null;
+    const entries = this.selectedEntries();
+    if (entries.some((s) => this.selectedItem(s)?.item.group)) return null;
+    const solids = entries
+      .filter((s) => s.kind === "solid")
+      .map((s) => this.level.solids.find((x) => x.id === (s as { id: string }).id))
+      .filter((s): s is CustomSolid => !!s);
+    return solids.length >= 2 ? autoClipOrder(solids) : null;
+  }
+  autoClipPreview() {
+    const targets = this.autoClipTargets();
+    return targets
+      ? previewAutoClip(this.level.solids, targets.map((s) => s.id))
+      : null;
+  }
+  applyAutoClip() {
+    const result = this.autoClipPreview();
     if (!result?.affected.length || result.issues.length) return false;
     this.pushHistory();
     this.level.solids = result.solids;

@@ -137,6 +137,85 @@ export type ClipResult = {
   issues: string[];
   slivers: number;
 };
+/** Display label used for ordering, matching the object list collation. */
+export function solidLabel(s: CustomSolid) {
+  return s.name ?? s.id;
+}
+/** Alphabetical cutter order (object-list collation, id tiebreak). */
+export function autoClipOrder(solids: CustomSolid[]) {
+  return [...solids].sort(
+    (a, b) =>
+      solidLabel(a).localeCompare(solidLabel(b), undefined, {
+        sensitivity: "base",
+        numeric: true,
+      }) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+  );
+}
+export type AutoClipResult = ClipResult & { order: string[] };
+/**
+ * Sequential mutual clip: each solid in alphabetical order cuts every other
+ * overlapping selected solid, evaluated against already-clipped geometry, so
+ * earlier names keep shared regions. Unsupported targets report issues and
+ * are left intact; cutters consumed by earlier steps are skipped.
+ */
+export function previewAutoClip(
+  solids: CustomSolid[],
+  ids: string[],
+): AutoClipResult {
+  const byId = new Map(solids.map((s) => [s.id, s]));
+  const ordered = autoClipOrder(
+    [...new Set(ids)]
+      .map((id) => byId.get(id))
+      .filter((s): s is CustomSolid => !!s),
+  );
+  const result: AutoClipResult = {
+    solids: [...solids],
+    retained: [],
+    removed: [],
+    affected: [],
+    issues: [],
+    slivers: 0,
+    order: ordered.map((s) => s.id),
+  };
+  const lineage = new Map<string, string[]>(ordered.map((s) => [s.id, [s.id]]));
+  const live = (pieceIds: string[]) =>
+    pieceIds.filter((id) => result.solids.some((s) => s.id === id));
+  for (const cutter of ordered) {
+    // Refresh the lookup: earlier steps replaced pieces.
+    for (const s of result.solids) byId.set(s.id, s);
+    const cutters = live(lineage.get(cutter.id) ?? [])
+      .map((id) => byId.get(id))
+      .filter((s): s is CustomSolid => !!s)
+      .map(solidRect)
+      .filter(validRect);
+    if (!cutters.length) continue;
+    for (const [orig, pieceIds] of lineage) {
+      if (orig === cutter.id) continue;
+      const targets = live(pieceIds);
+      if (!targets.length) continue;
+      const step = previewClip(result.solids, targets, cutters);
+      result.solids = step.solids;
+      for (const s of result.solids) byId.set(s.id, s);
+      // All retained pieces of this call belong to the single target original;
+      // targets that passed through uncut stay live under their own ids.
+      const cut = new Set(step.affected);
+      lineage.set(orig, [
+        ...targets.filter((id) => !cut.has(id)),
+        ...step.retained.map((p) => p.id),
+      ]);
+      result.retained.push(...step.retained);
+      result.removed.push(...step.removed);
+      if (step.affected.length && !result.affected.includes(orig))
+        result.affected.push(orig);
+      result.issues.push(...step.issues);
+      result.slivers += step.slivers;
+    }
+  }
+  // Earlier retained pieces may have been re-cut later; keep live ones only.
+  const current = new Set(result.solids.map((s) => s.id));
+  result.retained = result.retained.filter((s) => current.has(s.id));
+  return result;
+}
 export function previewClip(
   solids: CustomSolid[],
   targets: string[],

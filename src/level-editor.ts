@@ -6,7 +6,7 @@ import { commonProperty, editableProperties, objectKindKey, objectKindLabel, typ
 import { EditorStore, selectionKey, type EditorSelection } from "./editor-state";
 import { createEditorViewport } from "./editor-viewport";
 import { defaultTextureFor } from "./course-view";
-import { clipUnsupported, intersectRects, solidRect, validRect, type ClipRect } from "./editor-clip";
+import { clipUnsupported, intersectRects, solidLabel, solidRect, validRect, type ClipRect } from "./editor-clip";
 import {
   TEXTURE_IDS,
   PREFAB_KINDS,
@@ -444,6 +444,37 @@ export function createLevelEditor(
       layers.append(row);
     }
     props.append(layers);
+    const auto = store.autoClipPreview();
+    if (auto) {
+      const names = auto.order.map(
+        (id) => solidLabel(store.level.solids.find((s) => s.id === id)!),
+      );
+      props.append(
+        el(
+          "p",
+          { id: "editor-clip-auto-summary", role: "status" },
+          `Auto clip (${names.join(" → ")}): ${auto.affected.length} affected solids · ${auto.retained.length} retained pieces`,
+        ),
+      );
+      for (const issue of auto.issues)
+        props.append(el("p", { class: "clip-issue" }, issue));
+      const autoButton = el(
+        "button",
+        { id: "editor-clip-auto" },
+        "Auto clip",
+      ) as HTMLButtonElement;
+      autoButton.disabled = !auto.affected.length || !!auto.issues.length;
+      autoButton.title = auto.issues.length
+        ? auto.issues[0]
+        : !auto.affected.length
+          ? "Selected solids do not overlap"
+          : "Clip the selected solids against each other in name order";
+      autoButton.addEventListener("click", () => {
+        if (!store.applyAutoClip())
+          showError(auto.issues[0] ?? "Selected solids do not overlap");
+      });
+      props.append(autoButton);
+    }
     const apply = el(
       "button",
       { id: "editor-clip-apply" },

@@ -10,6 +10,7 @@ import {
 } from "../src/custom-level";
 import {
   intersectRects,
+  previewAutoClip,
   previewClip,
   solidRect,
   subtractRect,
@@ -203,6 +204,110 @@ it("stages multiple layers and applies/undoes/redoes geometry and selection atom
   store.redo();
   expect(store.level).toEqual(after);
   expect(store.solidSelection).toEqual(pieces);
+});
+const chain = (): CustomSolid[] => [
+  { ...box, id: "c-id", name: "Alpha", x: 5, z: 5, w: 10, d: 10 },
+  { ...box, id: "a-id", name: "Beta", x: 10, z: 5, w: 10, d: 10 },
+  { ...box, id: "b-id", name: "Cello", x: 17, z: 5, w: 10, d: 10 },
+];
+it("auto clip evaluates alphabetically by name against updated geometry", () => {
+  // A=[0,10] B=[5,15] C=[12,22] (z all [0,10]). A keeps the shared regions;
+  // B cuts C with its already-clipped remainder [10,15], leaving C=[15,22].
+  const result = previewAutoClip(chain(), ["c-id", "a-id", "b-id"]);
+  expect(result.order).toEqual(["c-id", "a-id", "b-id"]);
+  expect(result.issues).toEqual([]);
+  expect(new Set(result.affected)).toEqual(new Set(["a-id", "b-id"]));
+  const byId = new Map(result.solids.map((s) => [s.id, s]));
+  expect(solidRect(byId.get("c-id")!)).toEqual({ minX: 0, maxX: 10, minZ: 0, maxZ: 10 });
+  expect(result.solids.filter((s) => s.id.startsWith("a-id-piece-")).map(solidRect)).toEqual([
+    { minX: 10, maxX: 15, minZ: 0, maxZ: 10 },
+  ]);
+  expect(result.solids.filter((s) => s.id.startsWith("b-id-piece-")).map(solidRect)).toEqual([
+    { minX: 15, maxX: 22, minZ: 0, maxZ: 10 },
+  ]);
+  // Union area is conserved and no two final pieces overlap.
+  expect(
+    result.solids.reduce((n, s) => n + (s.w ?? 0) * (s.d ?? 0), 0),
+  ).toBe(220);
+  for (const [i, s] of result.solids.entries())
+    for (const other of result.solids.slice(i + 1))
+      expect(intersectRects(solidRect(s), solidRect(other))).toBeNull();
+  validateCustomLevel({ ...blankLevel("Auto clip"), solids: result.solids });
+});
+it("auto clip skips cutters consumed by earlier steps", () => {
+  const solids = [
+    ...chain(),
+    { ...box, id: "d-id", name: "Alpine", x: 3, z: 3, w: 2, d: 2 },
+  ];
+  const result = previewAutoClip(solids, ["c-id", "a-id", "b-id", "d-id"]);
+  expect(result.order).toEqual(["c-id", "d-id", "a-id", "b-id"]);
+  expect(result.solids.some((s) => s.id === "d-id")).toBe(false);
+  expect(result.solids.some((s) => s.id === "c-id")).toBe(true);
+});
+it("auto clip sorts unnamed solids by id", () => {
+  const solids = [
+    { ...box, id: "b-slab", name: undefined, x: 8, z: 5, w: 10, d: 10 },
+    { ...box, id: "a-slab", name: undefined, x: 2, z: 5, w: 10, d: 10 },
+  ];
+  expect(previewAutoClip(solids, ["b-slab", "a-slab"]).order).toEqual([
+    "a-slab",
+    "b-slab",
+  ]);
+});
+it("auto clip applies shift-selections atomically with undo/redo", () => {
+  const store = new EditorStore("Auto clip layers");
+  store.level.solids = chain();
+  store.select({ kind: "solid", id: "b-id" });
+  store.select({ kind: "solid", id: "c-id" }, true);
+  store.select({ kind: "solid", id: "a-id" }, true);
+  const before = structuredClone(store.level);
+  store.setTool("clip");
+  expect(store.autoClipTargets()?.map((s) => s.id)).toEqual(["c-id", "a-id", "b-id"]);
+  expect(store.applyAutoClip()).toBe(true);
+  expect(store.level.solids).toHaveLength(3);
+  expect(store.dirty).toBe(true);
+  const pieces = [...store.solidSelection];
+  expect(new Set(pieces)).toEqual(new Set(["a-id-piece-01", "b-id-piece-01"]));
+  store.undo();
+  expect(store.level).toEqual(before);
+  expect(store.solidSelection).toEqual(["b-id", "c-id", "a-id"]);
+  store.redo();
+  expect(store.solidSelection).toEqual(pieces);
+});
+it("auto clip ignores non-solid entries in the selection", () => {
+  const store = new EditorStore("Auto clip mixed");
+  store.level.solids = chain().slice(0, 2);
+  store.select({ kind: "solid", id: "c-id" });
+  store.select({ kind: "solid", id: "a-id" }, true);
+  store.select({ kind: "checkpoint", index: 0 }, true);
+  store.setTool("clip");
+  expect(store.autoClipTargets()?.map((s) => s.id)).toEqual(["c-id", "a-id"]);
+  expect(store.applyAutoClip()).toBe(true);
+  expect(store.level.checkpoints).toHaveLength(1);
+});
+it("auto clip refuses grouped selections, single solids and locked targets", () => {
+  const store = new EditorStore("Auto clip gated");
+  store.level.solids = chain().slice(0, 2);
+  store.select({ kind: "solid", id: "c-id" });
+  store.setTool("clip");
+  expect(store.autoClipTargets()).toBeNull();
+  expect(store.applyAutoClip()).toBe(false);
+  store.select({ kind: "solid", id: "c-id" });
+  store.select({ kind: "solid", id: "a-id" }, true);
+  store.groupSelected("Group");
+  store.select({ kind: "solid", id: "c-id" });
+  store.setTool("clip");
+  expect(store.autoClipTargets()).toBeNull();
+  expect(store.applyAutoClip()).toBe(false);
+  store.cancelClip();
+  store.ungroupSelected();
+  store.select({ kind: "solid", id: "c-id" });
+  store.select({ kind: "solid", id: "a-id" }, true);
+  store.level.solids.find((s) => s.id === "a-id")!.locked = true;
+  store.setTool("clip");
+  expect(store.autoClipPreview()?.issues).toHaveLength(1);
+  expect(store.applyAutoClip()).toBe(false);
+  expect(store.level.solids).toHaveLength(2);
 });
 it("keeps an existing cutter and clears selection after full removal", () => {
   const store = new EditorStore("Cutter");

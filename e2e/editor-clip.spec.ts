@@ -164,3 +164,46 @@ test("draws a through-cut and preserves an existing cutter; locked and rotated l
     .poll(() => page.evaluate(() => window.__game!.editor().solids))
     .toBe(5);
 });
+test("auto clip offers one-click mutual clipping for shift-selected solids", async ({
+  page,
+}) => {
+  const name = "e2e-clip-auto";
+  await open(page, name);
+  try {
+    await page.locator('li[data-key="solid:ground"] span').click();
+    await page.locator("#editor-tool-clip").click();
+    await expect(page.locator("#editor-clip-auto")).toHaveCount(0);
+    await page.locator("#editor-clip-cancel").click();
+    await page.locator('li[data-key="solid:ground"] span').click();
+    await page
+      .locator('li[data-key="solid:road-1"] span')
+      .click({ modifiers: ["Shift"] });
+    await page.locator("#editor-tool-clip").click();
+    await expect(page.locator("#editor-clip-auto-summary")).toContainText(
+      "Auto clip (ground → road-1)",
+    );
+    await page.locator("#editor-clip-auto").click();
+    // road-1 sits fully inside ground, so auto clip removes it and keeps ground.
+    await expect
+      .poll(() => page.evaluate(() => window.__game!.editor().solids))
+      .toBe(1);
+    await page.locator("#editor-undo").click();
+    await expect
+      .poll(() => page.evaluate(() => window.__game!.editor().solids))
+      .toBe(2);
+    await page.locator("#editor-redo").click();
+    await expect
+      .poll(() => page.evaluate(() => window.__game!.editor().solids))
+      .toBe(1);
+    // Grouped selections are excluded from auto clip.
+    await page.locator("#editor-undo").click();
+    await page.locator("#editor-group").click();
+    await page.locator("#editor-tool-clip").click();
+    await expect(page.locator("#editor-clip-auto")).toHaveCount(0);
+  } finally {
+    await page.evaluate(
+      (name) => window.__game!.customLevels.remove(name),
+      name,
+    );
+  }
+});
