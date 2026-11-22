@@ -33,6 +33,37 @@ const mesh = (
 const plastic = (color: number) =>
   new T.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.1 });
 
+/**
+ * Layered candle flame shared by both candle kinds: a translucent orange shell
+ * over an opaque amber mid layer and a bright core. The shell must stay
+ * translucent, otherwise the inner layers are hidden inside the cone.
+ */
+export function buildCandleFlame(r: number, h: number): T.Group {
+  const flame = new T.Group();
+  const outer = new T.Mesh(
+    new T.ConeGeometry(r, h, 24),
+    new T.MeshBasicMaterial({
+      color: 0xff7a1a,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+    }),
+  );
+  const mid = new T.Mesh(
+    new T.ConeGeometry(r * 0.62, h * 0.62, 18),
+    new T.MeshBasicMaterial({ color: 0xffb03a }),
+  );
+  mid.position.y = -h * 0.1;
+  const core = new T.Mesh(
+    new T.SphereGeometry(r * 0.5, 16, 12),
+    new T.MeshBasicMaterial({ color: 0xffe9a8 }),
+  );
+  core.position.y = -h * 0.15;
+  for (const part of [outer, mid, core]) part.userData.animate = true;
+  flame.add(outer, mid, core);
+  return flame;
+}
+
 /** Tall striped birthday candle on a dish; the flame pivot flickers in the view. */
 export function buildBirthdayCandle(root: T.Group) {
   const dishMat = plastic(0x3a3f45);
@@ -41,7 +72,9 @@ export function buildBirthdayCandle(root: T.Group) {
   const wickMat = plastic(0x14100b);
   const h = BIRTHDAY_CANDLE.height;
   const r = BIRTHDAY_CANDLE.radius;
-  mesh(root, new T.CylinderGeometry(0.9, 1.0, 0.18, 24), dishMat, [0, -h / 2 + 0.09, 0]);
+  // Dish sits 0.02 below the body bottom so the two faces are never coplanar;
+  // coplanar bottoms z-fight whenever the candle is flipped over.
+  mesh(root, new T.CylinderGeometry(0.9, 1.0, 0.18, 24), dishMat, [0, -h / 2 + 0.07, 0]);
   mesh(root, new T.CylinderGeometry(r, r * 1.1, h, 20), waxMat, [0, 0, 0]);
   // Spiral-look stripes: thin stacked rings up the stick.
   for (let i = 0; i < 6; i++) {
@@ -54,21 +87,9 @@ export function buildBirthdayCandle(root: T.Group) {
     ring.rotation.x = Math.PI / 2;
   }
   mesh(root, new T.CylinderGeometry(0.03, 0.03, 0.16, 8), wickMat, [0, h / 2 + 0.06, 0]);
-  const flame = new T.Group();
+  const flame = buildCandleFlame(0.19, 0.55);
   flame.name = "prefab-light-origin";
   flame.position.set(0, h / 2 + 0.36, 0);
-  const outer = new T.Mesh(
-    new T.ConeGeometry(0.19, 0.55, 12),
-    new T.MeshBasicMaterial({ color: 0xff7a1a }),
-  );
-  outer.userData.animate = true;
-  const core = new T.Mesh(
-    new T.SphereGeometry(0.1, 12, 10),
-    new T.MeshBasicMaterial({ color: 0xffe9a8 }),
-  );
-  core.position.y = -0.11;
-  core.userData.animate = true;
-  flame.add(outer, core);
   flame.userData.base = 1;
   root.add(flame);
   return [flame];

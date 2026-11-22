@@ -22,7 +22,7 @@ import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } fro
 import { buildSpider, poseSpider } from "./hollow-view";
 import { buildBat, buildCaterpillar, buildFairy, buildFirefly, buildMoth, buildMushroom, poseBat, poseCaterpillar, poseFairy, poseFirefly, poseMoth, poseMushroom } from "./mystic-view";
 import { buildMailbox, buildSpeedTube, buildTeeterTotter, poseMailbox } from "./screwball-view";
-import { buildBalloon, buildBirthdayCandle, buildBirthdayCake, buildBirthdayCard, buildBouncyCastle, poseBalloon, poseBirthdayCard } from "./birthday-view";
+import { buildBalloon, buildBirthdayCandle, buildBirthdayCake, buildBirthdayCard, buildBouncyCastle, buildCandleFlame, poseBalloon, poseBirthdayCard } from "./birthday-view";
 import { buildLimeChomper } from "./toy-track-view";
 import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
@@ -964,20 +964,8 @@ function buildCandleModel(h: DungeonHazard, root: T.Group): T.Group[] {
     const wick = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 0.14, 8), wickMat);
     wick.position.set(sx, 0.18 + sh + 0.05, sz);
     root.add(wick);
-    const flame = new T.Group();
+    const flame = buildCandleFlame(0.17, 0.5);
     flame.position.set(sx, 0.18 + sh + 0.32, sz);
-    const outer = new T.Mesh(
-      new T.ConeGeometry(0.17, 0.5, 12),
-      new T.MeshBasicMaterial({ color: 0xff7a1a }),
-    );
-    outer.userData.animate = true;
-    const core = new T.Mesh(
-      new T.SphereGeometry(0.09, 12, 10),
-      new T.MeshBasicMaterial({ color: 0xffe9a8 }),
-    );
-    core.position.y = -0.1;
-    core.userData.animate = true;
-    flame.add(outer, core);
     flame.userData.base = 0.9 + i * 0.12;
     root.add(flame);
     flames.push(flame);

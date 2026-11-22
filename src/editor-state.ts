@@ -2,6 +2,7 @@ import {
   blankLevel,
   prefabY,
   solidDefaults,
+  type CustomCheckpoint,
   type CustomLevel,
   type CustomPrefab,
   type CustomPoint,
@@ -482,9 +483,11 @@ export class EditorStore {
     this.emit();
     return prefab;
   }
-  addCheckpoint(x = 0, z = 0): CustomPoint {
+  addCheckpoint(x = 0, z = 0): CustomCheckpoint {
     this.pushHistory();
-    const point = { x, z };
+    // New checkpoints start without a heading: yaw stays undefined
+    // (automatic route direction) until the user sets it explicitly.
+    const point: CustomCheckpoint = { x, z };
     this.level.checkpoints.push(point);
     this.selection = {
       kind: "checkpoint",

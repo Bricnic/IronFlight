@@ -1,5 +1,5 @@
 import type { Track } from "./tracks";
-import type { TrackRun } from "./track-run";
+import type { Medal, TrackRun } from "./track-run";
 type RunSnapshot = ReturnType<TrackRun["snapshot"]>;
 export function modeLabel(track: Track) {
   if (track.mode === "arena") return `${track.limit}s COLLECTION`;
@@ -20,6 +20,17 @@ export function objectiveCopy(track: Track) {
   if (track.legacy)
     return "Clear the jump, complete the loop, then cross the exit.";
   return "Follow every checkpoint. Cross the final gate.";
+}
+export type HudBest = { time: string; medal: string; medalClass: string };
+/** In-game record rows: best time, medal word, and medal color class. */
+export function hudBestCopy(
+  best: { time: number; medal: Medal | null } | null,
+): HudBest {
+  return {
+    time: best ? `${best.time.toFixed(1)}s` : "—",
+    medal: best?.medal?.toUpperCase() ?? (best ? "COMPLETED" : "UNRANKED"),
+    medalClass: best?.medal ?? "",
+  };
 }
 /** Signed tenths for checkpoint deltas: current split minus best split. */
 export function formatDelta(delta: number) {

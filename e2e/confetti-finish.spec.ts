@@ -15,7 +15,7 @@ test("finish confetti keeps falling, clears on level select, and expires natural
     await page.getByRole("button", { name: "Level editor", exact: true }).click();
     await page.locator("#editor-levels").selectOption(name);
     await expect(page.locator("#editor-status")).toContainText(`Opened ${name}`);
-    await page.locator("#editor-playtest").click(); await expect(page.locator("#placement-bar")).toBeVisible();
+    await page.locator("#editor-playtest").click(); await expect(page.locator("#run-progress")).toBeVisible();
     const run = await page.evaluate(() => {
       const g = window.__game!; g.pause(true);
       for (let f = 0; f < 600 && g.snapshot().run?.status === "running"; f++) g.advanceFrames(1, 1, { throttle: 1 });

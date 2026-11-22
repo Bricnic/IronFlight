@@ -67,7 +67,9 @@ test("playtest boots the real sim and completes the custom level", async ({
   // Booting the sim (physics rebuild + first render) can exceed the default
   // 5s budget on a loaded full-suite run; the state change is what matters.
   await expect(page.locator("#level-editor")).toBeHidden({ timeout: 20000 });
-  await expect(page.locator("#placement-bar")).toBeVisible();
+  await expect(page.locator("#run-progress")).toBeVisible();
+  // The legacy in-play Edit flow is gone: no entrypoint while playing.
+  await expect(page.locator("#edit-toggle")).toHaveCount(0);
   const result = await driveTrack(page, "custom:playtest-sprint", false);
   expect(result.state.run?.status).toBe("completed");
   await page.evaluate(
@@ -88,5 +90,4 @@ test("playtest blocks levels that cannot be played", async ({ page }) => {
   await page.locator("#editor-playtest").click();
   await expect(page.locator("#editor-error")).not.toBeEmpty();
   await expect(page.locator("#level-editor")).toBeVisible();
-  await expect(page.locator("#placement-bar")).toBeHidden();
 });

@@ -16,6 +16,7 @@ import {
   customTrackIds,
   toTrack,
   validateCustomLevel,
+  type CustomCheckpoint,
   type CustomLevel,
   type SolidKind,
 } from "./custom-level";

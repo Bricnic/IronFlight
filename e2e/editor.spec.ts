@@ -547,7 +547,7 @@ test("wireframe rotator drives yaw/pitch, edits roll in degrees and drives the y
   // The opened wall lets the truck through in a real playtest.
   await page.locator("#editor-playtest").click();
   await expect(page.locator("#level-editor")).toBeHidden({ timeout: 20000 });
-  await expect(page.locator("#placement-bar")).toBeVisible();
+  await expect(page.locator("#run-progress")).toBeVisible();
   const endZ = await page.evaluate(() => {
     const g = window.__game!;
     g.pause(true);
@@ -729,5 +729,40 @@ test("level picker lists levels a-z", async ({ page }) => {
         ),
       );
     }, local);
+  }
+});
+test("checkpoint yaw is always visible, editable and persisted", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await page.evaluate(() =>
+    window.__game!.customLevels.remove("e2e-cpyaw").catch(() => {}),
+  );
+  try {
+    await page.locator("#editor-name").fill("e2e-cpyaw");
+    await page.locator("#editor-new").click();
+    // The default checkpoint has no stored yaw: the field shows the heading
+    // derived from the path (spawn to checkpoint runs due north).
+    await page.locator('li[data-key="checkpoint:0"]').click();
+    await expect(page.locator('#editor-props input[data-prop="yaw"]')).toHaveValue("0");
+    // New checkpoints pin an explicit heading at creation.
+    await page.locator("#editor-add-checkpoint").click();
+    await expect(page.locator('#editor-props input[data-prop="yaw"]')).toHaveValue("180");
+    // Editing pins a value that survives save and reload.
+    await page.locator('#editor-props input[data-prop="yaw"]').fill("90");
+    await page.locator("#editor-save").click();
+    const loaded = await page.evaluate(() =>
+      window.__game!.customLevels.load("e2e-cpyaw"),
+    );
+    expect(loaded.checkpoints[1].yaw).toBeCloseTo(Math.PI / 2, 9);
+    await page.locator("#editor-levels").selectOption("e2e-cpyaw");
+    await expect(page.locator("#editor-status")).toContainText("Opened e2e-cpyaw");
+    await page.locator('li[data-key="checkpoint:1"]').click();
+    await expect(page.locator('#editor-props input[data-prop="yaw"]')).toHaveValue("90");
+  } finally {
+    await page.evaluate(
+      (name) => window.__game!.customLevels.remove(name),
+      "e2e-cpyaw",
+    );
   }
 });

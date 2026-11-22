@@ -28,7 +28,7 @@ async function saveAndStart(page: Page, name: string, slug: string) {
     g.pause(true);
     g.startTrack(s as `custom:${string}`);
   }, slug);
-  await expect(page.locator("#placement-bar")).toBeVisible({ timeout: 20000 });
+  await expect(page.locator("#run-progress")).toBeVisible({ timeout: 20000 });
 }
 async function removeLevel(page: Page, name: string) {
   await page.evaluate(

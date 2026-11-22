@@ -45,7 +45,7 @@ test("resize drags face corners in object space, undoes once, and resizes gamepl
     const saved = await page.evaluate(name => window.__game!.customLevels.load(name), name);
     expect(saved.prefabs).toHaveLength(2);
     for (const prefab of saved.prefabs) expect(prefab.resizeScale).toBeCloseTo(object.resizeScale as number);
-    await page.locator("#editor-playtest").click(); await expect(page.locator("#placement-bar")).toBeVisible();
+    await page.locator("#editor-playtest").click(); await expect(page.locator("#run-progress")).toBeVisible();
     const runtime = await page.evaluate(() => window.__game!.resizedPrefabs());
     expect(runtime[0].scale).toBeCloseTo(object.resizeScale as number);
     expect(runtime[0].colliders).toBeGreaterThan(0);

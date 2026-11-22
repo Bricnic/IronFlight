@@ -387,6 +387,18 @@ it("headless trampoline bounces a parked car", () => {
   expect(s.trackRun?.snapshot().bounced).toBe(true);
   s.dispose();
 });
+it("toTrack honors explicit checkpoint yaw over the derived normal", () => {
+  const level = blankLevel("Yaw Override");
+  level.checkpoints = [{ x: 0, z: 40, yaw: Math.PI / 2 }];
+  const track = toTrack(validateCustomLevel(level));
+  expect(track.checkpoints[0].nx).toBeCloseTo(1, 9);
+  expect(track.checkpoints[0].nz).toBeCloseTo(0, 9);
+  const derived = toTrack(
+    validateCustomLevel({ ...blankLevel("Yaw Derived") }),
+  );
+  expect(derived.checkpoints[0].nx).toBeCloseTo(0, 9);
+  expect(derived.checkpoints[0].nz).toBeCloseTo(1, 9);
+});
 it("headless ghost chases and drains a parked car", () => {
   const level = minimal();
   level.name = "Ghost Park";

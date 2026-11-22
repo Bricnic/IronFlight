@@ -34,7 +34,7 @@ test("editor places a goal ring and a collectible; driving triggers both", async
     g.pause(true);
     g.startTrack("custom:e2e-rings");
   });
-  await expect(page.locator("#placement-bar")).toBeVisible({ timeout: 20000 });
+  await expect(page.locator("#run-progress")).toBeVisible({ timeout: 20000 });
   const art = await page.evaluate(() => window.__game!.stats().officialCourse);
   expect(art.rings).toBe(1);
   expect(art.pickups).toBe(1);

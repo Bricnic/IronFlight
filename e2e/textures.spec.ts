@@ -46,7 +46,7 @@ async function startCustom(page: Page, level: CustomLevel) {
     g.pause(true);
     g.startTrack(`custom:${l.name}` as `custom:${string}`);
   }, level);
-  await expect(page.locator("#placement-bar")).toBeVisible({ timeout: 20000 });
+  await expect(page.locator("#run-progress")).toBeVisible({ timeout: 20000 });
 }
 async function settledSolids(page: Page) {
   let last: SolidInspect[] = [];

@@ -72,16 +72,6 @@ export interface GameHarness {
     x: number;
     y: number;
   };
-  placement(): {
-    editing: boolean;
-    palette: string;
-    texture: string;
-    selected: string | null;
-    selectedKind: "solid" | "prefab" | "checkpoint" | null;
-    checkpoints: { id: string; x: number; y: number; z: number }[];
-    checkpointLabels: string[];
-    runCheckpoint: number | null;
-  };
   project(point: { x: number; y: number; z: number }): { x: number; y: number };
   customLevels: {
     list(): Promise<string[]>;

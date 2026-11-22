@@ -25,7 +25,7 @@ test("playtesting an edited official level stays in the game without reloading",
     await page.waitForTimeout(2000);
     expect(navigations).toBe(0);
     await expect(page.locator("#level-select")).toBeHidden();
-    await expect(page.locator("#placement-bar")).toBeVisible();
+    await expect(page.locator("#run-progress")).toBeVisible();
     expect(await page.evaluate(() => window.__game!.snapshot().run?.trackId)).toBe("custom:amber-undertow");
     expect(await page.evaluate(() => window.__game!.track("custom:amber-undertow").custom!.solids.length)).toBe(solids);
     expect(JSON.parse(await readFile(file, "utf8")).solids).toHaveLength(solids);

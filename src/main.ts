@@ -9,28 +9,6 @@ import { loadSettings, type InputDevice } from "./settings";
 import { isPermanentNight, levelWeather, randomWeather } from "./weather";
 import { loadedTextureIds, textureLoadErrors } from "./materials";
 import * as T from "three";
-import { solidQuaternion } from "./euler";
-import {
-  placeInLevel,
-  appendCheckpoint,
-  editPrefabInLevel,
-  deletePrefabInLevel,
-  duplicatePrefabInLevel,
-  editSolidInLevel,
-  deleteSolidInLevel,
-  duplicateSolidInLevel,
-  moveCheckpointInLevel,
-  deleteCheckpointInLevel,
-  duplicateCheckpointInLevel,
-  moveCheckpointOnTrack,
-  deleteCheckpointOnTrack,
-  duplicateCheckpointOnTrack,
-  registerCustomTrack,
-  COMIC_PREFAB_KINDS,
-  DUNGEON_PREFAB_KINDS,
-  TEXTURE_IDS,
-  validateCustomLevel,
-} from "./custom-level";
 import { getVehicle } from "./vehicles";
 import { BestTimes } from "./best-times";
 import { GoldStars } from "./gold-stars";
@@ -49,7 +27,7 @@ import {
   removeLevel,
   registerStoredTracks,
 } from "./level-store";
-import type { CustomLevel, CustomPrefab } from "./custom-level";
+import type { CustomLevel } from "./custom-level";
 import "./style.css";
 import { Simulation, initPhysics, type Stage, type Input } from "./simulation";
 import { FixedClock } from "./clock";
@@ -70,7 +48,7 @@ import {
 import { createPauseMenu } from "./pause-menu";
 import { proController } from "./switch-pro";
 import { ControllerMenuInput, activeControllerMenu, moveMenuFocus, activateMenuFocus } from "./controller-menu";
-import { formatDelta, objectiveCopy, progressCopy, progressFraction } from "./run-copy";
+import { formatDelta, hudBestCopy, objectiveCopy, progressCopy, progressFraction } from "./run-copy";
 import { isStarRelocated } from "./gold-star-migrations";
 
 import { createDebugMenu } from "./debug-menu";
@@ -79,8 +57,8 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
 <aside><div class="eyebrow">THE ARENA IS YOURS</div><h1>BIG TRUCK.<br>BAD IDEAS.</h1><p class="intro">Three ways across. One way to find out.</p><div id="routes">${ROUTES.map((r) => `<button class="route" data-stage="${r.id}" style="--route:#${r.color.toString(16)}"><small>${r.difficulty}</small><strong>${r.name}<span>↗</span></strong><em>${r.gapEnd - 12}m gap <span>·</span> ${r.hazards} hazard${r.hazards > 1 ? "s" : ""}</em></button>`).join("")}</div>
 <section id="lab" hidden><div class="eyebrow">SURGICAL DAMAGE TOOLS</div><label for="target">Target part</label><select id="target">${PARTS.map((p) => `<option value="${p.id}">${p.id}</option>`).join("")}</select><div class="tool-grid"><button id="dent">Dent panel</button><button id="destroy">Destroy part</button><button id="sever">Sever chassis</button><button id="restore">Restore truck</button></div><p>Each tool applies real damage. Detached pieces keep their momentum.</p></section></aside>
-<section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span></div></section>
 <div id="status"><span id="state-label">READY TO SEND IT</span><strong id="state-copy">Build speed. Hold your line.</strong><div id="run-progress" hidden></div><span id="wings-badge" class="weather-badge" hidden>WINGS</span><div class="progress"><i id="progress"></i></div></div>
+<section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span><span id="hud-best-row" hidden>BEST <b id="hud-best-time">—</b></span><span id="hud-medal-row" hidden>MEDAL <b id="hud-best-medal">UNRANKED</b></span><span id="hud-star-row" hidden>STAR <span class="star-row" id="hud-stars"></span></span></div></section>
 <div id="checkpoint-banner" hidden><strong>CHECKPOINT!</strong><span id="checkpoint-delta" hidden></span></div><canvas id="confetti" hidden></canvas>
 <footer><div class="controls"><span><kbd>W / UP</kbd> GAS</span><span><kbd>S / DOWN</kbd> BRAKE / REV</span><span><kbd>A/D / LEFT/RIGHT</kbd> <span id="steer-label">STEER</span></span><span><kbd>R</kbd> RESTART</span><span><kbd>L</kbd> LEVEL SELECT</span><span><kbd>SPACE</kbd> <span id="handbrake-label">HANDBRAKE</span></span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
 async function boot() {
@@ -143,6 +121,7 @@ async function boot() {
   let bannerUntil = 0;
   let starRun: Simulation["trackRun"];
   let starSeen = 0;
+  let hudStarSig = "";
   const scores = new BestTimes({
     getItem: (key) => localStorage.getItem(key),
     setItem: (key, value) => localStorage.setItem(key, value),
@@ -202,7 +181,6 @@ async function boot() {
   function select(stage: Stage) {
     surface = "play";
     closePause();
-    exitEdit();
     screens?.hide();
     vehicleScreens?.hide();
     editorScreens?.hide();
@@ -247,7 +225,6 @@ async function boot() {
     keys.clear();
     surface = "play";
     recordedRun = undefined;
-    exitEdit();
     if (unpause) paused = false;
     screens?.hide();
     vehicleScreens?.hide();
@@ -275,7 +252,6 @@ async function boot() {
     closePause();
     restoreMenuWeather();
     clearConfetti();
-    exitEdit();
     keys.clear();
     clock.reset();
     vehicleScreens?.hide();
@@ -290,7 +266,6 @@ async function boot() {
     // Note: no weather restore here; the editor keeps the live track's
     // atmosphere for WYSIWYG playtests (startOfficial re-resolves anyway).
     clearConfetti();
-    exitEdit();
     keys.clear();
     clock.reset();
     screens.hide();
@@ -308,7 +283,6 @@ async function boot() {
     closePause();
     restoreMenuWeather();
     clearConfetti();
-    exitEdit();
     keys.clear();
     clock.reset();
     screens.hide();
@@ -322,7 +296,6 @@ async function boot() {
     closePause();
     restoreMenuWeather();
     clearConfetti();
-    exitEdit();
     keys.clear();
     clock.reset();
     screens.hide();
@@ -410,646 +383,6 @@ async function boot() {
     onNext: () => stepLevel(1),
     onPrev: () => stepLevel(-1),
     onSettings: () => showSettings(true),
-  });
-  // In-game placement for custom levels: ghost brick, live commit, disk save.
-  app.insertAdjacentHTML(
-    "beforeend",
-    `<div id="placement-bar" hidden>
-      <button id="edit-toggle" hidden>Edit</button>
-      <select id="place-kind" aria-label="Placement palette">
-        <option value="brick">brick</option>
-        <option value="wall">wall</option>
-        <option value="checkpoint">checkpoint</option>
-        <option value="book">book</option>
-        <option value="snowman">snowman</option>
-        <option value="hydrant">hydrant</option>
-        <option value="select">select</option>
-      </select>
-      <select id="place-texture" aria-label="Brick texture"></select>
-      <button id="sel-rotate" disabled>Rotate</button>
-      <button id="sel-duplicate" disabled>Duplicate</button>
-      <button id="sel-delete" disabled>Delete</button>
-      <span id="place-status"></span>
-    </div>`,
-  );
-  const placementBar = $("placement-bar");
-  const editToggle = $("edit-toggle") as HTMLButtonElement;
-  const placeKind = $("place-kind") as HTMLSelectElement;
-  const placeTexture = $("place-texture") as HTMLSelectElement;
-  const placeStatus = $("place-status");
-  const selRotate = $("sel-rotate") as HTMLButtonElement;
-  const selDuplicate = $("sel-duplicate") as HTMLButtonElement;
-  const selDelete = $("sel-delete") as HTMLButtonElement;
-  placeTexture.append(new Option("(brick texture)", ""));
-  for (const id of TEXTURE_IDS) placeTexture.append(new Option(id, id));
-  const ghost = new T.Group();
-  const ghostBrick = new T.Mesh(
-    new T.BoxGeometry(6, 1.6, 5),
-    new T.MeshBasicMaterial({ color: 0xffe08a, wireframe: true }),
-  );
-  const ghostMark = new T.Mesh(
-    new T.OctahedronGeometry(1.2),
-    new T.MeshBasicMaterial({ color: 0xffe08a, wireframe: true }),
-  );
-  const ghostGate = new T.Mesh(
-    new T.PlaneGeometry(24, 8),
-    new T.MeshBasicMaterial({
-      color: 0xffe08a,
-      wireframe: true,
-      side: T.DoubleSide,
-    }),
-  );
-  ghost.add(ghostBrick, ghostMark, ghostGate);
-  ghost.visible = false;
-  const selBox = new T.Mesh(
-    new T.BoxGeometry(1, 1, 1),
-    new T.MeshBasicMaterial({ color: 0x7dffd4, wireframe: true }),
-  );
-  selBox.visible = false;
-  let selectedId: string | null = null;
-  let selectedKind: "solid" | "prefab" | "checkpoint" | null = null;
-  const PREFAB_BOX: Record<string, [number, number, number]> = {
-    snowman: [2.6, 3.4, 2.6],
-    book: [4, 2.4, 5],
-    hydrant: [1.6, 2.2, 1.6],
-  };
-  function selectedNode() {
-    const track = sim.courseTrack;
-    const level = track?.custom;
-    if (!track || !level || !selectedId || !selectedKind) return null;
-    if (selectedKind === "solid") {
-      const solid = level.solids.find((s) => s.id === selectedId);
-      return solid ? { kind: selectedKind, solid } : null;
-    }
-    if (selectedKind === "prefab") {
-      const prefab = level.prefabs.find((p) => p.id === selectedId);
-      return prefab ? { kind: selectedKind, prefab } : null;
-    }
-    const index = track.checkpoints.findIndex((g) => g.id === selectedId);
-    if (index < 0) return null;
-    return { kind: selectedKind, gate: track.checkpoints[index]!, index };
-  }
-  function refreshSelBox() {
-    const node = selectedNode();
-    if (!node) {
-      selBox.visible = false;
-    } else if (node.kind === "solid" && node.solid) {
-      const solid = node.solid;
-      selBox.visible = editing;
-      selBox.position.set(solid.x, solid.y, solid.z);
-      selBox.scale.set(solid.w, solid.h, solid.d);
-      selBox.quaternion.copy(solidQuaternion(solid));
-    } else if (node.kind === "prefab" && node.prefab) {
-      const prefab = node.prefab;
-      const box = PREFAB_BOX[prefab.kind] ?? [2, 2, 2];
-      selBox.visible = editing;
-      selBox.position.set(prefab.x, (prefab.y ?? 0) + box[1] / 2, prefab.z);
-      selBox.scale.set(box[0], box[1], box[2]);
-      selBox.quaternion.identity();
-    } else if (node.kind === "checkpoint" && node.gate) {
-      const gate = node.gate;
-      selBox.visible = editing;
-      selBox.position.set(gate.x, gate.y, gate.z);
-      selBox.scale.set(gate.width, gate.height, 2);
-      selBox.quaternion.setFromAxisAngle(
-        new T.Vector3(0, 1, 0),
-        Math.atan2(gate.nx, gate.nz),
-      );
-    }
-    const on = editing && !!node;
-    selRotate.disabled = !(on && node?.kind === "solid");
-    selDuplicate.disabled = !on;
-    selDelete.disabled = !on;
-  }
-  function selectSolid(
-    id: string | null,
-    kind: "solid" | "prefab" | "checkpoint" = "solid",
-  ) {
-    selectedId = id;
-    selectedKind = id ? kind : null;
-    refreshSelBox();
-  }
-  let editing = false;
-  let resumePaused = false;
-  const say = (message: string) => {
-    placeStatus.textContent = message;
-  };
-  function updateGhost(point: T.Vector3 | null) {
-    ghost.visible = editing && !!point && placeKind.value !== "select";
-    if (!point) return;
-    const wall = placeKind.value === "wall";
-    ghostBrick.visible =
-      placeKind.value === "brick" || wall;
-    ghostMark.visible =
-      placeKind.value !== "brick" &&
-      !wall &&
-      placeKind.value !== "checkpoint";
-    ghostGate.visible = placeKind.value === "checkpoint";
-    ghost.position.set(
-      point.x,
-      placeKind.value === "checkpoint" ? 2 : point.y,
-      point.z,
-    );
-    ghostBrick.scale.set(wall ? 4 : 1, wall ? 1.875 : 1, wall ? 0.4 : 1);
-    ghostBrick.position.y = wall ? 1.5 : 0.8;
-    ghostMark.position.y = 1.5;
-    ghostGate.position.y = 0;
-  }
-  function selectedSolid() {
-    const track = sim.courseTrack;
-    const level = track?.custom;
-    const solid =
-      selectedId && selectedKind === "solid" && level
-        ? level.solids.find((s) => s.id === selectedId)
-        : undefined;
-    return track && level && solid ? { track, level, solid } : null;
-  }
-  function selectedPrefab() {
-    const track = sim.courseTrack;
-    const level = track?.custom;
-    const prefab =
-      selectedId && selectedKind === "prefab" && level
-        ? level.prefabs.find((p) => p.id === selectedId)
-        : undefined;
-    return track && level && prefab ? { track, level, prefab } : null;
-  }
-  function selectedCheckpoint() {
-    const track = sim.courseTrack;
-    const level = track?.custom;
-    const index =
-      track && selectedId && selectedKind === "checkpoint"
-        ? track.checkpoints.findIndex((g) => g.id === selectedId)
-        : -1;
-    return track && level && index >= 0 ? { track, level, index } : null;
-  }
-  /** Level-checkpoint gates come first; checkpoint prefabs follow. */
-  function checkpointSource(level: CustomLevel, index: number) {
-    if (index < level.checkpoints.length)
-      return { type: "point" as const, index };
-    const prefabs = level.prefabs.filter((p) => p.kind === "checkpoint");
-    const prefab = prefabs[index - level.checkpoints.length];
-    if (!prefab) throw new Error(`Unknown checkpoint index: ${index}`);
-    return { type: "prefab" as const, prefab };
-  }
-  function liveAddPrefab(prefab: CustomPrefab) {
-    if (prefab.kind === "snowman")
-      sim.props.addProp({
-        id: prefab.id,
-        kind: "snowman",
-        x: prefab.x,
-        z: prefab.z,
-        ground: prefab.y ?? 0,
-        ...(prefab.yaw === undefined ? {} : { yaw: prefab.yaw }),
-      });
-    else if (
-      (COMIC_PREFAB_KINDS as readonly string[]).includes(prefab.kind)
-    )
-      sim.comic.addHazard({
-        id: prefab.id,
-        kind: prefab.kind as "book" | "hydrant",
-        x: prefab.x,
-        z: prefab.z,
-        phase: 0,
-        ...(prefab.y === undefined ? {} : { y: prefab.y }),
-      });
-    else if (
-      (DUNGEON_PREFAB_KINDS as readonly string[]).includes(prefab.kind)
-    )
-      sim.dungeon.addHazard({
-        id: prefab.id,
-        kind: prefab.kind as "hands" | "cage",
-        x: prefab.x,
-        z: prefab.z,
-        phase: 0,
-        ...(prefab.y === undefined ? {} : { y: prefab.y }),
-        ...(prefab.yaw === undefined ? {} : { yaw: prefab.yaw }),
-      });
-    else if (prefab.kind === "loose-blocks")
-      sim.looseBlocks.addBlock({
-        kind: prefab.kind,
-        id: prefab.id,
-        x: prefab.x,
-        z: prefab.z,
-        ...(prefab.y === undefined ? {} : { y: prefab.y }),
-      });
-    else if (prefab.kind === "burning-coals")
-      sim.burningCoals.addCoal({
-        id: prefab.id,
-        x: prefab.x,
-        z: prefab.z,
-        ...(prefab.y === undefined ? {} : { y: prefab.y }),
-      });
-    else if (prefab.kind === "fragile-ice" || prefab.kind === "rickety-plank")
-      sim.fragileIce.addTile({
-        id: prefab.id,
-        kind: prefab.kind,
-        x: prefab.x,
-        z: prefab.z,
-        ...(prefab.y === undefined ? {} : { y: prefab.y }),
-      });
-  }
-  async function saveLiveEdit(next: CustomLevel) {
-    const track = sim.courseTrack!;
-    track.custom = validateCustomLevel(next);
-    await saveLevel(undefined, track.custom);
-    // saveLevel registers a fresh positional track; the live track keeps
-    // stable ids, so re-register it as the in-session truth.
-    registerCustomTrack(track);
-    editorScreens.syncStore(track.custom);
-  }
-  async function moveSelected(point: T.Vector3) {
-    const cpCtx = selectedCheckpoint();
-    if (cpCtx) {
-      try {
-        const source = checkpointSource(cpCtx.level, cpCtx.index);
-        const next =
-          source.type === "point"
-            ? moveCheckpointInLevel(
-                cpCtx.level,
-                source.index,
-                point.x,
-                cpCtx.level.checkpoints[source.index]?.y ?? 2,
-                point.z,
-              )
-            : editPrefabInLevel(cpCtx.level, source.prefab.id, {
-                x: point.x,
-                z: point.z,
-              });
-        await saveLiveEdit(next);
-        moveCheckpointOnTrack(cpCtx.track, cpCtx.index, point.x, point.z);
-        view.moveCheckpointGate(
-          cpCtx.index,
-          cpCtx.track.checkpoints[cpCtx.index]!,
-        );
-        refreshSelBox();
-        say(`Moved ${cpCtx.track.checkpoints[cpCtx.index]!.id}`);
-      } catch (e) {
-        say(e instanceof Error ? e.message : "Move failed");
-      }
-      return;
-    }
-    const prefabCtx = selectedPrefab();
-    if (prefabCtx) {
-      try {
-        const y = Math.max(0, point.y);
-        await saveLiveEdit(
-          editPrefabInLevel(prefabCtx.level, prefabCtx.prefab.id, {
-            x: point.x,
-            y,
-            z: point.z,
-          }),
-        );
-        const updated = sim.courseTrack!.custom!.prefabs.find(
-          (p) => p.id === prefabCtx.prefab.id,
-        )!;
-        if (updated.kind === "snowman")
-          sim.props.moveProp(updated.id, updated.x, y, updated.z);
-        else {
-          const dx = updated.x - prefabCtx.prefab.x;
-          const dy = y - (prefabCtx.prefab.y ?? 0);
-          const dz = updated.z - prefabCtx.prefab.z;
-          sim.comic.moveHazard(updated.id, updated.x, y, updated.z);
-          sim.dungeon.moveHazard(updated.id, updated.x, y, updated.z);
-          sim.looseBlocks.moveBlock(updated.id, updated.x, y, updated.z);
-          sim.burningCoals.moveCoal(updated.id, updated.x, y, updated.z);
-          sim.fragileIce.moveTile(updated.id, updated.x, y, updated.z);
-          view.moveComicModel(updated.id, dx, dy, dz);
-          view.moveDungeonModel(updated.id, dx, dy, dz);
-          view.moveLooseBlockModel(updated.id, dx, dy, dz);
-          view.moveBurningCoalModel(updated.id, dx, dy, dz);
-          view.moveFragileIceModel(updated.id, dx, dy, dz);
-        }
-        refreshSelBox();
-        say(`Moved ${prefabCtx.prefab.id}`);
-      } catch (e) {
-        say(e instanceof Error ? e.message : "Move failed");
-      }
-      return;
-    }
-    const ctx = selectedSolid();
-    if (!ctx) return;
-    try {
-      await saveLiveEdit(
-        editSolidInLevel(ctx.level, ctx.solid.id, {
-          x: point.x,
-          y: point.y + ctx.solid.h / 2,
-          z: point.z,
-        }),
-      );
-      const updated = sim.courseTrack!.custom!.solids.find(
-        (s) => s.id === ctx.solid.id,
-      )!;
-      sim.updateSolidCollider(updated);
-      view.moveCourseSolid(updated.id, updated.x, updated.y, updated.z);
-      refreshSelBox();
-      say(`Moved ${ctx.solid.id}`);
-    } catch (e) {
-      say(e instanceof Error ? e.message : "Move failed");
-    }
-  }
-  async function rotateSelected() {
-    const ctx = selectedSolid();
-    if (!ctx) return;
-    try {
-      const yaw = (ctx.solid.yaw ?? 0) + Math.PI / 4;
-      await saveLiveEdit(editSolidInLevel(ctx.level, ctx.solid.id, { yaw }));
-      const updated = sim.courseTrack!.custom!.solids.find(
-        (s) => s.id === ctx.solid.id,
-      )!;
-      sim.updateSolidCollider(updated);
-      view.rotateCourseSolid(updated.id, yaw, updated.angle ?? 0, updated.roll ?? 0);
-      refreshSelBox();
-      say(`Rotated ${ctx.solid.id} to ${Math.round((yaw * 180) / Math.PI)}°`);
-    } catch (e) {
-      say(e instanceof Error ? e.message : "Rotate failed");
-    }
-  }
-  async function deleteSelected() {
-    const cpCtx = selectedCheckpoint();
-    if (cpCtx) {
-      try {
-        const source = checkpointSource(cpCtx.level, cpCtx.index);
-        const id = cpCtx.track.checkpoints[cpCtx.index]!.id;
-        const next =
-          source.type === "point"
-            ? deleteCheckpointInLevel(cpCtx.level, source.index)
-            : deletePrefabInLevel(cpCtx.level, source.prefab.id);
-        await saveLiveEdit(next);
-        deleteCheckpointOnTrack(cpCtx.track, cpCtx.index);
-        view.rebuildCheckpointGates();
-        const run = sim.trackRun;
-        if (run) {
-          if (cpCtx.index < run.checkpoint) run.checkpoint--;
-          run.checkpoint = Math.min(
-            run.checkpoint,
-            Math.max(0, cpCtx.track.checkpoints.length - 1),
-          );
-        }
-        selectSolid(null);
-        say(`Deleted ${id}`);
-      } catch (e) {
-        say(e instanceof Error ? e.message : "Delete failed");
-      }
-      return;
-    }
-    const prefabCtx = selectedPrefab();
-    if (prefabCtx) {
-      try {
-        await saveLiveEdit(
-          deletePrefabInLevel(prefabCtx.level, prefabCtx.prefab.id),
-        );
-        if (prefabCtx.prefab.kind === "snowman") {
-          sim.props.removeProp(prefabCtx.prefab.id);
-          view.removePropModel(prefabCtx.prefab.id);
-        } else {
-          sim.comic.removeHazard(prefabCtx.prefab.id);
-          sim.dungeon.removeHazard(prefabCtx.prefab.id);
-          sim.looseBlocks.removeBlock(prefabCtx.prefab.id);
-          sim.burningCoals.removeCoal(prefabCtx.prefab.id);
-          sim.fragileIce.removeTile(prefabCtx.prefab.id);
-          view.removeComicModel(prefabCtx.prefab.id);
-          view.removeDungeonModel(prefabCtx.prefab.id);
-          view.removeLooseBlockModel(prefabCtx.prefab.id);
-          view.removeBurningCoalModel(prefabCtx.prefab.id);
-          view.removeFragileIceModel(prefabCtx.prefab.id);
-        }
-        selectSolid(null);
-        say(`Deleted ${prefabCtx.prefab.id}`);
-      } catch (e) {
-        say(e instanceof Error ? e.message : "Delete failed");
-      }
-      return;
-    }
-    const ctx = selectedSolid();
-    if (!ctx) return;
-    try {
-      await saveLiveEdit(deleteSolidInLevel(ctx.level, ctx.solid.id));
-      sim.removeSolidCollider(ctx.solid.id);
-      view.removeCourseSolid(ctx.solid.id);
-      selectSolid(null);
-      say(`Deleted ${ctx.solid.id}`);
-    } catch (e) {
-      say(e instanceof Error ? e.message : "Delete failed");
-    }
-  }
-  async function duplicateSelected() {
-    const cpCtx = selectedCheckpoint();
-    if (cpCtx) {
-      try {
-        const source = checkpointSource(cpCtx.level, cpCtx.index);
-        const id = cpCtx.track.checkpoints[cpCtx.index]!.id;
-        const next =
-          source.type === "point"
-            ? duplicateCheckpointInLevel(cpCtx.level, source.index)
-            : duplicatePrefabInLevel(cpCtx.level, source.prefab.id);
-        if (source.type === "prefab") {
-          const prefs = next.prefabs;
-          const copy = prefs.pop()!;
-          const at = prefs.findIndex((p) => p.id === source.prefab.id);
-          prefs.splice(at + 1, 0, copy);
-        }
-        await saveLiveEdit(next);
-        const gate = duplicateCheckpointOnTrack(cpCtx.track, cpCtx.index);
-        view.rebuildCheckpointGates();
-        selectSolid(gate.id, "checkpoint");
-        say(`Duplicated ${id} → ${gate.id}`);
-      } catch (e) {
-        say(e instanceof Error ? e.message : "Duplicate failed");
-      }
-      return;
-    }
-    const prefabCtx = selectedPrefab();
-    if (prefabCtx) {
-      try {
-        await saveLiveEdit(
-          duplicatePrefabInLevel(prefabCtx.level, prefabCtx.prefab.id),
-        );
-        const copy = sim.courseTrack!.custom!.prefabs.at(-1)!;
-        liveAddPrefab(copy);
-        selectSolid(copy.id, "prefab");
-        say(`Duplicated ${prefabCtx.prefab.id} → ${copy.id}`);
-      } catch (e) {
-        say(e instanceof Error ? e.message : "Duplicate failed");
-      }
-      return;
-    }
-    const ctx = selectedSolid();
-    if (!ctx) return;
-    try {
-      await saveLiveEdit(duplicateSolidInLevel(ctx.level, ctx.solid.id));
-      const copy = sim.courseTrack!.custom!.solids.at(-1)!;
-      sim.addCustomSolid(copy);
-      view.addCourseSolid(copy);
-      selectSolid(copy.id);
-      say(`Duplicated ${ctx.solid.id} → ${copy.id}`);
-    } catch (e) {
-      say(e instanceof Error ? e.message : "Duplicate failed");
-    }
-  }
-  async function retextureSelected(texture: string) {
-    const ctx = selectedSolid();
-    if (!ctx) return;
-    try {
-      await saveLiveEdit(
-        editSolidInLevel(ctx.level, ctx.solid.id, { texture }),
-      );
-      const updated = sim.courseTrack!.custom!.solids.find(
-        (s) => s.id === ctx.solid.id,
-      )!;
-      view.retextureCourseSolid(updated);
-      say(`Retextured ${ctx.solid.id} → ${texture}`);
-    } catch (e) {
-      say(e instanceof Error ? e.message : "Retexture failed");
-    }
-  }
-  async function handleSelectClick(
-    clientX: number,
-    clientY: number,
-    point: T.Vector3 | null,
-  ) {
-    const track = sim.courseTrack;
-    const level = track?.custom;
-    const picked = view.pickCourseSolid(clientX, clientY);
-    const solid = picked
-      ? level?.solids.find((s) => s.id === picked)
-      : undefined;
-    const prefab =
-      !solid && picked
-        ? level?.prefabs.find((p) => p.id === picked)
-        : undefined;
-    const gate =
-      picked?.startsWith("checkpoint-") && track
-        ? track.checkpoints.find(
-            (g) => g.id === picked.slice("checkpoint-".length),
-          )
-        : undefined;
-    const node = gate
-      ? { kind: "checkpoint" as const, id: gate.id }
-      : solid && solid.kind !== "ground" && solid.kind !== "road"
-        ? { kind: "solid" as const, id: solid.id }
-        : prefab
-          ? { kind: "prefab" as const, id: prefab.id }
-          : null;
-    if (node) {
-      if (node.id === selectedId) {
-        selectSolid(null);
-        say("Deselected");
-      } else {
-        selectSolid(node.id, node.kind);
-        say(`Selected ${node.id}`);
-      }
-    } else if (selectedId && point) {
-      await moveSelected(point);
-    } else {
-      selectSolid(null);
-    }
-  }
-  async function commitPlacement(point: T.Vector3) {
-    if (placeKind.value === "select") return;
-    const track = sim.courseTrack;
-    const level = track?.custom;
-    if (!track || !level) return;
-    try {
-      if (placeKind.value === "brick" || placeKind.value === "wall") {
-        const wall = placeKind.value === "wall";
-        const next = placeInLevel(level, {
-          type: "solid",
-          kind: "barrier",
-          x: point.x,
-          z: point.z,
-          y: point.y + (wall ? 1.5 : 0.8),
-          ...(wall ? { w: 24, h: 3, d: 2 } : {}),
-          texture: placeTexture.value || undefined,
-        });
-        track.custom = validateCustomLevel(next);
-        await saveLevel(undefined, track.custom);
-        editorScreens.syncStore(track.custom);
-        const solid = track.custom.solids.at(-1)!;
-        sim.addCustomSolid(solid);
-        view.addCourseSolid(solid);
-        say(`${wall ? "Wall" : "Brick"} saved (${solid.id})`);
-      } else if (placeKind.value === "checkpoint") {
-        const next = placeInLevel(level, {
-          type: "checkpoint",
-          x: point.x,
-          z: point.z,
-        });
-        track.custom = validateCustomLevel(next);
-        await saveLevel(undefined, track.custom);
-        editorScreens.syncStore(track.custom);
-        const gate = appendCheckpoint(track, point.x, point.z);
-        view.addCheckpointGate(gate);
-        say(`Checkpoint gate ${track.checkpoints.length} saved`);
-      } else {
-        const kind = placeKind.value;
-        const next = placeInLevel(level, {
-          type: "prefab",
-          kind,
-          x: point.x,
-          z: point.z,
-          y: Math.max(0, point.y),
-        });
-        track.custom = validateCustomLevel(next);
-        await saveLevel(undefined, track.custom);
-        editorScreens.syncStore(track.custom);
-        const prefab = track.custom.prefabs.at(-1)!;
-        liveAddPrefab(prefab);
-        say(`${kind} saved (${prefab.id})`);
-      }
-    } catch (e) {
-      say(e instanceof Error ? e.message : "Placement failed");
-    }
-  }
-  function enterEdit() {
-    if (editing || surface !== "play" || !sim.courseTrack?.custom) return;
-    editing = true;
-    resumePaused = paused;
-    paused = true;
-    keys.clear();
-    view.scene.add(ghost);
-    view.scene.add(selBox);
-    refreshSelBox();
-    editToggle.textContent = "Done";
-    say("Click the course to place · Esc exits");
-  }
-  function exitEdit() {
-    if (!editing) return;
-    editing = false;
-    paused = resumePaused;
-    view.scene.remove(ghost);
-    view.scene.remove(selBox);
-    selectSolid(null);
-    ghost.visible = false;
-    editToggle.textContent = "Edit";
-    say("");
-  }
-  editToggle.onclick = () => (editing ? exitEdit() : enterEdit());
-  selRotate.onclick = () => void rotateSelected();
-  selDuplicate.onclick = () => void duplicateSelected();
-  selDelete.onclick = () => void deleteSelected();
-  placeTexture.addEventListener("change", () => {
-    if (editing && selectedId && placeTexture.value)
-      void retextureSelected(placeTexture.value);
-  });
-  let downAt: [number, number] | null = null;
-  view.renderer.domElement.addEventListener("pointermove", (e) => {
-    if (!editing) return;
-    updateGhost(view.aimPoint(e.clientX, e.clientY));
-  });
-  view.renderer.domElement.addEventListener("pointerdown", (e) => {
-    downAt = [e.clientX, e.clientY];
-  });
-  view.renderer.domElement.addEventListener("pointerup", (e) => {
-    if (!editing || !downAt) return;
-    const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]);
-    downAt = null;
-    if (moved > 6) return;
-    const point = view.aimPoint(e.clientX, e.clientY);
-    if (placeKind.value === "select") {
-      void handleSelectClick(e.clientX, e.clientY, point);
-      return;
-    }
-    if (point) void commitPlacement(point);
   });
   type ConfettiPiece = {
     x: number; y: number; vx: number; vy: number;
@@ -1183,13 +516,13 @@ async function boot() {
     const startNow = padStartPressed(pad);
     if (startNow && !padStartWas) {
       if (pauseScreens.isVisible()) closePause();
-      else if (surface === "play" && !editing && !editorScreens?.isVisible())
+      else if (surface === "play" && !editorScreens?.isVisible())
         openPause();
     }
     padStartWas = startNow;
     const menu = activeControllerMenu();
     const menuInput = controllerMenuInput.sample(pad, menu, performance.now());
-    if (menuInput.reset && (surface === "play" || surface === "result" || pauseScreens.isVisible()) && !editing && !editorScreens?.isVisible()) {
+    if (menuInput.reset && (surface === "play" || surface === "result" || pauseScreens.isVisible()) && !editorScreens?.isVisible()) {
       resetCurrentLevel();
       return;
     }
@@ -1204,7 +537,7 @@ async function boot() {
       } else if (menuInput.confirm) activateMenuFocus(menu);
     }
     // The right stick steers flight while airborne; otherwise it looks.
-    if (pad && surface === "play" && !paused && !editing && !sim.flying && frameDelta) {
+    if (pad && surface === "play" && !paused && !sim.flying && frameDelta) {
       const look = padLook(pad);
       if (look.dx || look.dy)
         view.chase.drag(
@@ -1217,10 +550,6 @@ async function boot() {
     syncControllerForeground();
     pollController(frameDelta);
     stepConfetti(frameDelta);
-    placementBar.hidden = !(
-      surface === "play" && editing && !!sim.courseTrack?.custom
-    );
-    placementBar.classList.toggle("idle", !editing);
     const s = sim.snapshot(false),
       r = ROUTES.find((r) => r.id === s.stage);
     $("speed").textContent = Math.round(s.speed * 3.6)
@@ -1277,6 +606,11 @@ async function boot() {
     wingsBadge.hidden = !s.run?.wings;
     wingsBadge.textContent = s.flying ? "FLYING" : "WINGS";
     $("handbrake-label").textContent = s.run?.wings && s.run.status === "running" ? "FLAP WINGS" : "HANDBRAKE";
+    if (!s.run) {
+      $("hud-best-row").hidden = true;
+      $("hud-medal-row").hidden = true;
+      $("hud-star-row").hidden = true;
+    }
     if (s.run) {
       const track = getTrack(s.run.trackId);
       // Bank pickups before completion/unlock checks, including a star at the finish.
@@ -1354,10 +688,46 @@ async function boot() {
       } else {
         banner.hidden = true;
       }
+      // In-run records for this variant; the star row re-renders only when
+      // lit states change so mid-run collects light up without per-frame DOM churn.
+      const run = s.run;
+      const hudBest = hudBestCopy(scores.best(run.trackId, run.variant));
+      $("hud-best-row").hidden = false;
+      $("hud-medal-row").hidden = false;
+      const hudTime = $("hud-best-time"), hudMedal = $("hud-best-medal");
+      if (hudTime.textContent !== hudBest.time)
+        hudTime.textContent = hudBest.time;
+      if (hudTime.className !== hudBest.medalClass)
+        hudTime.className = hudBest.medalClass;
+      if (hudMedal.textContent !== hudBest.medal)
+        hudMedal.textContent = hudBest.medal;
+      if (hudMedal.className !== hudBest.medalClass)
+        hudMedal.className = hudBest.medalClass;
+      const starDefs = track.goldStars ?? [];
+      $("hud-star-row").hidden = starDefs.length === 0;
+      if (starDefs.length) {
+        const lit = starDefs.map((def) =>
+          starBank.isLit(
+            run.trackId,
+            def,
+            isStarRelocated(run.trackId, def.id),
+          ),
+        );
+        const sig = `${run.trackId}:${lit.map(Number).join("")}`;
+        if (sig !== hudStarSig) {
+          hudStarSig = sig;
+          $("hud-stars").innerHTML = starDefs
+            .map(
+              (def, i) =>
+                `<span class="${lit[i] ? "star-lit" : "star-unlit"}" data-star="${def.id}" title="${lit[i] ? "Gold star collected" : "Gold star not collected yet"}">★</span>`,
+            )
+            .join("");
+        }
+      }
     }
     if (surface === "result" && s.run?.status === "failed")
       screens.reveal(resultOpacity(sim.time - resultStartedAt));
-    levelHUD.update(sim.trackRun?.track, s, surface === "play" && !editing && !editorScreens?.isVisible() && !pauseScreens?.isVisible());
+    levelHUD.update(sim.trackRun?.track, s, surface === "play" && !editorScreens?.isVisible() && !pauseScreens?.isVisible());
   }
   document
     .querySelectorAll<HTMLButtonElement>("[data-stage]")
@@ -1394,11 +764,6 @@ async function boot() {
     if (e.code === "Backquote") {
       e.preventDefault();
       if (!e.repeat) toggleDebug();
-      return;
-    }
-    if (e.key === "Escape" && editing) {
-      e.preventDefault();
-      exitEdit();
       return;
     }
     if (e.key === "Escape" && pauseScreens?.isVisible()) {
@@ -1512,22 +877,6 @@ async function boot() {
       inspectDragons: () => view.inspectDragons(),
       textureLoadErrors: () => textureLoadErrors(),
       loadedTextureIds: () => loadedTextureIds(),
-      placement: () => ({
-        editing,
-        palette: placeKind.value,
-        texture: placeTexture.value,
-        selected: selectedId,
-        selectedKind,
-        checkpoints:
-          sim.courseTrack?.checkpoints.map((g) => ({
-            id: g.id,
-            x: g.x,
-            y: g.y,
-            z: g.z,
-          })) ?? [],
-        checkpointLabels: view.checkpointGateLabels(),
-        runCheckpoint: sim.trackRun?.checkpoint ?? null,
-      }),
       project: (point: { x: number; y: number; z: number }) => {
         const v = new T.Vector3(point.x, point.y, point.z).project(
           view.camera,

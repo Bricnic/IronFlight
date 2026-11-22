@@ -7,7 +7,7 @@ test.slow();
 async function playtest(page: Page) {
   await page.locator("#editor-playtest").click();
   await expect(page.locator("#level-editor")).toBeHidden({ timeout: 20000 });
-  await expect(page.locator("#placement-bar")).toBeVisible();
+  await expect(page.locator("#run-progress")).toBeVisible();
   await page.evaluate(() => window.__game!.pause(true));
   await page.waitForLoadState("networkidle");
 }
