@@ -1,9 +1,13 @@
 import {
   loadSettings,
+  saveInput,
   saveSettings,
   saveObjectHelp,
+  type InputDevice,
   type VideoQuality,
 } from "./settings";
+import { connectedPadId } from "./gamepad";
+import { proController } from "./switch-pro";
 import type { WeatherFlags } from "./weather";
 const TIERS: { id: VideoQuality; name: string; blurb: string }[] = [
   {
@@ -102,8 +106,70 @@ export function createSettings(
     saveObjectHelp(show); onObjectHelp(show); paintHelp(show);
   };
   screen.append(helpSection);
+  const inputSection = document.createElement("section");
+  inputSection.className = "settings-section";
+  inputSection.setAttribute("aria-label", "Input");
+  inputSection.innerHTML = `<h2>Input</h2><div class="settings-grid" role="radiogroup" aria-label="Input device"></div><p class="selection-footnote" id="input-status"></p>`;
+  const inputGrid = inputSection.querySelector<HTMLElement>(".settings-grid")!;
+  const inputStatus = inputSection.querySelector<HTMLElement>("#input-status")!;
+  inputStatus.setAttribute("aria-live", "polite");
+  const connectPro = document.createElement("button");
+  connectPro.id = "connect-pro-controller";
+  connectPro.className = "header-action";
+  connectPro.textContent = "Connect Pro Controller";
+  const connectHelp = document.createElement("p"); connectHelp.className = "selection-footnote";
+  connectHelp.textContent = proController.supported
+    ? "Focus this page and press a controller button. If your Switch Pro Controller is still undetected, connect it here and choose it in the browser picker."
+    : "Focus this page and press a controller button. Direct Switch Pro Controller setup needs Chrome or Edge on HTTPS or localhost.";
+  connectPro.disabled = !proController.supported;
+  connectPro.onclick = async () => {
+    saveInput("controller"); paintInput("controller");
+    await proController.connect(); paintInputStatus();
+  };
+  inputSection.append(connectPro, connectHelp);
+  const controllerDetails = document.createElement("details");
+  controllerDetails.innerHTML = "<summary>Controller connection details</summary><pre id=\"controller-connection-details\" style=\"white-space:pre-wrap\"></pre>";
+  inputSection.append(controllerDetails);
+  const inputCards = new Map<InputDevice, HTMLElement>();
+  for (const device of [
+    { id: "keyboard", name: "Keyboard", blurb: "WASD or arrows drive, Space handbrakes, mouse drag orbits the camera." },
+    { id: "controller", name: "Controller", blurb: "Left stick steers, ZR accelerates, ZL brakes, A also accelerates, right stick looks, Start pauses. Falls back to keyboard with no controller connected." },
+  ] as const) {
+    const card = document.createElement("article");
+    card.className = "settings-card";
+    card.dataset.input = device.id;
+    card.innerHTML = `<button class="vehicle-pick" role="radio" aria-label="Input device ${device.name}" aria-checked="false"><div class="track-card-body"><div class="track-card-heading"><h2>${device.name}</h2><span class="best-medal picked">PICKED</span></div><p>${device.blurb}</p></div></button>`;
+    card.querySelector("button")!.onclick = () => {
+      saveInput(device.id);
+      paintInput(device.id);
+    };
+    inputGrid.append(card);
+    inputCards.set(device.id, card);
+  }
+  const paintInput = (picked: InputDevice) => {
+    for (const [id, card] of inputCards) {
+      card.classList.toggle("selected", id === picked);
+      card.querySelector("button")!.setAttribute("aria-checked", String(id === picked));
+    }
+  };
+  const paintInputStatus = () => {
+    const id = connectedPadId();
+    const direct = proController.status();
+    const text = id !== null ? `Controller connected: ${id.slice(0, 64)}.` : direct.message || "Controller: none detected. Press a button on the controller while this page is focused.";
+    if (inputStatus.textContent !== text) inputStatus.textContent = text;
+    const busy = direct.state === "requesting" || direct.state === "initializing";
+    connectPro.disabled = busy || !proController.supported;
+    connectPro.textContent = busy ? "Connecting…" : "Connect Pro Controller";
+    controllerDetails.querySelector("pre")!.textContent = JSON.stringify(proController.diagnostics(), null, 2);
+  };
+  proController.subscribe(paintInputStatus);
+  let inputStatusTimer: ReturnType<typeof setInterval> | undefined;
+  window.addEventListener("gamepadconnected", paintInputStatus);
+  window.addEventListener("gamepaddisconnected", paintInputStatus);
+  screen.append(inputSection);
   host.append(screen);
-  screen.querySelector<HTMLButtonElement>("#settings-back")!.onclick = onBack;
+  const backButton = screen.querySelector<HTMLButtonElement>("#settings-back")!;
+  backButton.onclick = onBack;
   function paintWeather(flags: WeatherFlags, randomizeAtmosphere: boolean) {
     for (const [id, card] of toggles) {
       const on = flags[id] && !randomizeAtmosphere;
@@ -127,7 +193,7 @@ export function createSettings(
     }
   }
   return {
-    show() {
+    show(onBackOverride?: () => void) {
       const stored = loadSettings();
       paint(stored.video);
       paintHelp(stored.showObjectHelp);
@@ -135,10 +201,18 @@ export function createSettings(
         { night: stored.night, rain: stored.rain },
         stored.randomizeAtmosphere,
       );
+      paintInput(stored.input);
+      paintInputStatus();
+      if (inputStatusTimer) clearInterval(inputStatusTimer);
+      inputStatusTimer = setInterval(paintInputStatus, 250);
+      backButton.onclick = onBackOverride ?? onBack;
+      backButton.textContent = onBackOverride ? "Back" : "Level select";
       screen.hidden = false;
       host.classList.add("at-level-select");
     },
     hide() {
+      if (inputStatusTimer) clearInterval(inputStatusTimer);
+      inputStatusTimer = undefined;
       screen.hidden = true;
       host.classList.remove("at-level-select");
     },

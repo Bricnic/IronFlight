@@ -269,5 +269,22 @@ function customLevels(): Plugin {
   };
 }
 export default defineConfig({
-  plugins: [tuningDefaults(), customLevels(), gameCopy()],
+  plugins: [tuningDefaults(), customLevels(), gameCopy(), {
+    name: "local-controller-diagnostics",
+    configureServer(server) {
+      let latest: unknown = null;
+      server.middlewares.use(async (req, res, next) => {
+        if (req.url !== "/__controller-diagnostics") { next(); return; }
+        res.setHeader("Content-Type", "application/json"); res.setHeader("Cache-Control", "no-store");
+        if (req.method === "POST" && localRequest(req)) {
+          try {
+            let body = "";
+            for await (const part of req) { body += String(part); if (body.length > 16384) throw new Error("Diagnostics too large"); }
+            latest = JSON.parse(body); res.end("{}");
+          } catch { res.statusCode = 400; res.end("{}"); }
+        } else if (req.method === "GET") res.end(JSON.stringify(latest));
+        else { res.statusCode = 403; res.end("{}"); }
+      });
+    },
+  }],
 });

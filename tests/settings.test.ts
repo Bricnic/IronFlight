@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import {
   QUALITY,
   loadSettings,
+  saveInput,
   saveSettings,
   saveObjectHelp,
   type VideoQuality,
@@ -35,37 +36,58 @@ it("remembers object help when other settings change", () => {
 });
 
 it("defaults to high video quality", () => {
-  expect(loadSettings(memoryStorage())).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false });
+  expect(loadSettings(memoryStorage())).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" });
 });
 
 it("round-trips the video tier through storage", () => {
   const storage = memoryStorage();
   for (const tier of ["low", "medium", "high"] as VideoQuality[]) {
-    expect(saveSettings(tier, { night: true, rain: false }, false, storage)).toEqual({ video: tier, night: true, rain: false, randomizeAtmosphere: false, showObjectHelp: false });
-    expect(loadSettings(storage)).toEqual({ video: tier, night: true, rain: false, randomizeAtmosphere: false, showObjectHelp: false });
+    expect(saveSettings(tier, { night: true, rain: false }, false, storage)).toEqual({ video: tier, night: true, rain: false, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" });
+    expect(loadSettings(storage)).toEqual({ video: tier, night: true, rain: false, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" });
   }
 });
 
 it("round-trips the randomize atmosphere flag through storage", () => {
   const storage = memoryStorage();
-  expect(saveSettings("high", { night: false, rain: false }, true, storage)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: true, showObjectHelp: false });
-  expect(loadSettings(storage)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: true, showObjectHelp: false });
+  expect(saveSettings("high", { night: false, rain: false }, true, storage)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: true, showObjectHelp: false, input: "keyboard" });
+  expect(loadSettings(storage)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: true, showObjectHelp: false, input: "keyboard" });
 });
 
 it("repairs missing or invalid stored tiers to high", () => {
   const storage = memoryStorage();
   storage.setItem("iron-flight-settings-v1", JSON.stringify({ video: "ultra" }));
-  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false });
+  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" });
   storage.setItem("iron-flight-settings-v1", "{broken");
-  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false });
+  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" });
   storage.setItem("iron-flight-settings-v1", JSON.stringify({}));
-  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false });
+  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" });
 });
 
 it("repairs a non-boolean randomize flag to off", () => {
   const storage = memoryStorage();
   storage.setItem("iron-flight-settings-v1", JSON.stringify({ video: "high", randomizeAtmosphere: "yes" }));
-  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false });
+  expect(loadSettings(storage)).toEqual({ video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" });
+});
+
+it("round-trips the input device and preserves it across other saves", () => {
+  const storage = memoryStorage();
+  expect(loadSettings(storage).input).toBe("keyboard");
+  expect(saveInput("controller", storage).input).toBe("controller");
+  expect(loadSettings(storage).input).toBe("controller");
+  saveSettings("low", { night: true, rain: false }, false, storage);
+  expect(loadSettings(storage).input).toBe("controller");
+  saveObjectHelp(true, storage);
+  expect(loadSettings(storage).input).toBe("controller");
+  expect(saveInput("keyboard", storage).input).toBe("keyboard");
+  expect(loadSettings(storage).input).toBe("keyboard");
+});
+
+it("repairs missing or invalid stored input to keyboard", () => {
+  const storage = memoryStorage();
+  storage.setItem("iron-flight-settings-v1", JSON.stringify({ video: "high" }));
+  expect(loadSettings(storage).input).toBe("keyboard");
+  storage.setItem("iron-flight-settings-v1", JSON.stringify({ video: "high", input: "gamepad" }));
+  expect(loadSettings(storage).input).toBe("keyboard");
 });
 
 it("low sacrifices pixel ratio, shadows, far plane and fog", () => {

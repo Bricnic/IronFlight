@@ -5,7 +5,7 @@ import { createVehicleSelect } from "./vehicle-select";
 import { createLevelEditor } from "./level-editor";
 import { shouldSyncFromSession } from "./editor-state";
 import { createSettings } from "./settings-screen";
-import { loadSettings } from "./settings";
+import { loadSettings, type InputDevice } from "./settings";
 import { isPermanentNight, levelWeather, randomWeather } from "./weather";
 import { loadedTextureIds, textureLoadErrors } from "./materials";
 import * as T from "three";
@@ -60,6 +60,17 @@ import { GameView } from "./view";
 import "./harness";
 import type { CameraSample } from "./harness";
 import { drivingInput } from "./controls";
+import {
+  PAD_LOOK_PX_PER_SEC,
+  padActionPressed,
+  padDriving,
+  padLook,
+  padMenuDelta,
+  padStartPressed,
+  pollPad,
+} from "./gamepad";
+import { createPauseMenu } from "./pause-menu";
+import { proController } from "./switch-pro";
 import { formatDelta, objectiveCopy, progressCopy, progressFraction } from "./run-copy";
 
 import { createDebugMenu } from "./debug-menu";
@@ -98,6 +109,12 @@ async function boot() {
   let vehicleScreens: ReturnType<typeof createVehicleSelect>;
   let editorScreens: ReturnType<typeof createLevelEditor>;
   let settingsScreens: ReturnType<typeof createSettings>;
+  let pauseScreens: ReturnType<typeof createPauseMenu>;
+  let inputMode: InputDevice = "keyboard";
+  let pauseResumePaused = false;
+  let padStartWas = false;
+  let padMenuWas: -1 | 0 | 1 = 0;
+  let padActionWas = false;
   function applyStoredVehicle() {
     try {
       sim.vehicleId = getVehicle(
@@ -158,8 +175,21 @@ async function boot() {
     sim.weather = levelWeather(stored, stored.randomizeAtmosphere, randomWeather(), backgroundTemplate, forceNight);
     paintWeatherBadges();
   }
+  function openPause() {
+    if (pauseScreens.isVisible()) return;
+    pauseResumePaused = paused;
+    paused = true;
+    keys.clear();
+    pauseScreens.show();
+  }
+  function closePause() {
+    if (!pauseScreens?.isVisible()) return;
+    pauseScreens.hide();
+    paused = pauseResumePaused;
+  }
   function select(stage: Stage) {
     surface = "play";
+    closePause();
     exitEdit();
     screens?.hide();
     vehicleScreens?.hide();
@@ -197,6 +227,7 @@ async function boot() {
   ) {
     if (vehicle) sim.vehicleId = getVehicle(vehicle).id;
     else applyStoredVehicle();
+    closePause();
     applyLevelWeather(getTrack(id).backgroundTemplate, getTrack(id).custom?.forceNight);
     sim.startTrack(id, lane);
     view.resetTruck();
@@ -229,6 +260,7 @@ async function boot() {
   }
   function showLevelSelect() {
     surface = "menu";
+    closePause();
     restoreMenuWeather();
     clearConfetti();
     exitEdit();
@@ -242,6 +274,7 @@ async function boot() {
   }
   function showLevelEditor() {
     surface = "menu";
+    closePause();
     // Note: no weather restore here; the editor keeps the live track's
     // atmosphere for WYSIWYG playtests (startOfficial re-resolves anyway).
     clearConfetti();
@@ -260,6 +293,7 @@ async function boot() {
   }
   function showVehicleSelect() {
     surface = "menu";
+    closePause();
     restoreMenuWeather();
     clearConfetti();
     exitEdit();
@@ -271,8 +305,9 @@ async function boot() {
     vehicleScreens.show();
     panel.hidden = true;
   }
-  function showSettings() {
+  function showSettings(backToPause = false) {
     surface = "menu";
+    closePause();
     restoreMenuWeather();
     clearConfetti();
     exitEdit();
@@ -281,8 +316,13 @@ async function boot() {
     screens.hide();
     editorScreens?.hide();
     vehicleScreens?.hide();
-    settingsScreens.show();
+    settingsScreens.show(backToPause ? backToPauseMenu : undefined);
     panel.hidden = true;
+  }
+  function backToPauseMenu() {
+    settingsScreens.hide();
+    surface = "play";
+    openPause();
   }
   function retryTrack() {
     const run = sim.trackRun;
@@ -342,7 +382,16 @@ async function boot() {
     (show) => view.setObjectHelpVisible(show),
   );
   paintWeatherBadges();
-  $("settings-button").onclick = showSettings;
+  $("settings-button").onclick = () => showSettings();
+  if (loadSettings().input === "controller") void proController.reconnect();
+  pauseScreens = createPauseMenu(app, {
+    onResume: closePause,
+    onLevelSelect: showLevelSelect,
+    onVehicleSelect: showVehicleSelect,
+    onNext: () => stepLevel(1),
+    onPrev: () => stepLevel(-1),
+    onSettings: () => showSettings(true),
+  });
   // In-game placement for custom levels: ghost brick, live commit, disk save.
   app.insertAdjacentHTML(
     "beforeend",
@@ -1109,7 +1158,39 @@ async function boot() {
     }
     fireConfetti();
   }
+  /** Start/look/menu sticks; runs every frame, even while paused. */
+  function pollController(frameDelta?: number) {
+    const pad = inputMode === "controller" ? pollPad() : null;
+    const startNow = padStartPressed(pad);
+    if (startNow && !padStartWas) {
+      if (pauseScreens.isVisible()) closePause();
+      else if (surface === "play" && !editing && !editorScreens?.isVisible())
+        openPause();
+    }
+    padStartWas = startNow;
+    if (pauseScreens.isVisible() && pad) {
+      const delta = padMenuDelta(pad);
+      if (delta !== 0 && delta !== padMenuWas) pauseScreens.focusNext(delta);
+      padMenuWas = delta;
+      const actionNow = padActionPressed(pad);
+      if (actionNow && !padActionWas) pauseScreens.activate();
+      padActionWas = actionNow;
+    } else {
+      padMenuWas = 0;
+      padActionWas = false;
+    }
+    if (pad && surface === "play" && !paused && !editing && frameDelta) {
+      const look = padLook(pad);
+      if (look.dx || look.dy)
+        view.chase.drag(
+          look.dx * PAD_LOOK_PX_PER_SEC * frameDelta,
+          look.dy * PAD_LOOK_PX_PER_SEC * frameDelta,
+        );
+    }
+  }
   function hud(frameDelta?: number) {
+    inputMode = loadSettings().input;
+    pollController(frameDelta);
     stepConfetti(frameDelta);
     placementBar.hidden = !(
       surface === "play" && !!sim.courseTrack?.custom
@@ -1295,6 +1376,13 @@ async function boot() {
       exitEdit();
       return;
     }
+    if (e.key === "Escape" && pauseScreens?.isVisible()) {
+      e.preventDefault();
+      if (!e.repeat) closePause();
+      return;
+    }
+    // While paused, the menu owns the keyboard: no shortcuts, no driving keys.
+    if (pauseScreens?.isVisible()) return;
     if (
       e.target instanceof HTMLSelectElement ||
       e.target instanceof HTMLInputElement ||
@@ -1347,8 +1435,15 @@ async function boot() {
   });
   window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => keys.clear());
-  const input = (): Input =>
-    drivingInput(keys, sim.snapshot(false).signedSpeed);
+  const input = (): Input => {
+    if (inputMode === "controller") {
+      const pad = pollPad();
+      // No controller connected: fall back to the keyboard so the game
+      // never soft-locks instead of silently ignoring all driving input.
+      if (pad) return padDriving(pad);
+    }
+    return drivingInput(keys, sim.snapshot(false).signedSpeed);
+  };
   if (import.meta.env.DEV)
     window.__game = {
       select,

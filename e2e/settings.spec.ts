@@ -41,7 +41,7 @@ test("settings page toggles video quality live", async ({ page }) => {
   const stored = await page.evaluate(() =>
     localStorage.getItem("iron-flight-settings-v1"),
   );
-  expect(JSON.parse(stored!)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: false, showObjectHelp: false });
+  expect(JSON.parse(stored!)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" });
   await page.locator("#settings-back").click();
   await expect(page.locator("#settings-screen")).toBeHidden();
 });
@@ -90,6 +90,26 @@ test("weather toggles flip badges, stats and storage", async ({ page }) => {
   await expect.poll(weather, { timeout: 15000 }).toEqual({ night: true, rain: true });
   await expect(page.locator("#weather-night")).toBeVisible();
   await expect(page.locator("#weather-rain")).toBeVisible();
+});
+
+test("input device cards switch and persist the driving input", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.locator("#settings-screen")).toBeVisible();
+  await expect(page.locator('[data-input="keyboard"]')).toHaveClass(/selected/);
+  await expect(page.locator("#input-status")).toContainText("none detected");
+  await page.locator('[data-input="controller"] button').click();
+  await expect(page.locator('[data-input="controller"]')).toHaveClass(/selected/);
+  await expect(page.locator('[data-input="keyboard"]')).not.toHaveClass(/selected/);
+  const stored = await page.evaluate(() =>
+    localStorage.getItem("iron-flight-settings-v1"),
+  );
+  expect(JSON.parse(stored!)).toMatchObject({ input: "controller" });
+  await page.reload();
+  await page.waitForFunction(() => !!window.__game);
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.locator('[data-input="controller"]')).toHaveClass(/selected/);
 });
 
 test("randomize atmosphere grays out manual toggles and rerolls on retry", async ({ page }) => {
