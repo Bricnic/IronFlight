@@ -29,3 +29,10 @@ stylized look better than photoscanned stone.
   `scripts/gemini-image.mjs` (gemini-2.5-flash-image, seamless prompts).
   Normal/roughness maps derived from diffuse luminance (Sobel).
   See `manifest.json` for file hashes.
+
+## Gemini-generated (sweet dream)
+
+- `pink_frosting_01_diffuse`, `candy_cream_01_diffuse` -- generated with
+  `scripts/gemini-image.mjs` (gemini-2.5-flash-image, seamless prompts).
+  Normal/roughness maps derived with `scripts/derive-texture-maps.mjs`.
+  See `manifest.json` for file hashes.

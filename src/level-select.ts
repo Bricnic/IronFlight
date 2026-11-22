@@ -89,7 +89,7 @@ export function createLevelSelect(
   const buildTrackCards = (collection: LevelCollection) => {
     grid.innerHTML = "";
     cards.clear();
-    const unlocked = new Set(unlockedIds(collection, scores));
+    const unlocked = new Set(unlockedIds(collection, scores, starBank));
     for (const [i, id] of collection.trackIds.entries()) {
       const track = getTrack(id);
       const locked = !unlocked.has(id);
@@ -105,7 +105,9 @@ export function createLevelSelect(
         if (card.classList.contains("unlocking")) return;
         const need = i + 1 - unlockedCount(collection, scores);
         showLockToast(
-          `Locked — earn ${need} more gold medal${need === 1 ? "" : "s"} in ${collection.name} to unlock ${track.name}.`,
+          collection.dream === id
+            ? `Locked — earn a gold medal and find the gold star on every ${collection.name} course to unlock ${track.name}.`
+            : `Locked — earn ${need} more gold medal${need === 1 ? "" : "s"} in ${collection.name} to unlock ${track.name}.`,
         );
         if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
         card.classList.remove("shake");
@@ -250,7 +252,7 @@ export function createLevelSelect(
     }
   });
   const refreshTrackCards = (collection: LevelCollection) => {
-    const unlocked = new Set(unlockedIds(collection, scores));
+    const unlocked = new Set(unlockedIds(collection, scores, starBank));
     for (const id of collection.trackIds) {
       const track = getTrack(id);
       const best = track.legacy

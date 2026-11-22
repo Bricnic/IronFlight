@@ -8,6 +8,7 @@ import { propHeight, type PropKind } from "./destructibles";
 import { buildCarousel, buildArena, buildArenaXL, buildBalloon, buildBumper } from "./fairground-view";
 import { buildAxeMesh, buildHammerMesh, buildCheckpointFrame, buildBoostPadMesh, buildGoldStar, buildGhostMeshes, buildTrampolineMesh, buildLampPost, buildGrandstand } from "./course-view";
 import { buildDragonStatue } from "./loop-view";
+import { buildWingsPickup } from "./wings-view";
 import { buildLooseBlockModel } from "./loose-blocks-view";
 import { buildBurningCoalModel } from "./burning-coals-view";
 import type { LooseBlock } from "./loose-blocks";
@@ -31,6 +32,7 @@ export function buildEditorPrefab(p: CustomPrefab, preview: boolean): T.Group {
     model.root.position.y = propHeight(p.kind) * (p.scale ?? 1);
     root.add(model.scene);
   } else if (p.kind === "gold-star") root.add(buildGoldStar(p.scale ?? 1));
+  else if (p.kind === "wings") root.add(buildWingsPickup(p.scale ?? 1));
   else if (p.kind === "carousel") root.add(buildCarousel());
   else if (p.kind === "bumper-arena" || p.kind === "bumper-arena-xl") {
     root.add(p.kind === "bumper-arena" ? buildArena() : buildArenaXL());

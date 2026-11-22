@@ -193,5 +193,10 @@
     "file": "/official/spooky-places/Lavabridge Abyss.json",
     "thumbnail": "/tracks/lavabridge-abyss.png",
     "description": "Cross a narrow arched bridge over a lava lake patrolled by dust moths, then loop the far cavern to the abyss gate."
+  },
+  {
+    "file": "/official/sweet-celebrations/Sweet Celebrations Dream.json",
+    "thumbnail": "/tracks/sweet-celebrations-dream.png",
+    "description": "Slalom the gumdrop forest, circle the grand cake, earn wings and fly the chocolate gap to the cherry-hill finish."
   }
 ]

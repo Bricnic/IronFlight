@@ -20,10 +20,12 @@ import {
   goldCount,
   hasGold,
   hasPlayed,
+  isDreamUnlocked,
   starProgress,
   unlockedCount,
   unlockedIds,
 } from "../src/level-unlocks";
+import type { LevelCollection } from "../src/level-collections";
 
 function memoryStorage() {
   const data = new Map<string, string>();
@@ -48,7 +50,7 @@ function goldRun(trackId: string) {
   };
 }
 
-it("covers all 47 official levels in 7 collections with no duplicates", () => {
+it("covers all 48 official levels in 7 collections with no duplicates", () => {
   expect(LEVEL_COLLECTIONS).toHaveLength(7);
   expect(LEVEL_COLLECTIONS.map((c) => c.name)).toEqual([
     "Sweet Celebrations",
@@ -60,8 +62,8 @@ it("covers all 47 official levels in 7 collections with no duplicates", () => {
     "Outdoor Adventures",
   ]);
   const ids = collectionOrderIds();
-  expect(ids).toHaveLength(47);
-  expect(new Set(ids).size).toBe(47);
+  expect(ids).toHaveLength(48);
+  expect(new Set(ids).size).toBe(48);
   expect(new Set(ids)).toEqual(new Set(officialTracks.map((t) => t.id)));
   for (const track of officialTracks)
     expect(collectionForTrack(track.id)?.trackIds).toContain(track.id);
@@ -75,7 +77,7 @@ it("ships one artwork file per collection", () => {
 });
 
 it("stores every official file level in a collection subfolder", () => {
-  expect(officialFileTracks).toHaveLength(39);
+  expect(officialFileTracks).toHaveLength(40);
   for (const track of officialFileTracks) {
     expect(track.sourceFile?.startsWith("levels/official/")).toBe(true);
     const rel = track.sourceFile!.slice("levels/official/".length);
@@ -140,6 +142,43 @@ it("tracks gold-star progress per collection", () => {
   const after = starProgress(outdoor, stars);
   expect(after.lit).toBe(1);
   expect(after.total).toBe(empty.total);
+});
+
+it("locks the dream level until every other course has gold and stars", () => {
+  const scores = new BestTimes(memoryStorage());
+  const starBank = new GoldStars(memoryStorage());
+  const dreamy: LevelCollection = {
+    id: "toybox-adventures",
+    name: "Toybox",
+    theme: "",
+    art: "",
+    trackIds: ["custom:block-party", "custom:toybox-road", "custom:tabletop-brawl"],
+    dream: "custom:tabletop-brawl",
+  };
+  const others = ["custom:block-party", "custom:toybox-road"];
+  expect(isDreamUnlocked(dreamy, scores, starBank)).toBe(false);
+  expect(unlockedIds(dreamy, scores, starBank)).not.toContain(
+    "custom:tabletop-brawl",
+  );
+  // Golds alone still lock it: the stars are missing.
+  for (const id of others) scores.record(goldRun(id) as never);
+  expect(unlockedCount(dreamy, scores)).toBe(3);
+  expect(isDreamUnlocked(dreamy, scores, starBank)).toBe(false);
+  expect(unlockedIds(dreamy, scores, starBank)).not.toContain(
+    "custom:tabletop-brawl",
+  );
+  // Banking every other star opens the dream.
+  for (const id of others) {
+    const def = getTrack(id).goldStars![0];
+    starBank.collect(id, def.id, { x: def.x, y: def.y, z: def.z });
+  }
+  expect(isDreamUnlocked(dreamy, scores, starBank)).toBe(true);
+  expect(unlockedIds(dreamy, scores, starBank)).toContain(
+    "custom:tabletop-brawl",
+  );
+  // Collections without a dream level are unaffected.
+  const plain: LevelCollection = { ...dreamy, dream: undefined };
+  expect(isDreamUnlocked(plain, scores, starBank)).toBe(true);
 });
 
 it("remembers which unlock animations have fully played", () => {

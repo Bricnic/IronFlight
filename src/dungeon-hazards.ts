@@ -127,6 +127,12 @@ export const CANDY_STAND = { w: 4, h: 1.5, d: 4 } as const;
 export const CANDY_CHOCOLATE = { w: 12, h: 3, d: 1.6 } as const;
 export const CANDY_STALL = { w: 6, h: 4, d: 5 } as const;
 export const CANDY_LAMP = { w: 1.6, h: 7, d: 1.6 } as const;
+/** Sweet-dream party decor, shared by the collider builder and the artist. Solid but never lethal. */
+export const SWEET_BUNTING = { postW: 1, postH: 9, postD: 1, postX: 12 } as const;
+export const SWEET_BALLOON_POLE = { w: 1, h: 9, d: 1 } as const;
+export const SWEET_CUPCAKE = { w: 3.4, h: 4.2, d: 3.4 } as const;
+export const SWEET_GIFT = { w: 3.2, h: 2.6, d: 3.2 } as const;
+export const SWEET_HAT = { w: 3, h: 6.5, d: 3 } as const;
 /** Candy press-trap gantry posts; cars drive between them under the moving stamp. */
 export const CANDY_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6 } as const;
 /** Christmas decor furniture, shared by the collider builder and the artist. Solid but never lethal: christmas kinds have no DUNGEON_STRIKE entry. */

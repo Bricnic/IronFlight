@@ -31,6 +31,16 @@ import { DEFAULT_WEATHER, isPermanentNight, type WeatherFlags } from "./weather"
 import { POISON } from "./dungeon-hazards";
 /** Wet-asphalt grip multiplier: softer yaw bite, longer slides. */
 export const RAIN_GRIP_SCALE = 0.55;
+/** Dream wings: weightless at/above this displayed speed, third gravity below. */
+export const WINGS_FULL_GRAVITY_MPH = 20;
+export const WINGS_SLOW_GRAVITY_SCALE = 1 / 3;
+/** Horizontal air drag (1/s) while flying so coasting settles into the slow sink. */
+export const FLIGHT_DRAG = 0.3;
+/** Flight orientation rates (rad/s) and bank recovery. */
+export const FLIGHT_YAW_RATE = 1.6;
+export const FLIGHT_PITCH_RATE = 1.4;
+export const FLIGHT_ROLL_GAIN = 3;
+export const FLIGHT_ROLL_TORQUE = 4000;
 import { type PartState } from "./damage";
 import { getVehicle, type VehicleId } from "./vehicles";
 import {
@@ -64,6 +74,10 @@ export type Input = {
   brake?: number;
   steer?: number;
   handbrake?: number;
+  /** Flight orientation while airborne with wings: +yaw turns left. */
+  airYaw?: number;
+  /** Flight orientation while airborne with wings: +pitch pulls up. */
+  airPitch?: number;
 };
 let ready: Promise<void> | undefined;
 export function initPhysics() {
@@ -108,6 +122,7 @@ export class Simulation {
   ticks = 0;
   airborneTicks = 0;
   landed = false;
+  flying = false;
   status: "driving" | "finished" | "wrecked" = "driving";
   parts = new Map<string, PartState>();
   // The view supplies complete model bounds, including cage, arches and tread.
@@ -701,6 +716,80 @@ export class Simulation {
     const grounded = contactCount > 0;
     if (this.courseTrack?.id === "sky-slide")
       this.body.setLinearDamping(this.bounced && !grounded ? 0 : 0.08);
+    // Dream wings: midair throttle and orientation while airborne. Gravity
+    // fades with speed and returns in full on landing; a finished run
+    // grounds the wings even if the wreck keeps falling.
+    const flightMph = Math.hypot(speed.x, speed.y, speed.z) * 3.6;
+    const wingsLive =
+      !!this.trackRun?.wings && this.trackRun.status === "running";
+    const flying = wingsLive && !grounded;
+    this.flying = flying;
+    this.body.setGravityScale(
+      !wingsLive || grounded
+        ? 1
+        : flightMph < WINGS_FULL_GRAVITY_MPH
+          ? WINGS_SLOW_GRAVITY_SCALE
+          : 0,
+      true,
+    );
+    if (flying) {
+      // Drag bleeds horizontal speed only; vertical flight stays untouched.
+      const hv = Math.hypot(speed.x, speed.z);
+      if (hv > 1e-3) {
+        this.body.applyImpulse(
+          new Vector3(-speed.x / hv, 0, -speed.z / hv).multiplyScalar(
+            FLIGHT_DRAG * hv * this.body.mass() * DT,
+          ),
+          true,
+        );
+      }
+      if (throttle !== 0) {
+        const taper = Math.max(
+          0,
+          1 -
+            Math.max(0, longitudinal) /
+              (30 * this.effectiveTopSpeed),
+        );
+        this.body.applyImpulse(
+          forward
+            .clone()
+            .multiplyScalar(
+              throttle *
+                (this.tuning.acceleration - 1) *
+                12 *
+                taper *
+                this.body.mass() *
+                DT,
+            ),
+          true,
+        );
+      }
+      const airYaw = Math.max(-1, Math.min(1, input.airYaw ?? 0));
+      const airPitch = Math.max(-1, Math.min(1, input.airPitch ?? 0));
+      const quat = new Quaternion().copy(this.body.rotation());
+      const bodyUp = new Vector3(0, 1, 0).applyQuaternion(quat);
+      // Bank isolated from pitch: the lean's forward component only.
+      const lean = new Vector3()
+        .crossVectors(bodyUp, new Vector3(0, 1, 0))
+        .dot(forward);
+      if (airYaw !== 0 || airPitch !== 0) {
+        const up = new Vector3(0, 1, 0);
+        const right = new Vector3(1, 0, 0).applyQuaternion(quat);
+        const spin = new Vector3()
+          .addScaledVector(up, airYaw * FLIGHT_YAW_RATE)
+          .addScaledVector(right, -airPitch * FLIGHT_PITCH_RATE)
+          .addScaledVector(forward, lean * FLIGHT_ROLL_GAIN);
+        this.body.setAngvel({ x: spin.x, y: spin.y, z: spin.z }, true);
+      } else if (Math.abs(lean) > 1e-3) {
+        // Hands off: ease out bank only, never fight loops or tumbles.
+        this.body.applyTorqueImpulse(
+          forward
+            .clone()
+            .multiplyScalar(lean * FLIGHT_ROLL_TORQUE * DT),
+          true,
+        );
+      }
+    }
     const driveShare = attachedWheels.filter(Boolean).length / 4;
     const braking =
       Math.max(brake, handbrake * this.tuning.handbrakePower) *
@@ -1635,6 +1724,7 @@ export class Simulation {
       stage: this.stage,
       airborneTicks: this.airborneTicks,
       landed: this.landed,
+      flying: this.flying,
       status: this.status,
       damageEvents: [...this.damageEvents],
       hammerImpacts: this.hammerImpacts.map((hit) => ({

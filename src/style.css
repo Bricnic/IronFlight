@@ -595,6 +595,11 @@ kbd {
   border-color: #7dd7f0;
   color: #bfe9f7;
 }
+#wings-badge {
+  border-color: #f0c96a;
+  color: #ffe9a8;
+  margin-top: 6px;
+}
 #weather-rain {
   border-color: #6aa8e0;
   color: #c2d9f2;

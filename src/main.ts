@@ -71,14 +71,15 @@ import { createPauseMenu } from "./pause-menu";
 import { proController } from "./switch-pro";
 import { ControllerMenuInput, activeControllerMenu, moveMenuFocus, activateMenuFocus } from "./controller-menu";
 import { formatDelta, objectiveCopy, progressCopy, progressFraction } from "./run-copy";
+import { isStarRelocated } from "./gold-star-migrations";
 
 import { createDebugMenu } from "./debug-menu";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
 <aside><div class="eyebrow">THE ARENA IS YOURS</div><h1>BIG TRUCK.<br>BAD IDEAS.</h1><p class="intro">Three ways across. One way to find out.</p><div id="routes">${ROUTES.map((r) => `<button class="route" data-stage="${r.id}" style="--route:#${r.color.toString(16)}"><small>${r.difficulty}</small><strong>${r.name}<span>↗</span></strong><em>${r.gapEnd - 12}m gap <span>·</span> ${r.hazards} hazard${r.hazards > 1 ? "s" : ""}</em></button>`).join("")}</div>
 <section id="lab" hidden><div class="eyebrow">SURGICAL DAMAGE TOOLS</div><label for="target">Target part</label><select id="target">${PARTS.map((p) => `<option value="${p.id}">${p.id}</option>`).join("")}</select><div class="tool-grid"><button id="dent">Dent panel</button><button id="destroy">Destroy part</button><button id="sever">Sever chassis</button><button id="restore">Restore truck</button></div><p>Each tool applies real damage. Detached pieces keep their momentum.</p></section></aside>
-<div id="status"><span id="state-label">READY TO SEND IT</span><strong id="state-copy">Build speed. Hold your line.</strong><div id="run-progress" hidden></div><div class="progress"><i id="progress"></i></div></div>
 <section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span></div></section>
+<div id="status"><span id="state-label">READY TO SEND IT</span><strong id="state-copy">Build speed. Hold your line.</strong><div id="run-progress" hidden></div><span id="wings-badge" class="weather-badge" hidden>WINGS</span><div class="progress"><i id="progress"></i></div></div>
 <div id="checkpoint-banner" hidden><strong>CHECKPOINT!</strong><span id="checkpoint-delta" hidden></span></div><canvas id="confetti" hidden></canvas>
 <footer><div class="controls"><span><kbd>W / UP</kbd> GAS</span><span><kbd>S / DOWN</kbd> BRAKE / REV</span><span><kbd>A/D / LEFT/RIGHT</kbd> <span id="steer-label">STEER</span></span><span><kbd>R</kbd> RESTART</span><span><kbd>L</kbd> LEVEL SELECT</span><span><kbd>SPACE</kbd> HANDBRAKE</span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
 async function boot() {
@@ -155,7 +156,7 @@ async function boot() {
   });
   const unlockedSet = () =>
     new Set(
-      LEVEL_COLLECTIONS.flatMap((c) => unlockedIds(c, scores)),
+      LEVEL_COLLECTIONS.flatMap((c) => unlockedIds(c, scores, starBank)),
     );
   header.insertAdjacentHTML(
     "beforeend",
@@ -1200,7 +1201,8 @@ async function boot() {
         } else showLevelSelect();
       } else if (menuInput.confirm) activateMenuFocus(menu);
     }
-    if (pad && surface === "play" && !paused && !editing && frameDelta) {
+    // The right stick steers flight while airborne; otherwise it looks.
+    if (pad && surface === "play" && !paused && !editing && !sim.flying && frameDelta) {
       const look = padLook(pad);
       if (look.dx || look.dy)
         view.chase.drag(
@@ -1269,6 +1271,9 @@ async function boot() {
           "Jump cleared. Keep going for the dragon loop.";
     }
     $("run-progress").hidden = !s.run;
+    const wingsBadge = $("wings-badge");
+    wingsBadge.hidden = !s.run?.wings;
+    wingsBadge.textContent = s.flying ? "FLYING" : "WINGS";
     if (s.run) {
       const track = getTrack(s.run.trackId);
       $("state-label").textContent = track.name.toUpperCase();
@@ -1456,14 +1461,31 @@ async function boot() {
   });
   window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => keys.clear());
+  /** Mouse drag px per frame for full flight deflection. */
+  const FLIGHT_MOUSE_PX = 240;
   const input = (): Input => {
     const signedSpeed = sim.snapshot(false).signedSpeed;
     const keyboard = drivingInput(keys, signedSpeed);
-    if (controllerForeground) {
-      const pad = pollPad();
-      if (pad) return combineDrivingInput(padDriving(pad, signedSpeed), keyboard);
+    const pad = controllerForeground ? pollPad() : null;
+    const base = pad
+      ? combineDrivingInput(padDriving(pad, signedSpeed), keyboard)
+      : keyboard;
+    // Dream flight: mouse drags plus the right stick orient while airborne.
+    if (!sim.flying) return base;
+    let airYaw = -view.flightMouse.x / FLIGHT_MOUSE_PX;
+    let airPitch = -view.flightMouse.y / FLIGHT_MOUSE_PX;
+    view.flightMouse.x = 0;
+    view.flightMouse.y = 0;
+    if (pad) {
+      const look = padLook(pad);
+      airYaw += -look.dx;
+      airPitch += -look.dy;
     }
-    return keyboard;
+    return {
+      ...base,
+      airYaw: Math.max(-1, Math.min(1, airYaw)),
+      airPitch: Math.max(-1, Math.min(1, airPitch)),
+    };
   };
   if (import.meta.env.DEV)
     window.__game = {

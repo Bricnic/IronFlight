@@ -50,19 +50,46 @@ export function unlockedCount(
   );
 }
 
+/**
+ * Dream gate: every non-dream course needs a gold medal and all of its
+ * gold stars banked. Collections without a dream level are always open.
+ */
+export function isDreamUnlocked(
+  collection: LevelCollection,
+  scores: BestTimes,
+  starBank?: GoldStars,
+): boolean {
+  const dream = collection.dream;
+  if (!dream) return true;
+  for (const id of collection.trackIds) {
+    if (id === dream) continue;
+    if (!hasGold(id, scores)) return false;
+    for (const s of getTrack(id).goldStars ?? [])
+      if (!starBank?.isLit(id, s, isStarRelocated(id, s.id))) return false;
+  }
+  return true;
+}
+
 export function unlockedIds(
   collection: LevelCollection,
   scores: BestTimes,
+  starBank?: GoldStars,
 ): string[] {
-  return [...collection.trackIds.slice(0, unlockedCount(collection, scores))];
+  const ids = [
+    ...collection.trackIds.slice(0, unlockedCount(collection, scores)),
+  ];
+  if (collection.dream && !isDreamUnlocked(collection, scores, starBank))
+    return ids.filter((id) => id !== collection.dream);
+  return ids;
 }
 
 export function isUnlocked(
   collection: LevelCollection,
   trackId: string,
   scores: BestTimes,
+  starBank?: GoldStars,
 ): boolean {
-  return unlockedIds(collection, scores).includes(trackId);
+  return unlockedIds(collection, scores, starBank).includes(trackId);
 }
 
 /** Stars banked vs total across a collection. */

@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import { MUSHROOM } from "./mushroom-shape";
@@ -60,6 +60,11 @@ import {
   CANDY_CHOCOLATE,
   CANDY_STALL,
   CANDY_LAMP,
+  SWEET_BUNTING,
+  SWEET_BALLOON_POLE,
+  SWEET_CUPCAKE,
+  SWEET_GIFT,
+  SWEET_HAT,
   CANDY_PRESS,
   CHRISTMAS_ARCH,
   CHRISTMAS_TRUNK,
@@ -669,6 +674,20 @@ export class DungeonPhysics {
         solid(CANDY_STALL.w, CANDY_STALL.h, CANDY_STALL.d, 0, 0);
       } else if (h.kind === "gumball-lamp") {
         solid(CANDY_LAMP.w, CANDY_LAMP.h, CANDY_LAMP.d, 0, 0);
+      }
+    } else if (isSweetDream(h.kind)) {
+      // Bumpable scenery only: sweet kinds have no strike entry, so after() never fires.
+      if (h.kind === "bunting-string") {
+        solid(SWEET_BUNTING.postW, SWEET_BUNTING.postH, SWEET_BUNTING.postD, -SWEET_BUNTING.postX, 0);
+        solid(SWEET_BUNTING.postW, SWEET_BUNTING.postH, SWEET_BUNTING.postD, SWEET_BUNTING.postX, 0);
+      } else if (h.kind === "balloon-pole") {
+        solid(SWEET_BALLOON_POLE.w, SWEET_BALLOON_POLE.h, SWEET_BALLOON_POLE.d, 0, 0);
+      } else if (h.kind === "cupcake") {
+        solid(SWEET_CUPCAKE.w, SWEET_CUPCAKE.h, SWEET_CUPCAKE.d, 0, 0);
+      } else if (h.kind === "gift-box") {
+        solid(SWEET_GIFT.w, SWEET_GIFT.h, SWEET_GIFT.d, 0, 0);
+      } else if (h.kind === "party-hat") {
+        solid(SWEET_HAT.w, SWEET_HAT.h, SWEET_HAT.d, 0, 0);
       }
     }
   }

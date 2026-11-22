@@ -41,6 +41,8 @@ export function segmentDistance(a: Position, b: Position, p: Position) {
 }
 /** Swept collect radius for gold stars, shared by the run and the views. */
 export const GOLD_STAR_RADIUS = 4;
+/** Swept collect radius for wings pickups. */
+export const WINGS_RADIUS = 5;
 export class TrackRun {
   status: "running" | "completed" | "failed" = "running";
   reason: "timeout" | "wrecked" | null = null;
@@ -51,6 +53,9 @@ export class TrackRun {
   collected = new Set<string>();
   /** Gold-star ids banked this run; stars never gate completion. */
   stars = new Set<string>();
+  /** Wings equipped this run; wingsAt stamps the collect time. */
+  wings = false;
+  wingsAt: number | null = null;
   destroyed = new Set<string>();
   bounced = false;
   ringDone = false;
@@ -94,6 +99,14 @@ export class TrackRun {
         segmentDistance(previous, current, s) <= GOLD_STAR_RADIUS * (s.resizeScale ?? 1)
       )
         this.stars.add(s.id);
+    // First wings pickup equips flight for the rest of the run.
+    if (!this.wings)
+      for (const w of this.track.wings ?? [])
+        if (segmentDistance(previous, current, w) <= WINGS_RADIUS * (w.scale ?? 1)) {
+          this.wings = true;
+          this.wingsAt = this.elapsed;
+          break;
+        }
     if (this.track.ring && this.bounced && !this.ringDone) {
       const r = this.track.ring;
       if (previous.z < r.z && current.z >= r.z) {
@@ -183,6 +196,8 @@ export class TrackRun {
       collectibleCount: this.track.collectibles.length,
       stars: [...this.stars],
       starCount: (this.track.goldStars ?? []).length,
+      wings: this.wings,
+      wingsAt: this.wingsAt,
       destroyed: [...this.destroyed],
       demolishCount: this.track.demolish?.length ?? 0,
       bounced: this.bounced,

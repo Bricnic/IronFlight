@@ -20,6 +20,8 @@ export const TEXTURE_IDS = [
   "cave_wall_01",
   "glow_moss_01",
   "crystal_vein_01",
+  "pink_frosting_01",
+  "candy_cream_01",
 ] as const;
 export type TextureId = (typeof TEXTURE_IDS)[number];
 export const PROP_PREFAB_KINDS = [
@@ -181,6 +183,18 @@ export type HollowKind = (typeof HOLLOW_PREFAB_KINDS)[number];
 export function isHollow(kind: string): kind is HollowKind {
   return (HOLLOW_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Sweet-dream decor: solid non-lethal candy-party scenery. */
+export const SWEET_DREAM_PREFAB_KINDS = [
+  "bunting-string",
+  "balloon-pole",
+  "cupcake",
+  "gift-box",
+  "party-hat",
+] as const;
+export type SweetDreamKind = (typeof SWEET_DREAM_PREFAB_KINDS)[number];
+export function isSweetDream(kind: string): kind is SweetDreamKind {
+  return (SWEET_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -208,8 +222,14 @@ export const DUNGEON_PREFAB_KINDS = [
   ...CANDY_LETHAL_PREFAB_KINDS,
   ...CHRISTMAS_PREFAB_KINDS,
   ...CHRISTMAS_LETHAL_PREFAB_KINDS,
+  ...SWEET_DREAM_PREFAB_KINDS,
 ] as const;
 /** Gold-star collectible: a spinning chrome star worth permanent garage glory. */
+export const DREAM_PREFAB_KINDS = ["wings"] as const;
+export type DreamKind = (typeof DREAM_PREFAB_KINDS)[number];
+export function isDreamPrefab(kind: string): kind is DreamKind {
+  return (DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const GOLD_STAR_PREFAB_KINDS = ["gold-star"] as const;
 export type GoldStarKind = (typeof GOLD_STAR_PREFAB_KINDS)[number];
 export function isGoldStar(kind: string): kind is GoldStarKind {
@@ -225,6 +245,7 @@ export const PREFAB_KINDS = [
   ...DUNGEON_PREFAB_KINDS,
   ...LOOSE_BLOCK_PREFAB_KINDS,
   ...GOLD_STAR_PREFAB_KINDS,
+  ...DREAM_PREFAB_KINDS,
   ...BURNING_COALS_PREFAB_KINDS,
   ...FRAGILE_ICE_PREFAB_KINDS,
   "checkpoint",
@@ -701,6 +722,16 @@ export function toTrack(level: CustomLevel): Track {
       ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
       ...(p.scale === undefined ? {} : { scale: p.scale }),
     }));
+  const wings = level.prefabs
+    .filter((p) => p.kind === "wings")
+    .map((p) => ({
+      id: p.id,
+      x: p.x,
+      y: p.y ?? 2,
+      z: p.z,
+      ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
+      ...(p.scale === undefined ? {} : { scale: p.scale }),
+    }));
   const base = {
     id: `custom:${customSlug(level.name)}` as CustomTrackId,
     name: level.name,
@@ -712,6 +743,7 @@ export function toTrack(level: CustomLevel): Track {
     medals: { ...level.medals },
     custom: level,
     ...(goldStars.length ? { goldStars } : {}),
+    ...(wings.length ? { wings } : {}),
     ...(level.underground ? { underground: true } : {}),
     ...(level.backgroundTemplate === undefined
       ? {}

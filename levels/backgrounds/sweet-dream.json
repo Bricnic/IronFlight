@@ -1,0 +1,85 @@
+{
+  "name": "sweet-dream",
+  "sky": {
+    "top": 12487664,
+    "horizon": 16763363
+  },
+  "fog": {
+    "color": 16234712,
+    "near": 150,
+    "far": 700
+  },
+  "sun": {
+    "color": 16771286,
+    "intensity": 2.2
+  },
+  "hemi": {
+    "sky": 16767468,
+    "ground": 9659530,
+    "intensity": 1.1
+  },
+  "env": 0.45,
+  "shapes": [
+    {
+      "kind": "hill",
+      "count": 8,
+      "radius": 460,
+      "y": 0,
+      "size": [
+        50,
+        80
+      ],
+      "seed": 701,
+      "color": 10189780
+    },
+    {
+      "kind": "hill",
+      "count": 6,
+      "radius": 560,
+      "y": 0,
+      "size": [
+        70,
+        110
+      ],
+      "seed": 702,
+      "color": 7029286
+    },
+    {
+      "kind": "balloon",
+      "count": 10,
+      "radius": 300,
+      "y": 45,
+      "size": [
+        8,
+        14
+      ],
+      "seed": 703
+    },
+    {
+      "kind": "hill",
+      "count": 8,
+      "radius": 640,
+      "y": 0,
+      "size": [
+        90,
+        140
+      ],
+      "seed": 704,
+      "color": 10189780
+    }
+  ],
+  "clouds": {
+    "count": 6,
+    "y": [
+      140,
+      200
+    ],
+    "radius": [
+      250,
+      550
+    ],
+    "color": 16773367,
+    "opacity": 0.55,
+    "drift": 2
+  }
+}

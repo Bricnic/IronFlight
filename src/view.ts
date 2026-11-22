@@ -29,6 +29,7 @@ import type { Checkpoint } from "./tracks";
 import { DT } from "./clock";
 import { QUALITY, type VideoQuality } from "./settings";
 import { TruckFireView } from "./truck-fire";
+import { buildWings, poseWings } from "./wings-view";
 import { SkidView } from "./skids";
 import { LoopView } from "./loop-view";
 import { BackgroundView } from "./background-view";
@@ -73,6 +74,9 @@ export class GameView {
   private resizedPrefabs = new ResizedPrefabView();
   private background = new BackgroundView();
   private fire = new TruckFireView();
+  private truckWings?: T.Group;
+  /** Mouse flight deltas (px); main consumes and clears these every frame. */
+  readonly flightMouse = { x: 0, y: 0 };
   private lavaEffects = new LavaPartEffects();
   private lavaInspection = false;
   private basinInspection?: number;
@@ -165,7 +169,12 @@ export class GameView {
     });
     canvas.addEventListener("pointermove", (e) => {
       if (!dragging) return;
-      this.chase.drag(e.clientX - lastX, e.clientY - lastY);
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      // While flying, drags steer the car instead of orbiting the camera.
+      if (this.simulation.flying) {
+        this.flightMouse.x += dx;
+        this.flightMouse.y += dy;
+      } else this.chase.drag(dx, dy);
       lastX = e.clientX;
       lastY = e.clientY;
     });
@@ -836,6 +845,38 @@ export class GameView {
     for (const jet of this.nitro.children)
       ((jet as T.Mesh).material as T.ShaderMaterial).uniforms.time.value =
         s.time;
+    // Dream wings ride the chassis once equipped: folded on the ground,
+    // flapping in slow flight, gliding when weightless.
+    const wingsOn = !!s.trackRun?.wings;
+    if (wingsOn && !this.truckWings) {
+      this.truckWings = buildWings(1);
+      this.scene.add(this.truckWings);
+    } else if (!wingsOn && this.truckWings) {
+      this.scene.remove(this.truckWings);
+      this.truckWings.traverse((o) => {
+        if (o instanceof T.Mesh) {
+          o.geometry.dispose();
+          const ms = Array.isArray(o.material) ? o.material : [o.material];
+          ms.forEach((m) => m.dispose());
+        }
+      });
+      this.truckWings = undefined;
+    }
+    if (this.truckWings) {
+      this.truckWings.position.copy(root);
+      this.truckWings.quaternion.copy(q);
+      const flightMph =
+        Math.hypot(
+          s.body.linvel().x,
+          s.body.linvel().y,
+          s.body.linvel().z,
+        ) * 3.6;
+      poseWings(
+        this.truckWings,
+        s.time,
+        !s.flying ? "fold" : flightMph < 20 ? "flap" : "glide",
+      );
+    }
     // Mystic venom: cloudy green filter, fading over the last 0.4s.
     const poisonMix = s.poisoned
       ? Math.min(1, (s.poisonUntil - s.time) / 0.4)

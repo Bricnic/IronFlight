@@ -255,6 +255,7 @@ const PHYSICS_EXEMPT = new Map<string, string>([
   ["birthday-cake-grand", "RADIAL: concentric cylinder colliders are yaw-invariant by construction; model carries yaw"],
   ["birthday-cake-table", "RADIAL: concentric cylinder colliders are yaw-invariant by construction; model carries yaw"],
   ["gold-star", "NO_COLLIDERS: radial collect zone in TrackRun; model carries yaw"],
+  ["wings", "NO_COLLIDERS: radial collect zone in TrackRun; model carries yaw"],
   ["hands", "NO_COLLIDERS: radial snap-strike zone; model carries yaw"],
   ["scissors", "NO_COLLIDERS: radial snap-strike zone; model carries yaw"],
   ["cup", "NO_COLLIDERS: radial snap-strike zone; model carries yaw"],

@@ -450,6 +450,56 @@
           "bytes": 40223
         }
       }
+    },
+    {
+      "id": "pink_frosting_01",
+      "source": "Gemini 2.5-flash-image (seamless pastel-pink frosting)",
+      "license": "Generated",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/pink_frosting_01_diffuse.jpg",
+          "url": "Gemini 2.5-flash-image (seamless pastel-pink frosting)",
+          "sha256": "53101c4681a6ab0682bd7452f0381a7bafb4c5194623a3f73d44de0f83115669",
+          "bytes": 75039
+        },
+        "normal": {
+          "file": "/textures/pink_frosting_01_normal.jpg",
+          "url": "Gemini 2.5-flash-image (seamless pastel-pink frosting)",
+          "sha256": "8a397b9a96ecacc29691945cccb423ac3d6c1a9b65be5b390b11551107c55d2e",
+          "bytes": 63802
+        },
+        "roughness": {
+          "file": "/textures/pink_frosting_01_roughness.jpg",
+          "url": "Gemini 2.5-flash-image (seamless pastel-pink frosting)",
+          "sha256": "119cc7e663570fa737a394f3d09d69c13fb20bcfae873fe6242345635ee9bdf6",
+          "bytes": 36689
+        }
+      }
+    },
+    {
+      "id": "candy_cream_01",
+      "source": "Gemini 2.5-flash-image (seamless pink cream with sprinkles)",
+      "license": "Generated",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/candy_cream_01_diffuse.jpg",
+          "url": "Gemini 2.5-flash-image (seamless pink cream with sprinkles)",
+          "sha256": "ea4de4be03e7ef843eb5a910f7eb635c844d09bc1b352099e3b7d1f12c2a5f6a",
+          "bytes": 31524
+        },
+        "normal": {
+          "file": "/textures/candy_cream_01_normal.jpg",
+          "url": "Gemini 2.5-flash-image (seamless pink cream with sprinkles)",
+          "sha256": "7f47140b7ca2979ce10262559a64c773f78b736496c5f28652f03a726b62a215",
+          "bytes": 18714
+        },
+        "roughness": {
+          "file": "/textures/candy_cream_01_roughness.jpg",
+          "url": "Gemini 2.5-flash-image (seamless pink cream with sprinkles)",
+          "sha256": "09567007d00469023314a8d53d6ce90ea5133f89dde8e4621483efb56044940b",
+          "bytes": 15848
+        }
+      }
     }
   ]
 }

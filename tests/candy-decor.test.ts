@@ -83,7 +83,9 @@ it("builds five detailed static models headlessly", () => {
     expect(parts, `${kind} parts`).toBeGreaterThanOrEqual(10);
     const model = buildDungeonModel({ id: `test-${kind}`, kind, x: 0, z: 0, phase: 0 });
     expect(model.pivots, `${kind} pivots`).toHaveLength(0);
-    expect(model.triangles, `${kind} triangles`).toBeGreaterThan(100);
+    const floor =
+      kind === "gumdrop-tree" ? 15000 : kind === "candy-cane-arch" ? 3000 : 100;
+    expect(model.triangles, `${kind} triangles`).toBeGreaterThan(floor);
     let labels = 0;
     model.root.traverse((o) => {
       if (o instanceof T.Sprite) labels++;

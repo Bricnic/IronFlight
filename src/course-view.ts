@@ -18,6 +18,7 @@ import {
   updateDragonJets,
 } from "./loop-view";
 import { flameMaterial } from "./materials";
+import { buildWingsPickup, poseWings } from "./wings-view";
 import { courseSolids, type CourseSolid } from "./course";
 import { BOOST_PAD } from "./custom-level";
 import { solidQuaternion } from "./euler";
@@ -122,6 +123,7 @@ export class CourseView extends T.Group {
   private ghostGroup: T.Group | null = null;
   private pickupModels = new Map<string, T.Group>();
   private starModels = new Map<string, T.Group>();
+  private wingModels = new Map<string, T.Group>();
   private meshes: T.Mesh[] = [];
   private builtTrack: Track | null = null;
   private label(text: string, color: number) {
@@ -526,6 +528,7 @@ export class CourseView extends T.Group {
       this.hazards = [];
       this.pickupModels.clear();
       this.starModels.clear();
+      this.wingModels.clear();
       this.meshes = [];
       this.wetSurfaces = [];
       this.lavaMaterials = [];
@@ -816,6 +819,15 @@ export class CourseView extends T.Group {
           this.add(g);
           this.starModels.set(s.id, g);
         }
+        for (const w of track.wings ?? []) {
+          const g = new T.Group();
+          g.position.set(w.x, w.y, w.z);
+          g.name = w.id;
+          g.rotation.y = w.yaw ?? 0;
+          g.add(buildWingsPickup(w.scale ?? 1));
+          this.add(g);
+          this.wingModels.set(w.id, g);
+        }
       }
     }
     this.visible = !!run;
@@ -885,6 +897,15 @@ export class CourseView extends T.Group {
       g.position.y = s.y + Math.sin(sim.time * 2.2) * 0.25;
       g.children[0].rotation.y = sim.time * 2.4;
     }
+    for (const w of run.track.wings ?? []) {
+      const g = this.wingModels.get(w.id);
+      if (!g) continue;
+      g.visible = !run.wings;
+      g.position.y = w.y + Math.sin(sim.time * 2.2) * 0.25;
+      g.children[0].rotation.y = sim.time * 1.6;
+      const wings = g.children[0].getObjectByName("dream-wings");
+      if (wings) poseWings(wings as T.Group, sim.time, "flap");
+    }
     for (const { key, at } of sim.pianoPresses()) {
       const solid = run.track.custom?.solids.find((s) => s.pianoKey === key);
       const mesh = solid && this.solidMesh(solid.id);
@@ -926,6 +947,7 @@ export class CourseView extends T.Group {
       gates: this.gateModels.filter((g) => g.visible).length,
       pickups: [...this.pickupModels.values()].filter((g) => g.visible).length,
       stars: [...this.starModels.values()].filter((g) => g.visible).length,
+      wings: [...this.wingModels.values()].filter((g) => g.visible).length,
       solids: this.meshes.length,
       jets: this.hazards
         .filter((m) => m.flames)

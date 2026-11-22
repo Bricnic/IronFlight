@@ -32,6 +32,13 @@ export type Collectible = Point & {
   kind?: "ring" | "chest";
 };
 export type Demolishable = Point & { id: string; y: number; radius: number };
+/** Wings pickup: drive within WINGS_RADIUS to fly for the rest of the run. */
+export type WingPickup = Point & {
+  id: string;
+  y: number;
+  yaw?: number;
+  scale?: number;
+};
 /** Gold-star collectible: drive within GOLD_STAR_RADIUS to bank it forever. */
 export type GoldStar = Point & {
   resizeScale?: number;
@@ -52,6 +59,7 @@ export type Track = {
   rings?: TrackRing[];
   demolish?: Demolishable[];
   goldStars?: GoldStar[];
+  wings?: WingPickup[];
   description: string;
   legacy?: boolean;
   thumbnail: string;

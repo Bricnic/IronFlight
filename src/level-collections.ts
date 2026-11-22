@@ -17,6 +17,8 @@ export interface LevelCollection {
   art: string;
   /** Track ids in unlock order (directive order). */
   trackIds: (TrackId | CustomTrackId)[];
+  /** Dream level id (always last): gold+stars on every other course to open. */
+  dream?: TrackId | CustomTrackId;
 }
 
 export const LEVEL_COLLECTIONS: LevelCollection[] = [
@@ -35,7 +37,9 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
       "custom:peppermint-pass",
       "custom:chocolate-chasm",
       "custom:sugar-rush-summit",
+      "custom:sweet-celebrations-dream",
     ],
+    dream: "custom:sweet-celebrations-dream",
   },
   {
     id: "winter-wonderland",

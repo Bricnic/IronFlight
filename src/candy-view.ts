@@ -42,7 +42,7 @@ function buildArch(root: T.Group) {
     for (let i = 0; i < 8; i++)
       mesh(
         root,
-        new T.CylinderGeometry(0.8, 0.8, 1.25, 20),
+        new T.CylinderGeometry(0.8, 0.8, 1.25, 28),
         i % 2 ? white : red,
         side * postX,
         0.6 + 0.625 + i * 1.25,
@@ -67,12 +67,12 @@ function buildArch(root: T.Group) {
     );
     dot.rotation.x = Math.PI / 2;
   }
-  const segments = 12;
+  const segments = 18;
   for (let i = 0; i < segments; i++) {
     const theta = (Math.PI * (i + 0.5)) / segments;
     const piece = mesh(
       root,
-      new T.CylinderGeometry(0.8, 0.8, 1.9, 20),
+      new T.CylinderGeometry(0.8, 0.8, ((Math.PI * postX) / segments) * 1.15, 28),
       i % 2 ? white : red,
       postX * Math.cos(theta),
       10 + postX * Math.sin(theta),
@@ -119,7 +119,7 @@ function buildTree(root: T.Group) {
       const a = (i / tier.count) * Math.PI * 2;
       const drop = mesh(
         root,
-        new T.SphereGeometry(1.1, 20, 14),
+        new T.SphereGeometry(1.1, 28, 20),
         gum,
         Math.cos(a) * tier.r,
         tier.y,
@@ -127,8 +127,21 @@ function buildTree(root: T.Group) {
       );
       drop.scale.set(1, 0.8, 1);
     }
+    // Small filler drops between the big ones for a lush canopy.
+    for (let i = 0; i < tier.count; i++) {
+      const a = ((i + 0.5) / tier.count) * Math.PI * 2;
+      const drop = mesh(
+        root,
+        new T.SphereGeometry(0.55, 16, 12),
+        gum,
+        Math.cos(a) * tier.r * 0.92,
+        tier.y + 0.75,
+        Math.sin(a) * tier.r * 0.92,
+      );
+      drop.scale.set(1, 0.8, 1);
+    }
   }
-  mesh(root, new T.SphereGeometry(0.8, 16, 12), mat(WHITE, 0.3), 0, 9.6, 0);
+  mesh(root, new T.SphereGeometry(0.8, 24, 18), mat(WHITE, 0.3), 0, 9.6, 0);
 
 }
 
