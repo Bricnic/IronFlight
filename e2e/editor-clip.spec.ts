@@ -174,29 +174,38 @@ test("auto clip offers one-click mutual clipping for shift-selected solids", asy
     await page.locator("#editor-tool-clip").click();
     await expect(page.locator("#editor-clip-auto")).toHaveCount(0);
     await page.locator("#editor-clip-cancel").click();
-    await page.locator('li[data-key="solid:ground"] span').click();
+    // Stacked ground + road never interact; add a barrier overlapping road-1.
+    await page.locator("#editor-solid-kind").selectOption("barrier");
+    await page.locator("#editor-add-solid").click();
+    await page.locator('[data-prop="x"]').fill("0");
+    await page.locator('[data-prop="z"]').fill("0");
+    await page.locator('[data-prop="z"]').press("Tab");
     await page
       .locator('li[data-key="solid:road-1"] span')
       .click({ modifiers: ["Shift"] });
     await page.locator("#editor-tool-clip").click();
     await expect(page.locator("#editor-clip-auto-summary")).toContainText(
-      "Auto clip (ground → road-1)",
+      "Auto clip (barrier-3 → road-1)",
     );
     await page.locator("#editor-clip-auto").click();
-    // road-1 sits fully inside ground, so auto clip removes it and keeps ground.
+    // The barrier punches a hole through road-1, then nothing overlaps back.
     await expect
       .poll(() => page.evaluate(() => window.__game!.editor().solids))
-      .toBe(1);
+      .toBe(6);
     await page.locator("#editor-undo").click();
     await expect
       .poll(() => page.evaluate(() => window.__game!.editor().solids))
-      .toBe(2);
+      .toBe(3);
     await page.locator("#editor-redo").click();
     await expect
       .poll(() => page.evaluate(() => window.__game!.editor().solids))
-      .toBe(1);
+      .toBe(6);
     // Grouped selections are excluded from auto clip.
     await page.locator("#editor-undo").click();
+    await page.locator('li[data-key="solid:ground"] span').click();
+    await page
+      .locator('li[data-key="solid:road-1"] span')
+      .click({ modifiers: ["Shift"] });
     await page.locator("#editor-group").click();
     await page.locator("#editor-tool-clip").click();
     await expect(page.locator("#editor-clip-auto")).toHaveCount(0);

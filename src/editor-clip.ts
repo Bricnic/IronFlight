@@ -19,6 +19,39 @@ function cleanPolygon(poly: Point[]) {
 function polygonArea(poly: Point[]) {
   return poly.reduce((sum, a, i) => { const b = poly[(i + 1) % poly.length]; return sum + a.x * b.z - a.z * b.x; }, 0) / 2;
 }
+/** Ear-clipping triangulation into counterclockwise triangles for convex-only cutters. */
+export function triangulate(poly: Point[]): Point[][] {
+  let rest = cleanPolygon(poly);
+  if (polygonArea(rest) < 0) rest = rest.reverse();
+  const tris: Point[][] = [];
+  const idx = rest.map((_, i) => i);
+  const cross = (a: Point, b: Point, c: Point) => (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x);
+  // Non-strict: a vertex on the candidate diagonal invalidates the ear.
+  const inTriangle = (p: Point, a: Point, b: Point, c: Point) =>
+    cross(a, b, p) >= -CLIP_EPSILON && cross(b, c, p) >= -CLIP_EPSILON && cross(c, a, p) >= -CLIP_EPSILON;
+  let guard = idx.length * idx.length + 4;
+  while (idx.length > 3 && guard-- > 0) {
+    let clipped = false;
+    for (let k = 0; k < idx.length; k++) {
+      const a = rest[idx[(k + idx.length - 1) % idx.length]];
+      const b = rest[idx[k]];
+      const c = rest[idx[(k + 1) % idx.length]];
+      if (cross(a, b, c) <= CLIP_EPSILON) continue;
+      if (idx.some((j) => rest[j] !== a && rest[j] !== b && rest[j] !== c && inTriangle(rest[j], a, b, c))) continue;
+      tris.push([a, b, c]);
+      idx.splice(k, 1);
+      clipped = true;
+      break;
+    }
+    if (!clipped) break;
+  }
+  if (idx.length === 3) tris.push(idx.map((i) => rest[i]));
+  return tris.filter((t) => Math.abs(polygonArea(t)) > CLIP_EPSILON);
+}
+/** Vertical ranges overlap with positive length (stacked layers never interact). */
+function heightsOverlap(a: CustomSolid, b: CustomSolid) {
+  return Math.min(a.y + a.h / 2, b.y + b.h / 2) - Math.max(a.y - a.h / 2, b.y - b.h / 2) > CLIP_EPSILON;
+}
 function polygonPiece(s: CustomSolid, poly: Point[]): CustomSolid {
   const c = Math.cos(s.yaw ?? 0), n = Math.sin(s.yaw ?? 0);
   const local = poly.map(p => ({ x: (p.x - s.x) * c - (p.z - s.z) * n, z: (p.x - s.x) * n + (p.z - s.z) * c }));
@@ -80,6 +113,94 @@ export function subtractRect(a: ClipRect, cutter: ClipRect): ClipRect[] {
     { minX: i.minX, maxX: i.maxX, minZ: a.minZ, maxZ: i.minZ },
     { minX: i.minX, maxX: i.maxX, minZ: i.maxZ, maxZ: a.maxZ },
   ].filter(validRect);
+}
+export type ClipPolygon = Point[];
+/**
+ * Polygon-true clip: like previewClip but every target is cut by polygon
+ * footprints (triangulated for the convex-only subtractor) instead of
+ * bounding boxes, so yawed solids cut their real shape. Targets keep the
+ * same support rules (locked/pitched/rolled/invalid are reported, not cut).
+ */
+export function previewClipPolygons(
+  solids: CustomSolid[],
+  targets: string[],
+  cutters: ClipPolygon[],
+): ClipResult {
+  const tris = cutters.flatMap(triangulate);
+  const result: ClipResult = {
+    solids: [],
+    retained: [],
+    removed: [],
+    affected: [],
+    issues: [],
+    slivers: 0,
+  };
+  if (!tris.length) {
+    result.solids = [...solids];
+    return result;
+  }
+  const taken = new Set(solids.map((s) => s.id));
+  for (const s of solids) {
+    if (!targets.includes(s.id)) {
+      result.solids.push(s);
+      continue;
+    }
+    const issue = clipUnsupported(s);
+    if (issue) {
+      result.issues.push(`${s.name ?? s.id}: ${issue}`);
+      result.solids.push(s);
+      continue;
+    }
+    let original = cleanPolygon(solidFootprint(s));
+    if (polygonArea(original) < 0) original = original.reverse();
+    let polygons = [original];
+    let affected = false;
+    for (const tri of tris) {
+      const next: Point[][] = [];
+      for (const poly of polygons) {
+        let inside = poly;
+        for (const [i, a] of tri.entries()) {
+          const b = tri[(i + 1) % tri.length];
+          inside = clipFootprint(inside, a, { x: a.z - b.z, z: b.x - a.x });
+        }
+        if (Math.abs(polygonArea(inside)) <= CLIP_EPSILON) {
+          next.push(poly);
+          continue;
+        }
+        affected = true;
+        result.removed.push(polygonPiece(s, cleanPolygon(inside)));
+        next.push(
+          ...subtractFootprint(poly, tri)
+            .map(cleanPolygon)
+            .filter(
+              (p) => p.length >= 3 && Math.abs(polygonArea(p)) > CLIP_EPSILON,
+            ),
+        );
+      }
+      polygons = next;
+    }
+    if (!affected) {
+      result.solids.push(s);
+      continue;
+    }
+    result.affected.push(s.id);
+    for (const [i, poly] of polygons.entries()) {
+      const base = `${s.id}-piece-${String(i + 1).padStart(2, "0")}`;
+      let id = base,
+        n = 2;
+      while (taken.has(id)) id = `${base}-${n++}`;
+      taken.add(id);
+      const piece = {
+        ...polygonPiece(s, poly),
+        id,
+        name: `${(s.name ?? s.id).slice(0, 60)} / piece ${i + 1}`,
+      };
+      if (Math.min(piece.w, piece.d) < CLIP_SLIVER) result.slivers++;
+      result.solids.push(piece);
+      result.retained.push(piece);
+    }
+  }
+  return result;
 }
 /** Exact full-edge merging, within one source only (therefore identical metadata). */
 function mergeRects(rects: ClipRect[]) {
@@ -154,9 +275,11 @@ export function autoClipOrder(solids: CustomSolid[]) {
 export type AutoClipResult = ClipResult & { order: string[] };
 /**
  * Sequential mutual clip: each solid in alphabetical order cuts every other
- * overlapping selected solid, evaluated against already-clipped geometry, so
- * earlier names keep shared regions. Unsupported targets report issues and
- * are left intact; cutters consumed by earlier steps are skipped.
+ * overlapping selected solid with its true footprint, evaluated against
+ * already-clipped geometry, so earlier names keep shared regions. Only
+ * solids whose footprints AND heights overlap interact, so stacked layers
+ * never eat each other. Unsupported targets report issues and are left
+ * intact; cutters consumed by earlier steps are skipped.
  */
 export function previewAutoClip(
   solids: CustomSolid[],
@@ -183,17 +306,21 @@ export function previewAutoClip(
   for (const cutter of ordered) {
     // Refresh the lookup: earlier steps replaced pieces.
     for (const s of result.solids) byId.set(s.id, s);
-    const cutters = live(lineage.get(cutter.id) ?? [])
+    const cutterPieces = live(lineage.get(cutter.id) ?? [])
       .map((id) => byId.get(id))
-      .filter((s): s is CustomSolid => !!s)
-      .map(solidRect)
-      .filter(validRect);
+      .filter((s): s is CustomSolid => !!s);
+    const cutters = cutterPieces
+      .map(solidFootprint)
+      .map(cleanPolygon)
+      .filter((p) => p.length >= 3 && Math.abs(polygonArea(p)) > CLIP_EPSILON);
     if (!cutters.length) continue;
     for (const [orig, pieceIds] of lineage) {
       if (orig === cutter.id) continue;
-      const targets = live(pieceIds);
+      const targets = live(pieceIds).filter((id) =>
+        cutterPieces.some((c) => heightsOverlap(c, byId.get(id)!)),
+      );
       if (!targets.length) continue;
-      const step = previewClip(result.solids, targets, cutters);
+      const step = previewClipPolygons(result.solids, targets, cutters);
       result.solids = step.solids;
       for (const s of result.solids) byId.set(s.id, s);
       // All retained pieces of this call belong to the single target original;

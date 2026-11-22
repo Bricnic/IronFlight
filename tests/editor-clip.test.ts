@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { beforeAll, expect, it } from "vitest";
 import * as T from "three";
 import {
@@ -12,8 +13,10 @@ import {
   intersectRects,
   previewAutoClip,
   previewClip,
+  solidFootprint,
   solidRect,
   subtractRect,
+  triangulate,
   type ClipRect,
 } from "../src/editor-clip";
 import { EditorStore } from "../src/editor-state";
@@ -244,6 +247,33 @@ it("auto clip skips cutters consumed by earlier steps", () => {
   expect(result.solids.some((s) => s.id === "d-id")).toBe(false);
   expect(result.solids.some((s) => s.id === "c-id")).toBe(true);
 });
+it("auto clip ignores stacked layers with disjoint heights", () => {
+  const ground = { ...box, id: "ground", w: 200, d: 200, y: -0.6, h: 1.2 };
+  const road = { ...box, id: "road-1", x: 0, z: 0, y: 0.015, h: 0.03, w: 24, d: 110 };
+  const result = previewAutoClip([ground, road], ["ground", "road-1"]);
+  expect(result.affected).toEqual([]);
+  expect(result.solids).toHaveLength(2);
+});
+it("auto clip cuts true footprints, not bounding boxes, of yawed solids", () => {
+  // A=[0,10]^2. B is a thin diagonal slab whose bbox overlaps A's corner
+  // while its true footprint passes 3u clear of it.
+  const a = { ...box, id: "a-id", name: "Alpha", x: 5, z: 5, w: 10, d: 10 };
+  const b = {
+    ...box,
+    id: "b-id",
+    name: "Beta",
+    x: 12,
+    z: 12,
+    w: 12,
+    d: 1,
+    yaw: Math.PI / 4,
+  };
+  expect(intersectRects(solidRect(a), solidRect(b))).not.toBeNull();
+  const result = previewAutoClip([a, b], ["a-id", "b-id"]);
+  expect(result.issues).toEqual([]);
+  expect(result.affected).toEqual([]);
+  expect(result.solids).toHaveLength(2);
+});
 it("auto clip sorts unnamed solids by id", () => {
   const solids = [
     { ...box, id: "b-slab", name: undefined, x: 8, z: 5, w: 10, d: 10 },
@@ -308,6 +338,168 @@ it("auto clip refuses grouped selections, single solids and locked targets", () 
   expect(store.autoClipPreview()?.issues).toHaveLength(1);
   expect(store.applyAutoClip()).toBe(false);
   expect(store.level.solids).toHaveLength(2);
+});
+it("triangulation preserves area with counterclockwise ears", () => {
+  const area = (poly: { x: number; z: number }[]) =>
+    Math.abs(
+      poly.reduce((n, p, i) => {
+        const q = poly[(i + 1) % poly.length];
+        return n + p.x * q.z - p.z * q.x;
+      }, 0),
+    ) / 2;
+  // Convex quad, either winding.
+  for (const quad of [
+    [
+      { x: 0, z: 0 },
+      { x: 10, z: 0 },
+      { x: 10, z: 10 },
+      { x: 0, z: 10 },
+    ],
+    [
+      { x: 0, z: 10 },
+      { x: 10, z: 10 },
+      { x: 10, z: 0 },
+      { x: 0, z: 0 },
+    ],
+  ]) {
+    const tris = triangulate(quad);
+    expect(tris).toHaveLength(2);
+    expect(tris.reduce((n, t) => n + area(t), 0)).toBeCloseTo(100, 9);
+    for (const t of tris) expect(area(t)).toBeGreaterThan(0);
+  }
+  // Concave arrow: n-2 ears, area preserved.
+  const arrow = [
+    { x: 0, z: 0 },
+    { x: 6, z: 0 },
+    { x: 6, z: 4 },
+    { x: 3, z: 2 },
+    { x: 0, z: 4 },
+  ];
+  const tris = triangulate(arrow);
+  expect(tris).toHaveLength(3);
+  expect(tris.reduce((n, t) => n + area(t), 0)).toBeCloseTo(area(arrow), 9);
+  expect(triangulate([{ x: 0, z: 0 }])).toEqual([]);
+});
+it("auto clip resolves every Mystic Caverns road into one contiguous deck", () => {
+  type Pt = { x: number; z: number };
+  const EPS = 1e-6;
+  const distToSeg = (p: Pt, a: Pt, b: Pt) => {
+    const dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+    const t = l2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / l2)) : 0;
+    return Math.hypot(p.x - (a.x + dx * t), p.z - (a.z + dz * t));
+  };
+  const onBoundary = (p: Pt, poly: Pt[]) =>
+    poly.some((a, i) => distToSeg(p, a, poly[(i + 1) % poly.length]) < EPS);
+  const inside = (p: Pt, poly: Pt[]) => {
+    if (onBoundary(p, poly)) return true;
+    let crossings = 0;
+    for (let i = 0; i < poly.length; i++) {
+      const a = poly[i], b = poly[(i + 1) % poly.length];
+      if (a.z > p.z !== b.z > p.z) {
+        const x = a.x + ((p.z - a.z) / (b.z - a.z)) * (b.x - a.x);
+        if (x > p.x) crossings++;
+      }
+    }
+    return crossings % 2 === 1;
+  };
+  // Exact pairwise intersection area via triangle-triangle clipping, using
+  // the engine's own epsilon: shared cut boundaries measure as zero.
+  const triArea = (t: Pt[]) =>
+    Math.abs(
+      (t[1].x - t[0].x) * (t[2].z - t[0].z) - (t[1].z - t[0].z) * (t[2].x - t[0].x),
+    ) / 2;
+  const clipTri = (subject: Pt[], a: Pt, b: Pt, interior: Pt) => {
+    let nx = a.z - b.z, nz = b.x - a.x;
+    if ((interior.x - a.x) * nx + (interior.z - a.z) * nz < 0) {
+      nx = -nx;
+      nz = -nz;
+    }
+    const out: Pt[] = [];
+    for (let i = 0; i < subject.length; i++) {
+      const p = subject[i], q = subject[(i + 1) % subject.length];
+      const dp = (p.x - a.x) * nx + (p.z - a.z) * nz;
+      const dq = (q.x - a.x) * nx + (q.z - a.z) * nz;
+      if (dp >= 0) out.push(p);
+      if ((dp < 0 && dq > 0) || (dp > 0 && dq < 0)) {
+        const t = dp / (dp - dq);
+        out.push({ x: p.x + (q.x - p.x) * t, z: p.z + (q.z - p.z) * t });
+      }
+    }
+    return out;
+  };
+  const intersectionArea = (p: Pt[], q: Pt[]) => {
+    let total = 0;
+    for (const tp of triangulate(p))
+      for (const tq of triangulate(q)) {
+        let inter: Pt[] = tp;
+        const centroid = {
+          x: (tq[0].x + tq[1].x + tq[2].x) / 3,
+          z: (tq[0].z + tq[1].z + tq[2].z) / 3,
+        };
+        for (let i = 0; i < 3 && inter.length >= 3; i++)
+          inter = clipTri(inter, tq[i], tq[(i + 1) % 3], centroid);
+        if (inter.length >= 3) {
+          let area = 0;
+          for (let i = 0; i < inter.length; i++) {
+            const a = inter[i], b = inter[(i + 1) % inter.length];
+            area += a.x * b.z - a.z * b.x;
+          }
+          total += Math.abs(area) / 2;
+        }
+      }
+    return total;
+  };
+  const level = JSON.parse(
+    readFileSync("levels/official/spooky-places/Mystic Caverns.json", "utf8"),
+  );
+  const roads: string[] = level.solids
+    .filter((s: CustomSolid) => s.kind === "road")
+    .map((s: CustomSolid) => s.id);
+  expect(roads.length).toBeGreaterThan(10);
+  const result = previewAutoClip(level.solids, roads);
+  expect(result.order).toHaveLength(roads.length);
+  expect(result.issues).toEqual([]);
+  expect(result.affected.length).toBeGreaterThan(0);
+  const finals = result.solids.filter(
+    (s: CustomSolid) =>
+      roads.includes(s.id) || roads.some((id) => s.id.startsWith(`${id}-piece-`)),
+  );
+  const polys = finals.map((s: CustomSolid) => solidFootprint(s));
+  const yOverlap = (a: CustomSolid, b: CustomSolid) =>
+    Math.min(a.y + a.h / 2, b.y + b.h / 2) -
+      Math.max(a.y - a.h / 2, b.y - b.h / 2) >
+    1e-8;
+  for (const [i, p] of polys.entries())
+    for (const [j, q] of polys.slice(i + 1).entries()) {
+      if (!yOverlap(finals[i], finals[i + 1 + j])) continue;
+      const shared = intersectionArea(p, q);
+      expect(shared, `${finals[i].id} overlaps ${finals[i + 1 + j].id}`).toBeLessThanOrEqual(
+        1e-8,
+      );
+    }
+  // Every drive-line sample covered before is still covered: no new holes.
+  const path = [level.spawn, ...level.checkpoints];
+  const samples: Pt[] = [];
+  for (let i = 1; i < path.length; i++) {
+    const steps = Math.ceil(
+      Math.hypot(path[i].x - path[i - 1].x, path[i].z - path[i - 1].z) / 2,
+    );
+    for (let k = 0; k <= steps; k++)
+      samples.push({
+        x: path[i - 1].x + ((path[i].x - path[i - 1].x) * k) / steps,
+        z: path[i - 1].z + ((path[i].z - path[i - 1].z) * k) / steps,
+      });
+  }
+  const before = roads.map(
+    (id: string) => solidFootprint(level.solids.find((s: CustomSolid) => s.id === id)!),
+  );
+  let checked = 0;
+  for (const s of samples) {
+    if (!before.some((p) => inside(s, p))) continue;
+    checked++;
+    expect(polys.some((p) => inside(s, p)), `hole at ${s.x},${s.z}`).toBe(true);
+  }
+  expect(checked).toBeGreaterThan(100);
 });
 it("keeps an existing cutter and clears selection after full removal", () => {
   const store = new EditorStore("Cutter");
