@@ -66,6 +66,7 @@ export class PrefabSpace {
   world(world: R.World): R.World {
     const space = this;
     return new Proxy(world, { get(target, key) {
+      if (key === "gravity") return space.vector(target.gravity, 1 / space.factor);
       if (key === "createRigidBody") return (desc: R.RigidBodyDesc) => {
         const copy = Object.assign(Object.create(Object.getPrototypeOf(desc)), desc) as R.RigidBodyDesc;
         copy.translation = space.toWorld(desc.translation); copy.linvel = space.vector(desc.linvel);

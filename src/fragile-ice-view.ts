@@ -2,6 +2,9 @@ import * as T from "three";
 import {
   FRAGILE_ICE_SIZE,
   FRAGILE_ICE_WATER_Y,
+  FRAGILE_SHARD_COUNT as SHARD_COUNT,
+  fragileShardLocal,
+  type PlankDebris,
   type FragileIce,
 } from "./fragile-ice";
 
@@ -11,7 +14,6 @@ const SHEET_Y = -0.13;
 const CRACK_Y = 0.03;
 const CRACK_TILTS = [0.3, 1.35, 2.4];
 const CRACK_LENS = [3.6, 2.9, 2.2];
-const SHARD_COUNT = 6;
 
 const _m = new T.Matrix4();
 const _p = new T.Vector3();
@@ -23,13 +25,6 @@ const _up = new T.Vector3(0, 1, 0);
 const ZERO = new T.Vector3(0, 0, 0);
 const ONE = new T.Vector3(1, 1, 1);
 
-function shardLocal(i: number, half: number) {
-  const a = (i / SHARD_COUNT) * Math.PI * 2 + 0.4;
-  return {
-    pos: new T.Vector3(Math.cos(a) * (half - 0.5), 0.1, Math.sin(a) * (half - 0.5)),
-    rot: new T.Euler(i * 1.3, a, i * 0.7),
-  };
-}
 
 export class FragileIceView extends T.Group {
   private source?: FragileIce;
@@ -38,6 +33,7 @@ export class FragileIceView extends T.Group {
   private base: { x: number; y: number; z: number }[] = [];
   private yaws: number[] = [];
   private shattered: boolean[] = [];
+  private debrisActive: boolean[] = [];
   private kinds: string[] = [];
   private iceSlot: number[] = [];
   private plankSlot: number[] = [];
@@ -87,6 +83,7 @@ export class FragileIceView extends T.Group {
     this.base = source.tiles.map((t) => ({ x: t.h.x, y: t.h.y ?? 0, z: t.h.z }));
     this.yaws = source.tiles.map((t) => t.h.yaw ?? 0);
     this.shattered = source.tiles.map((t) => t.shattered);
+    this.debrisActive = source.tiles.map(t => !!t.debris?.some(s => s.active));
     this.kinds = source.tiles.map((t) => t.h.kind);
     this.key = this.order.join(",");
     const n = this.order.length;
@@ -177,7 +174,7 @@ export class FragileIceView extends T.Group {
     for (let i = 0; i < n; i++) {
       this.writeSheet(i, !this.shattered[i]);
       this.writeWater(i, 0);
-      this.writeShards(i, this.shattered[i]);
+      this.writeShards(i, this.shattered[i], source.tiles[i].debris);
     }
   }
   private writeSheet(i: number, visible: boolean) {
@@ -218,23 +215,21 @@ export class FragileIceView extends T.Group {
     _m.compose(_p, _q, ONE);
     this.waters.setMatrixAt(this.iceSlot[i], _m);
   }
-  private writeShards(i: number, visible: boolean) {
+  private writeShards(i: number, visible: boolean, debris?: PlankDebris[]) {
     const b = this.base[i];
     const yaw = this.yaws[i] ?? 0;
-    const half = FRAGILE_ICE_SIZE / 2;
     const c = Math.cos(yaw),
       s = Math.sin(yaw);
     const slot = this.kinds[i] === "rickety-plank" ? this.plankSlot[i] : this.iceSlot[i];
     const shards = this.kinds[i] === "rickety-plank" ? this.plankShards : this.shards;
     for (let k = 0; k < SHARD_COUNT; k++) {
-      const { pos, rot } = shardLocal(k, half);
-      _p.set(
-        b.x + pos.x * c + pos.z * s,
-        b.y + pos.y,
-        b.z - pos.x * s + pos.z * c,
-      );
-      _q.setFromEuler(rot).premultiply(_qy.setFromAxisAngle(_up, yaw));
-      _m.compose(_p, _q, visible ? ONE : ZERO);
+      if (debris) { _p.copy(debris[k].position); _q.copy(debris[k].rotation); }
+      else {
+        const { pos, rot } = fragileShardLocal(k);
+        _p.set(b.x + pos.x * c + pos.z * s, b.y + pos.y, b.z - pos.x * s + pos.z * c);
+        _q.setFromEuler(rot).premultiply(_qy.setFromAxisAngle(_up, yaw));
+      }
+      _m.compose(_p, _q, visible && (!debris || debris[k].active) ? ONE : ZERO);
       shards!.setMatrixAt(slot * SHARD_COUNT + k, _m);
     }
     shards!.instanceMatrix.needsUpdate = true;
@@ -245,12 +240,15 @@ export class FragileIceView extends T.Group {
     if (this.order.length === 0) return;
     for (let i = 0; i < source.tiles.length; i++) {
       const t = source.tiles[i];
+      const debrisActive = !!t.debris?.some(s => s.active);
       this.writeWater(i, time);
       if (t.shattered !== this.shattered[i]) {
         this.shattered[i] = t.shattered;
         this.writeSheet(i, !t.shattered);
-        this.writeShards(i, t.shattered);
+        this.writeShards(i, t.shattered, t.debris);
       }
+      else if (debrisActive || this.debrisActive[i]) this.writeShards(i, t.shattered, t.debris);
+      this.debrisActive[i] = debrisActive;
     }
     if (this.waters) this.waters.instanceMatrix.needsUpdate = true;
   }

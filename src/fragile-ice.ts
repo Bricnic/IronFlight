@@ -1,5 +1,5 @@
 import R from "@dimforge/rapier3d-compat";
-import { Quaternion, Vector3 } from "three";
+import { Euler, Quaternion, Vector3 } from "three";
 import { DT } from "./clock";
 import type { Track } from "./tracks";
 import type { Simulation } from "./simulation";
@@ -12,6 +12,22 @@ export const FRAGILE_ICE_SHATTER_CHANCE = 0.1;
 export const FRAGILE_ICE_SINK_SECONDS = 2.5;
 /** Rickety planks groan, then give way behind a moving truck. */
 export const RICKETY_COLLAPSE_DELAY = 0.6;
+export const FRAGILE_SHARD_COUNT = 6;
+/** Bounded cleanup for debris that falls into an empty chasm. */
+const RICKETY_DEBRIS_LIFETIME = 12;
+const SHARD_RADIUS = 0.45;
+export function fragileShardLocal(i: number) {
+  const a = i / FRAGILE_SHARD_COUNT * Math.PI * 2 + 0.4;
+  return { pos: new Vector3(Math.cos(a) * (FRAGILE_ICE_SIZE / 2 - 0.5), 0.1, Math.sin(a) * (FRAGILE_ICE_SIZE / 2 - 0.5)), rot: new Euler(i * 1.3, a, i * 0.7) };
+}
+export type PlankDebris = {
+  position: Vector3;
+  velocity: Vector3;
+  rotation: Quaternion;
+  spin: Quaternion;
+  active: boolean;
+  grounded: boolean;
+};
 /** Freezing water burns like the water prefab: 45% of each part per second. */
 const FRAGILE_ICE_DAMAGE_RATE = 0.45;
 /** Visible water surface below the rim. */
@@ -60,6 +76,8 @@ export type FragileIceState = {
   wheels: number;
   sinking: number;
   contacts: number;
+  debris?: PlankDebris[];
+  debrisUntil?: number;
 };
 
 export class FragileIce {
@@ -123,6 +141,7 @@ export class FragileIce {
     t.h.x = x;
     t.h.y = y;
     t.h.z = z;
+    for (const shard of t.debris ?? []) shard.position.add(new Vector3(dx, dy, dz));
     for (const c of [...(t.sheet ? [t.sheet] : []), t.sensor]) {
       const p = c.translation();
       c.setTranslation({ x: p.x + dx, y: p.y + dy, z: p.z + dz });
@@ -146,6 +165,20 @@ export class FragileIce {
     t.shattered = true;
     t.armed = false;
     t.contacts++;
+    if (t.h.kind === "rickety-plank") {
+      const yaw = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), t.h.yaw ?? 0);
+      t.debrisUntil = this.sim.time + RICKETY_DEBRIS_LIFETIME;
+      t.debris = Array.from({ length: FRAGILE_SHARD_COUNT }, (_, i) => {
+        const local = fragileShardLocal(i);
+        return {
+          position: local.pos.clone().applyQuaternion(yaw).add(new Vector3(t.h.x, t.h.y ?? 0, t.h.z)),
+          velocity: new Vector3(local.pos.x * 0.35, -0.5 - i * 0.1, local.pos.z * 0.35).applyQuaternion(yaw),
+          rotation: new Quaternion().setFromEuler(local.rot).premultiply(yaw),
+          spin: new Quaternion().setFromEuler(new Euler((i - 2) * DT, (i % 2 ? 1 : -1) * DT, (3 - i) * DT)),
+          active: true, grounded: false,
+        };
+      });
+    }
     this.sim.damageEvents.push({ source: t.h.kind, part: "chassis-front", time: this.sim.time });
   }
   private intersects(sensor: R.Collider) {
@@ -159,6 +192,35 @@ export class FragileIce {
   }
   /** Shared dunking clock: one instance of water effects no matter how many broken sensors overlap. */
   sinking = 0;
+  private updateDebris() {
+    const s = this.sim, world = s.world;
+    for (const tile of this.tiles) for (const shard of tile.debris ?? []) {
+      if (!shard.active) continue;
+      if (s.time >= tile.debrisUntil!) { shard.active = false; continue; }
+      if (shard.grounded) continue;
+      const g = world.gravity, v = shard.velocity;
+      v.set(v.x + g.x * DT, v.y + g.y * DT, v.z + g.z * DT);
+      const distance = shard.velocity.length() * DT;
+      if (distance < 1e-9) continue;
+      const direction = shard.velocity.clone().normalize();
+      const hit = world.castRayAndGetNormal(
+        new R.Ray(shard.position, direction), distance + SHARD_RADIUS, true,
+        R.QueryFilterFlags.EXCLUDE_DYNAMIC | R.QueryFilterFlags.EXCLUDE_KINEMATIC,
+        undefined, undefined, undefined,
+        collider => !collider.isSensor() || s.surfaceKind(collider.handle) === "lava",
+      );
+      if (hit && s.surfaceKind(hit.collider.handle) === "lava") { shard.active = false; continue; }
+      shard.position.addScaledVector(direction, hit ? Math.max(0, hit.timeOfImpact - SHARD_RADIUS - 0.001) : distance);
+      if (hit) {
+        if (hit.normal.y > 0.5 && shard.velocity.y < 0) { shard.grounded = true; shard.velocity.set(0, 0, 0); }
+        else {
+          const normal = new Vector3(hit.normal.x, hit.normal.y, hit.normal.z);
+          shard.velocity.addScaledVector(normal, -1.2 * shard.velocity.dot(normal));
+        }
+      }
+      shard.rotation.multiply(shard.spin);
+    }
+  }
   private sink() {
     const s = this.sim;
     // Rickety planks span lava or chasms: falling through meets that fate,
@@ -190,6 +252,7 @@ export class FragileIce {
   }
   after() {
     const s = this.sim;
+    this.updateDebris();
     if (s.status !== "driving") return;
     const counts = new Map<FragileIceState, number>();
     for (let i = 0; i < 4; i++) {
@@ -236,6 +299,7 @@ export class FragileIce {
       wheels: t.wheels,
       sinking: t.sinking,
       contacts: t.contacts,
+      ...(t.debris ? { shards: t.debris.filter(s => s.active).map(s => ({ x: s.position.x, y: s.position.y, z: s.position.z })) } : {}),
     }));
   }
 }

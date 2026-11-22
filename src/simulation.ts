@@ -254,6 +254,8 @@ export class Simulation {
     if (s.id !== undefined) this.solidColliders.set(s.id, collider);
     if (s.id !== undefined) this.colliderSolids.set(collider.handle, s.id);
   }
+  /** Surface identity for geometry queries, including lava sensors. */
+  surfaceKind(colliderHandle: number) { return this.surfaceKinds.get(colliderHandle); }
   /** Live placement: add one solid collider without resetting the run. */
   addCustomSolid(s: CourseSolid) {
     this.addSolidCollider(s);
