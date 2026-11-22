@@ -1177,10 +1177,10 @@ export function createLevelEditor(
       unsaved.hidden = true;
     });
   addSolid.addEventListener("click", () =>
-    store.addSolid(solidKind.value as SolidKind),
+    store.addSolid(solidKind.value as SolidKind, viewport.cameraTarget()),
   );
   addPrefab.addEventListener("click", () =>
-    store.addPrefab(prefabKind.value),
+    store.addPrefab(prefabKind.value, viewport.cameraTarget()),
   );
   addCheckpoint.addEventListener("click", () => store.addCheckpoint());
   addTarget.addEventListener("click", () => {

@@ -443,7 +443,7 @@ export class EditorStore {
     while (taken.has(`${prefix}-${n}`)) n++;
     return `${prefix}-${n}`;
   }
-  addSolid(kind: SolidKind, x = 0, z = 0): CustomSolid {
+  addSolid(kind: SolidKind, placement: number | { x: number; y: number; z: number } = 0, z = 0): CustomSolid {
     this.pushHistory();
     const defaults = solidDefaults(kind);
     const taken = new Set(this.level.solids.map((s) => s.id));
@@ -451,9 +451,9 @@ export class EditorStore {
     const solid: CustomSolid = {
       id: this.nextId(kind, taken),
       kind,
-      x: x + nudge,
-      y: kind === "ground" ? -defaults.h / 2 : defaults.h / 2,
-      z,
+      x: typeof placement === "number" ? placement + nudge : placement.x,
+      y: typeof placement === "number" ? kind === "ground" ? -defaults.h / 2 : defaults.h / 2 : placement.y,
+      z: typeof placement === "number" ? z : placement.z,
       w: defaults.w,
       h: defaults.h,
       d: defaults.d,
@@ -466,14 +466,15 @@ export class EditorStore {
     this.emit();
     return solid;
   }
-  addPrefab(kind: string, x = 0, z = 0): CustomPrefab {
+  addPrefab(kind: string, placement: number | { x: number; y: number; z: number } = 0, z = 0): CustomPrefab {
     this.pushHistory();
     const taken = new Set(this.level.prefabs.map((p) => p.id));
     const prefab: CustomPrefab = {
       id: this.nextId(kind, taken),
       kind,
-      x,
-      z,
+      x: typeof placement === "number" ? placement : placement.x,
+      z: typeof placement === "number" ? z : placement.z,
+      ...(typeof placement === "number" ? {} : { y: placement.y }),
       ...(kind === "birthday-candle" ? { resizeScale: 3 } : {}),
     };
     this.level.prefabs.push(prefab);

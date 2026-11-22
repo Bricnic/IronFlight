@@ -99,6 +99,20 @@ it("adds solids with per-kind defaults and unique ids", () => {
   const ramp = store.addSolid("ramp");
   expect(ramp.angle).toBeCloseTo(-0.124, 3);
 });
+it("creates solids and prefabs at an explicit 3D location in one undoable operation", () => {
+  const store = new EditorStore("View placement");
+  const position = { x: 123, y: 27, z: -81 };
+  const solid = store.addSolid("barrier", position);
+  expect(solid).toMatchObject({ ...position, w: 6, h: 1.6, d: 5 });
+  expect(store.addSolid("barrier", position)).toMatchObject(position);
+  store.undo(); expect(store.level.solids.some(s => s.id === solid.id)).toBe(true);
+  store.undo(); expect(store.level.solids.some(s => s.id === solid.id)).toBe(false);
+  store.redo(); expect(store.level.solids.find(s => s.id === solid.id)).toMatchObject(position);
+  const prefab = store.addPrefab("birthday-candle", position);
+  expect(prefab).toMatchObject({ ...position, resizeScale: 3 });
+  store.undo(); expect(store.level.prefabs.some(p => p.id === prefab.id)).toBe(false);
+  store.redo(); expect(store.level.prefabs.find(p => p.id === prefab.id)).toMatchObject(position);
+});
 it("updates and deletes the selection", () => {
   const store = new EditorStore("Edit");
   const solid = store.addSolid("container");
