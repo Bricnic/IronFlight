@@ -1,4 +1,5 @@
 import { expect, it } from "vitest";
+import { drivingInput } from "../src/controls";
 import {
   PAD_DEADZONE,
   connectedPadId,
@@ -53,14 +54,33 @@ it("steers left positive like the A key and ignores drift", () => {
   expect(padDriving(null).steer).toBe(0);
 });
 
-it("accelerates on ZR analog or A digital, brakes on ZL analog", () => {
+it("accelerates on ZR analog or A digital and reverses on ZL analog", () => {
   expect(padDriving(pad({ buttons: buttons({ 7: 0.6 }) }))).toMatchObject({ throttle: 0.6, brake: 0 });
   expect(padDriving(pad({ buttons: buttons({ 0: 1 }) }))).toMatchObject({ throttle: 1, brake: 0 });
-  expect(padDriving(pad({ buttons: buttons({ 6: 0.4 }) }))).toMatchObject({ throttle: 0, brake: 0.4 });
-  // ZR and A combine by max; triggers and A can overlap the brake.
-  expect(padDriving(pad({ buttons: buttons({ 7: 0.5, 0: 1, 6: 0.3 }) }))).toMatchObject({ throttle: 1, brake: 0.3 });
+  expect(padDriving(pad({ buttons: buttons({ 6: 0.4 }) }))).toMatchObject({ throttle: -0.4, brake: 0 });
+  // ZR and A combine by max; opposing triggers cancel their shared pressure.
+  expect(padDriving(pad({ buttons: buttons({ 7: 0.5, 0: 1, 6: 0.3 }) }))).toMatchObject({ throttle: 0.7, brake: 0 });
   expect(padDriving(null)).toMatchObject({ throttle: 0, brake: 0, handbrake: 0 });
   expect(padDriving(pad())).toMatchObject({ throttle: 0, brake: 0, handbrake: 0 });
+});
+
+it("brakes against motion, then blends into reverse as the truck slows", () => {
+  const reverse = pad({ buttons: buttons({ 6: 0.4 }) });
+  expect(padDriving(reverse, 10)).toMatchObject({ throttle: 0, brake: 0.4 });
+  const slowing = padDriving(reverse, 2);
+  expect(slowing.throttle).toBeLessThan(0); expect(slowing.throttle).toBeGreaterThan(-0.4);
+  expect(slowing.brake).toBeGreaterThan(0); expect(slowing.brake).toBeLessThan(0.4);
+  expect(padDriving(reverse, 0)).toMatchObject({ throttle: -0.4, brake: 0 });
+  expect(padDriving(reverse, -10)).toMatchObject({ throttle: -0.4, brake: 0 });
+  expect(padDriving(pad({ buttons: buttons({ 7: 0.6 }) }), -10)).toMatchObject({ throttle: 0, brake: 0.6 });
+  expect(padDriving(pad({ buttons: buttons({ 6: 1, 7: 1 }) }), 10)).toMatchObject({ throttle: 0, brake: 0 });
+});
+
+it("matches down-arrow drive behavior at full left-trigger pressure", () => {
+  const reverse = pad({ buttons: buttons({ 6: 1 }) });
+  for (const speed of [-10, -2, 0, 2, 10]) {
+    expect(padDriving(reverse, speed)).toEqual(drivingInput(new Set(["arrowdown"]), speed));
+  }
 });
 
 it("reads right-stick look with a deadzone", () => {

@@ -59,7 +59,7 @@ import { DestructionLab } from "./lab";
 import { GameView } from "./view";
 import "./harness";
 import type { CameraSample } from "./harness";
-import { drivingInput } from "./controls";
+import { combineDrivingInput, drivingInput } from "./controls";
 import {
   PAD_LOOK_PX_PER_SEC,
   padActionPressed,
@@ -1436,13 +1436,13 @@ async function boot() {
   window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => keys.clear());
   const input = (): Input => {
+    const signedSpeed = sim.snapshot(false).signedSpeed;
+    const keyboard = drivingInput(keys, signedSpeed);
     if (inputMode === "controller") {
       const pad = pollPad();
-      // No controller connected: fall back to the keyboard so the game
-      // never soft-locks instead of silently ignoring all driving input.
-      if (pad) return padDriving(pad);
+      if (pad) return combineDrivingInput(padDriving(pad, signedSpeed), keyboard);
     }
-    return drivingInput(keys, sim.snapshot(false).signedSpeed);
+    return keyboard;
   };
   if (import.meta.env.DEV)
     window.__game = {

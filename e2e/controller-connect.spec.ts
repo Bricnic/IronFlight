@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 declare global {
   interface Window {
-    __proTest: { packets: { id: number; data: number[] }[]; cancelled: boolean; frame(right: number, shared?: number): void; disconnect(): void; getRequests(): number };
+    __proTest: { packets: { id: number; data: number[] }[]; cancelled: boolean; frame(right: number, shared?: number, left?: number): void; disconnect(): void; getRequests(): number };
   }
 }
 test.slow();
@@ -14,8 +14,8 @@ test.beforeEach(async ({ page }) => {
     const emit = (reportId: number, bytes: Uint8Array) => {
       const event = new Event("inputreport"); Object.assign(event, { reportId, data: new DataView(bytes.buffer), device }); device.dispatchEvent(event);
     };
-    const frame = (right: number, shared = 0) => {
-      const bytes = new Uint8Array(48); bytes[2] = right; bytes[3] = shared; bytes.set([0, 8, 128, 0, 8, 128], 5); emit(0x30, bytes);
+    const frame = (right: number, shared = 0, left = 0) => {
+      const bytes = new Uint8Array(48); bytes[2] = right; bytes[3] = shared; bytes[4] = left; bytes.set([0, 8, 128, 0, 8, 128], 5); emit(0x30, bytes);
     };
     const mock = { packets, cancelled: false, frame, getRequests: () => requests,
       disconnect: () => { const event = new Event("disconnect"); Object.assign(event, { device }); hid.dispatchEvent(event); } };
@@ -53,6 +53,9 @@ test("Connect Pro Controller performs the handshake and drives the game without 
   expect(speed).toBeGreaterThan(0.5);
   await page.evaluate(() => window.__proTest.frame(0, 0x02)); await page.clock.runFor(20);
   await expect(page.locator("#pause-menu")).toBeVisible();
+  await page.evaluate(() => { window.__game!.select("easy"); window.__game!.pause(false); });
+  for (let i = 0; i < 6; i++) { await page.evaluate(() => window.__proTest.frame(0, 0, 0x80)); await page.clock.runFor(150); }
+  expect(await page.evaluate(() => window.__game!.snapshot().signedSpeed)).toBeLessThan(-0.5);
   await page.evaluate(() => window.__proTest.disconnect());
   await page.getByRole("button", { name: "Settings", exact: true }).first().click();
   await expect(page.locator("#input-status")).toContainText("Controller disconnected");
@@ -67,4 +70,19 @@ test("cancelling the chooser keeps the page usable and retry connects", async ({
   await page.evaluate(() => { window.__proTest.cancelled = false; });
   await page.getByRole("button", { name: "Connect Pro Controller", exact: true }).click();
   await expect(page.locator("#input-status")).toContainText("Controller connected");
+});
+
+test("keyboard driving remains active with a connected controller selected", async ({ page }) => {
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("button", { name: "Connect Pro Controller", exact: true }).click();
+  await expect(page.locator("#input-status")).toContainText("Controller connected");
+  await expect(page.locator('[data-input="controller"] button')).toContainText("Controller or keyboard");
+  await page.evaluate(() => { window.__game!.select("easy"); window.__game!.pause(false); });
+  await page.keyboard.down("ArrowDown");
+  for (let i = 0; i < 6; i++) {
+    await page.evaluate(() => window.__proTest.frame(0));
+    await page.clock.runFor(150);
+  }
+  await page.keyboard.up("ArrowDown");
+  expect(await page.evaluate(() => window.__game!.snapshot().signedSpeed)).toBeLessThan(-0.5);
 });

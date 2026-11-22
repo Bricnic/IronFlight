@@ -1,5 +1,6 @@
 import type { Input } from "./simulation";
 import { proController } from "./switch-pro";
+import { directionalDrive } from "./controls";
 
 /** Standard-mapping button indices used by the controller scheme. */
 export const PAD_BUTTON = {
@@ -69,14 +70,14 @@ function trigger(pad: PadState | null, index: number): number {
 
 /**
  * Controller driving: left stick steers (left is positive like the A key),
- * ZR accelerates analog, ZL brakes analog, A is a digital alternative
+ * ZR accelerates analog, ZL brakes/reverses analog, A is a digital alternative
  * accelerator. No pad reads as all zeros.
  */
-export function padDriving(pad: PadState | null): Input {
-  const throttle = Math.max(trigger(pad, PAD_BUTTON.rightTrigger), pad?.buttons[PAD_BUTTON.action]?.pressed ? 1 : 0);
+export function padDriving(pad: PadState | null, signedSpeed = 0): Input {
+  const forward = Math.max(trigger(pad, PAD_BUTTON.rightTrigger), pad?.buttons[PAD_BUTTON.action]?.pressed ? 1 : 0);
+  const direction = forward - trigger(pad, PAD_BUTTON.leftTrigger);
   return {
-    throttle,
-    brake: trigger(pad, PAD_BUTTON.leftTrigger),
+    ...directionalDrive(direction, signedSpeed),
     handbrake: 0,
     steer: -axis(pad, 0) || 0,
   };
