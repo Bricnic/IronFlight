@@ -72,6 +72,7 @@ it("steps to the next and previous level with wraparound", () => {
     "Sweet Celebrations Dream",
     "Winter Wonderland Dream",
     "Spooky Places Dream",
+    "Toybox Adventures Dream",
   ]);
   expect(stepTrackId("triple-loop", 1)).toBe("foundry-run");
   expect(stepTrackId("foundry-run", -1)).toBe("triple-loop");
@@ -171,14 +172,20 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:spooky-places-dream", -1)).toBe(
     "custom:winter-wonderland-dream",
   );
-  expect(stepTrackId("custom:spooky-places-dream", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:spooky-places-dream");
-  expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe(
+  expect(stepTrackId("custom:spooky-places-dream", 1)).toBe(
+    "custom:toybox-adventures-dream",
+  );
+  expect(stepTrackId("custom:toybox-adventures-dream", -1)).toBe(
     "custom:spooky-places-dream",
   );
+  expect(stepTrackId("custom:toybox-adventures-dream", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:toybox-adventures-dream");
+  expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
+  expect(stepTrackId("custom:my-level", -1)).toBe(
+    "custom:toybox-adventures-dream",
+  );
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:spooky-places-dream");
+  expect(stepTrackId(undefined, -1)).toBe("custom:toybox-adventures-dream");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

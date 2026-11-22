@@ -23,6 +23,7 @@ export const TEXTURE_IDS = [
   "pink_frosting_01",
   "candy_cream_01",
   "pond_ice_01",
+  "toy_table_wood",
 ] as const;
 export type TextureId = (typeof TEXTURE_IDS)[number];
 export const PROP_PREFAB_KINDS = [
@@ -221,6 +222,19 @@ export type SpookyDreamKind = (typeof SPOOKY_DREAM_PREFAB_KINDS)[number];
 export function isSpookyDream(kind: string): kind is SpookyDreamKind {
   return (SPOOKY_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Toybox-dream decor: solid non-lethal tabletop toys. */
+export const TOYBOX_DREAM_PREFAB_KINDS = [
+  "rubber-duck",
+  "brick-arch",
+  "domino",
+  "toy-die",
+  "gummy-bear",
+  "toy-train",
+] as const;
+export type ToyboxDreamKind = (typeof TOYBOX_DREAM_PREFAB_KINDS)[number];
+export function isToyboxDream(kind: string): kind is ToyboxDreamKind {
+  return (TOYBOX_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -251,6 +265,7 @@ export const DUNGEON_PREFAB_KINDS = [
   ...SWEET_DREAM_PREFAB_KINDS,
   ...WINTER_DREAM_PREFAB_KINDS,
   ...SPOOKY_DREAM_PREFAB_KINDS,
+  ...TOYBOX_DREAM_PREFAB_KINDS,
 ] as const;
 /** Gold-star collectible: a spinning chrome star worth permanent garage glory. */
 export const DREAM_PREFAB_KINDS = ["wings"] as const;

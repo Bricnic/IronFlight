@@ -525,6 +525,31 @@
           "bytes": 89983
         }
       }
+    },
+    {
+      "id": "toy_table_wood",
+      "source": "Gemini 2.5-flash-image (seamless beech tabletop)",
+      "license": "Generated",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/toy_table_wood_diffuse.jpg",
+          "url": "Gemini 2.5-flash-image (seamless beech tabletop)",
+          "sha256": "d3a6da9acfd56a38bf15d2e94ad0587e3e655d136b53fe2de9962099cb08be45",
+          "bytes": 187564
+        },
+        "normal": {
+          "file": "/textures/toy_table_wood_normal.jpg",
+          "url": "Gemini 2.5-flash-image (seamless beech tabletop)",
+          "sha256": "023b6d28a5a4e23a4cfe3dc4519ff3f62ecdfd05a532661dfff9292a085909b3",
+          "bytes": 175204
+        },
+        "roughness": {
+          "file": "/textures/toy_table_wood_roughness.jpg",
+          "url": "Gemini 2.5-flash-image (seamless beech tabletop)",
+          "sha256": "8845ae1caa427a40173d5744f74e85916a1c845b875ac0d249756581328ae8f1",
+          "bytes": 103596
+        }
+      }
     }
   ]
 }

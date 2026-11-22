@@ -208,5 +208,10 @@
     "file": "/official/spooky-places/Spooky Places Dream.json",
     "thumbnail": "/tracks/spooky-places-dream.png",
     "description": "Race the haunted graveyard at night, ring the mushroom circle, pass the gargoyle gate and fly the abyss to the mausoleum finish."
+  },
+  {
+    "file": "/official/toybox-adventures/Toybox Adventures Dream.json",
+    "thumbnail": "/tracks/toybox-adventures-dream.png",
+    "description": "Tour the tabletop playroom, thread the domino lanes, pass under the brick arches and fly the floor gap to the block-stack finish."
   }
 ]

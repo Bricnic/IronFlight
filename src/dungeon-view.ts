@@ -16,7 +16,7 @@ import {
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isSweetDream, isWinterDream, isSpookyDream } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream } from "./custom-level";
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
 import { buildSpider, poseSpider } from "./hollow-view";
@@ -30,6 +30,7 @@ import { buildCandyDecor } from "./candy-view";
 import { buildSweetDream, poseSweetDream } from "./sweet-dream-view";
 import { buildWinterDream, poseWinterDream } from "./winter-dream-view";
 import { buildSpookyDream, poseSpookyDream } from "./spooky-dream-view";
+import { buildToyboxDream, poseToyboxDream } from "./toybox-dream-view";
 import { buildChristmasDecor } from "./christmas-view";
 import { buildCandyLethal, poseCandyLethal } from "./candy-lethal-view";
 import { buildChristmasLethal, poseChristmasLethal } from "./christmas-lethal-view";
@@ -1041,6 +1042,8 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     model.pivots = buildWinterDream(root, h.kind);
   } else if (isSpookyDream(h.kind)) {
     model.pivots = buildSpookyDream(root, h.kind);
+  } else if (isToyboxDream(h.kind)) {
+    model.pivots = buildToyboxDream(root, h.kind);
   } else if (isChristmasDecor(h.kind)) {
     model.pivots = buildChristmasDecor(root, h.kind);
   } else if (isChristmasLethal(h.kind)) {
@@ -1458,6 +1461,8 @@ export class DungeonView extends T.Group {
         poseWinterDream(m.h.kind, m.pivots, s.time + m.h.phase);
       } else if (isSpookyDream(m.h.kind)) {
         poseSpookyDream(m.h.kind, m.pivots, s.time + m.h.phase);
+      } else if (isToyboxDream(m.h.kind)) {
+        poseToyboxDream(m.h.kind, m.pivots, s.time + m.h.phase);
       } else if (m.h.kind === "candle") {
         m.pivots.forEach((f, i) => {
           const base = (f.userData.base as number | undefined) ?? 1;

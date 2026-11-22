@@ -1,0 +1,55 @@
+{
+  "name": "toybox-dream",
+  "sky": { "top": 7545215, "horizon": 14671863 },
+  "fog": { "color": 14671863, "near": 140, "far": 650 },
+  "sun": { "color": 16769967, "intensity": 2.4 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 1.25 },
+  "env": 0.6,
+  "shapes": [
+    {
+      "kind": "toy-block",
+      "texture": "blue_plaster_wall",
+      "color": 14769853,
+      "count": 8,
+      "radius": 280,
+      "y": 0,
+      "size": [15, 30],
+      "seed": 131
+    },
+    {
+      "kind": "toy-block",
+      "texture": "blue_plaster_wall",
+      "color": 2911276,
+      "count": 6,
+      "radius": 340,
+      "y": 0,
+      "size": [18, 34],
+      "seed": 132
+    },
+    {
+      "kind": "balloon",
+      "count": 6,
+      "radius": 300,
+      "y": 60,
+      "size": [10, 16],
+      "seed": 133
+    },
+    {
+      "kind": "party-flag",
+      "count": 10,
+      "radius": 220,
+      "y": 0,
+      "size": [8, 12],
+      "seed": 134
+    }
+  ],
+  "clouds": {
+    "count": 10,
+    "y": [90, 150],
+    "radius": [250, 480],
+    "color": 16777215,
+    "opacity": 0.9,
+    "drift": 1.5,
+    "seed": 135
+  }
+}

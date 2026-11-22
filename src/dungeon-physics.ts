@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import { MUSHROOM } from "./mushroom-shape";
@@ -76,6 +76,12 @@ import {
   SPOOKY_GARGOYLE,
   SPOOKY_FENCE,
   SPOOKY_BUNTING,
+  TOY_DUCK,
+  TOY_ARCH,
+  TOY_DOMINO,
+  TOY_DIE,
+  TOY_BEAR,
+  TOY_TRAIN,
   CANDY_PRESS,
   CHRISTMAS_ARCH,
   CHRISTMAS_TRUNK,
@@ -729,6 +735,22 @@ export class DungeonPhysics {
       } else if (h.kind === "spooky-bunting") {
         solid(SPOOKY_BUNTING.postW, SPOOKY_BUNTING.postH, SPOOKY_BUNTING.postD, -SPOOKY_BUNTING.postX, 0);
         solid(SPOOKY_BUNTING.postW, SPOOKY_BUNTING.postH, SPOOKY_BUNTING.postD, SPOOKY_BUNTING.postX, 0);
+      }
+    } else if (isToyboxDream(h.kind)) {
+      // Bumpable scenery only: toybox kinds have no strike entry, so after() never fires.
+      if (h.kind === "rubber-duck") {
+        solid(TOY_DUCK.w, TOY_DUCK.h, TOY_DUCK.d, 0, 0);
+      } else if (h.kind === "brick-arch") {
+        solid(TOY_ARCH.postW, TOY_ARCH.postH, TOY_ARCH.postD, -TOY_ARCH.postX, 0);
+        solid(TOY_ARCH.postW, TOY_ARCH.postH, TOY_ARCH.postD, TOY_ARCH.postX, 0);
+      } else if (h.kind === "domino") {
+        solid(TOY_DOMINO.w, TOY_DOMINO.h, TOY_DOMINO.d, 0, 0);
+      } else if (h.kind === "toy-die") {
+        solid(TOY_DIE.w, TOY_DIE.h, TOY_DIE.d, 0, 0);
+      } else if (h.kind === "gummy-bear") {
+        solid(TOY_BEAR.w, TOY_BEAR.h, TOY_BEAR.d, 0, 0);
+      } else if (h.kind === "toy-train") {
+        solid(TOY_TRAIN.w, TOY_TRAIN.h, TOY_TRAIN.d, 0, 0);
       }
     }
   }

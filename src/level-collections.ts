@@ -92,7 +92,9 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
       "custom:jurassic-junction",
       "custom:emberfall-causeway",
       "custom:chompworks",
+      "custom:toybox-adventures-dream",
     ],
+    dream: "custom:toybox-adventures-dream",
   },
   {
     id: "stunt-parks",

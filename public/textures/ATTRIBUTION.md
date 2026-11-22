@@ -43,3 +43,10 @@ stylized look better than photoscanned stone.
   `scripts/gemini-image.mjs` (gemini-2.5-flash-image, seamless prompt).
   Normal/roughness maps derived with `scripts/derive-texture-maps.mjs`.
   See `manifest.json` for file hashes.
+
+## Gemini-generated (toybox dream)
+
+- `toy_table_wood_diffuse` -- generated with
+  `scripts/gemini-image.mjs` (gemini-2.5-flash-image, seamless prompt).
+  Normal/roughness maps derived with `scripts/derive-texture-maps.mjs`.
+  See `manifest.json` for file hashes.
