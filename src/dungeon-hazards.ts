@@ -453,6 +453,13 @@ export const CATERPILLAR = {
   wanderRadius: 100,
   /** Crawl speed; slow enough to dodge, fast enough to menace. */
   speed: 4,
+  /** Ground footprint, including the head and tail, in unscaled prefab units. */
+  front: 7,
+  back: 5.7,
+  halfWidth: 1.25,
+  /** Allow authored ground offsets, but reject drops to lower floors. */
+  maxDrop: 2,
+  maxStepUp: 0.75,
   /** Touch distance that poisons. */
   touch: 3.4,
   /** Vertical gate around the caterpillar's height. */

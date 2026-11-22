@@ -1242,28 +1242,52 @@ export class DungeonPhysics {
       sp.yaw = Math.atan2(sdx, sdz);
     }
   }
-  /** Giant caterpillar: crawls within 100u of home; touch poisons. */
+  /** Require support under the crawler's footprint and clearance through its body. */
+  private caterpillarCanMove(m: Mechanism, x: number, z: number, yaw: number) {
+    const world = this.sim.world, y = m.h.y ?? 0;
+    const forwardX = Math.sin(yaw), forwardZ = Math.cos(yaw);
+    const rightX = forwardZ, rightZ = -forwardX;
+    const flags = R.QueryFilterFlags.EXCLUDE_DYNAMIC | R.QueryFilterFlags.EXCLUDE_KINEMATIC | R.QueryFilterFlags.EXCLUDE_SENSORS;
+    for (const side of [-CATERPILLAR.halfWidth, 0, CATERPILLAR.halfWidth]) {
+      for (const along of [CATERPILLAR.front, 0, -CATERPILLAR.back]) {
+        const origin = { x: x + forwardX * along + rightX * side, y: y + CATERPILLAR.maxStepUp, z: z + forwardZ * along + rightZ * side };
+        const support = world.castRayAndGetNormal(new R.Ray(origin, { x: 0, y: -1, z: 0 }), CATERPILLAR.maxStepUp + CATERPILLAR.maxDrop, true, flags);
+        if (!support || support.normal.y < 0.6) return false;
+      }
+      const rear = { x: x - forwardX * CATERPILLAR.back + rightX * side, y: y + 1.25, z: z - forwardZ * CATERPILLAR.back + rightZ * side };
+      if (world.castRay(new R.Ray(rear, { x: forwardX, y: 0, z: forwardZ }), CATERPILLAR.back + CATERPILLAR.front, true, flags)) return false;
+    }
+    return true;
+  }
+  /** Giant caterpillar: crawls within 100u of home, avoiding walls and ledges; touch poisons. */
   private updateCaterpillar(m: Mechanism, p: R.Vector) {
     const s = this.sim;
     const c = m.caterpillar!;
     const h = m.h;
     const baseY = h.y ?? 0;
-    const dx = c.dest.x - c.pos.x, dz = c.dest.z - c.pos.z;
-    const dist = Math.hypot(dx, dz);
     const step = CATERPILLAR.speed * DT;
-    if (dist <= Math.max(step, 0.5)) {
-      c.pos.x = c.dest.x;
-      c.pos.z = c.dest.z;
+    const seed = birthdayCardSeed(s.courseTrack?.custom?.name ?? s.courseTrack?.id ?? "", h.id);
+    const chooseDestination = () => {
       c.trips++;
-      const seed = birthdayCardSeed(
-        s.courseTrack?.custom?.name ?? s.courseTrack?.id ?? "",
-        h.id,
-      );
       c.dest = wanderDestination(c.home.x, c.home.z, seed, c.trips, CATERPILLAR.wanderRadius);
-    } else {
-      c.pos.x += (dx / dist) * step;
-      c.pos.z += (dz / dist) * step;
-      c.yaw = Math.atan2(dx, dz);
+    };
+    const move = () => {
+      const dx = c.dest.x - c.pos.x, dz = c.dest.z - c.pos.z;
+      const distance = Math.hypot(dx, dz);
+      if (distance < 0.0001) return false;
+      const travel = Math.min(step, distance), yaw = Math.atan2(dx, dz);
+      const x = c.pos.x + dx / distance * travel, z = c.pos.z + dz / distance * travel;
+      if (!this.caterpillarCanMove(m, x, z, yaw)) return false;
+      c.pos.x = x; c.pos.z = z; c.yaw = yaw;
+      return true;
+    };
+    if (Math.hypot(c.dest.x - c.pos.x, c.dest.z - c.pos.z) <= Math.max(step, 0.5)) chooseDestination();
+    if (!move()) {
+      // Bounded deterministic retries: stay put if no direction can fit safely.
+      for (let attempt = 0; attempt < 16; attempt++) {
+        chooseDestination();
+        if (move()) break;
+      }
     }
     if (s.status !== "driving") return;
     if (

@@ -494,3 +494,8 @@ Validation: 33 focused controller/input/protocol checks and the production build
 ## Checkpoint yaw inspector
 
 RED: a browser regression could not find a yaw field on a checkpoint without a saved yaw. The inspector now always offers Yaw in degrees for checkpoints, with Automatic (route direction) as the placeholder for omitted rotation. Viewing it or changing height preserves automatic orientation until a yaw is entered. Validation: the browser check passed for existing/default and newly added checkpoints, 90/-45/720-degree edits, saved radians, reopening, and the playtest gate's yaw/normal. The production build passed.
+## Caterpillar ledge and wall avoidance
+
+RED: physics regressions showed the crawler walking off a raised platform, across a gap, through a wall and beyond a rotated platform. Movement now checks support beneath the head/body/tail footprint and fixed-solid clearance before accepting a step or turn. Missing support, steep faces and walls trigger bounded deterministic destination changes; a crawler stays put if no direction fits. Small authored height offsets are allowed, while lower floors and lava sensors do not count as nearby support. Existing prefab-space transforms scale the probes with resized caterpillars.
+
+Validation: 32 focused navigation/mystic physics/view checks and the production build passed. Coverage includes rotated and clipped platforms, head clearance, gaps above a lower floor, sensors, walls, resized crawlers and too-small platforms. The elevated Lavabridge Abyss crawler remained supported and kept moving for 30 simulated seconds in both physics and browser checks; the rendered start/end screenshots were inspected. The user's ongoing level-file edits remain in the working tree and are not part of this change.
