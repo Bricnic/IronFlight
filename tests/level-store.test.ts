@@ -10,6 +10,9 @@ import {
   type LevelStoreDeps,
 } from "../src/level-store";
 import type { CustomLevel } from "../src/custom-level";
+import { toTrack, registerCustomTrack } from "../src/custom-level";
+import { officialFileTracks } from "../src/official-levels";
+import { getTrack } from "../src/tracks";
 const level = (name: string): CustomLevel => ({
   name,
   mode: "race",
@@ -81,6 +84,28 @@ function deps(down = false): LevelStoreDeps & { storage: ReturnType<typeof memor
     fetchFn: backend.fetchFn as unknown as typeof fetch,
   };
 }
+it.each(["Firefly Grotto", "Lavabridge Abyss"])("keeps %s catalogue artwork when saving and loading content edits", async name => {
+  const d = deps(), official = officialFileTracks.find(t => t.name === name)!;
+  const edited = structuredClone(official.custom!);
+  edited.solids[0].x += 3;
+  await saveLevel(d, edited);
+  expect(getTrack(toTrack(edited).id)).toMatchObject({ thumbnail: official.thumbnail, description: official.description, sourceFile: official.sourceFile });
+  expect(getTrack(toTrack(edited).id).custom!.solids[0].x).toBe(edited.solids[0].x);
+  // File identity also preserves presentation when loading a renamed level.
+  edited.name = `Reloaded ${name}`;
+  d.backend.files.set(edited.sourcePath!, edited);
+  const loaded = await loadLevel(d, edited.sourcePath!);
+  expect(getTrack(toTrack(loaded).id)).toMatchObject({ thumbnail: official.thumbnail, sourceFile: official.sourceFile });
+});
+it("repairs lost official artwork on load while preserving live checkpoint identities", async () => {
+  const d = deps(), official = officialFileTracks.find(t => t.name === "Firefly Grotto")!;
+  const marker = { ...official.checkpoints[0], id: "live-edited-gate", x: 12345 };
+  registerCustomTrack({ ...official, thumbnail: "/tracks/custom.svg", checkpoints: [marker] });
+  d.backend.files.set(official.custom!.sourcePath!, official.custom!);
+  await loadLevel(d, official.custom!.sourcePath!);
+  expect(getTrack(official.id).thumbnail).toBe(official.thumbnail);
+  expect(getTrack(official.id).checkpoints[0]).toBe(marker);
+});
 it("import assigns a heuristic background when the level has none", async () => {
   const d = deps();
   const saved = await importLevel(d, JSON.stringify(level("Canyon Dash")));

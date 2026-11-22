@@ -53,6 +53,12 @@ export async function listLevels(deps?: Partial<LevelStoreDeps>) {
     if (!names.includes(name)) names.unshift(name);
   return names;
 }
+/** Catalogue presentation belongs to the source file, independently of content edits. */
+function playableLevel(level: CustomLevel) {
+  const track = toTrack(level);
+  const official = officialFileTracks.find(t => t.custom?.sourcePath === level.sourcePath);
+  return official ? { ...track, thumbnail: official.thumbnail, description: official.description, sourceFile: official.sourceFile } : track;
+}
 /** Validate, register the playable track, mirror locally, persist to disk. */
 export async function saveLevel(
   deps: Partial<LevelStoreDeps> | undefined,
@@ -63,7 +69,7 @@ export async function saveLevel(
   const path = valid.sourcePath ?? valid.name;
   valid.sourcePath = path;
   level.sourcePath = path;
-  registerCustomTrack(toTrack(valid));
+  registerCustomTrack(playableLevel(valid));
   storage.setItem(levelKey(path), JSON.stringify(valid));
   const names = readIndex(storage);
   if (!names.includes(path)) writeIndex(storage, [...names, path]);
@@ -107,8 +113,11 @@ export async function loadLevel(
   level.sourcePath = name;
   // Reads must not clobber a live-registered track (in-playtest edits keep
   // stable gate ids that a fresh positional build would renumber).
-  const track = toTrack(level);
-  if (!getCustomTrack(track.id)) registerCustomTrack(track);
+  const track = playableLevel(level);
+  const live = getCustomTrack(track.id);
+  if (!live) registerCustomTrack(track);
+  else if (track.sourceFile && live.custom?.sourcePath === name)
+    registerCustomTrack({ ...live, thumbnail: track.thumbnail, description: track.description, sourceFile: track.sourceFile });
   return level;
 }
 export async function removeLevel(
