@@ -71,7 +71,9 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
       "custom:mystic-caverns",
       "custom:firefly-grotto",
       "custom:lavabridge-abyss",
+      "custom:spooky-places-dream",
     ],
+    dream: "custom:spooky-places-dream",
   },
   {
     id: "toybox-adventures",

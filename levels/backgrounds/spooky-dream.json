@@ -1,0 +1,74 @@
+{
+  "name": "spooky-dream",
+  "sky": {
+    "top": 3875174,
+    "horizon": 7230632
+  },
+  "fog": {
+    "color": 4864622,
+    "near": 150,
+    "far": 700
+  },
+  "sun": {
+    "color": 15259903,
+    "intensity": 1.6
+  },
+  "hemi": {
+    "sky": 9075668,
+    "ground": 3023928,
+    "intensity": 1
+  },
+  "env": 0.4,
+  "shapes": [
+    {
+      "kind": "dead-tree",
+      "texture": "bark_brown_01",
+      "count": 16,
+      "radius": 420,
+      "y": 0,
+      "size": [
+        10,
+        18
+      ],
+      "seed": 721
+    },
+    {
+      "kind": "hill",
+      "texture": "brown_mud_leaves_01",
+      "count": 8,
+      "radius": 520,
+      "y": -4,
+      "size": [
+        60,
+        100
+      ],
+      "seed": 722
+    },
+    {
+      "kind": "moon",
+      "count": 1,
+      "radius": 480,
+      "y": 118,
+      "size": [
+        34,
+        34
+      ],
+      "seed": 742
+    }
+  ],
+  "clouds": {
+    "count": 8,
+    "y": [
+      80,
+      140
+    ],
+    "radius": [
+      250,
+      550
+    ],
+    "color": 8878513,
+    "opacity": 0.75,
+    "drift": 1,
+    "seed": 724
+  }
+}

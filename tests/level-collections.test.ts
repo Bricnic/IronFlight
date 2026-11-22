@@ -50,7 +50,7 @@ function goldRun(trackId: string) {
   };
 }
 
-it("covers all 49 official levels in 7 collections with no duplicates", () => {
+it("covers all 50 official levels in 7 collections with no duplicates", () => {
   expect(LEVEL_COLLECTIONS).toHaveLength(7);
   expect(LEVEL_COLLECTIONS.map((c) => c.name)).toEqual([
     "Sweet Celebrations",
@@ -62,8 +62,8 @@ it("covers all 49 official levels in 7 collections with no duplicates", () => {
     "Outdoor Adventures",
   ]);
   const ids = collectionOrderIds();
-  expect(ids).toHaveLength(49);
-  expect(new Set(ids).size).toBe(49);
+  expect(ids).toHaveLength(50);
+  expect(new Set(ids).size).toBe(50);
   expect(new Set(ids)).toEqual(new Set(officialTracks.map((t) => t.id)));
   for (const track of officialTracks)
     expect(collectionForTrack(track.id)?.trackIds).toContain(track.id);
@@ -77,7 +77,7 @@ it("ships one artwork file per collection", () => {
 });
 
 it("stores every official file level in a collection subfolder", () => {
-  expect(officialFileTracks).toHaveLength(41);
+  expect(officialFileTracks).toHaveLength(42);
   for (const track of officialFileTracks) {
     expect(track.sourceFile?.startsWith("levels/official/")).toBe(true);
     const rel = track.sourceFile!.slice("levels/official/".length);

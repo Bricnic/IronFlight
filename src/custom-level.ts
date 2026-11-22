@@ -209,6 +209,18 @@ export type WinterDreamKind = (typeof WINTER_DREAM_PREFAB_KINDS)[number];
 export function isWinterDream(kind: string): kind is WinterDreamKind {
   return (WINTER_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Spooky-dream decor: solid non-lethal haunted scenery. */
+export const SPOOKY_DREAM_PREFAB_KINDS = [
+  "jack-o-lantern",
+  "dead-tree",
+  "gargoyle",
+  "iron-fence",
+  "spooky-bunting",
+] as const;
+export type SpookyDreamKind = (typeof SPOOKY_DREAM_PREFAB_KINDS)[number];
+export function isSpookyDream(kind: string): kind is SpookyDreamKind {
+  return (SPOOKY_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -238,6 +250,7 @@ export const DUNGEON_PREFAB_KINDS = [
   ...CHRISTMAS_LETHAL_PREFAB_KINDS,
   ...SWEET_DREAM_PREFAB_KINDS,
   ...WINTER_DREAM_PREFAB_KINDS,
+  ...SPOOKY_DREAM_PREFAB_KINDS,
 ] as const;
 /** Gold-star collectible: a spinning chrome star worth permanent garage glory. */
 export const DREAM_PREFAB_KINDS = ["wings"] as const;

@@ -31,9 +31,12 @@ function mesh(
 const PASTELS = [0xff6f9f, 0xffd166, 0x6fd3ff, 0x8fe388, 0xc79bff, 0xff9d6f];
 
 /** Two poles with a sagging garland of waving pastel flags. */
-function buildBunting(root: T.Group): T.Group[] {
+export function buildBuntingStrip(
+  root: T.Group,
+  colors: number[],
+  postX = SWEET_BUNTING.postX,
+): T.Group[] {
   const poleMat = mat(0xf6f2ea, 0.4);
-  const { postX } = SWEET_BUNTING;
   for (const side of [-1, 1]) {
     mesh(root, new T.CylinderGeometry(0.35, 0.45, 9, 20), poleMat, side * postX, 4.5, 0);
     mesh(root, new T.SphereGeometry(0.55, 16, 12), mat(0xff5f8f, 0.35), side * postX, 9.2, 0);
@@ -60,7 +63,7 @@ function buildBunting(root: T.Group): T.Group[] {
     const flag = new T.Mesh(
       flagGeo,
       new T.MeshStandardMaterial({
-        color: PASTELS[i % PASTELS.length],
+        color: colors[i % colors.length],
         roughness: 0.6,
         metalness: 0.05,
         side: T.DoubleSide,
@@ -72,6 +75,16 @@ function buildBunting(root: T.Group): T.Group[] {
     pivots.push(pivot);
   }
   return pivots;
+}
+
+function buildBunting(root: T.Group): T.Group[] {
+  return buildBuntingStrip(root, PASTELS, SWEET_BUNTING.postX);
+}
+
+/** Shared flag wave for both bunting families. */
+export function waveBuntingFlags(pivots: T.Group[], time: number) {
+  for (const [i, pivot] of pivots.entries())
+    pivot.rotation.y = Math.sin(time * 2.4 + i * 0.7) * 0.35;
 }
 
 /** Tall pole with a swaying cluster of glossy party balloons. */
@@ -193,9 +206,7 @@ export function buildSweetDream(root: T.Group, kind: SweetDreamKind): T.Group[] 
 
 /** Wave bunting flags and sway balloon clusters; static kinds ignore time. */
 export function poseSweetDream(kind: SweetDreamKind, pivots: T.Group[], time: number) {
-  if (kind === "bunting-string")
-    for (const [i, pivot] of pivots.entries())
-      pivot.rotation.y = Math.sin(time * 2.4 + i * 0.7) * 0.35;
+  if (kind === "bunting-string") waveBuntingFlags(pivots, time);
   else if (kind === "balloon-pole" && pivots[0]) {
     pivots[0].rotation.x = Math.sin(time * 1.3) * 0.06;
     pivots[0].rotation.z = Math.cos(time * 1.1) * 0.06;

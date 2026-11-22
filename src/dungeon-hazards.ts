@@ -140,6 +140,12 @@ export const WINTER_PINE = { w: 2.4, h: 12, d: 2.4 } as const;
 export const WINTER_BUOY = { w: 2.5, h: 3, d: 2.5 } as const;
 export const WINTER_TOWER = { w: 2, h: 16, d: 2 } as const;
 export const WINTER_SLED = { w: 3, h: 1.5, d: 5 } as const;
+/** Spooky-dream haunted decor, shared by the collider builder and the artist. Solid but never lethal. */
+export const SPOOKY_JACK = { w: 3, h: 5, d: 3 } as const;
+export const SPOOKY_TREE = { w: 3, h: 14, d: 3 } as const;
+export const SPOOKY_GARGOYLE = { w: 3.5, h: 5.5, d: 3.5 } as const;
+export const SPOOKY_FENCE = { postW: 1, postH: 5, postD: 1, postX: 12 } as const;
+export const SPOOKY_BUNTING = { postW: 1, postH: 9, postD: 1, postX: 12 } as const;
 /** Candy press-trap gantry posts; cars drive between them under the moving stamp. */
 export const CANDY_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6 } as const;
 /** Christmas decor furniture, shared by the collider builder and the artist. Solid but never lethal: christmas kinds have no DUNGEON_STRIKE entry. */

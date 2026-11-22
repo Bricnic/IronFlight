@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import { MUSHROOM } from "./mushroom-shape";
@@ -71,6 +71,11 @@ import {
   WINTER_BUOY,
   WINTER_TOWER,
   WINTER_SLED,
+  SPOOKY_JACK,
+  SPOOKY_TREE,
+  SPOOKY_GARGOYLE,
+  SPOOKY_FENCE,
+  SPOOKY_BUNTING,
   CANDY_PRESS,
   CHRISTMAS_ARCH,
   CHRISTMAS_TRUNK,
@@ -709,6 +714,21 @@ export class DungeonPhysics {
         solid(WINTER_TOWER.w, WINTER_TOWER.h, WINTER_TOWER.d, 0, 0);
       } else if (h.kind === "sled") {
         solid(WINTER_SLED.w, WINTER_SLED.h, WINTER_SLED.d, 0, 0);
+      }
+    } else if (isSpookyDream(h.kind)) {
+      // Bumpable scenery only: spooky kinds have no strike entry, so after() never fires.
+      if (h.kind === "jack-o-lantern") {
+        solid(SPOOKY_JACK.w, SPOOKY_JACK.h, SPOOKY_JACK.d, 0, 0);
+      } else if (h.kind === "dead-tree") {
+        solid(SPOOKY_TREE.w, SPOOKY_TREE.h, SPOOKY_TREE.d, 0, 0);
+      } else if (h.kind === "gargoyle") {
+        solid(SPOOKY_GARGOYLE.w, SPOOKY_GARGOYLE.h, SPOOKY_GARGOYLE.d, 0, 0);
+      } else if (h.kind === "iron-fence") {
+        solid(SPOOKY_FENCE.postW, SPOOKY_FENCE.postH, SPOOKY_FENCE.postD, -SPOOKY_FENCE.postX, 0);
+        solid(SPOOKY_FENCE.postW, SPOOKY_FENCE.postH, SPOOKY_FENCE.postD, SPOOKY_FENCE.postX, 0);
+      } else if (h.kind === "spooky-bunting") {
+        solid(SPOOKY_BUNTING.postW, SPOOKY_BUNTING.postH, SPOOKY_BUNTING.postD, -SPOOKY_BUNTING.postX, 0);
+        solid(SPOOKY_BUNTING.postW, SPOOKY_BUNTING.postH, SPOOKY_BUNTING.postD, SPOOKY_BUNTING.postX, 0);
       }
     }
   }

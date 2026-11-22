@@ -203,5 +203,10 @@
     "file": "/official/winter-wonderland/Winter Wonderland Dream.json",
     "thumbnail": "/tracks/winter-wonderland-dream.png",
     "description": "Tour the gingerbread village at dusk, ring the frozen pond, ride under the ski lift and fly the gorge to the castle finish."
+  },
+  {
+    "file": "/official/spooky-places/Spooky Places Dream.json",
+    "thumbnail": "/tracks/spooky-places-dream.png",
+    "description": "Race the haunted graveyard at night, ring the mushroom circle, pass the gargoyle gate and fly the abyss to the mausoleum finish."
   }
 ]
