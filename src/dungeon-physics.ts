@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, isStuntDream, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, isStuntDream, isIndustrialDream, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import { MUSHROOM } from "./mushroom-shape";
@@ -87,6 +87,12 @@ import {
   STUNT_TOWER,
   STUNT_BOOTH,
   STUNT_STAR,
+  IND_STACK,
+  IND_PYLON,
+  IND_GEAR,
+  IND_SCRAP,
+  IND_PIPE,
+  IND_TANK,
   CANDY_PRESS,
   CHRISTMAS_ARCH,
   CHRISTMAS_TRUNK,
@@ -771,6 +777,22 @@ export class DungeonPhysics {
       } else if (h.kind === "marquee-star") {
         solid(STUNT_STAR.postW, STUNT_STAR.postH, STUNT_STAR.postD, -STUNT_STAR.postX, 0);
         solid(STUNT_STAR.postW, STUNT_STAR.postH, STUNT_STAR.postD, STUNT_STAR.postX, 0);
+      }
+    } else if (isIndustrialDream(h.kind)) {
+      // Bumpable scenery only: industrial kinds have no strike entry, so after() never fires.
+      if (h.kind === "smokestack") {
+        solid(IND_STACK.w, IND_STACK.h, IND_STACK.d, 0, 0);
+      } else if (h.kind === "power-pylon") {
+        solid(IND_PYLON.w, IND_PYLON.h, IND_PYLON.d, 0, 0);
+      } else if (h.kind === "gear-works") {
+        solid(IND_GEAR.w, IND_GEAR.h, IND_GEAR.d, 0, 0);
+      } else if (h.kind === "scrap-pile") {
+        solid(IND_SCRAP.w, IND_SCRAP.h, IND_SCRAP.d, 0, 0);
+      } else if (h.kind === "pipe-arch") {
+        solid(IND_PIPE.postW, IND_PIPE.postH, IND_PIPE.postD, -IND_PIPE.postX, 0);
+        solid(IND_PIPE.postW, IND_PIPE.postH, IND_PIPE.postD, IND_PIPE.postX, 0);
+      } else if (h.kind === "slime-tank") {
+        solid(IND_TANK.w, IND_TANK.h, IND_TANK.d, 0, 0);
       }
     }
   }

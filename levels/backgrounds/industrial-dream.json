@@ -1,0 +1,45 @@
+{
+  "name": "industrial-dream",
+  "sky": { "top": 2771578, "horizon": 14256816 },
+  "fog": { "color": 14256816, "near": 140, "far": 650 },
+  "sun": { "color": 16769967, "intensity": 2.4 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 1.25 },
+  "env": 0.6,
+  "shapes": [
+    {
+      "kind": "smokestack",
+      "texture": "concrete_floor_02",
+      "color": 11563087,
+      "count": 6,
+      "radius": 320,
+      "y": 0,
+      "size": [18, 30],
+      "seed": 151
+    },
+    {
+      "kind": "crane",
+      "count": 4,
+      "radius": 380,
+      "y": 0,
+      "size": [20, 30],
+      "seed": 152
+    },
+    {
+      "kind": "container-stack",
+      "count": 8,
+      "radius": 260,
+      "y": 0,
+      "size": [10, 16],
+      "seed": 153
+    }
+  ],
+  "clouds": {
+    "count": 10,
+    "y": [90, 150],
+    "radius": [250, 480],
+    "color": 16777215,
+    "opacity": 0.85,
+    "drift": 1.2,
+    "seed": 154
+  }
+}

@@ -159,6 +159,13 @@ export const STUNT_RING = { postW: 1.2, postH: 12, postD: 1.2, postX: 10 } as co
 export const STUNT_TOWER = { w: 6, h: 22, d: 6 } as const;
 export const STUNT_BOOTH = { w: 7, h: 6, d: 6 } as const;
 export const STUNT_STAR = { postW: 1, postH: 10, postD: 1, postX: 6 } as const;
+/** Industrial-dream factory machinery, shared by the collider builder and the artist. Solid but never lethal. */
+export const IND_STACK = { w: 5, h: 24, d: 5 } as const;
+export const IND_PYLON = { w: 6, h: 20, d: 6 } as const;
+export const IND_GEAR = { w: 10, h: 8, d: 3 } as const;
+export const IND_SCRAP = { w: 8, h: 5, d: 8 } as const;
+export const IND_PIPE = { postW: 1.5, postH: 12, postD: 1.5, postX: 10 } as const;
+export const IND_TANK = { w: 6, h: 8, d: 6 } as const;
 /** Candy press-trap gantry posts; cars drive between them under the moving stamp. */
 export const CANDY_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6 } as const;
 /** Christmas decor furniture, shared by the collider builder and the artist. Solid but never lethal: christmas kinds have no DUNGEON_STRIKE entry. */

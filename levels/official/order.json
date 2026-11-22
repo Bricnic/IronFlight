@@ -218,5 +218,10 @@
     "file": "/official/stunt-parks/Stunt Parks Dream.json",
     "thumbnail": "/tracks/stunt-parks-dream.png",
     "description": "Tour the candy midway, thread the lollipop lanes, jump the rings of fire and fly the gap to the carousel finish."
+  },
+  {
+    "file": "/official/industrial-mayhem/Industrial Mayhem Dream.json",
+    "thumbnail": "/tracks/industrial-mayhem-dream.png",
+    "description": "Tour the foundry waterfront, thread the scrap lanes, pass the gear court and fly the coolant gap to the crusher finish."
   }
 ]

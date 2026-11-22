@@ -127,7 +127,9 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
       "skyline-circuit",
       "scrapyard-sweep",
       "custom:shipyard",
+      "custom:industrial-mayhem-dream",
     ],
+    dream: "custom:industrial-mayhem-dream",
   },
   {
     id: "outdoor-adventures",

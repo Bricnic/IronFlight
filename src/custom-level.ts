@@ -247,6 +247,19 @@ export type StuntDreamKind = (typeof STUNT_DREAM_PREFAB_KINDS)[number];
 export function isStuntDream(kind: string): kind is StuntDreamKind {
   return (STUNT_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Industrial-dream decor: solid non-lethal factory machinery. */
+export const INDUSTRIAL_DREAM_PREFAB_KINDS = [
+  "smokestack",
+  "power-pylon",
+  "gear-works",
+  "scrap-pile",
+  "pipe-arch",
+  "slime-tank",
+] as const;
+export type IndustrialDreamKind = (typeof INDUSTRIAL_DREAM_PREFAB_KINDS)[number];
+export function isIndustrialDream(kind: string): kind is IndustrialDreamKind {
+  return (INDUSTRIAL_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -279,6 +292,7 @@ export const DUNGEON_PREFAB_KINDS = [
   ...SPOOKY_DREAM_PREFAB_KINDS,
   ...TOYBOX_DREAM_PREFAB_KINDS,
   ...STUNT_DREAM_PREFAB_KINDS,
+  ...INDUSTRIAL_DREAM_PREFAB_KINDS,
 ] as const;
 /** Gold-star collectible: a spinning chrome star worth permanent garage glory. */
 export const DREAM_PREFAB_KINDS = ["wings"] as const;
