@@ -102,7 +102,13 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
     theme:
       "Purpose-built stunt and amusement parks centered on loops, rings, rides and arena attractions.",
     art: "/collections/stunt-parks.jpg",
-    trackIds: ["triple-loop", "custom:fairground", "custom:ring-chase"],
+    trackIds: [
+      "triple-loop",
+      "custom:fairground",
+      "custom:ring-chase",
+      "custom:stunt-parks-dream",
+    ],
+    dream: "custom:stunt-parks-dream",
   },
   {
     id: "industrial-mayhem",

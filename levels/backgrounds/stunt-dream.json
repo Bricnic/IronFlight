@@ -1,0 +1,43 @@
+{
+  "name": "stunt-dream",
+  "sky": { "top": 9404351, "horizon": 16767464 },
+  "fog": { "color": 16767464, "near": 140, "far": 650 },
+  "sun": { "color": 16769967, "intensity": 2.4 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 1.25 },
+  "env": 0.6,
+  "shapes": [
+    {
+      "kind": "tent",
+      "count": 6,
+      "radius": 300,
+      "y": 0,
+      "size": [20, 30],
+      "seed": 141
+    },
+    {
+      "kind": "balloon",
+      "count": 6,
+      "radius": 320,
+      "y": 60,
+      "size": [10, 16],
+      "seed": 142
+    },
+    {
+      "kind": "party-flag",
+      "count": 10,
+      "radius": 240,
+      "y": 0,
+      "size": [8, 12],
+      "seed": 143
+    }
+  ],
+  "clouds": {
+    "count": 12,
+    "y": [90, 150],
+    "radius": [250, 480],
+    "color": 16777215,
+    "opacity": 0.9,
+    "drift": 1.2,
+    "seed": 144
+  }
+}

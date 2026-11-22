@@ -235,6 +235,18 @@ export type ToyboxDreamKind = (typeof TOYBOX_DREAM_PREFAB_KINDS)[number];
 export function isToyboxDream(kind: string): kind is ToyboxDreamKind {
   return (TOYBOX_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Stunt-dream decor: solid non-lethal fairground rides. */
+export const STUNT_DREAM_PREFAB_KINDS = [
+  "ferris-wheel",
+  "ring-of-fire",
+  "drop-tower",
+  "ticket-booth",
+  "marquee-star",
+] as const;
+export type StuntDreamKind = (typeof STUNT_DREAM_PREFAB_KINDS)[number];
+export function isStuntDream(kind: string): kind is StuntDreamKind {
+  return (STUNT_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -266,6 +278,7 @@ export const DUNGEON_PREFAB_KINDS = [
   ...WINTER_DREAM_PREFAB_KINDS,
   ...SPOOKY_DREAM_PREFAB_KINDS,
   ...TOYBOX_DREAM_PREFAB_KINDS,
+  ...STUNT_DREAM_PREFAB_KINDS,
 ] as const;
 /** Gold-star collectible: a spinning chrome star worth permanent garage glory. */
 export const DREAM_PREFAB_KINDS = ["wings"] as const;

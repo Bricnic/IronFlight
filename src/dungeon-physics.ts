@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, isStuntDream, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import { MUSHROOM } from "./mushroom-shape";
@@ -82,6 +82,11 @@ import {
   TOY_DIE,
   TOY_BEAR,
   TOY_TRAIN,
+  STUNT_FERRIS,
+  STUNT_RING,
+  STUNT_TOWER,
+  STUNT_BOOTH,
+  STUNT_STAR,
   CANDY_PRESS,
   CHRISTMAS_ARCH,
   CHRISTMAS_TRUNK,
@@ -751,6 +756,21 @@ export class DungeonPhysics {
         solid(TOY_BEAR.w, TOY_BEAR.h, TOY_BEAR.d, 0, 0);
       } else if (h.kind === "toy-train") {
         solid(TOY_TRAIN.w, TOY_TRAIN.h, TOY_TRAIN.d, 0, 0);
+      }
+    } else if (isStuntDream(h.kind)) {
+      // Bumpable scenery only: stunt kinds have no strike entry, so after() never fires.
+      if (h.kind === "ferris-wheel") {
+        solid(STUNT_FERRIS.w, STUNT_FERRIS.h, STUNT_FERRIS.d, 0, 0);
+      } else if (h.kind === "ring-of-fire") {
+        solid(STUNT_RING.postW, STUNT_RING.postH, STUNT_RING.postD, -STUNT_RING.postX, 0);
+        solid(STUNT_RING.postW, STUNT_RING.postH, STUNT_RING.postD, STUNT_RING.postX, 0);
+      } else if (h.kind === "drop-tower") {
+        solid(STUNT_TOWER.w, STUNT_TOWER.h, STUNT_TOWER.d, 0, 0);
+      } else if (h.kind === "ticket-booth") {
+        solid(STUNT_BOOTH.w, STUNT_BOOTH.h, STUNT_BOOTH.d, 0, 0);
+      } else if (h.kind === "marquee-star") {
+        solid(STUNT_STAR.postW, STUNT_STAR.postH, STUNT_STAR.postD, -STUNT_STAR.postX, 0);
+        solid(STUNT_STAR.postW, STUNT_STAR.postH, STUNT_STAR.postD, STUNT_STAR.postX, 0);
       }
     }
   }

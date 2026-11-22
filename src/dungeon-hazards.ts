@@ -153,6 +153,12 @@ export const TOY_DOMINO = { w: 3, h: 6, d: 1 } as const;
 export const TOY_DIE = { w: 4, h: 4, d: 4 } as const;
 export const TOY_BEAR = { w: 4, h: 7, d: 3 } as const;
 export const TOY_TRAIN = { w: 4, h: 5, d: 9 } as const;
+/** Stunt-dream fairground rides, shared by the collider builder and the artist. Solid but never lethal. */
+export const STUNT_FERRIS = { w: 10, h: 6, d: 8 } as const;
+export const STUNT_RING = { postW: 1.2, postH: 12, postD: 1.2, postX: 10 } as const;
+export const STUNT_TOWER = { w: 6, h: 22, d: 6 } as const;
+export const STUNT_BOOTH = { w: 7, h: 6, d: 6 } as const;
+export const STUNT_STAR = { postW: 1, postH: 10, postD: 1, postX: 6 } as const;
 /** Candy press-trap gantry posts; cars drive between them under the moving stamp. */
 export const CANDY_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6 } as const;
 /** Christmas decor furniture, shared by the collider builder and the artist. Solid but never lethal: christmas kinds have no DUNGEON_STRIKE entry. */
