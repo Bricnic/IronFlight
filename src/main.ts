@@ -22,9 +22,11 @@ import { LEVEL_COLLECTIONS, collectionForTrack } from "./level-collections";
 import { UnlockSeen, isDreamUnlocked, unlockedIds } from "./level-unlocks";
 import {
   isXRSupported,
+  mergePadStates,
   startVRSession,
   xrControllers,
   xrDrivingInput,
+  xrMenuPad,
 } from "./xr";
 import {
   listLevels,
@@ -604,7 +606,10 @@ async function boot() {
     }
     xrPauseWas = xrPauseNow;
     const menu = activeControllerMenu();
-    const menuInput = controllerMenuInput.sample(pad, menu, performance.now());
+    // Touch input joins physical pads for menu navigation (A confirms, B
+    // goes back); without controllers the merge is the physical pad alone.
+    const menuPad = mergePadStates(pad, xrMenuPad(xr.left, xr.right));
+    const menuInput = controllerMenuInput.sample(menuPad, menu, performance.now());
     if (menuInput.reset && (surface === "play" || surface === "result" || pauseScreens.isVisible()) && !editorScreens?.isVisible()) {
       resetCurrentLevel();
       return;
@@ -977,7 +982,7 @@ async function boot() {
     const xr = view.renderer.xr.isPresenting
       ? xrControllers(view.renderer)
       : { left: null, right: null };
-    const xrInput = xrDrivingInput(xr.left, xr.right);
+    const xrInput = xrDrivingInput(xr.left, xr.right, wings);
     const driving = combineDrivingInput(xrInput, base, wings);
     // Dream flight: mouse drags plus the right stick orient while airborne.
     const airYawDelta = -view.flightMouse.x * FLIGHT_MOUSE_RADIANS_PER_PX;

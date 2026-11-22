@@ -1065,6 +1065,9 @@ export class GameView {
         !!s.parts.get("chassis-front")?.lava,
         poisonMix * Math.PI,
       );
+    // lookAt faces the rig's +Z at the car, but headsets look down -Z: yaw
+    // the rig half a turn so a recentered headset faces the car, not away.
+    if (presenting) this.xrRig.rotateY(Math.PI);
     // Inspection framings are desktop QA harnesses; in-headset the rig follow
     // above is the only camera authority.
     if (!presenting) {
