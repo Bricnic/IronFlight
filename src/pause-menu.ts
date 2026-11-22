@@ -23,12 +23,13 @@ export function createPauseMenu(host: HTMLElement, actions: PauseMenuActions) {
     ["prev", "Previous track", actions.onPrev],
     ["settings", "Settings", actions.onSettings],
   ] as const;
-  screen.innerHTML = `<div class="pause-card"><div class="eyebrow">PAUSED</div><h2 id="pause-title">Take a breath.</h2><div class="pause-actions">${entries.map(([id, label]) => `<button id="pause-${id}">${label}</button>`).join("")}</div><p class="pause-hint">D-pad to choose · A to confirm · Start or Escape to resume</p></div>`;
+  screen.innerHTML = `<div class="pause-card"><div class="eyebrow">PAUSED</div><h2 id="pause-title">Take a breath.</h2><div class="pause-actions">${entries.map(([id, label]) => `<button id="pause-${id}">${label}</button>`).join("")}</div><p class="pause-hint">D-pad or left stick to choose · A to confirm · B, Start or Escape to resume</p></div>`;
   for (const [id, , fn] of entries)
     screen.querySelector<HTMLButtonElement>(`#pause-${id}`)!.onclick = fn;
   host.append(screen);
   const buttons = Array.from(screen.querySelectorAll<HTMLButtonElement>(".pause-actions button"));
   let selected = 0;
+  buttons.forEach((button, index) => button.addEventListener("focus", () => { selected = index; }));
   screen.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();

@@ -62,15 +62,14 @@ import type { CameraSample } from "./harness";
 import { combineDrivingInput, drivingInput } from "./controls";
 import {
   PAD_LOOK_PX_PER_SEC,
-  padActionPressed,
   padDriving,
   padLook,
-  padMenuDelta,
   padStartPressed,
   pollPad,
 } from "./gamepad";
 import { createPauseMenu } from "./pause-menu";
 import { proController } from "./switch-pro";
+import { ControllerMenuInput, activeControllerMenu, moveMenuFocus, activateMenuFocus } from "./controller-menu";
 import { formatDelta, objectiveCopy, progressCopy, progressFraction } from "./run-copy";
 
 import { createDebugMenu } from "./debug-menu";
@@ -113,8 +112,7 @@ async function boot() {
   let inputMode: InputDevice = "keyboard";
   let pauseResumePaused = false;
   let padStartWas = false;
-  let padMenuWas: -1 | 0 | 1 = 0;
-  let padActionWas = false;
+  const controllerMenuInput = new ControllerMenuInput();
   function applyStoredVehicle() {
     try {
       sim.vehicleId = getVehicle(
@@ -1168,16 +1166,17 @@ async function boot() {
         openPause();
     }
     padStartWas = startNow;
-    if (pauseScreens.isVisible() && pad) {
-      const delta = padMenuDelta(pad);
-      if (delta !== 0 && delta !== padMenuWas) pauseScreens.focusNext(delta);
-      padMenuWas = delta;
-      const actionNow = padActionPressed(pad);
-      if (actionNow && !padActionWas) pauseScreens.activate();
-      padActionWas = actionNow;
-    } else {
-      padMenuWas = 0;
-      padActionWas = false;
+    const menu = activeControllerMenu();
+    const menuInput = controllerMenuInput.sample(pad, menu, performance.now());
+    if (menu) {
+      if (menuInput.direction) moveMenuFocus(menu, menuInput.direction);
+      if (menuInput.back) {
+        if (menu.id === "pause-menu") closePause();
+        else if (menu.id === "settings-screen") $("settings-back").click();
+        else if (menu.id === "level-select") {
+          const back = $("collection-back"); if (back.getClientRects().length) back.click();
+        } else showLevelSelect();
+      } else if (menuInput.confirm) activateMenuFocus(menu);
     }
     if (pad && surface === "play" && !paused && !editing && frameDelta) {
       const look = padLook(pad);
