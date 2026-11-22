@@ -1,6 +1,5 @@
 {
   "name": "Dungeon",
-  "backgroundTemplate": "cavern-dark",
   "mode": "arena",
   "spawn": {
     "x": 0,
@@ -25,25 +24,7 @@
     {
       "x": 150,
       "y": 1.2,
-      "z": -80,
-      "kind": "chest"
-    },
-    {
-      "x": 150,
-      "y": 1.2,
       "z": 0,
-      "kind": "chest"
-    },
-    {
-      "x": 100,
-      "y": 1.2,
-      "z": 40,
-      "kind": "chest"
-    },
-    {
-      "x": -100,
-      "y": 1.2,
-      "z": 40,
       "kind": "chest"
     },
     {
@@ -53,49 +34,13 @@
       "kind": "chest"
     },
     {
-      "x": -120,
-      "y": 1.2,
-      "z": 170,
-      "kind": "chest"
-    },
-    {
-      "x": 0,
-      "y": 1.2,
-      "z": 185,
-      "kind": "chest"
-    },
-    {
       "x": 60,
       "y": 1.2,
       "z": 150,
       "kind": "chest"
     },
     {
-      "x": -140,
-      "y": 7.2,
-      "z": 160,
-      "kind": "chest"
-    },
-    {
-      "x": -60,
-      "y": 7.2,
-      "z": 160,
-      "kind": "chest"
-    },
-    {
       "x": 0,
-      "y": 7.2,
-      "z": 190,
-      "kind": "chest"
-    },
-    {
-      "x": 80,
-      "y": 7.2,
-      "z": 195,
-      "kind": "chest"
-    },
-    {
-      "x": 140,
       "y": 7.2,
       "z": 190,
       "kind": "chest"
@@ -601,7 +546,8 @@
       "h": 1,
       "d": 76,
       "texture": "monastery_stone_floor",
-      "color": 12106946
+      "color": 12106946,
+      "locked": true
     },
     {
       "id": "parapet-north",
@@ -757,7 +703,8 @@
       "h": 1,
       "d": 100,
       "texture": "dark_rock_02",
-      "color": 13686235
+      "color": 13686235,
+      "locked": true
     },
     {
       "id": "ceil-s1",
@@ -769,7 +716,8 @@
       "h": 1,
       "d": 214,
       "texture": "dark_rock_02",
-      "color": 13686235
+      "color": 13686235,
+      "locked": true
     },
     {
       "id": "ceil-s2",
@@ -985,7 +933,8 @@
       "h": 1,
       "d": 75,
       "texture": "dark_rock_02",
-      "color": 13686235
+      "color": 13686235,
+      "locked": true
     },
     {
       "id": "dcol--163-155",
@@ -1658,10 +1607,11 @@
     }
   ],
   "medals": {
-    "gold": 150,
-    "silver": 200,
-    "bronze": 260
+    "gold": 200,
+    "silver": 300,
+    "bronze": 400
   },
-  "limit": 300,
-  "underground": true
+  "limit": 500,
+  "underground": true,
+  "backgroundTemplate": "cavern-dark"
 }
