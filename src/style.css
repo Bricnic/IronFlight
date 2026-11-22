@@ -1152,6 +1152,29 @@ kbd {
 #checkpoint-delta.behind {
   color: #ff8a7a;
 }
+#checkpoint-delta.dream {
+  color: #ffd700;
+}
+#vr-button {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  padding: 12px 20px;
+  border: 2px solid #7ec8e3;
+  border-radius: 10px;
+  background: rgba(8, 14, 18, 0.85);
+  color: #f6edde;
+  font:
+    700 18px "Barlow Condensed",
+    Impact,
+    sans-serif;
+  letter-spacing: 2px;
+  cursor: pointer;
+}
+#vr-button:hover {
+  background: rgba(20, 40, 52, 0.92);
+}
 #confetti {
   position: fixed;
   inset: 0;

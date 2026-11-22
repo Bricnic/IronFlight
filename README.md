@@ -59,6 +59,20 @@ The windshield is transparent, with two seats and a steering wheel on the driver
 
 Hammer impacts use actual collision contacts. A heavy hit damages the struck part and nearby pieces, then throws the truck into the air with an impulse based on the rotor's tangential motion. The impulse is applied before breakage so detached panels and wheels inherit the launch and spin. One strike is registered per contact episode, and near misses cause no hammer damage. Browser tests verify launches and visible detachments at both 1x and 16x.
 
+## WebXR (Quest headsets)
+
+The game runs in-headset through the Quest Browser over WebXR (`immersive-vr`, no app install). Simulation, physics, tracks, and views are shared with desktop; VR adds session entry, a camera rig, Touch-controller mapping, an in-headset dashboard, and an auto-applied XR render tier. Menus, settings, results, and the editor stay 2D: drive in VR, manage outside it.
+
+```sh
+npm run dev:https
+```
+
+Then open `https://<your-lan-ip>:5173` in the Quest Browser on the same network (accept the self-signed certificate warning), start any level, and press **ENTER VR**. `localhost`/`127.0.0.1` does not work from the headset, and the button only appears while driving on a WebXR-capable browser.
+
+Touch controls: left stick steers (right stick is a fallback), right trigger throttles, left trigger brakes, left squeeze is the handbrake (wing flap while flying), right stick orients dream flight, and either thumbstick click pauses. A Bluetooth gamepad paired to the Quest also drives with zero setup. Thumbstick click unpauses; the in-headset dashboard shows speed, time, progress, stars, and PAUSED/WINGS/FLYING. Checkpoint, star, and dream-unlock celebrations flash in-headset; finishing or wrecking drops back to the 2D result screen after a beat (or exit anytime from the headset system menu).
+
+For desktop iteration without a headset, use the WebXR API Emulator browser extension: it offers an emulated `immersive-vr` session so entry, the rig camera, and controller mapping can be exercised from `npm run dev`. On-device validation still needs the real pass above, including a sustained-framerate check over full laps (the XR tier starts from low settings and is tuned from headset measurement, never desktop fps).
+
 ## Verify
 
 ```sh

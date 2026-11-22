@@ -24,10 +24,11 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { buildSkyEnvScene } from "./sky-env";
 import { arenaSolids } from "./arena";
 import { ChaseCamera } from "./camera";
+import { XRHud } from "./xr-hud";
 import type { CourseSolid } from "./course";
 import type { Checkpoint } from "./tracks";
 import { DT } from "./clock";
-import { QUALITY, type VideoQuality } from "./settings";
+import { QUALITY, XR_QUALITY, type QualitySpec, type VideoQuality } from "./settings";
 import { TruckFireView } from "./truck-fire";
 import { buildWings, poseWings } from "./wings-view";
 import { SkidView } from "./skids";
@@ -54,6 +55,14 @@ export class GameView {
   readonly camera = new T.PerspectiveCamera(55, 1, 0.1, 650);
   readonly renderer: T.WebGLRenderer;
   readonly chase = new ChaseCamera(this.camera);
+  /**
+   * XR camera rig. The headset owns the camera's local pose while presenting,
+   * so the chase follow runs against the rig instead (same math, same feel).
+   * The rig sits at identity outside XR, leaving the desktop path untouched.
+   */
+  readonly xrRig = new T.Group();
+  readonly xrChase = new ChaseCamera(this.xrRig);
+  readonly xrHud = new XRHud();
   private props = new PropView();
   private looseBlocks = new LooseBlocksView();
   private burningCoals = new BurningCoalsView();
@@ -154,6 +163,10 @@ export class GameView {
       this.nitro.add(jet);
     }
     this.renderer = new T.WebGLRenderer({ antialias: true });
+    this.renderer.xr.enabled = true;
+    this.scene.add(this.xrRig);
+    this.xrRig.add(this.camera);
+    this.camera.add(this.xrHud.group);
     host.append(this.renderer.domElement);
     let dragging = false,
       lastX = 0,
@@ -778,8 +791,24 @@ export class GameView {
   }
   /** Live video-quality tier switch: pixel ratio, shadows, far plane, fog. */
   applyQuality(tier: VideoQuality) {
-    const spec = QUALITY[tier];
     this.videoTier = tier;
+    this.applySpec(QUALITY[tier]);
+  }
+  /** Enter immersive-vr rendering: XR spec now, user tier restored on exit. */
+  enterXR() {
+    this.preXRTier = this.videoTier;
+    this.applySpec(XR_QUALITY);
+  }
+  /** Leave immersive-vr rendering: restore the user's tier and rig pose. */
+  exitXR() {
+    this.applyQuality(this.preXRTier ?? "high");
+    this.preXRTier = undefined;
+    this.xrRig.position.set(0, 0, 0);
+    this.xrRig.quaternion.identity();
+    this.xrChase.reset();
+  }
+  private preXRTier: VideoQuality | undefined;
+  private applySpec(spec: QualitySpec) {
     this.fogScale = spec.fogScale;
     this.renderer.setPixelRatio(
       Math.min(devicePixelRatio || 1, spec.pixelRatio),
@@ -1023,9 +1052,11 @@ export class GameView {
       elapsed = Math.max(0, renderTime - this.lastCameraTime);
     this.lastCameraTime = renderTime;
     const debris = s.parts.get("chassis-front")?.body;
+    const presenting = this.renderer.xr.isPresenting;
+    const follow = presenting ? this.xrChase : this.chase;
     // QA overhead shots freeze the chase camera via window.__captureFreeze.
     if (!(globalThis as Record<string, unknown>).__captureFreeze)
-      this.chase.update(
+      follow.update(
         debris ? new T.Vector3().copy(debris.translation()) : root,
         debris ? new T.Quaternion().copy(debris.rotation()) : q,
         elapsed,
@@ -1034,6 +1065,9 @@ export class GameView {
         !!s.parts.get("chassis-front")?.lava,
         poisonMix * Math.PI,
       );
+    // Inspection framings are desktop QA harnesses; in-headset the rig follow
+    // above is the only camera authority.
+    if (!presenting) {
     if (this.overview && s.skidStrokes.length) {
       const bounds = new T.Box3();
       for (const stroke of s.skidStrokes)
@@ -1108,6 +1142,7 @@ export class GameView {
         this.camera.position.set(midX - (dz / len) * dist, (h.y ?? 0) + 4.5 * sc, midZ + (dx / len) * dist);
         this.camera.lookAt(midX, (h.y ?? 0) + 2 * sc, midZ);
       }
+    }
     }
     this.snapCamera = false;
     for (const models of [this.officialCourse, this.comic, this.dungeon, this.fairground, this.resizedPrefabs, this.props, this.looseBlocks, this.fragileIce]) configureShadowSurfaces(models);

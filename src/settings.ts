@@ -14,6 +14,18 @@ export const QUALITY: Record<VideoQuality, QualitySpec> = {
   medium: { pixelRatio: 1, shadows: true, far: 500, fogScale: 0.8 },
   low: { pixelRatio: 0.75, shadows: false, far: 350, fogScale: 0.6 },
 };
+/**
+ * Rendering spec auto-applied inside an immersive-vr session and reverted on
+ * exit. It starts from the low tier (no shadows, short draw distance) since
+ * stereo roughly doubles fragment cost on headset GPUs; tune from on-device
+ * measurement, never from desktop fps. Not a user-selectable tier.
+ */
+export const XR_QUALITY: QualitySpec = {
+  pixelRatio: 0.75,
+  shadows: false,
+  far: 350,
+  fogScale: 0.6,
+};
 /** Driving input source; Start/look sticks only poll in controller mode. */
 export type InputDevice = "keyboard" | "controller";
 export interface GameSettings {

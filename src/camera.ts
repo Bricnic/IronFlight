@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Quaternion, Vector3 } from "three";
+import { Quaternion, Vector3, type Object3D } from "three";
 export class ChaseCamera {
   yaw = 0;
   pitch = Math.atan2(5.5, 14);
@@ -7,7 +7,7 @@ export class ChaseCamera {
   private sinkBlend = 0;
   private heading = 0;
   private initialized = false;
-  constructor(readonly camera: PerspectiveCamera) {}
+  constructor(readonly camera: Object3D) {}
   reset() {
     this.initialized = false;
     this.sinkBlend = 0;

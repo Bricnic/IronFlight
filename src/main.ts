@@ -18,8 +18,14 @@ import {
   type TrackId,
 } from "./tracks";
 import { stepUnlockedTrackId } from "./official-levels";
-import { LEVEL_COLLECTIONS } from "./level-collections";
-import { UnlockSeen, unlockedIds } from "./level-unlocks";
+import { LEVEL_COLLECTIONS, collectionForTrack } from "./level-collections";
+import { UnlockSeen, isDreamUnlocked, unlockedIds } from "./level-unlocks";
+import {
+  isXRSupported,
+  startVRSession,
+  xrControllers,
+  xrDrivingInput,
+} from "./xr";
 import {
   listLevels,
   saveLevel,
@@ -121,6 +127,10 @@ async function boot() {
   let bannerUntil = 0;
   let starRun: Simulation["trackRun"];
   let starSeen = 0;
+  let dreamLockedThisRun = false;
+  let xrSupported = false;
+  let xrPauseWas = false;
+  let xrExitAt: number | null = null;
   let hudStarSig = "";
   const scores = new BestTimes({
     getItem: (key) => localStorage.getItem(key),
@@ -147,6 +157,43 @@ async function boot() {
     <button id="level-editor-button" class="header-action"><img src="/icons/level-editor.png" width="24" height="24" alt=""><span>Level editor</span></button>
     <button id="settings-button" class="header-action"><img src="/icons/settings.png" width="24" height="24" alt=""><span>Settings</span></button>`,
   );
+  // Immersive-vr entry: hidden unless the browser reports support, and only
+  // offered on the play surface (menus stay 2D; the headset is for driving).
+  app.insertAdjacentHTML(
+    "beforeend",
+    `<button id="vr-button" hidden>ENTER VR</button>`,
+  );
+  const vrButton = document.getElementById(
+    "vr-button",
+  ) as HTMLButtonElement;
+  vrButton.onclick = async () => {
+    try {
+      const session = view.renderer.xr.getSession() as unknown as {
+        end(): unknown;
+      } | null;
+      if (session) await session.end();
+      else {
+        view.xrChase.reset();
+        await startVRSession(view.renderer);
+      }
+    } catch (e) {
+      console.warn("VR session failed to start", e);
+    }
+  };
+  view.renderer.xr.addEventListener("sessionstart", () => {
+    view.enterXR();
+    view.xrHud.group.visible = true;
+    vrButton.textContent = "EXIT VR";
+  });
+  view.renderer.xr.addEventListener("sessionend", () => {
+    view.exitXR();
+    view.xrHud.group.visible = false;
+    vrButton.textContent = "ENTER VR";
+    xrExitAt = null;
+  });
+  void isXRSupported().then((supported) => {
+    xrSupported = supported;
+  });
   const keys = new Set<string>();
   let cameraTrace: CameraSample[] = [],
     captureCamera = false;
@@ -474,17 +521,35 @@ async function boot() {
     confettiLast = sim.time;
     drawConfetti();
   }
-  function showStarBanner() {
+  function showStarBanner(dreamName?: string) {
     const banner = $("checkpoint-banner");
-    banner.querySelector("strong")!.textContent = "GOLD STAR!";
+    const delta = $("checkpoint-delta");
+    banner.querySelector("strong")!.textContent = dreamName
+      ? "DREAM LEVEL UNLOCKED!"
+      : "GOLD STAR!";
     banner.classList.add("gold");
     banner.hidden = false;
     bannerFiredAt = sim.time;
     bannerUntil = sim.time + 2.5;
     banner.style.transform = "";
     banner.style.opacity = "";
-    $("checkpoint-delta").hidden = true;
-    fireConfetti({ colors: GOLD_CONFETTI, count: CONFETTI_COUNT * 3 });
+    if (dreamName) {
+      delta.hidden = false;
+      delta.textContent = dreamName;
+      delta.className = "dream";
+    } else {
+      delta.hidden = true;
+    }
+    fireConfetti({
+      colors: GOLD_CONFETTI,
+      count: CONFETTI_COUNT * (dreamName ? 6 : 3),
+    });
+    if (view.renderer.xr.isPresenting)
+      view.xrHud.flash(
+        dreamName ? "DREAM UNLOCKED!" : "GOLD STAR!",
+        dreamName ?? "",
+        sim.time + 2.5,
+      );
   }
   function showCheckpointBanner(
     run: NonNullable<ReturnType<Simulation["snapshot"]>["run"]>,
@@ -498,6 +563,12 @@ async function boot() {
     bannerUntil = sim.time + 2.5;
     banner.style.transform = "";
     banner.style.opacity = "";
+    if (view.renderer.xr.isPresenting)
+      view.xrHud.flash(
+        "CHECKPOINT",
+        progressCopy(getTrack(run.trackId), run),
+        sim.time + 2.5,
+      );
     const best = scores.best(run.trackId, sim.trackRun?.variant ?? "default");
     const split = best?.splits[run.checkpoint - 1];
     if (split === undefined) {
@@ -520,6 +591,18 @@ async function boot() {
         openPause();
     }
     padStartWas = startNow;
+    // Thumbstick click on either Touch controller toggles pause in-headset,
+    // where the DOM pause menu is invisible (the XR HUD shows PAUSED).
+    const xr = view.renderer.xr.isPresenting
+      ? xrControllers(view.renderer)
+      : { left: null, right: null };
+    const xrPauseNow =
+      xrDrivingInput(xr.left, xr.right).pausePressed;
+    if (xrPauseNow && !xrPauseWas) {
+      if (pauseScreens.isVisible()) closePause();
+      else if (surface === "play") openPause();
+    }
+    xrPauseWas = xrPauseNow;
     const menu = activeControllerMenu();
     const menuInput = controllerMenuInput.sample(pad, menu, performance.now());
     if (menuInput.reset && (surface === "play" || surface === "result" || pauseScreens.isVisible()) && !editorScreens?.isVisible()) {
@@ -537,7 +620,8 @@ async function boot() {
       } else if (menuInput.confirm) activateMenuFocus(menu);
     }
     // The right stick steers flight while airborne; otherwise it looks.
-    if (pad && surface === "play" && !paused && !sim.flying && frameDelta) {
+    // In-headset the head does the looking, so controller look stays desktop.
+    if (pad && surface === "play" && !paused && !sim.flying && frameDelta && !view.renderer.xr.isPresenting) {
       const look = padLook(pad);
       if (look.dx || look.dy)
         view.chase.drag(
@@ -550,8 +634,36 @@ async function boot() {
     syncControllerForeground();
     pollController(frameDelta);
     stepConfetti(frameDelta);
+    vrButton.hidden = !(xrSupported && surface === "play");
     const s = sim.snapshot(false),
       r = ROUTES.find((r) => r.id === s.stage);
+    if (view.renderer.xr.isPresenting) {
+      const run = s.run;
+      const track = run ? getTrack(run.trackId) : null;
+      view.xrHud.update(
+        {
+          speedMph: Math.round(s.speed * 3.6),
+          timeText: (run?.elapsed ?? s.time).toFixed(2),
+          progressText: run && track ? progressCopy(track, run) : "",
+          starsText: run ? `${run.stars.length} ★` : "",
+          badgeText: paused
+            ? "PAUSED"
+            : s.flying
+              ? "FLYING"
+              : run?.wings
+                ? "WINGS"
+                : "",
+        },
+        sim.time,
+      );
+      if (xrExitAt !== null && performance.now() >= xrExitAt) {
+        xrExitAt = null;
+        const session = view.renderer.xr.getSession() as unknown as {
+          end(): unknown;
+        } | null;
+        if (session) void session.end();
+      }
+    }
     $("speed").textContent = Math.round(s.speed * 3.6)
       .toString()
       .padStart(3, "0");
@@ -647,6 +759,16 @@ async function boot() {
         if (unlockedNames.length)
           fireConfetti({ colors: GOLD_CONFETTI, count: CONFETTI_COUNT * 3 });
         if (s.run.status === "failed") screens.reveal(0);
+        // In-headset the result screen is invisible DOM: celebrate in 3D,
+        // then drop back to 2D after a beat so results are reachable.
+        if (view.renderer.xr.isPresenting) {
+          view.xrHud.flash(
+            s.run.status === "completed" ? "FINISH!" : "WRECKED!",
+            "",
+            sim.time + 3,
+          );
+          xrExitAt = performance.now() + 3000;
+        }
       }
       // Celebrate intermediate gates; the final gate gets the result screen.
       const banner = $("checkpoint-banner");
@@ -663,9 +785,25 @@ async function boot() {
         if (sim.trackRun !== starRun) {
           starRun = sim.trackRun;
           starSeen = s.run.stars.length;
+          // Golds only land at run end, so a mid-run dream flip below can
+          // only come from star banking: snapshot the locked state now.
+          const collection = collectionForTrack(s.run.trackId);
+          dreamLockedThisRun =
+            !!collection?.dream &&
+            !isDreamUnlocked(collection, scores, starBank);
         } else if (s.run.stars.length > starSeen) {
           starSeen = s.run.stars.length;
-          showStarBanner();
+          const collection = collectionForTrack(s.run.trackId);
+          const dreamId = collection?.dream;
+          const justUnlocked =
+            !!collection &&
+            !!dreamId &&
+            dreamLockedThisRun &&
+            isDreamUnlocked(collection, scores, starBank);
+          if (justUnlocked) dreamLockedThisRun = false;
+          showStarBanner(
+            justUnlocked && dreamId ? getTrack(dreamId).name : undefined,
+          );
         }
         // Pop and fade on sim time so pausing freezes the celebration
         // mid-show (and headless captures catch it at full opacity).
@@ -835,20 +973,28 @@ async function boot() {
     const base = pad
       ? combineDrivingInput(padDriving(pad, signedSpeed, wings), keyboard, wings)
       : keyboard;
+    // Touch controllers blend in like a second pad; idle when not presenting.
+    const xr = view.renderer.xr.isPresenting
+      ? xrControllers(view.renderer)
+      : { left: null, right: null };
+    const xrInput = xrDrivingInput(xr.left, xr.right);
+    const driving = combineDrivingInput(xrInput, base, wings);
     // Dream flight: mouse drags plus the right stick orient while airborne.
     const airYawDelta = -view.flightMouse.x * FLIGHT_MOUSE_RADIANS_PER_PX;
     const airPitchDelta = -view.flightMouse.y * FLIGHT_MOUSE_RADIANS_PER_PX;
     view.flightMouse.x = 0;
     view.flightMouse.y = 0;
-    if (!sim.flying) return base;
+    if (!sim.flying) return driving;
     let airYaw = 0, airPitch = 0;
     if (pad) {
       const look = padLook(pad);
       airYaw += -look.dx;
       airPitch += -look.dy;
     }
+    airYaw += xrInput.airYaw ?? 0;
+    airPitch += xrInput.airPitch ?? 0;
     return {
-      ...base,
+      ...driving,
       airYawDelta,
       airPitchDelta,
       airYaw: Math.max(-1, Math.min(1, airYaw)),
@@ -1017,12 +1163,13 @@ async function boot() {
     if (captureCamera && cameraTrace.length < 2000)
       cameraTrace.push(cameraSample());
     hud(dt);
-    requestAnimationFrame(frame);
   }
   select("easy");
   showLevelSelect();
   $("loading").remove();
-  requestAnimationFrame(frame);
+  // three.js routes this through the XR session loop while presenting (window
+  // rAF has no such guarantee); on desktop it behaves like rAF.
+  view.renderer.setAnimationLoop(frame);
 }
 boot().catch((e) => {
   document.getElementById("loading")!.textContent =
