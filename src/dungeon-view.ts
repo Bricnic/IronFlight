@@ -16,7 +16,7 @@ import {
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, isStuntDream, isIndustrialDream } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, isStuntDream, isIndustrialDream, isOutdoorDream } from "./custom-level";
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
 import { buildSpider, poseSpider } from "./hollow-view";
@@ -33,6 +33,7 @@ import { buildSpookyDream, poseSpookyDream } from "./spooky-dream-view";
 import { buildToyboxDream, poseToyboxDream } from "./toybox-dream-view";
 import { buildStuntDream, poseStuntDream } from "./stunt-dream-view";
 import { buildIndustrialDream, poseIndustrialDream } from "./industrial-dream-view";
+import { buildOutdoorDream, poseOutdoorDream } from "./outdoor-dream-view";
 import { buildChristmasDecor } from "./christmas-view";
 import { buildCandyLethal, poseCandyLethal } from "./candy-lethal-view";
 import { buildChristmasLethal, poseChristmasLethal } from "./christmas-lethal-view";
@@ -1050,6 +1051,8 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     model.pivots = buildStuntDream(root, h.kind);
   } else if (isIndustrialDream(h.kind)) {
     model.pivots = buildIndustrialDream(root, h.kind);
+  } else if (isOutdoorDream(h.kind)) {
+    model.pivots = buildOutdoorDream(root, h.kind);
   } else if (isChristmasDecor(h.kind)) {
     model.pivots = buildChristmasDecor(root, h.kind);
   } else if (isChristmasLethal(h.kind)) {
@@ -1473,6 +1476,8 @@ export class DungeonView extends T.Group {
         poseStuntDream(m.h.kind, m.pivots, s.time + m.h.phase);
       } else if (isIndustrialDream(m.h.kind)) {
         poseIndustrialDream(m.h.kind, m.pivots, s.time + m.h.phase);
+      } else if (isOutdoorDream(m.h.kind)) {
+        poseOutdoorDream(m.h.kind, m.pivots, s.time + m.h.phase);
       } else if (m.h.kind === "candle") {
         m.pivots.forEach((f, i) => {
           const base = (f.userData.base as number | undefined) ?? 1;

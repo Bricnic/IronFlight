@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, isStuntDream, isIndustrialDream, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, isStuntDream, isIndustrialDream, isOutdoorDream, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import { MUSHROOM } from "./mushroom-shape";
@@ -93,6 +93,12 @@ import {
   IND_SCRAP,
   IND_PIPE,
   IND_TANK,
+  OUT_PINE,
+  OUT_MESA,
+  OUT_TRAIL,
+  OUT_FALLS,
+  OUT_RAFT,
+  OUT_COMPASS,
   CANDY_PRESS,
   CHRISTMAS_ARCH,
   CHRISTMAS_TRUNK,
@@ -793,6 +799,22 @@ export class DungeonPhysics {
         solid(IND_PIPE.postW, IND_PIPE.postH, IND_PIPE.postD, IND_PIPE.postX, 0);
       } else if (h.kind === "slime-tank") {
         solid(IND_TANK.w, IND_TANK.h, IND_TANK.d, 0, 0);
+      }
+    } else if (isOutdoorDream(h.kind)) {
+      // Bumpable scenery only: outdoor kinds have no strike entry, so after() never fires.
+      if (h.kind === "pine-tree") {
+        solid(OUT_PINE.w, OUT_PINE.h, OUT_PINE.d, 0, 0);
+      } else if (h.kind === "mesa-rock") {
+        solid(OUT_MESA.w, OUT_MESA.h, OUT_MESA.d, 0, 0);
+      } else if (h.kind === "trail-arch") {
+        solid(OUT_TRAIL.postW, OUT_TRAIL.postH, OUT_TRAIL.postD, -OUT_TRAIL.postX, 0);
+        solid(OUT_TRAIL.postW, OUT_TRAIL.postH, OUT_TRAIL.postD, OUT_TRAIL.postX, 0);
+      } else if (h.kind === "waterfall") {
+        solid(OUT_FALLS.w, OUT_FALLS.h, OUT_FALLS.d, 0, 0);
+      } else if (h.kind === "raft-pond") {
+        solid(OUT_RAFT.w, OUT_RAFT.h, OUT_RAFT.d, 0, 0);
+      } else if (h.kind === "compass-rock") {
+        solid(OUT_COMPASS.w, OUT_COMPASS.h, OUT_COMPASS.d, 0, 0);
       }
     }
   }

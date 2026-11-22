@@ -137,7 +137,13 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
     theme:
       "Natural terrain courses with canyon drops, mountain rapids, desert obstacles and water crossings.",
     art: "/collections/outdoor-adventures.jpg",
-    trackIds: ["canyon-plunge", "sky-slide", "custom:sharkbite-run"],
+    trackIds: [
+      "canyon-plunge",
+      "sky-slide",
+      "custom:sharkbite-run",
+      "custom:outdoor-adventures-dream",
+    ],
+    dream: "custom:outdoor-adventures-dream",
   },
 ];
 

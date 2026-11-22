@@ -223,5 +223,10 @@
     "file": "/official/industrial-mayhem/Industrial Mayhem Dream.json",
     "thumbnail": "/tracks/industrial-mayhem-dream.png",
     "description": "Tour the foundry waterfront, thread the scrap lanes, pass the gear court and fly the coolant gap to the crusher finish."
+  },
+  {
+    "file": "/official/outdoor-adventures/Outdoor Adventures Dream.json",
+    "thumbnail": "/tracks/outdoor-adventures-dream.png",
+    "description": "Tour the canyon rim at sunset, thread the pine lanes, pass the mesa court and fly the gorge to the bridge finish."
   }
 ]

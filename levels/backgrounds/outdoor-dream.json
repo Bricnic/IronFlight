@@ -1,0 +1,46 @@
+{
+  "name": "outdoor-dream",
+  "sky": { "top": 8035016, "horizon": 15771832 },
+  "fog": { "color": 15771832, "near": 150, "far": 650 },
+  "sun": { "color": 16769967, "intensity": 2.4 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 1.25 },
+  "env": 0.6,
+  "shapes": [
+    {
+      "kind": "mesa",
+      "texture": "cracked_red_ground",
+      "count": 8,
+      "radius": 340,
+      "y": 0,
+      "size": [60, 110],
+      "seed": 161
+    },
+    {
+      "kind": "hill",
+      "texture": "coast_sand_rocks_02",
+      "count": 6,
+      "radius": 260,
+      "y": -4,
+      "size": [30, 55],
+      "seed": 162
+    },
+    {
+      "kind": "tree",
+      "texture": "bark_brown_01",
+      "count": 14,
+      "radius": 240,
+      "y": 0,
+      "size": [7, 13],
+      "seed": 163
+    }
+  ],
+  "clouds": {
+    "count": 8,
+    "y": [100, 160],
+    "radius": [250, 480],
+    "color": 16777215,
+    "opacity": 0.85,
+    "drift": 0.8,
+    "seed": 164
+  }
+}

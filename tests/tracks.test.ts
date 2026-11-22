@@ -75,6 +75,7 @@ it("steps to the next and previous level with wraparound", () => {
     "Toybox Adventures Dream",
     "Stunt Parks Dream",
     "Industrial Mayhem Dream",
+    "Outdoor Adventures Dream",
   ]);
   expect(stepTrackId("triple-loop", 1)).toBe("foundry-run");
   expect(stepTrackId("foundry-run", -1)).toBe("triple-loop");
@@ -192,14 +193,20 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:industrial-mayhem-dream", -1)).toBe(
     "custom:stunt-parks-dream",
   );
-  expect(stepTrackId("custom:industrial-mayhem-dream", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:industrial-mayhem-dream");
-  expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
-  expect(stepTrackId("custom:my-level", -1)).toBe(
+  expect(stepTrackId("custom:industrial-mayhem-dream", 1)).toBe(
+    "custom:outdoor-adventures-dream",
+  );
+  expect(stepTrackId("custom:outdoor-adventures-dream", -1)).toBe(
     "custom:industrial-mayhem-dream",
   );
+  expect(stepTrackId("custom:outdoor-adventures-dream", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:outdoor-adventures-dream");
+  expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
+  expect(stepTrackId("custom:my-level", -1)).toBe(
+    "custom:outdoor-adventures-dream",
+  );
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:industrial-mayhem-dream");
+  expect(stepTrackId(undefined, -1)).toBe("custom:outdoor-adventures-dream");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

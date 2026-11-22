@@ -260,6 +260,19 @@ export type IndustrialDreamKind = (typeof INDUSTRIAL_DREAM_PREFAB_KINDS)[number]
 export function isIndustrialDream(kind: string): kind is IndustrialDreamKind {
   return (INDUSTRIAL_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Outdoor-dream decor: solid non-lethal canyon scenery. */
+export const OUTDOOR_DREAM_PREFAB_KINDS = [
+  "pine-tree",
+  "mesa-rock",
+  "trail-arch",
+  "waterfall",
+  "raft-pond",
+  "compass-rock",
+] as const;
+export type OutdoorDreamKind = (typeof OUTDOOR_DREAM_PREFAB_KINDS)[number];
+export function isOutdoorDream(kind: string): kind is OutdoorDreamKind {
+  return (OUTDOOR_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -293,6 +306,7 @@ export const DUNGEON_PREFAB_KINDS = [
   ...TOYBOX_DREAM_PREFAB_KINDS,
   ...STUNT_DREAM_PREFAB_KINDS,
   ...INDUSTRIAL_DREAM_PREFAB_KINDS,
+  ...OUTDOOR_DREAM_PREFAB_KINDS,
 ] as const;
 /** Gold-star collectible: a spinning chrome star worth permanent garage glory. */
 export const DREAM_PREFAB_KINDS = ["wings"] as const;

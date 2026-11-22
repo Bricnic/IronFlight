@@ -166,6 +166,13 @@ export const IND_GEAR = { w: 10, h: 8, d: 3 } as const;
 export const IND_SCRAP = { w: 8, h: 5, d: 8 } as const;
 export const IND_PIPE = { postW: 1.5, postH: 12, postD: 1.5, postX: 10 } as const;
 export const IND_TANK = { w: 6, h: 8, d: 6 } as const;
+/** Outdoor-dream canyon scenery, shared by the collider builder and the artist. Solid but never lethal. */
+export const OUT_PINE = { w: 3, h: 12, d: 3 } as const;
+export const OUT_MESA = { w: 12, h: 10, d: 12 } as const;
+export const OUT_TRAIL = { postW: 1.5, postH: 10, postD: 1.5, postX: 10 } as const;
+export const OUT_FALLS = { w: 10, h: 14, d: 4 } as const;
+export const OUT_RAFT = { w: 9, h: 2, d: 9 } as const;
+export const OUT_COMPASS = { w: 3, h: 3, d: 3 } as const;
 /** Candy press-trap gantry posts; cars drive between them under the moving stamp. */
 export const CANDY_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6 } as const;
 /** Christmas decor furniture, shared by the collider builder and the artist. Solid but never lethal: christmas kinds have no DUNGEON_STRIKE entry. */
