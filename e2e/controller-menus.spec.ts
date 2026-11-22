@@ -45,6 +45,7 @@ test("left stick navigates pause and vehicle options, A picks a vehicle and B re
   await page.evaluate(() => window.__game!.select("easy"));
   await control(page, 0, 0, 9);
   await expect(page.locator("#pause-resume")).toBeFocused();
+  await control(page, 0, 1); await expect(page.locator("#pause-reset")).toBeFocused();
   await control(page, 0, 1); await expect(page.locator("#pause-levels")).toBeFocused();
   await control(page, 0, 0, 13); await expect(page.locator("#pause-vehicles")).toBeFocused();
   await control(page, 0, 0, 0);
@@ -97,4 +98,29 @@ test("B handbrakes during gameplay and releasing it restores controller accelera
   expect(speeds.released).toBeGreaterThan(1);
   await expect(page.locator("#level-select")).toBeHidden();
   await expect(page.locator("#pause-menu")).toBeHidden();
+});
+
+test("pause Reset level and Y restart the current course and resume; held Y does not repeat", async ({ page }, info) => {
+  await page.evaluate(() => { const g = window.__game!; g.startTrack("foundry-run"); g.advanceFrames(60, 1, {}); });
+  expect(await page.evaluate(() => window.__game!.snapshot().run?.elapsed)).toBeGreaterThan(0.5);
+  await control(page, 0, 0, 9);
+  await control(page, 0, 1); await expect(page.locator("#pause-reset")).toBeFocused();
+  await page.screenshot({ path: info.outputPath("pause-reset-level.png") });
+  await control(page, 0, 0, 0);
+  await expect(page.locator("#pause-menu")).toBeHidden();
+  expect(await page.evaluate(() => window.__game!.snapshot().run)).toMatchObject({ trackId: "foundry-run", status: "running", elapsed: 0 });
+  await page.clock.runFor(50);
+  expect(await page.evaluate(() => window.__game!.snapshot().run?.elapsed)).toBeGreaterThan(0);
+  await control(page, 0, 0, 9);
+  await control(page, 0, 0, 3, false);
+  await expect(page.locator("#pause-menu")).toBeHidden();
+  expect(await page.evaluate(() => window.__game!.snapshot().run?.elapsed)).toBe(0);
+  await page.evaluate(() => window.__game!.driveFrames(60, 1, () => ({}), false));
+  expect(await page.evaluate(() => window.__game!.snapshot().run?.elapsed)).toBeGreaterThan(0.5);
+  await control(page);
+  await control(page, 0, 0, 3);
+  expect(await page.evaluate(() => window.__game!.snapshot().run)).toMatchObject({ trackId: "foundry-run", status: "running", elapsed: 0 });
+  await page.getByRole("button", { name: "Select level", exact: true }).click();
+  await control(page, 0, 0, 3);
+  await expect(page.locator("#level-select")).toBeVisible();
 });

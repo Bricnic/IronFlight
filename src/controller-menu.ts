@@ -15,15 +15,17 @@ export class ControllerMenuInput {
   private repeatAt = 0;
   private confirmWas = false;
   private backWas = false;
+  private resetWas = false;
   private context: unknown = null;
   sample(pad: PadState | null, context: unknown, now: number) {
     const held = direction(pad), confirm = !!pad?.buttons[0]?.pressed, back = !!pad?.buttons[1]?.pressed;
-    const result = { direction: null as MenuDirection | null, confirm: !!context && confirm && !this.confirmWas, back: !!context && back && !this.backWas };
+    const reset = !!pad?.buttons[3]?.pressed;
+    const result = { direction: null as MenuDirection | null, confirm: !!context && confirm && !this.confirmWas, back: !!context && back && !this.backWas, reset: reset && !this.resetWas };
     if (context && held && (held !== this.previous || context !== this.context || now >= this.repeatAt)) {
       result.direction = held;
       this.repeatAt = now + (held !== this.previous || context !== this.context ? 350 : 120);
     }
-    this.previous = held; this.context = context; this.confirmWas = confirm; this.backWas = back;
+    this.previous = held; this.context = context; this.confirmWas = confirm; this.backWas = back; this.resetWas = reset;
     return result;
   }
 }

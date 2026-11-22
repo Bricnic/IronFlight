@@ -3,6 +3,13 @@ import { ControllerMenuInput, nextMenuIndex } from "../src/controller-menu";
 import type { PadState } from "../src/gamepad";
 
 const pad = (x = 0, y = 0, buttons: number[] = []): PadState => ({ axes: [x, y], buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: buttons.includes(i), value: buttons.includes(i) ? 1 : 0 })) });
+it("emits one reset for each Y press, including gameplay, without repeating while held", () => {
+  const input = new ControllerMenuInput();
+  expect(input.sample(pad(0, 0, [3]), null, 0).reset).toBe(true);
+  expect(input.sample(pad(0, 0, [3]), "pause", 100).reset).toBe(false);
+  input.sample(pad(), "pause", 200);
+  expect(input.sample(pad(0, 0, [3]), "pause", 300).reset).toBe(true);
+});
 it("navigates with either stick axis or the d-pad, ignoring stick drift", () => {
   for (const [p, direction] of [[pad(1), "right"], [pad(-1), "left"], [pad(0, 1), "down"], [pad(0, -1), "up"], [pad(0, 0, [15]), "right"], [pad(0, 0, [12]), "up"]] as const) {
     expect(new ControllerMenuInput().sample(p, "menu", 0).direction).toBe(direction);

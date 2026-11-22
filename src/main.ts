@@ -332,6 +332,11 @@ async function boot() {
       );
     else select(sim.stage);
   }
+  function resetCurrentLevel() {
+    closePause();
+    paused = false;
+    retryTrack();
+  }
   function stepLevel(dir: 1 | -1) {
     const run = sim.trackRun;
     startOfficial(
@@ -384,6 +389,7 @@ async function boot() {
   if (loadSettings().input === "controller") void proController.reconnect();
   pauseScreens = createPauseMenu(app, {
     onResume: closePause,
+    onReset: resetCurrentLevel,
     onLevelSelect: showLevelSelect,
     onVehicleSelect: showVehicleSelect,
     onNext: () => stepLevel(1),
@@ -1168,6 +1174,10 @@ async function boot() {
     padStartWas = startNow;
     const menu = activeControllerMenu();
     const menuInput = controllerMenuInput.sample(pad, menu, performance.now());
+    if (menuInput.reset && (surface === "play" || surface === "result" || pauseScreens.isVisible()) && !editing && !editorScreens?.isVisible()) {
+      resetCurrentLevel();
+      return;
+    }
     if (menu) {
       if (menuInput.direction) moveMenuFocus(menu, menuInput.direction);
       if (menuInput.back) {

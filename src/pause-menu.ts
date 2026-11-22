@@ -1,5 +1,6 @@
 export interface PauseMenuActions {
   onResume: () => void;
+  onReset: () => void;
   onLevelSelect: () => void;
   onVehicleSelect: () => void;
   onNext: () => void;
@@ -17,13 +18,14 @@ export function createPauseMenu(host: HTMLElement, actions: PauseMenuActions) {
   screen.setAttribute("aria-labelledby", "pause-title");
   const entries = [
     ["resume", "Resume game", actions.onResume],
+    ["reset", "Reset level", actions.onReset],
     ["levels", "Level select", actions.onLevelSelect],
     ["vehicles", "Vehicle select", actions.onVehicleSelect],
     ["next", "Next track", actions.onNext],
     ["prev", "Previous track", actions.onPrev],
     ["settings", "Settings", actions.onSettings],
   ] as const;
-  screen.innerHTML = `<div class="pause-card"><div class="eyebrow">PAUSED</div><h2 id="pause-title">Take a breath.</h2><div class="pause-actions">${entries.map(([id, label]) => `<button id="pause-${id}">${label}</button>`).join("")}</div><p class="pause-hint">D-pad or left stick to choose · A to confirm · B, Start or Escape to resume</p></div>`;
+  screen.innerHTML = `<div class="pause-card"><div class="eyebrow">PAUSED</div><h2 id="pause-title">Take a breath.</h2><div class="pause-actions">${entries.map(([id, label]) => `<button id="pause-${id}">${label}</button>`).join("")}</div><p class="pause-hint">D-pad or left stick to choose · A to confirm · Y to reset · B, Start or Escape to resume</p></div>`;
   for (const [id, , fn] of entries)
     screen.querySelector<HTMLButtonElement>(`#pause-${id}`)!.onclick = fn;
   host.append(screen);
