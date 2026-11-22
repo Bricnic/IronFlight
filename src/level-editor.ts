@@ -781,8 +781,10 @@ export function createLevelEditor(
       const defaultY = current.kind === "checkpoint" ? 2 : level.mode === "demolition" ? 1.5 : 1.7;
       numberField(props, "Y", "y", (item.y as number | undefined) ?? defaultY, commit("y"));
     }
-    if (current.kind === "checkpoint" && item.yaw !== undefined)
-      numberField(props, "Yaw", "yaw", item.yaw as number, commit("yaw"));
+    if (current.kind === "checkpoint") {
+      const yaw = numberField(props, "Yaw", "yaw", item.yaw as number | undefined, commit("yaw"));
+      yaw.placeholder = "Automatic (route direction)";
+    }
     if (current.kind === "target" && level.mode !== "demolition") {
       const typeRow = el("label", { class: "prop-row" }, "Type ");
       const type = el("select", { "data-prop": "kind" }) as HTMLSelectElement;
