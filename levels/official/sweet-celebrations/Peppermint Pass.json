@@ -1,6 +1,5 @@
 {
   "name": "Peppermint Pass",
-  "backgroundTemplate": "candy-midnight",
   "mode": "race",
   "spawn": {
     "x": -160,
@@ -393,9 +392,9 @@
     {
       "id": "pp-decor-0-5",
       "kind": "lollipop-stand",
-      "x": 5,
+      "x": -6.90071626087369,
       "y": 0,
-      "z": -106.5,
+      "z": -117.71864864062465,
       "yaw": 3.5
     },
     {
@@ -769,5 +768,6 @@
     "silver": 165,
     "bronze": 240
   },
-  "limit": 260
+  "limit": 260,
+  "backgroundTemplate": "candy-midnight"
 }
