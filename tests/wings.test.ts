@@ -94,3 +94,70 @@ it("orients the car from air yaw/pitch input while flying", () => {
   for (let i = 0; i < 30; i++) sim.step({ airYaw: 1, airPitch: 1 });
   expect(sim.flying).toBe(false);
 });
+
+it("Space/B jumps with wings on each press, without continuously lifting when held", () => {
+  const sim = flyingSim();
+  try {
+    sim.run(1);
+    sim.step({ handbrake: 1 });
+    const launch = sim.body.linvel().y;
+    expect(launch).toBeGreaterThan(10);
+    sim.run(0.2, { handbrake: 1 });
+    expect(sim.body.linvel().y).toBeLessThanOrEqual(launch);
+    sim.step({}); sim.step({ handbrake: 1 });
+    expect(sim.body.linvel().y).toBeGreaterThan(launch + 5);
+    sim.reset(); sim.run(1); sim.step({ handbrake: 1 });
+    expect(sim.body.linvel().y).toBeLessThan(1);
+  } finally { sim.dispose(); }
+});
+
+it("usual steering smoothly turns flight velocity and stops turning on release", () => {
+  const sim = flyingSim();
+  try {
+    sim.body.setTranslation({ x: 0, y: 60, z: 0 }, true);
+    sim.body.setLinvel({ x: 0, y: 0, z: 12 }, true);
+    sim.step({ steer: 1 });
+    expect(sim.body.angvel().y).toBeGreaterThan(0);
+    expect(sim.body.angvel().y).toBeLessThan(1);
+    sim.run(0.4, { steer: 1 });
+    expect(sim.body.linvel().x).toBeGreaterThan(2);
+    sim.run(0.5);
+    expect(Math.abs(sim.body.angvel().y)).toBeLessThan(0.05);
+    sim.run(0.4, { steer: -1 });
+    expect(sim.body.angvel().y).toBeLessThan(-0.5);
+  } finally { sim.dispose(); }
+});
+
+it("tunes jump, look and usual flight steering independently", () => {
+  const sample = (jump: number, look: number, steering: number) => {
+    const sim = flyingSim();
+    try {
+      sim.setTuning({ flightJumpStrength: jump, flightLookPower: look, flightSteerPower: steering });
+      sim.body.setTranslation({ x: 0, y: 60, z: 0 }, true);
+      sim.body.setLinvel({ x: 0, y: 0, z: 12 }, true);
+      sim.step({ handbrake: 1, airPitch: 0.5, steer: 0.5 });
+      return { y: sim.body.linvel().y, pitch: sim.body.angvel().x, yaw: sim.body.angvel().y };
+    } finally { sim.dispose(); }
+  };
+  const base = sample(1, 1, 1), jump = sample(2, 1, 1), look = sample(1, 2, 1), steering = sample(1, 1, 2);
+  expect(jump.y).toBeGreaterThan(base.y * 1.8);
+  expect(Math.abs(look.pitch)).toBeGreaterThan(Math.abs(base.pitch) * 1.8);
+  expect(steering.yaw).toBeGreaterThan(base.yaw * 1.8);
+  expect(look.yaw).toBeCloseTo(base.yaw);
+});
+
+it("uses mouse displacement without losing larger gestures to a stick-input clamp", () => {
+  const turns: number[] = [];
+  for (const delta of [0.09, 0.27]) {
+    const sim = flyingSim();
+    try {
+      sim.body.setTranslation({ x: 0, y: 60, z: 0 }, true);
+      sim.body.setLinvel({ x: 0, y: 0, z: 12 }, true);
+      sim.step({ airYawDelta: delta }); sim.run(0.5);
+      const q = sim.body.rotation();
+      turns.push(Math.atan2(2 * (q.x * q.z + q.w * q.y), 1 - 2 * (q.x * q.x + q.y * q.y)));
+    } finally { sim.dispose(); }
+  }
+  expect(turns[0]).toBeGreaterThan(0.15);
+  expect(turns[1]).toBeCloseTo(turns[0] * 3, 1);
+});

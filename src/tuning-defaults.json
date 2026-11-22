@@ -20,5 +20,8 @@
   "secondaryColor": 7044439,
   "canyonTopSpeed": 1,
   "slideWaterSpeed": 2.5,
-  "headlightDim": 1
+  "headlightDim": 1,
+  "flightJumpStrength": 1.5,
+  "flightLookPower": 2,
+  "flightSteerPower": 1
 }

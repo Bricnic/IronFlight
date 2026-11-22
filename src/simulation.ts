@@ -40,7 +40,6 @@ export const FLIGHT_DRAG = 0.3;
 export const FLIGHT_YAW_RATE = 1.6;
 export const FLIGHT_PITCH_RATE = 1.4;
 export const FLIGHT_ROLL_GAIN = 3;
-export const FLIGHT_ROLL_TORQUE = 4000;
 import { type PartState } from "./damage";
 import { getVehicle, type VehicleId } from "./vehicles";
 import {
@@ -78,6 +77,9 @@ export type Input = {
   airYaw?: number;
   /** Flight orientation while airborne with wings: +pitch pulls up. */
   airPitch?: number;
+  /** Mouse displacement in radians before the look-power multiplier. */
+  airYawDelta?: number;
+  airPitchDelta?: number;
 };
 let ready: Promise<void> | undefined;
 export function initPhysics() {
@@ -123,6 +125,8 @@ export class Simulation {
   airborneTicks = 0;
   landed = false;
   flying = false;
+  flapAt = -Infinity;
+  private flapHeld = false;
   status: "driving" | "finished" | "wrecked" = "driving";
   parts = new Map<string, PartState>();
   // The view supplies complete model bounds, including cage, arches and tread.
@@ -277,6 +281,8 @@ export class Simulation {
     this.world.removeCollider(collider, true);
   }
   reset(stage: Stage = this.stage) {
+    this.flapHeld = false;
+    this.flapAt = -Infinity;
     this.trackRun = undefined;
     this.courseTrack = ["lab", "easy", "medium", "hard"].includes(stage)
       ? undefined
@@ -585,7 +591,8 @@ export class Simulation {
     this.inFlames = false;
     const throttle = Math.max(-1, Math.min(1, input.throttle ?? 0)),
       brake = Math.max(0, Math.min(1, input.brake ?? 0)),
-      handbrake = Math.max(0, Math.min(1, input.handbrake ?? 0)),
+      flapButton = Math.max(0, Math.min(1, input.handbrake ?? 0)),
+      handbrake = this.trackRun?.wings && this.trackRun.status === "running" ? 0 : flapButton,
       steer = Math.max(-1, Math.min(1, input.steer ?? 0));
     const flow = this.slide.flowAt(this.body.translation());
     const strafeMode = this.courseTrack?.controls === "strafe" && !!flow;
@@ -724,6 +731,11 @@ export class Simulation {
     const flightMph = Math.hypot(speed.x, speed.y, speed.z) * 3.6;
     const wingsLive =
       !!this.trackRun?.wings && this.trackRun.status === "running";
+    if (wingsLive && flapButton > 0 && !this.flapHeld) {
+      this.body.applyImpulse(new Vector3(0, 12 * this.tuning.flightJumpStrength * this.body.mass(), 0), true);
+      this.flapAt = this.time;
+    }
+    this.flapHeld = flapButton > 0;
     const flying = wingsLive && !grounded;
     this.flying = flying;
     this.body.setGravityScale(
@@ -735,7 +747,9 @@ export class Simulation {
       true,
     );
     if (flying) {
-      // Drag bleeds horizontal speed only; vertical flight stays untouched.
+      // Lift settles after a flap, even at weightless cruising speed.
+      this.body.applyImpulse(new Vector3(0, -this.body.linvel().y * 0.8 * this.body.mass() * DT, 0), true);
+      // Horizontal drag lets the player coast down toward a landing.
       const hv = Math.hypot(speed.x, speed.z);
       if (hv > 1e-3) {
         this.body.applyImpulse(
@@ -766,31 +780,27 @@ export class Simulation {
           true,
         );
       }
-      const airYaw = Math.max(-1, Math.min(1, input.airYaw ?? 0));
-      const airPitch = Math.max(-1, Math.min(1, input.airPitch ?? 0));
+      const airYaw = Math.max(-1, Math.min(1, input.airYaw ?? 0)) * this.tuning.flightLookPower + steer * this.tuning.flightSteerPower;
+      const airPitch = Math.max(-1, Math.min(1, input.airPitch ?? 0)) * this.tuning.flightLookPower;
       const quat = new Quaternion().copy(this.body.rotation());
       const bodyUp = new Vector3(0, 1, 0).applyQuaternion(quat);
       // Bank isolated from pitch: the lean's forward component only.
       const lean = new Vector3()
         .crossVectors(bodyUp, new Vector3(0, 1, 0))
         .dot(forward);
-      if (airYaw !== 0 || airPitch !== 0) {
-        const up = new Vector3(0, 1, 0);
-        const right = new Vector3(1, 0, 0).applyQuaternion(quat);
-        const spin = new Vector3()
-          .addScaledVector(up, airYaw * FLIGHT_YAW_RATE)
-          .addScaledVector(right, -airPitch * FLIGHT_PITCH_RATE)
-          .addScaledVector(forward, lean * FLIGHT_ROLL_GAIN);
-        this.body.setAngvel({ x: spin.x, y: spin.y, z: spin.z }, true);
-      } else if (Math.abs(lean) > 1e-3) {
-        // Hands off: ease out bank only, never fight loops or tumbles.
-        this.body.applyTorqueImpulse(
-          forward
-            .clone()
-            .multiplyScalar(lean * FLIGHT_ROLL_TORQUE * DT),
-          true,
-        );
-      }
+      const up = new Vector3(0, 1, 0);
+      const right = new Vector3(1, 0, 0).applyQuaternion(quat);
+      const spin = new Vector3()
+        .addScaledVector(up, airYaw * FLIGHT_YAW_RATE + (input.airYawDelta ?? 0) * this.tuning.flightLookPower / DT)
+        .addScaledVector(right, -airPitch * FLIGHT_PITCH_RATE - (input.airPitchDelta ?? 0) * this.tuning.flightLookPower / DT)
+        .addScaledVector(forward, lean * FLIGHT_ROLL_GAIN);
+      // Ease in/out so keyboard and analog steering share the same smooth response.
+      const angular = new Vector3().copy(this.body.angvel()).lerp(spin, 1 - Math.exp(-12 * DT));
+      this.body.setAngvel(angular, true);
+      // Turn the horizontal flight path too, rather than merely rotating the model.
+      const velocity = new Vector3().copy(this.body.linvel());
+      velocity.applyAxisAngle(up, angular.y * DT);
+      this.body.setLinvel(velocity, true);
     }
     const driveShare = attachedWheels.filter(Boolean).length / 4;
     const braking =

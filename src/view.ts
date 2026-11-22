@@ -874,7 +874,7 @@ export class GameView {
       poseWings(
         this.truckWings,
         s.time,
-        !s.flying ? "fold" : flightMph < 20 ? "flap" : "glide",
+        s.time - s.flapAt < 0.4 ? "flap" : !s.flying ? "fold" : flightMph < 20 ? "flap" : "glide",
       );
     }
     // Mystic venom: cloudy green filter, fading over the last 0.4s.
