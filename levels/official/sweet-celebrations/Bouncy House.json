@@ -2,9 +2,9 @@
   "name": "Bouncy House",
   "mode": "race",
   "spawn": {
-    "x": 0,
+    "x": -10.779265650350368,
     "y": 16,
-    "z": 2,
+    "z": 1.3200331804436458,
     "yaw": 0
   },
   "checkpoints": [
