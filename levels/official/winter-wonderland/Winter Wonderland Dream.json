@@ -1,0 +1,954 @@
+{
+  "name": "Winter Wonderland Dream",
+  "mode": "race",
+  "spawn": {
+    "x": 0,
+    "y": 2,
+    "z": -20,
+    "yaw": 0
+  },
+  "checkpoints": [
+    {
+      "x": 0,
+      "z": 60
+    },
+    {
+      "x": -8,
+      "z": 120
+    },
+    {
+      "x": 8,
+      "z": 180
+    },
+    {
+      "x": 0,
+      "z": 250
+    },
+    {
+      "x": 0,
+      "z": 330
+    },
+    {
+      "x": 55,
+      "z": 380
+    },
+    {
+      "x": 0,
+      "z": 430
+    },
+    {
+      "x": 0,
+      "z": 480
+    }
+  ],
+  "solids": [
+    {
+      "id": "g-leg1",
+      "kind": "ground",
+      "x": 0,
+      "y": -0.6,
+      "z": 130,
+      "w": 120,
+      "h": 1.2,
+      "d": 340,
+      "color": 16777215,
+      "texture": "snow_01"
+    },
+    {
+      "id": "g-court",
+      "kind": "ground",
+      "x": 0,
+      "y": -0.6,
+      "z": 380,
+      "w": 240,
+      "h": 1.2,
+      "d": 160,
+      "color": 16777215,
+      "texture": "pond_ice_01"
+    },
+    {
+      "id": "g-leg2",
+      "kind": "ground",
+      "x": 0,
+      "y": -0.6,
+      "z": 482.5,
+      "w": 120,
+      "h": 1.2,
+      "d": 45,
+      "color": 16777215,
+      "texture": "snow_01"
+    },
+    {
+      "id": "g-land",
+      "kind": "ground",
+      "x": 0,
+      "y": -0.6,
+      "z": 632.5,
+      "w": 120,
+      "h": 1.2,
+      "d": 135,
+      "color": 16777215,
+      "texture": "snow_01"
+    },
+    {
+      "id": "r-rainbow-0",
+      "kind": "road",
+      "x": 0,
+      "y": 0.02,
+      "z": -2.5,
+      "w": 16,
+      "h": 0.06,
+      "d": 55,
+      "color": 16736110,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "r-rainbow-1",
+      "kind": "road",
+      "x": 0,
+      "y": 0.02,
+      "z": 52.5,
+      "w": 16,
+      "h": 0.06,
+      "d": 55,
+      "color": 16751949,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "r-rainbow-2",
+      "kind": "road",
+      "x": 0,
+      "y": 0.02,
+      "z": 107.5,
+      "w": 16,
+      "h": 0.06,
+      "d": 55,
+      "color": 16767309,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "r-rainbow-3",
+      "kind": "road",
+      "x": 0,
+      "y": 0.02,
+      "z": 162.5,
+      "w": 16,
+      "h": 0.06,
+      "d": 55,
+      "color": 7332744,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "r-rainbow-4",
+      "kind": "road",
+      "x": 0,
+      "y": 0.02,
+      "z": 217.5,
+      "w": 16,
+      "h": 0.06,
+      "d": 55,
+      "color": 6273279,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "r-rainbow-5",
+      "kind": "road",
+      "x": 0,
+      "y": 0.02,
+      "z": 272.5,
+      "w": 16,
+      "h": 0.06,
+      "d": 55,
+      "color": 11567103,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "r-arc-a",
+      "kind": "road",
+      "x": 27.5,
+      "y": 0.06,
+      "z": 347.5,
+      "w": 16,
+      "h": 0.06,
+      "d": 46,
+      "yaw": 0.7023,
+      "color": 12575730,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "r-arc-b",
+      "kind": "road",
+      "x": 27.5,
+      "y": 0.1,
+      "z": 412.5,
+      "w": 16,
+      "h": 0.06,
+      "d": 46,
+      "yaw": -0.7023,
+      "color": 12575730,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "r-leg2",
+      "kind": "road",
+      "x": 0,
+      "y": 0.06,
+      "z": 475,
+      "w": 16,
+      "h": 0.06,
+      "d": 60,
+      "color": 12575730,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "r-land",
+      "kind": "road",
+      "x": 0,
+      "y": 0.02,
+      "z": 630,
+      "w": 16,
+      "h": 0.06,
+      "d": 130,
+      "color": 12575730,
+      "texture": "candy_cream_01"
+    },
+    {
+      "id": "kicker",
+      "kind": "ramp",
+      "x": 0,
+      "y": 1,
+      "z": 495,
+      "w": 12,
+      "h": 1,
+      "d": 14,
+      "angle": -0.35,
+      "color": 15119957
+    },
+    {
+      "id": "gorge-l",
+      "kind": "barrier",
+      "x": -19,
+      "y": -6,
+      "z": 535,
+      "w": 6,
+      "h": 12,
+      "d": 60,
+      "color": 9346248
+    },
+    {
+      "id": "gorge-r",
+      "kind": "barrier",
+      "x": 19,
+      "y": -6,
+      "z": 535,
+      "w": 6,
+      "h": 12,
+      "d": 60,
+      "color": 9346248
+    },
+    {
+      "id": "knoll-1",
+      "kind": "barrier",
+      "x": 34,
+      "y": 1,
+      "z": 620,
+      "w": 22,
+      "h": 2,
+      "d": 22,
+      "color": 15265271,
+      "texture": "snow_01"
+    },
+    {
+      "id": "knoll-2",
+      "kind": "barrier",
+      "x": 34,
+      "y": 3,
+      "z": 620,
+      "w": 15,
+      "h": 2,
+      "d": 15,
+      "color": 15265271,
+      "texture": "snow_01"
+    },
+    {
+      "id": "knoll-3",
+      "kind": "barrier",
+      "x": 34,
+      "y": 5,
+      "z": 620,
+      "w": 8,
+      "h": 2,
+      "d": 8,
+      "color": 15265271,
+      "texture": "snow_01"
+    }
+  ],
+  "prefabs": [
+    {
+      "id": "gate-air",
+      "kind": "checkpoint",
+      "x": 0,
+      "z": 535,
+      "y": 12,
+      "resizeScale": 3
+    },
+    {
+      "id": "gate-600",
+      "kind": "checkpoint",
+      "x": 0,
+      "z": 600,
+      "y": 8,
+      "resizeScale": 2
+    },
+    {
+      "id": "gate-665",
+      "kind": "checkpoint",
+      "x": 0,
+      "z": 665
+    },
+    {
+      "id": "wings-1",
+      "kind": "wings",
+      "x": 4,
+      "z": 180,
+      "y": 2
+    },
+    {
+      "id": "gold-star-1",
+      "kind": "gold-star",
+      "x": 0,
+      "z": 535,
+      "y": 14
+    },
+    {
+      "id": "bunting-string-6",
+      "kind": "bunting-string",
+      "x": 0,
+      "z": 40,
+      "yaw": 0
+    },
+    {
+      "id": "bunting-string-7",
+      "kind": "bunting-string",
+      "x": 0,
+      "z": 110,
+      "yaw": 0
+    },
+    {
+      "id": "bunting-string-8",
+      "kind": "bunting-string",
+      "x": 0,
+      "z": 190,
+      "yaw": 0
+    },
+    {
+      "id": "bunting-string-9",
+      "kind": "bunting-string",
+      "x": 0,
+      "z": 260,
+      "yaw": 0
+    },
+    {
+      "id": "bunting-string-10",
+      "kind": "bunting-string",
+      "x": 0,
+      "z": 350,
+      "yaw": 0
+    },
+    {
+      "id": "bunting-string-11",
+      "kind": "bunting-string",
+      "x": 0,
+      "z": 420,
+      "yaw": 0
+    },
+    {
+      "id": "bunting-string-12",
+      "kind": "bunting-string",
+      "x": 0,
+      "z": 465,
+      "yaw": 0
+    },
+    {
+      "id": "balloon-pole-13",
+      "kind": "balloon-pole",
+      "x": -14,
+      "z": 20
+    },
+    {
+      "id": "balloon-pole-14",
+      "kind": "balloon-pole",
+      "x": 14,
+      "z": 20
+    },
+    {
+      "id": "balloon-pole-15",
+      "kind": "balloon-pole",
+      "x": -14,
+      "z": 90
+    },
+    {
+      "id": "balloon-pole-16",
+      "kind": "balloon-pole",
+      "x": 14,
+      "z": 90
+    },
+    {
+      "id": "balloon-pole-17",
+      "kind": "balloon-pole",
+      "x": -14,
+      "z": 160
+    },
+    {
+      "id": "balloon-pole-18",
+      "kind": "balloon-pole",
+      "x": 14,
+      "z": 160
+    },
+    {
+      "id": "balloon-pole-19",
+      "kind": "balloon-pole",
+      "x": -14,
+      "z": 230
+    },
+    {
+      "id": "balloon-pole-20",
+      "kind": "balloon-pole",
+      "x": 14,
+      "z": 230
+    },
+    {
+      "id": "balloon-pole-21",
+      "kind": "balloon-pole",
+      "x": -14,
+      "z": 310
+    },
+    {
+      "id": "balloon-pole-22",
+      "kind": "balloon-pole",
+      "x": 14,
+      "z": 310
+    },
+    {
+      "id": "balloon-pole-23",
+      "kind": "balloon-pole",
+      "x": -14,
+      "z": 390
+    },
+    {
+      "id": "balloon-pole-24",
+      "kind": "balloon-pole",
+      "x": 14,
+      "z": 390
+    },
+    {
+      "id": "balloon-pole-25",
+      "kind": "balloon-pole",
+      "x": -14,
+      "z": 460
+    },
+    {
+      "id": "balloon-pole-26",
+      "kind": "balloon-pole",
+      "x": 14,
+      "z": 460
+    },
+    {
+      "id": "balloon-pole-27",
+      "kind": "balloon-pole",
+      "x": -14,
+      "z": 590
+    },
+    {
+      "id": "balloon-pole-28",
+      "kind": "balloon-pole",
+      "x": 14,
+      "z": 590
+    },
+    {
+      "id": "balloon-pole-29",
+      "kind": "balloon-pole",
+      "x": -14,
+      "z": 650
+    },
+    {
+      "id": "balloon-pole-30",
+      "kind": "balloon-pole",
+      "x": 14,
+      "z": 650
+    },
+    {
+      "id": "frosted-pine-31",
+      "kind": "frosted-pine",
+      "x": -28,
+      "z": 60,
+      "yaw": -4
+    },
+    {
+      "id": "frosted-pine-32",
+      "kind": "frosted-pine",
+      "x": 30,
+      "z": 90,
+      "yaw": 0
+    },
+    {
+      "id": "frosted-pine-33",
+      "kind": "frosted-pine",
+      "x": -34,
+      "z": 140,
+      "yaw": -2
+    },
+    {
+      "id": "frosted-pine-34",
+      "kind": "frosted-pine",
+      "x": 28,
+      "z": 170,
+      "yaw": 0
+    },
+    {
+      "id": "frosted-pine-35",
+      "kind": "frosted-pine",
+      "x": -30,
+      "z": 220,
+      "yaw": 4
+    },
+    {
+      "id": "frosted-pine-36",
+      "kind": "frosted-pine",
+      "x": 34,
+      "z": 250,
+      "yaw": 2
+    },
+    {
+      "id": "frosted-pine-37",
+      "kind": "frosted-pine",
+      "x": -50,
+      "z": 330,
+      "yaw": -2
+    },
+    {
+      "id": "frosted-pine-38",
+      "kind": "frosted-pine",
+      "x": 70,
+      "z": 350,
+      "yaw": 0
+    },
+    {
+      "id": "frosted-pine-39",
+      "kind": "frosted-pine",
+      "x": -70,
+      "z": 410,
+      "yaw": -2
+    },
+    {
+      "id": "frosted-pine-40",
+      "kind": "frosted-pine",
+      "x": 70,
+      "z": 430,
+      "yaw": 2
+    },
+    {
+      "id": "frosted-pine-41",
+      "kind": "frosted-pine",
+      "x": -30,
+      "z": 480,
+      "yaw": 0
+    },
+    {
+      "id": "frosted-pine-42",
+      "kind": "frosted-pine",
+      "x": 30,
+      "z": 500,
+      "yaw": 2
+    },
+    {
+      "id": "frosted-pine-43",
+      "kind": "frosted-pine",
+      "x": -28,
+      "z": 590,
+      "yaw": 4
+    },
+    {
+      "id": "frosted-pine-44",
+      "kind": "frosted-pine",
+      "x": 28,
+      "z": 640,
+      "yaw": 2
+    },
+    {
+      "id": "lollipop-stand-45",
+      "kind": "lollipop-stand",
+      "x": -13,
+      "z": 70
+    },
+    {
+      "id": "lollipop-stand-46",
+      "kind": "lollipop-stand",
+      "x": 13,
+      "z": 70
+    },
+    {
+      "id": "lollipop-stand-47",
+      "kind": "lollipop-stand",
+      "x": -13,
+      "z": 140
+    },
+    {
+      "id": "lollipop-stand-48",
+      "kind": "lollipop-stand",
+      "x": 13,
+      "z": 140
+    },
+    {
+      "id": "lollipop-stand-49",
+      "kind": "lollipop-stand",
+      "x": -13,
+      "z": 210
+    },
+    {
+      "id": "lollipop-stand-50",
+      "kind": "lollipop-stand",
+      "x": 13,
+      "z": 210
+    },
+    {
+      "id": "lollipop-stand-51",
+      "kind": "lollipop-stand",
+      "x": -13,
+      "z": 270
+    },
+    {
+      "id": "lollipop-stand-52",
+      "kind": "lollipop-stand",
+      "x": 13,
+      "z": 270
+    },
+    {
+      "id": "lollipop-stand-53",
+      "kind": "lollipop-stand",
+      "x": -13,
+      "z": 580
+    },
+    {
+      "id": "lollipop-stand-54",
+      "kind": "lollipop-stand",
+      "x": 13,
+      "z": 580
+    },
+    {
+      "id": "lollipop-stand-55",
+      "kind": "lollipop-stand",
+      "x": -13,
+      "z": 620
+    },
+    {
+      "id": "lollipop-stand-56",
+      "kind": "lollipop-stand",
+      "x": 13,
+      "z": 620
+    },
+    {
+      "id": "gingerbread-house-57",
+      "kind": "gingerbread-house",
+      "x": -45,
+      "z": 340,
+      "yaw": 0.4
+    },
+    {
+      "id": "gingerbread-house-58",
+      "kind": "gingerbread-house",
+      "x": 70,
+      "z": 400,
+      "yaw": -0.4
+    },
+    {
+      "id": "gingerbread-house-59",
+      "kind": "gingerbread-house",
+      "x": -50,
+      "z": 420,
+      "yaw": 0.2
+    },
+    {
+      "id": "gingerbread-house-60",
+      "kind": "gingerbread-house",
+      "x": 25,
+      "z": 290,
+      "yaw": 0
+    },
+    {
+      "id": "castle-finish",
+      "kind": "gingerbread-castle",
+      "x": -40,
+      "z": 640
+    },
+    {
+      "id": "gift-box-62",
+      "kind": "gift-box",
+      "x": -14,
+      "z": 348
+    },
+    {
+      "id": "gift-box-63",
+      "kind": "gift-box",
+      "x": 32,
+      "z": 334
+    },
+    {
+      "id": "gift-box-64",
+      "kind": "gift-box",
+      "x": -14,
+      "z": 412
+    },
+    {
+      "id": "gift-box-65",
+      "kind": "gift-box",
+      "x": 32,
+      "z": 428
+    },
+    {
+      "id": "christmas-lantern-66",
+      "kind": "christmas-lantern",
+      "x": 48,
+      "z": 352
+    },
+    {
+      "id": "christmas-lantern-67",
+      "kind": "christmas-lantern",
+      "x": 40,
+      "z": 380
+    },
+    {
+      "id": "christmas-lantern-68",
+      "kind": "christmas-lantern",
+      "x": 0,
+      "z": 344
+    },
+    {
+      "id": "christmas-lantern-69",
+      "kind": "christmas-lantern",
+      "x": 0,
+      "z": 416
+    },
+    {
+      "id": "peppermint-buoy-70",
+      "kind": "peppermint-buoy",
+      "x": -16,
+      "z": 356
+    },
+    {
+      "id": "peppermint-buoy-71",
+      "kind": "peppermint-buoy",
+      "x": -20,
+      "z": 384
+    },
+    {
+      "id": "peppermint-buoy-72",
+      "kind": "peppermint-buoy",
+      "x": -16,
+      "z": 408
+    },
+    {
+      "id": "peppermint-buoy-73",
+      "kind": "peppermint-buoy",
+      "x": 70,
+      "z": 360
+    },
+    {
+      "id": "peppermint-buoy-74",
+      "kind": "peppermint-buoy",
+      "x": 72,
+      "z": 400
+    },
+    {
+      "id": "ski-lift-tower-75",
+      "kind": "ski-lift-tower",
+      "x": -13,
+      "z": 455
+    },
+    {
+      "id": "ski-lift-tower-76",
+      "kind": "ski-lift-tower",
+      "x": 13,
+      "z": 455
+    },
+    {
+      "id": "ski-lift-tower-77",
+      "kind": "ski-lift-tower",
+      "x": -13,
+      "z": 475
+    },
+    {
+      "id": "ski-lift-tower-78",
+      "kind": "ski-lift-tower",
+      "x": 13,
+      "z": 475
+    },
+    {
+      "id": "ski-lift-tower-79",
+      "kind": "ski-lift-tower",
+      "x": -13,
+      "z": 495
+    },
+    {
+      "id": "ski-lift-tower-80",
+      "kind": "ski-lift-tower",
+      "x": 13,
+      "z": 495
+    },
+    {
+      "id": "gift-box-81",
+      "kind": "gift-box",
+      "x": -14,
+      "z": 30
+    },
+    {
+      "id": "gift-box-82",
+      "kind": "gift-box",
+      "x": 14,
+      "z": 55
+    },
+    {
+      "id": "gift-box-83",
+      "kind": "gift-box",
+      "x": -14,
+      "z": 250
+    },
+    {
+      "id": "gift-box-84",
+      "kind": "gift-box",
+      "x": 14,
+      "z": 275
+    },
+    {
+      "id": "gift-box-85",
+      "kind": "gift-box",
+      "x": -14,
+      "z": 610
+    },
+    {
+      "id": "gift-box-86",
+      "kind": "gift-box",
+      "x": 14,
+      "z": 635
+    },
+    {
+      "id": "sled-87",
+      "kind": "sled",
+      "x": -16,
+      "z": 100,
+      "yaw": 0.2
+    },
+    {
+      "id": "sled-88",
+      "kind": "sled",
+      "x": 16,
+      "z": 150,
+      "yaw": 0.2
+    },
+    {
+      "id": "sled-89",
+      "kind": "sled",
+      "x": -16,
+      "z": 200,
+      "yaw": 0.2
+    },
+    {
+      "id": "sled-90",
+      "kind": "sled",
+      "x": 16,
+      "z": 290,
+      "yaw": 0.2
+    },
+    {
+      "id": "sled-91",
+      "kind": "sled",
+      "x": -16,
+      "z": 610,
+      "yaw": 0.2
+    },
+    {
+      "id": "sled-92",
+      "kind": "sled",
+      "x": 16,
+      "z": 650,
+      "yaw": 0.2
+    },
+    {
+      "id": "snowman-93",
+      "kind": "snowman",
+      "x": -20,
+      "z": 120
+    },
+    {
+      "id": "snowman-94",
+      "kind": "snowman",
+      "x": 20,
+      "z": 220
+    },
+    {
+      "id": "snowman-95",
+      "kind": "snowman",
+      "x": -22,
+      "z": 320
+    },
+    {
+      "id": "snowman-96",
+      "kind": "snowman",
+      "x": 22,
+      "z": 560
+    },
+    {
+      "id": "snowman-97",
+      "kind": "snowman",
+      "x": -20,
+      "z": 620
+    },
+    {
+      "id": "arch-1",
+      "kind": "candy-cane-arch",
+      "x": 0,
+      "z": 473
+    },
+    {
+      "id": "peppermint-buoy-99",
+      "kind": "peppermint-buoy",
+      "x": 28,
+      "z": 610,
+      "y": 2
+    },
+    {
+      "id": "sled-100",
+      "kind": "sled",
+      "x": 40,
+      "z": 628,
+      "y": 2,
+      "yaw": -0.3
+    },
+    {
+      "id": "christmas-tree-101",
+      "kind": "christmas-tree",
+      "x": 34,
+      "z": 620,
+      "y": 6
+    },
+    {
+      "id": "gift-box-102",
+      "kind": "gift-box",
+      "x": -30,
+      "z": 660
+    },
+    {
+      "id": "gift-box-103",
+      "kind": "gift-box",
+      "x": 30,
+      "z": 660
+    }
+  ],
+  "medals": {
+    "gold": 86,
+    "silver": 125,
+    "bronze": 172
+  },
+  "limit": 240,
+  "backgroundTemplate": "winter-dream"
+}

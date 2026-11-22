@@ -16,7 +16,7 @@ import {
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isSweetDream } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isSweetDream, isWinterDream } from "./custom-level";
 import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
 import { buildSpider, poseSpider } from "./hollow-view";
@@ -28,6 +28,7 @@ import { buildGauntletMachine } from "./gauntlet-view";
 import { buildFlagpole, buildGuidedPipe } from "./guided-pipe-view";
 import { buildCandyDecor } from "./candy-view";
 import { buildSweetDream, poseSweetDream } from "./sweet-dream-view";
+import { buildWinterDream, poseWinterDream } from "./winter-dream-view";
 import { buildChristmasDecor } from "./christmas-view";
 import { buildCandyLethal, poseCandyLethal } from "./candy-lethal-view";
 import { buildChristmasLethal, poseChristmasLethal } from "./christmas-lethal-view";
@@ -1035,6 +1036,8 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     model.pivots = buildCandyDecor(root, h.kind);
   } else if (isSweetDream(h.kind)) {
     model.pivots = buildSweetDream(root, h.kind);
+  } else if (isWinterDream(h.kind)) {
+    model.pivots = buildWinterDream(root, h.kind);
   } else if (isChristmasDecor(h.kind)) {
     model.pivots = buildChristmasDecor(root, h.kind);
   } else if (isChristmasLethal(h.kind)) {
@@ -1448,6 +1451,8 @@ export class DungeonView extends T.Group {
         poseCandyLethal(m.h.kind, m.pivots, open);
       } else if (isSweetDream(m.h.kind)) {
         poseSweetDream(m.h.kind, m.pivots, s.time + m.h.phase);
+      } else if (isWinterDream(m.h.kind)) {
+        poseWinterDream(m.h.kind, m.pivots, s.time + m.h.phase);
       } else if (m.h.kind === "candle") {
         m.pivots.forEach((f, i) => {
           const base = (f.userData.base as number | undefined) ?? 1;

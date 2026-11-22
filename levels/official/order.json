@@ -198,5 +198,10 @@
     "file": "/official/sweet-celebrations/Sweet Celebrations Dream.json",
     "thumbnail": "/tracks/sweet-celebrations-dream.png",
     "description": "Slalom the gumdrop forest, circle the grand cake, earn wings and fly the chocolate gap to the cherry-hill finish."
+  },
+  {
+    "file": "/official/winter-wonderland/Winter Wonderland Dream.json",
+    "thumbnail": "/tracks/winter-wonderland-dream.png",
+    "description": "Tour the gingerbread village at dusk, ring the frozen pond, ride under the ski lift and fly the gorge to the castle finish."
   }
 ]

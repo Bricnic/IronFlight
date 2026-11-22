@@ -5,7 +5,7 @@ import { officialFileTracks } from "../src/official-levels";
 
 it("secret hints cover every level exactly once, sorted A-Z", () => {
   const lines = readFileSync("secret_hints.txt", "utf8").trim().split(/\r?\n/);
-  expect(lines).toHaveLength(48);
+  expect(lines).toHaveLength(49);
   const names = lines.map((line) => {
     const sep = line.indexOf(":");
     expect(sep, `level name and hint in "${line}"`).toBeGreaterThan(0);
@@ -21,5 +21,5 @@ it("secret hints cover every level exactly once, sorted A-Z", () => {
   // Covers every legacy + official display name exactly once.
   const expected = [...TRACKS, ...officialFileTracks].map((t) => t.name);
   expect(new Set(names)).toEqual(new Set(expected));
-  expect(new Set(names).size).toBe(48);
+  expect(new Set(names).size).toBe(49);
 });

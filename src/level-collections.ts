@@ -53,7 +53,9 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
       "custom:sleigh-bell-sprint",
       "custom:north-pole-summit",
       "custom:frostfire-pass",
+      "custom:winter-wonderland-dream",
     ],
+    dream: "custom:winter-wonderland-dream",
   },
   {
     id: "spooky-places",

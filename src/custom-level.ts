@@ -22,6 +22,7 @@ export const TEXTURE_IDS = [
   "crystal_vein_01",
   "pink_frosting_01",
   "candy_cream_01",
+  "pond_ice_01",
 ] as const;
 export type TextureId = (typeof TEXTURE_IDS)[number];
 export const PROP_PREFAB_KINDS = [
@@ -195,6 +196,19 @@ export type SweetDreamKind = (typeof SWEET_DREAM_PREFAB_KINDS)[number];
 export function isSweetDream(kind: string): kind is SweetDreamKind {
   return (SWEET_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
 }
+/** Winter-dream decor: solid non-lethal gingerbread scenery. */
+export const WINTER_DREAM_PREFAB_KINDS = [
+  "gingerbread-house",
+  "gingerbread-castle",
+  "frosted-pine",
+  "peppermint-buoy",
+  "ski-lift-tower",
+  "sled",
+] as const;
+export type WinterDreamKind = (typeof WINTER_DREAM_PREFAB_KINDS)[number];
+export function isWinterDream(kind: string): kind is WinterDreamKind {
+  return (WINTER_DREAM_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 export const DUNGEON_PREFAB_KINDS = [
   "hands",
   "scissors",
@@ -223,6 +237,7 @@ export const DUNGEON_PREFAB_KINDS = [
   ...CHRISTMAS_PREFAB_KINDS,
   ...CHRISTMAS_LETHAL_PREFAB_KINDS,
   ...SWEET_DREAM_PREFAB_KINDS,
+  ...WINTER_DREAM_PREFAB_KINDS,
 ] as const;
 /** Gold-star collectible: a spinning chrome star worth permanent garage glory. */
 export const DREAM_PREFAB_KINDS = ["wings"] as const;

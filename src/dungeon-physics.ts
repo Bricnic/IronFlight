@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import { MUSHROOM } from "./mushroom-shape";
@@ -65,6 +65,12 @@ import {
   SWEET_CUPCAKE,
   SWEET_GIFT,
   SWEET_HAT,
+  WINTER_HOUSE,
+  WINTER_CASTLE,
+  WINTER_PINE,
+  WINTER_BUOY,
+  WINTER_TOWER,
+  WINTER_SLED,
   CANDY_PRESS,
   CHRISTMAS_ARCH,
   CHRISTMAS_TRUNK,
@@ -688,6 +694,21 @@ export class DungeonPhysics {
         solid(SWEET_GIFT.w, SWEET_GIFT.h, SWEET_GIFT.d, 0, 0);
       } else if (h.kind === "party-hat") {
         solid(SWEET_HAT.w, SWEET_HAT.h, SWEET_HAT.d, 0, 0);
+      }
+    } else if (isWinterDream(h.kind)) {
+      // Bumpable scenery only: winter kinds have no strike entry, so after() never fires.
+      if (h.kind === "gingerbread-house") {
+        solid(WINTER_HOUSE.w, WINTER_HOUSE.h, WINTER_HOUSE.d, 0, 0);
+      } else if (h.kind === "gingerbread-castle") {
+        solid(WINTER_CASTLE.w, WINTER_CASTLE.h, WINTER_CASTLE.d, 0, 0);
+      } else if (h.kind === "frosted-pine") {
+        solid(WINTER_PINE.w, WINTER_PINE.h, WINTER_PINE.d, 0, 0);
+      } else if (h.kind === "peppermint-buoy") {
+        solid(WINTER_BUOY.w, WINTER_BUOY.h, WINTER_BUOY.d, 0, 0);
+      } else if (h.kind === "ski-lift-tower") {
+        solid(WINTER_TOWER.w, WINTER_TOWER.h, WINTER_TOWER.d, 0, 0);
+      } else if (h.kind === "sled") {
+        solid(WINTER_SLED.w, WINTER_SLED.h, WINTER_SLED.d, 0, 0);
       }
     }
   }

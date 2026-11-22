@@ -133,6 +133,13 @@ export const SWEET_BALLOON_POLE = { w: 1, h: 9, d: 1 } as const;
 export const SWEET_CUPCAKE = { w: 3.4, h: 4.2, d: 3.4 } as const;
 export const SWEET_GIFT = { w: 3.2, h: 2.6, d: 3.2 } as const;
 export const SWEET_HAT = { w: 3, h: 6.5, d: 3 } as const;
+/** Winter-dream gingerbread decor, shared by the collider builder and the artist. Solid but never lethal. */
+export const WINTER_HOUSE = { w: 10, h: 8, d: 9 } as const;
+export const WINTER_CASTLE = { w: 16, h: 22, d: 14 } as const;
+export const WINTER_PINE = { w: 2.4, h: 12, d: 2.4 } as const;
+export const WINTER_BUOY = { w: 2.5, h: 3, d: 2.5 } as const;
+export const WINTER_TOWER = { w: 2, h: 16, d: 2 } as const;
+export const WINTER_SLED = { w: 3, h: 1.5, d: 5 } as const;
 /** Candy press-trap gantry posts; cars drive between them under the moving stamp. */
 export const CANDY_PRESS = { postW: 1.8, postH: 9, postD: 1.8, postX: 6 } as const;
 /** Christmas decor furniture, shared by the collider builder and the artist. Solid but never lethal: christmas kinds have no DUNGEON_STRIKE entry. */

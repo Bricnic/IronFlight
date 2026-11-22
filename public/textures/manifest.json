@@ -500,6 +500,31 @@
           "bytes": 15848
         }
       }
+    },
+    {
+      "id": "pond_ice_01",
+      "source": "Gemini 2.5-flash-image (seamless frozen pond ice)",
+      "license": "Generated",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/pond_ice_01_diffuse.jpg",
+          "url": "Gemini 2.5-flash-image (seamless frozen pond ice)",
+          "sha256": "9174c3dc45f06952516fb2e8fafdb17af741e37a76de7e818bfa9946d3ccc604",
+          "bytes": 163839
+        },
+        "normal": {
+          "file": "/textures/pond_ice_01_normal.jpg",
+          "url": "Gemini 2.5-flash-image (seamless frozen pond ice)",
+          "sha256": "c4999d01bce7b008a99620be7f678ae356990a9829ef6cf039918de17a29d896",
+          "bytes": 167325
+        },
+        "roughness": {
+          "file": "/textures/pond_ice_01_roughness.jpg",
+          "url": "Gemini 2.5-flash-image (seamless frozen pond ice)",
+          "sha256": "07ea2b1d7a618e87aee39d34335c7eedf545663151f2640aa6d8770467300751",
+          "bytes": 89983
+        }
+      }
     }
   ]
 }

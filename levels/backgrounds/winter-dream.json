@@ -1,0 +1,85 @@
+{
+  "name": "winter-dream",
+  "sky": {
+    "top": 5983134,
+    "horizon": 13212648
+  },
+  "fog": {
+    "color": 12029908,
+    "near": 150,
+    "far": 700
+  },
+  "sun": {
+    "color": 16771314,
+    "intensity": 2
+  },
+  "hemi": {
+    "sky": 14271730,
+    "ground": 5917294,
+    "intensity": 1.2
+  },
+  "env": 0.5,
+  "shapes": [
+    {
+      "kind": "hill",
+      "count": 8,
+      "radius": 460,
+      "y": 0,
+      "size": [
+        50,
+        80
+      ],
+      "seed": 711,
+      "color": 15265271
+    },
+    {
+      "kind": "hill",
+      "count": 6,
+      "radius": 580,
+      "y": 0,
+      "size": [
+        80,
+        120
+      ],
+      "seed": 712,
+      "color": 9346248
+    },
+    {
+      "kind": "balloon",
+      "count": 8,
+      "radius": 300,
+      "y": 45,
+      "size": [
+        8,
+        14
+      ],
+      "seed": 714
+    },
+    {
+      "kind": "hill",
+      "count": 8,
+      "radius": 660,
+      "y": 0,
+      "size": [
+        90,
+        140
+      ],
+      "seed": 713,
+      "color": 14477045
+    }
+  ],
+  "clouds": {
+    "count": 8,
+    "y": [
+      140,
+      200
+    ],
+    "radius": [
+      250,
+      550
+    ],
+    "color": 15919354,
+    "opacity": 0.6,
+    "drift": 2
+  }
+}

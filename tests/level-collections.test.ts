@@ -50,7 +50,7 @@ function goldRun(trackId: string) {
   };
 }
 
-it("covers all 48 official levels in 7 collections with no duplicates", () => {
+it("covers all 49 official levels in 7 collections with no duplicates", () => {
   expect(LEVEL_COLLECTIONS).toHaveLength(7);
   expect(LEVEL_COLLECTIONS.map((c) => c.name)).toEqual([
     "Sweet Celebrations",
@@ -62,8 +62,8 @@ it("covers all 48 official levels in 7 collections with no duplicates", () => {
     "Outdoor Adventures",
   ]);
   const ids = collectionOrderIds();
-  expect(ids).toHaveLength(48);
-  expect(new Set(ids).size).toBe(48);
+  expect(ids).toHaveLength(49);
+  expect(new Set(ids).size).toBe(49);
   expect(new Set(ids)).toEqual(new Set(officialTracks.map((t) => t.id)));
   for (const track of officialTracks)
     expect(collectionForTrack(track.id)?.trackIds).toContain(track.id);
@@ -77,7 +77,7 @@ it("ships one artwork file per collection", () => {
 });
 
 it("stores every official file level in a collection subfolder", () => {
-  expect(officialFileTracks).toHaveLength(40);
+  expect(officialFileTracks).toHaveLength(41);
   for (const track of officialFileTracks) {
     expect(track.sourceFile?.startsWith("levels/official/")).toBe(true);
     const rel = track.sourceFile!.slice("levels/official/".length);
@@ -179,6 +179,14 @@ it("locks the dream level until every other course has gold and stars", () => {
   // Collections without a dream level are unaffected.
   const plain: LevelCollection = { ...dreamy, dream: undefined };
   expect(isDreamUnlocked(plain, scores, starBank)).toBe(true);
+});
+
+it("pins every declared dream level last in its collection", () => {
+  for (const c of LEVEL_COLLECTIONS) {
+    if (!c.dream) continue;
+    expect(c.trackIds.at(-1)).toBe(c.dream);
+    expect(getTrack(c.dream).name).toBe(`${c.name} Dream`);
+  }
 });
 
 it("remembers which unlock animations have fully played", () => {
