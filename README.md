@@ -67,7 +67,7 @@ The game runs in-headset through the Quest Browser over WebXR (`immersive-vr`, n
 npm run dev:https
 ```
 
-Then open `https://<your-lan-ip>:5173` in the Quest Browser on the same network (accept the self-signed certificate warning), start any level, and press **ENTER VR**. `localhost`/`127.0.0.1` does not work from the headset, and the button only appears while driving on a WebXR-capable browser.
+Or double-click `host_local_network_server.cmd`: it installs dependencies if needed, opens the firewall port (accept the admin prompt), prints this PC's LAN address, and starts the HTTPS server. Then open `https://<your-lan-ip>:5173` in the Quest Browser on the same network (accept the self-signed certificate warning), start any level, and press **ENTER VR**. `localhost`/`127.0.0.1` does not work from the headset, and the button only appears while driving on a WebXR-capable browser. If the headset cannot reach the page, allow the port through Windows Firewall once from an elevated PowerShell: `New-NetFirewallRule -DisplayName "IronFlight Vite HTTPS (Quest)" -Direction Inbound -LocalPort 5173 -Protocol TCP -Action Allow -Profile Private`.
 
 Touch controls: left stick steers (right stick is a fallback), right trigger throttles, left trigger brakes, left squeeze is the handbrake (wing flap while flying), right stick orients dream flight, and either thumbstick click pauses. A Bluetooth gamepad paired to the Quest also drives with zero setup. Thumbstick click unpauses; the in-headset dashboard shows speed, time, progress, stars, and PAUSED/WINGS/FLYING. Checkpoint, star, and dream-unlock celebrations flash in-headset; finishing or wrecking drops back to the 2D result screen after a beat (or exit anytime from the headset system menu).
 

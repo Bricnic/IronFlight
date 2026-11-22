@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "dev:https": "vite --host 0.0.0.0 --https",
+    "dev:https": "set XRCERT=1&& vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "test:e2e": "playwright test",
@@ -21,6 +21,7 @@
     "@playwright/test": "1.56.1",
     "@types/node": "24.19.2",
     "@types/three": "0.180.0",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "prettier": "3.6.2",
     "typescript": "5.9.3",
     "vite": "7.3.7",
