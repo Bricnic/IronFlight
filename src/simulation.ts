@@ -28,7 +28,7 @@ import { solidQuaternion } from "./euler";
 import { DT } from "./clock";
 import { ROUTES, routeSolids } from "./routes";
 import { DEFAULT_WEATHER, isPermanentNight, type WeatherFlags } from "./weather";
-import { POISON } from "./dungeon-hazards";
+import { CONFUSION, POISON } from "./dungeon-hazards";
 /** Wet-asphalt grip multiplier: softer yaw bite, longer slides. */
 export const RAIN_GRIP_SCALE = 0.55;
 /** Dream wings: weightless at/above this displayed speed, third gravity below. */
@@ -165,6 +165,8 @@ export class Simulation {
   poisonUntil = 0;
   poisonRemaining = 0;
   poisonTaken = 0;
+  /** Alien confusion: inverted steering plus a wobble until this time. */
+  confusedUntil = 0;
   inFlames = false;
   private lastSmokeAt = -Infinity;
   get scorch() {
@@ -188,8 +190,18 @@ export class Simulation {
   bounced = false;
   setTuning(values: Partial<Tuning>) {
     Object.assign(this.tuning, validateTuning(values));
-    if (this.world)
-      this.world.gravity = { x: 0, y: -9.81 * this.tuning.gravity, z: 0 };
+    if (this.world) this.world.gravity = this.effectiveGravity();
+  }
+  /** World gravity after tuning and the level's gravityScale multiplier. */
+  effectiveGravity() {
+    return {
+      x: 0,
+      y:
+        -9.81 *
+        this.tuning.gravity *
+        (this.courseTrack?.custom?.gravityScale ?? 1),
+      z: 0,
+    };
   }
   get partDefs() {
     return getVehicle(this.vehicleId).parts;
@@ -314,6 +326,7 @@ export class Simulation {
     this.poisonUntil = 0;
     this.poisonRemaining = 0;
     this.poisonTaken = 0;
+    this.confusedUntil = 0;
     this.inFlames = false;
     this.lastSmokeAt = -Infinity;
     this.steeringAngle = 0;
@@ -324,11 +337,7 @@ export class Simulation {
     this.loopApex = false;
     this.loopCompleted = false;
     this.bounced = false;
-    this.world = new RAPIER.World({
-      x: 0,
-      y: -9.81 * this.tuning.gravity,
-      z: 0,
-    });
+    this.world = new RAPIER.World(this.effectiveGravity());
     this.world.timestep = DT;
     this.parts.clear();
     this.lastImpact = -1;
@@ -593,7 +602,7 @@ export class Simulation {
       brake = Math.max(0, Math.min(1, input.brake ?? 0)),
       flapButton = Math.max(0, Math.min(1, input.handbrake ?? 0)),
       handbrake = this.trackRun?.wings && this.trackRun.status === "running" ? 0 : flapButton,
-      steer = Math.max(-1, Math.min(1, input.steer ?? 0));
+      steer = Math.max(-1, Math.min(1, input.steer ?? 0)) * (this.confused ? -1 : 1);
     const flow = this.slide.flowAt(this.body.translation());
     const strafeMode = this.courseTrack?.controls === "strafe" && !!flow;
     const speed = this.body.linvel();
@@ -1593,6 +1602,18 @@ export class Simulation {
   get poisoned() {
     return this.time < this.poisonUntil;
   }
+  /** Alien confusion: inverted steering plus a wobble, no damage. Touching
+   * while already confused extends the effect without event spam. */
+  applyConfusion(source: string) {
+    if (this.status !== "driving") return;
+    const fresh = !this.confused;
+    this.confusedUntil = this.time + CONFUSION.duration;
+    if (fresh)
+      this.damageEvents.push({ source, part: "chassis-front", time: this.time });
+  }
+  get confused() {
+    return this.time < this.confusedUntil;
+  }
   private updatePoison() {
     if (this.poisonRemaining <= 1e-9) {
       this.poisonRemaining = 0;
@@ -1707,6 +1728,7 @@ export class Simulation {
       poisonUntil: this.poisonUntil,
       poisonRemaining: this.poisonRemaining,
       poisonTaken: this.poisonTaken,
+      confusedUntil: this.confusedUntil,
       inFlames: this.inFlames,
       smoking: this.smoking,
       smokeStrength: this.smokeStrength,

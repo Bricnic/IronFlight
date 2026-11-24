@@ -542,6 +542,49 @@ export const POISON = {
   duration: 3,
   fraction: 0.25,
 } as const;
+/** Alien confusion: inverted steering plus a wobble, no direct damage. */
+export const CONFUSION = {
+  duration: 4,
+} as const;
+/** Space-station decor furniture, shared by the collider builder and the artist. Solid but never lethal. */
+export const SPACE_PILLAR = { w: 3, h: 14, d: 3 } as const;
+export const SPACE_SOLAR = { w: 10, h: 6, d: 1.2 } as const;
+export const SPACE_DISH = { w: 4, h: 6, d: 4 } as const;
+export const SPACE_ROCK = { w: 5, h: 4, d: 5 } as const;
+export const SPACE_CRATE = { w: 3, h: 3, d: 3 } as const;
+export const SPACE_TOWER = { w: 10, h: 26, d: 10 } as const;
+export const SPACE_DOME = { w: 16, h: 11, d: 16 } as const;
+/** Asteroid: tumbling flyby along a lane past the course; lethal on touch. */
+export const ASTEROID = {
+  speed: 14,
+  laneLength: 220,
+  touch: 4.5,
+} as const;
+/** Meteor: spawns high, crashes into the moon, then respawns; lethal on touch. */
+export const METEOR = {
+  fallSpeed: 32,
+  spawnHeight: 60,
+  touch: 4,
+  respawn: 6,
+} as const;
+/** Walking alien: wanders near home; touch confuses. */
+export const ALIEN = {
+  speed: 6,
+  touch: 3.2,
+  dy: 3,
+  wanderRadius: 60,
+} as const;
+/** Flying UFO: cruises waypoints and zaps the truck in range. */
+export const UFO = {
+  speed: 10,
+  cruiseHeight: 14,
+  wanderRadius: 80,
+  laserRange: 42,
+  laserPeriod: 3,
+  laserDuration: 0.5,
+  laserFraction: 0.4,
+  laserParts: 2,
+} as const;
 /** Uniform-disc destination within a radius of home for one trip. */
 export function wanderDestination(homeX: number, homeZ: number, seed: number, trip: number, radius: number) {
   const rng = mulberry32((seed ^ Math.imul(trip + 0x9e37, 0x85ebca6b)) >>> 0);

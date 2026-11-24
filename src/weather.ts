@@ -16,8 +16,8 @@ export function parseWeatherFlags(value: unknown): WeatherFlags {
 export function randomWeather(rng: () => number = Math.random): WeatherFlags {
   return { night: rng() < 0.5, rain: rng() < 0.5 };
 }
-/** Background templates stuck in permanent night (mystic caves). */
-export const PERMANENT_NIGHT_TEMPLATES = ["mystic-cave"];
+/** Background templates stuck in permanent night (mystic caves, deep space). */
+export const PERMANENT_NIGHT_TEMPLATES = ["mystic-cave", "station-void", "moon-surface"];
 /** True when the track's background never sees daylight. */
 export function isPermanentNight(backgroundTemplate?: string, forceNight?: boolean) {
   if (forceNight !== undefined) return forceNight;

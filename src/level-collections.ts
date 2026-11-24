@@ -8,7 +8,8 @@ export type CollectionId =
   | "toybox-adventures"
   | "stunt-parks"
   | "industrial-mayhem"
-  | "outdoor-adventures";
+  | "outdoor-adventures"
+  | "space";
 
 export interface LevelCollection {
   id: CollectionId;
@@ -144,6 +145,24 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
       "custom:outdoor-adventures-dream",
     ],
     dream: "custom:outdoor-adventures-dream",
+  },
+  {
+    id: "space",
+    name: "Space",
+    theme:
+      "Space station interiors and exteriors plus moon terrain, with rainbow glowing roads, asteroids, meteors, aliens and UFOs.",
+    art: "/collections/space.jpg",
+    trackIds: [
+      "custom:airlock-approach",
+      "custom:station-ring",
+      "custom:solar-array",
+      "custom:reactor-core",
+      "custom:docking-bay",
+      "custom:crater-field",
+      "custom:meteor-storm",
+      "custom:space-dream",
+    ],
+    dream: "custom:space-dream",
   },
 ];
 

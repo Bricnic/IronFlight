@@ -24,7 +24,9 @@ export type PropKind =
   | "christmas-cocoa-cart"
   | "cookie"
   | "cracker"
-  | "fruit";
+  | "fruit"
+  | "supply-crate"
+  | "oxygen-tank";
 export type PropDefinition = {
   id: string;
   kind: PropKind;
@@ -87,6 +89,8 @@ export function propHeight(kind: string) {
   if (kind === "cookie") return 0.35;
   if (kind === "cracker") return 0.35;
   if (kind === "fruit") return 0.55;
+  if (kind === "supply-crate") return 0.9;
+  if (kind === "oxygen-tank") return 0.8;
   return 0.7;
 }
 export class Destructibles {
@@ -328,6 +332,25 @@ export class Destructibles {
             body,
           ),
         );
+      else if (kind === "supply-crate")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cuboid(0.75, 0.9, 0.75)
+              .setMass(60)
+              .setFriction(0.7),
+            body,
+          ),
+        );
+      else if (kind === "oxygen-tank")
+        colliders.push(
+          world.createCollider(
+            RAPIER.ColliderDesc.cylinder(1.0, 0.55)
+              .setMass(25)
+              .setFriction(0.5)
+              .setRestitution(0.3),
+            body,
+          ),
+        );
       else
         colliders.push(
           world.createCollider(
@@ -494,7 +517,9 @@ export class Destructibles {
             prop.definition.kind === "chocolate-crate" ||
             prop.definition.kind === "christmas-gift-crate" ||
             prop.definition.kind === "cookie" ||
-            prop.definition.kind === "cracker") &&
+            prop.definition.kind === "cracker" ||
+            prop.definition.kind === "supply-crate" ||
+            prop.definition.kind === "oxygen-tank") &&
           !prop.broken &&
           closing > 2.5
         ) {
@@ -640,7 +665,11 @@ export class Destructibles {
                 ? [0x8a5a2b, 0x6e4a26, 0xd9a066, 0x4a2c14][i]
                 : prop.definition.kind === "cracker"
                   ? [0xe2c98a, 0xd9b06a, 0xc9a05a, 0xb08a4a][i]
-                  : [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
+                  : prop.definition.kind === "supply-crate"
+                    ? [0x3a6ea5, 0x2a4a7a, 0xf2c200, 0x8a94a5][i]
+                    : prop.definition.kind === "oxygen-tank"
+                      ? [0x2a9a8a, 0xd8dce5, 0x3a414c, 0x7ae0ff][i]
+                      : [0x9aa0a3, 0x7d8487, 0x8f979b, 0x6e7477][i],
       });
     }
   }

@@ -1,0 +1,36 @@
+{
+  "name": "station-void",
+  "sky": { "top": 659504, "horizon": 3820122 },
+  "fog": { "color": 3820122, "near": 120, "far": 500 },
+  "sun": { "color": 16751178, "intensity": 1.8 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 1.2 },
+  "env": 0.4,
+  "shapes": [
+    {
+      "kind": "skyscraper",
+      "texture": "concrete_layers_02",
+      "count": 10,
+      "radius": 320,
+      "y": 0,
+      "size": [30, 70],
+      "seed": 91
+    },
+    {
+      "kind": "moon",
+      "count": 1,
+      "radius": 480,
+      "y": 140,
+      "size": [20, 20],
+      "seed": 92
+    }
+  ],
+  "clouds": {
+    "count": 0,
+    "y": [100, 170],
+    "radius": [250, 470],
+    "color": 2765904,
+    "opacity": 0.0,
+    "drift": 0,
+    "seed": 93
+  }
+}

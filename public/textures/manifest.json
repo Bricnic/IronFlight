@@ -550,6 +550,56 @@
           "bytes": 103596
         }
       }
+    },
+    {
+      "id": "station_deck_01",
+      "source": "Gemini 2.5-flash-image (seamless station deck)",
+      "license": "Generated",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/station_deck_01_diffuse.jpg",
+          "url": "Gemini 2.5-flash-image (seamless station deck)",
+          "sha256": "036899a02cf4169ec970c9a2043bdacbe31e90d41c3cc90c532de377dc310370",
+          "bytes": 324915
+        },
+        "normal": {
+          "file": "/textures/station_deck_01_normal.jpg",
+          "url": "Gemini 2.5-flash-image (seamless station deck)",
+          "sha256": "e4c99000341d598ef689e88ed99ee53f54a97c3730df5e5fecff7d9f3089a985",
+          "bytes": 325925
+        },
+        "roughness": {
+          "file": "/textures/station_deck_01_roughness.jpg",
+          "url": "Gemini 2.5-flash-image (seamless station deck)",
+          "sha256": "c61a128d4dd65de59f7fb88d7085e02c3960637f4dcdcf90528205db51d13928",
+          "bytes": 192800
+        }
+      }
+    },
+    {
+      "id": "moon_regolith_01",
+      "source": "Gemini 2.5-flash-image (seamless moon regolith)",
+      "license": "Generated",
+      "maps": {
+        "diffuse": {
+          "file": "/textures/moon_regolith_01_diffuse.jpg",
+          "url": "Gemini 2.5-flash-image (seamless moon regolith)",
+          "sha256": "4f0097604850332664da7bb9f18077ea3a3ce14c0e7a3040be4410eaa0ff5eb6",
+          "bytes": 318518
+        },
+        "normal": {
+          "file": "/textures/moon_regolith_01_normal.jpg",
+          "url": "Gemini 2.5-flash-image (seamless moon regolith)",
+          "sha256": "b90482bc03e79ed7ae0a5c249a9866eb8cf8a48360d45bee25d0fe5446495da7",
+          "bytes": 344260
+        },
+        "roughness": {
+          "file": "/textures/moon_regolith_01_roughness.jpg",
+          "url": "Gemini 2.5-flash-image (seamless moon regolith)",
+          "sha256": "c9789b5852e4057645b8ba513172b4be3c292b81a0d2a41a90dd60fe72b66ed5",
+          "bytes": 192709
+        }
+      }
     }
   ]
 }

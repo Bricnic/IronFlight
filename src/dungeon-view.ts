@@ -13,6 +13,7 @@ import {
   robotLaserFiring,
   ROCKER,
   BOULDER,
+  ASTEROID,
   type DungeonHazard,
 } from "./dungeon-hazards";
 import { dungeonHazards } from "./dungeon-hazards";
@@ -21,6 +22,7 @@ import { buildDinosaur, dinosaurAimPitch, poseDinosaur } from "./dinosaur-view";
 import { buildAnchor, buildPelican, buildShip, layAnchorChain, posePelican } from "./shipyard-view";
 import { buildSpider, poseSpider } from "./hollow-view";
 import { buildBat, buildCaterpillar, buildFairy, buildFirefly, buildMoth, buildMushroom, poseBat, poseCaterpillar, poseFairy, poseFirefly, poseMoth, poseMushroom } from "./mystic-view";
+import { buildAlien, buildAsteroid, buildHabitatDome, buildMeteor, buildMoonRock, buildSatelliteDish, buildSolarPanel, buildSpaceCrate, buildStationPillar, buildStationTower, buildUfo, poseAlien, poseAsteroid, poseMeteor, poseUfo } from "./space-view";
 import { buildMailbox, buildSpeedTube, buildTeeterTotter, poseMailbox } from "./screwball-view";
 import { buildBalloon, buildBirthdayCandle, buildBirthdayCake, buildBirthdayCard, buildBouncyCastle, buildCandleFlame, poseBalloon, poseBirthdayCard } from "./birthday-view";
 import { buildLimeChomper } from "./toy-track-view";
@@ -60,6 +62,10 @@ type Model = {
   card?: ReturnType<typeof buildBirthdayCard>;
   caterpillar?: ReturnType<typeof buildCaterpillar>;
   moth?: ReturnType<typeof buildMoth>;
+  asteroid?: ReturnType<typeof buildAsteroid>;
+  meteor?: ReturnType<typeof buildMeteor>;
+  alien?: ReturnType<typeof buildAlien>;
+  ufo?: ReturnType<typeof buildUfo>;
   bat?: ReturnType<typeof buildBat>;
   mushroom?: ReturnType<typeof buildMushroom>;
   fairy?: ReturnType<typeof buildFairy>;
@@ -115,6 +121,10 @@ const labelMessages: Record<string, [string, string]> = {
   "cave-caterpillar": ["CAVE CATERPILLAR", "GIANT CRAWLER / TOUCH IS VENOM"],
   "cave-moth": ["DUST MOTH", "GREEN SPRINKLES / DODGE THE DUST"],
   "cave-bat": ["CAVE BAT", "HARMLESS / SPOOKS WHEN CLOSE"],
+  asteroid: ["ASTEROID", "TUMBLING ROCK / LETHAL ON TOUCH"],
+  meteor: ["METEOR", "CRASHES DOWN / LETHAL ON TOUCH"],
+  alien: ["SPACE ALIEN", "WANDERS / TOUCH CONFUSES"],
+  ufo: ["UFO", "ZAPS TRUCKS IN RANGE / 40% + 2 PARTS"],
   "glow-mushroom": ["GLOWCAP", "CAVE LIGHT / LOVELY AND HARMLESS"],
   "cave-fairy": ["CAVE FAIRY", "CAVE LIGHT / LOVELY AND HARMLESS"],
   firefly: ["FIREFLY", "CAVE LIGHT / LOVELY AND HARMLESS"],
@@ -1082,6 +1092,32 @@ export function buildDungeonModel(h: DungeonHazard): Model {
     model.fairy = buildFairy(root);
   } else if (h.kind === "firefly") {
     model.firefly = buildFirefly(root);
+  } else if (h.kind === "station-pillar") {
+    buildStationPillar(root);
+  } else if (h.kind === "solar-panel") {
+    buildSolarPanel(root);
+  } else if (h.kind === "satellite-dish") {
+    buildSatelliteDish(root);
+  } else if (h.kind === "moon-rock") {
+    buildMoonRock(root);
+  } else if (h.kind === "space-crate") {
+    buildSpaceCrate(root);
+  } else if (h.kind === "station-tower") {
+    buildStationTower(root);
+  } else if (h.kind === "habitat-dome") {
+    buildHabitatDome(root);
+  } else if (h.kind === "asteroid") {
+    model.asteroid = buildAsteroid(root);
+    root.add(buildDungeonLabel(h, 8));
+  } else if (h.kind === "meteor") {
+    model.meteor = buildMeteor(root);
+    root.add(buildDungeonLabel(h, 8));
+  } else if (h.kind === "alien") {
+    model.alien = buildAlien(root);
+    root.add(buildDungeonLabel(h, 7));
+  } else if (h.kind === "ufo") {
+    model.ufo = buildUfo(root);
+    root.add(buildDungeonLabel(h, 6));
   } else if (h.kind === "speed-tube") {
     buildSpeedTube(root);
     root.add(buildDungeonLabel(h, 8));
@@ -1369,6 +1405,55 @@ export class DungeonView extends T.Group {
         poseFirefly(m.firefly, m.root, m.h, s.time, s.weather.night);
         continue;
       }
+      if (m.h.kind === "asteroid" && m.asteroid) {
+        const a = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.asteroid;
+        if (a) {
+          const half = ASTEROID.laneLength / 2;
+          const offset = ((a.t * ASTEROID.speed) % ASTEROID.laneLength) - half;
+          poseAsteroid(
+            m.asteroid,
+            m.root,
+            a.center.x + Math.sin(a.yaw) * offset,
+            a.altitude,
+            a.center.z + Math.cos(a.yaw) * offset,
+            s.time,
+          );
+        }
+        continue;
+      }
+      if (m.h.kind === "meteor" && m.meteor) {
+        const mo = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.meteor;
+        if (mo) poseMeteor(m.meteor, m.root, mo.x, mo.y, mo.z, mo.live, s.time);
+        continue;
+      }
+      if (m.h.kind === "alien" && m.alien) {
+        const al = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.alien;
+        if (al) poseAlien(m.alien, m.root, al.pos.x, m.h.y ?? 0, al.pos.z, al.yaw, al.phase);
+        continue;
+      }
+      if (m.h.kind === "ufo" && m.ufo) {
+        const u = s.dungeon.mechanisms.find(
+          ({ h }) => h.id === m.h.id,
+        )?.ufo;
+        if (u)
+          poseUfo(
+            m.ufo,
+            m.root,
+            u.pos.x,
+            u.pos.y,
+            u.pos.z,
+            u.yaw,
+            s.time < u.beamUntil ? u.beamTo : null,
+            s.time,
+          );
+        continue;
+      }
       if (m.h.kind === "teeter-totter") {
         const body = s.dungeon.mechanisms.find(
           ({ h }) => h.id === m.h.id,
@@ -1538,7 +1623,7 @@ export class DungeonView extends T.Group {
       id: m.h.id,
       kind: m.h.kind,
       triangles: m.triangles,
-      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || !!m.spider || !!m.mailbox || !!m.balloon || !!m.card || !!m.caterpillar || !!m.moth || !!m.bat || !!m.mushroom || !!m.fairy || !!m.firefly || m.h.kind === "ship" || m.h.kind === "teeter-totter" || (!!m.machine && m.h.kind !== "start-gate"),
+      animated: m.pivots.length > 0 || !!m.dinosaur || !!m.pelican || !!m.anchor || !!m.spider || !!m.mailbox || !!m.balloon || !!m.card || !!m.caterpillar || !!m.moth || !!m.bat || !!m.mushroom || !!m.fairy || !!m.firefly || !!m.asteroid || !!m.meteor || !!m.alien || !!m.ufo || m.h.kind === "ship" || m.h.kind === "teeter-totter" || (!!m.machine && m.h.kind !== "start-gate"),
     }));
   }
 }

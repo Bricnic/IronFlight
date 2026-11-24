@@ -910,6 +910,10 @@ export class GameView {
     const poisonMix = s.poisoned
       ? Math.min(1, (s.poisonUntil - s.time) / 0.4)
       : 0;
+    // Alien confusion: pulsing violet filter plus a camera wobble.
+    const confuseMix = s.confused
+      ? Math.min(1, (s.confusedUntil - s.time) / 0.4)
+      : 0;
     const fogFilter =
       s.activeComic.effect === "fog"
         ? `blur(${Math.min(7, s.activeComic.effectUntil - s.time) * 1.1}px) contrast(.75)`
@@ -918,7 +922,11 @@ export class GameView {
       poisonMix > 0
         ? `blur(${(3 * poisonMix).toFixed(2)}px) contrast(${(1 - 0.35 * poisonMix).toFixed(2)}) hue-rotate(${(90 * poisonMix).toFixed(0)}deg) saturate(1.4)`
         : "";
-    this.renderer.domElement.style.filter = [fogFilter, poisonFilter]
+    const confuseFilter =
+      confuseMix > 0
+        ? `blur(${(2 * confuseMix).toFixed(2)}px) hue-rotate(${(200 * confuseMix).toFixed(0)}deg) saturate(2)`
+        : "";
+    this.renderer.domElement.style.filter = [fogFilter, poisonFilter, confuseFilter]
       .filter(Boolean)
       .join(" ");
     const shape = new T.Vector3(
@@ -1063,7 +1071,8 @@ export class GameView {
         this.snapCamera || snap,
         // Any lava sink pans the camera above the surface (was inferno-only).
         !!s.parts.get("chassis-front")?.lava,
-        poisonMix * Math.PI,
+        poisonMix * Math.PI +
+          confuseMix * 0.25 * Math.sin(renderTime * 6),
       );
     // lookAt faces the rig's +Z at the car, but headsets look down -Z: yaw
     // the rig half a turn so a recentered headset faces the car, not away.

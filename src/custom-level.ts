@@ -24,6 +24,8 @@ export const TEXTURE_IDS = [
   "candy_cream_01",
   "pond_ice_01",
   "toy_table_wood",
+  "station_deck_01",
+  "moon_regolith_01",
 ] as const;
 export type TextureId = (typeof TEXTURE_IDS)[number];
 export const PROP_PREFAB_KINDS = [
@@ -49,6 +51,8 @@ export const PROP_PREFAB_KINDS = [
   "cookie",
   "cracker",
   "fruit",
+  "supply-crate",
+  "oxygen-tank",
 ] as const;
 export const COMIC_PREFAB_KINDS = [
   "book",
@@ -86,6 +90,24 @@ export const COURSE_PREFAB_KINDS = [
   "grandstand",
   "boost-pad",
 ] as const;
+/** Space collection: station decor, moon rocks, and live hazards. */
+export const SPACE_PREFAB_KINDS = [
+  "station-pillar",
+  "solar-panel",
+  "satellite-dish",
+  "moon-rock",
+  "space-crate",
+  "station-tower",
+  "habitat-dome",
+  "asteroid",
+  "meteor",
+  "alien",
+  "ufo",
+] as const;
+export type SpaceKind = (typeof SPACE_PREFAB_KINDS)[number];
+export function isSpace(kind: string): kind is SpaceKind {
+  return (SPACE_PREFAB_KINDS as readonly string[]).includes(kind);
+}
 /** Triple-Loop-style booster footprint in world units, shared by sim and view. */
 export const BOOST_PAD = { w: 10, d: 12 } as const;
 export const DINOSAUR_PREFAB_KINDS = ["raptor", "pterosaur", "spinosaurus", "ember-wyvern"] as const;
@@ -307,6 +329,7 @@ export const DUNGEON_PREFAB_KINDS = [
   ...STUNT_DREAM_PREFAB_KINDS,
   ...INDUSTRIAL_DREAM_PREFAB_KINDS,
   ...OUTDOOR_DREAM_PREFAB_KINDS,
+  ...SPACE_PREFAB_KINDS,
 ] as const;
 /** Gold-star collectible: a spinning chrome star worth permanent garage glory. */
 export const DREAM_PREFAB_KINDS = ["wings"] as const;
@@ -450,6 +473,8 @@ export interface CustomLevel {
   underground?: boolean;
   /** Override the background's permanent-night rule; false permits Settings weather. */
   forceNight?: boolean;
+  /** Gravity multiplier for this level (1 = normal, 0.5 = moon-like). */
+  gravityScale?: number;
   /** Use the gameplay lighting rig in the editor preview. */
   previewGameLighting?: boolean;
   /** Background template name; resolved against levels/backgrounds/. */
@@ -513,6 +538,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
   );
   const underground = (level as CustomLevel)?.underground;
   const forceNight = (level as CustomLevel)?.forceNight;
+  const gravityScale = (level as CustomLevel)?.gravityScale;
   const previewGameLighting = (level as CustomLevel)?.previewGameLighting;
   for (const [key, value] of Object.entries({ forceNight, previewGameLighting }))
     check(errors, value === undefined || typeof value === "boolean", `${key} must be a boolean`);
@@ -520,6 +546,12 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     errors,
     underground === undefined || typeof underground === "boolean",
     "underground must be a boolean",
+  );
+  check(
+    errors,
+    gravityScale === undefined ||
+      (finite(gravityScale) && gravityScale >= 0.1 && gravityScale <= 3),
+    "gravityScale must be a finite number between 0.1 and 3",
   );
   const checkpoints = Array.isArray((level as CustomLevel)?.checkpoints)
     ? (level as CustomLevel).checkpoints
@@ -747,6 +779,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     ...(limit === undefined ? {} : { limit }),
     ...(underground === undefined ? {} : { underground }),
     ...(forceNight === undefined ? {} : { forceNight }),
+    ...(gravityScale === undefined ? {} : { gravityScale }),
     ...(previewGameLighting === undefined ? {} : { previewGameLighting }),
     ...(backgroundTemplate === undefined ? {} : { backgroundTemplate }),
   };

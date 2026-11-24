@@ -2,7 +2,7 @@ import R from "@dimforge/rapier3d-compat";
 import { DT } from "./clock";
 import { Euler, Quaternion, Vector3 } from "three";
 import type { Simulation } from "./simulation";
-import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, isStuntDream, isIndustrialDream, isOutdoorDream, type DinosaurKind } from "./custom-level";
+import { isCandyDecor, isCandyLethal, isChristmasDecor, isChristmasLethal, isDinosaur, isGauntletMachine, isMystic, isSweetDream, isWinterDream, isSpookyDream, isToyboxDream, isStuntDream, isIndustrialDream, isOutdoorDream, isSpace, type DinosaurKind } from "./custom-level";
 import { GauntletPhysics } from "./gauntlet-physics";
 import { SCREW_FIELD_SIZE } from "./gauntlet-timing";
 import { MUSHROOM } from "./mushroom-shape";
@@ -110,6 +110,17 @@ import {
   CHRISTMAS_PRESS,
   CLIPPER_BACK,
   WINDOW_GATE,
+  SPACE_PILLAR,
+  SPACE_SOLAR,
+  SPACE_DISH,
+  SPACE_ROCK,
+  SPACE_CRATE,
+  SPACE_TOWER,
+  SPACE_DOME,
+  ASTEROID,
+  METEOR,
+  ALIEN,
+  UFO,
   type DungeonHazard,
 } from "./dungeon-hazards";
 type Mechanism = {
@@ -202,6 +213,37 @@ type Mechanism = {
     fled: boolean;
     fledAt: number;
     fleeYaw: number;
+  };
+  asteroid?: {
+    center: { x: number; z: number };
+    altitude: number;
+    yaw: number;
+    t: number;
+  };
+  meteor?: {
+    x: number;
+    z: number;
+    y: number;
+    live: boolean;
+    respawnAt: number;
+  };
+  alien?: {
+    home: { x: number; z: number };
+    pos: { x: number; z: number };
+    yaw: number;
+    dest: { x: number; z: number };
+    trips: number;
+    phase: number;
+  };
+  ufo?: {
+    home: { x: number; z: number };
+    pos: { x: number; y: number; z: number };
+    yaw: number;
+    dest: { x: number; z: number };
+    trips: number;
+    nextZapAt: number;
+    beamUntil: number;
+    beamTo: { x: number; y: number; z: number };
   };
 };
 export class DungeonPhysics {
@@ -488,6 +530,67 @@ export class DungeonPhysics {
     } else if (h.kind === "cave-bat") {
       // Perched decor: no colliders, flees on approach, never harms.
       m.bat = { fled: false, fledAt: 0, fleeYaw: h.yaw ?? 0 };
+    } else if (isSpace(h.kind)) {
+      // Station decor is solid scenery; hazards move by zone math below.
+      if (h.kind === "station-pillar")
+        solid(SPACE_PILLAR.w, SPACE_PILLAR.h, SPACE_PILLAR.d, 0, 0);
+      else if (h.kind === "solar-panel")
+        solid(SPACE_SOLAR.w, SPACE_SOLAR.h, SPACE_SOLAR.d, 0, 0);
+      else if (h.kind === "satellite-dish")
+        solid(SPACE_DISH.w, SPACE_DISH.h, SPACE_DISH.d, 0, 0);
+      else if (h.kind === "moon-rock")
+        solid(SPACE_ROCK.w, SPACE_ROCK.h, SPACE_ROCK.d, 0, 0);
+      else if (h.kind === "space-crate")
+        solid(SPACE_CRATE.w, SPACE_CRATE.h, SPACE_CRATE.d, 0, 0);
+      else if (h.kind === "station-tower")
+        solid(SPACE_TOWER.w, SPACE_TOWER.h, SPACE_TOWER.d, 0, 0);
+      else if (h.kind === "habitat-dome")
+        solid(SPACE_DOME.w, SPACE_DOME.h, SPACE_DOME.d, 0, 0);
+      else if (h.kind === "asteroid") {
+        const yaw = h.yaw ?? 0;
+        m.asteroid = {
+          center: { x: h.x, z: h.z },
+          altitude: h.y ?? 8,
+          yaw,
+          t: 0,
+        };
+      } else if (h.kind === "meteor") {
+        m.meteor = {
+          x: h.x,
+          z: h.z,
+          y: (h.y ?? 0) + METEOR.spawnHeight,
+          live: true,
+          respawnAt: 0,
+        };
+      } else if (h.kind === "alien") {
+        const seed = birthdayCardSeed(
+          this.sim.courseTrack?.custom?.name ?? this.sim.courseTrack?.id ?? "",
+          h.id,
+        );
+        m.alien = {
+          home: { x: h.x, z: h.z },
+          pos: { x: h.x, z: h.z },
+          yaw: h.yaw ?? 0,
+          dest: wanderDestination(h.x, h.z, seed, 0, ALIEN.wanderRadius),
+          trips: 0,
+          phase: 0,
+        };
+      } else if (h.kind === "ufo") {
+        const seed = birthdayCardSeed(
+          this.sim.courseTrack?.custom?.name ?? this.sim.courseTrack?.id ?? "",
+          h.id,
+        );
+        m.ufo = {
+          home: { x: h.x, z: h.z },
+          pos: { x: h.x, y: (h.y ?? 0) + UFO.cruiseHeight, z: h.z },
+          yaw: h.yaw ?? 0,
+          dest: wanderDestination(h.x, h.z, seed, 0, UFO.wanderRadius),
+          trips: 0,
+          nextZapAt: UFO.laserPeriod,
+          beamUntil: -1,
+          beamTo: { x: 0, y: 0, z: 0 },
+        };
+      }
     } else if (h.kind === "speed-tube") {
       // Pure zone math: no colliders, the shell is visual only.
       m.tube = { inside: false, cruise: 0 };
@@ -1507,6 +1610,110 @@ export class DungeonPhysics {
       }
     }
   }
+  /** Asteroid: tumbling flyby along its yawed lane; lethal on touch. */
+  private updateAsteroid(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const a = m.asteroid!;
+    a.t += DT;
+    const half = ASTEROID.laneLength / 2;
+    const offset = ((a.t * ASTEROID.speed) % ASTEROID.laneLength) - half;
+    const x = a.center.x + Math.sin(a.yaw) * offset;
+    const z = a.center.z + Math.cos(a.yaw) * offset;
+    if (s.status !== "driving") return;
+    if (Math.hypot(p.x - x, p.y - a.altitude, p.z - z) <= ASTEROID.touch) {
+      m.contacts++;
+      s.applyHazardDamage("asteroid", 1, 0);
+    }
+  }
+  /** Meteor: crashes from the sky, lies burning, then respawns; lethal. */
+  private updateMeteor(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const mo = m.meteor!;
+    const h = m.h;
+    const groundY = h.y ?? 0;
+    if (!mo.live) {
+      if (s.time >= mo.respawnAt) {
+        mo.live = true;
+        mo.y = groundY + METEOR.spawnHeight;
+      } else return;
+    } else {
+      mo.y -= METEOR.fallSpeed * DT;
+      if (mo.y <= groundY + 1) {
+        mo.y = groundY + 1;
+        mo.live = false;
+        mo.respawnAt = s.time + METEOR.respawn;
+      }
+    }
+    if (s.status !== "driving" || !mo.live) return;
+    if (Math.hypot(p.x - mo.x, p.y - mo.y, p.z - mo.z) <= METEOR.touch) {
+      m.contacts++;
+      s.applyHazardDamage("meteor", 1, 0);
+    }
+  }
+  /** Walking alien: wanders near home; touch confuses (no damage). */
+  private updateAlien(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const a = m.alien!;
+    const h = m.h;
+    const baseY = h.y ?? 0;
+    const step = ALIEN.speed * DT;
+    const seed = birthdayCardSeed(
+      s.courseTrack?.custom?.name ?? s.courseTrack?.id ?? "",
+      h.id,
+    );
+    const dx = a.dest.x - a.pos.x, dz = a.dest.z - a.pos.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist <= Math.max(step, 0.5)) {
+      a.trips++;
+      a.dest = wanderDestination(a.home.x, a.home.z, seed, a.trips, ALIEN.wanderRadius);
+    } else {
+      a.pos.x += (dx / dist) * step;
+      a.pos.z += (dz / dist) * step;
+      a.yaw = Math.atan2(dx, dz);
+    }
+    a.phase += DT * 8;
+    if (s.status !== "driving") return;
+    if (
+      Math.hypot(p.x - a.pos.x, p.z - a.pos.z) <= ALIEN.touch &&
+      Math.abs(p.y - baseY) <= ALIEN.dy
+    ) {
+      m.contacts++;
+      s.applyConfusion("alien");
+    }
+  }
+  /** Flying UFO: cruises waypoints, zaps the truck in range for 40% + 2 parts. */
+  private updateUfo(m: Mechanism, p: R.Vector) {
+    const s = this.sim;
+    const u = m.ufo!;
+    const h = m.h;
+    const groundY = h.y ?? 0;
+    const cruiseY = groundY + UFO.cruiseHeight;
+    const dx = u.dest.x - u.pos.x, dz = u.dest.z - u.pos.z;
+    const dist = Math.hypot(dx, dz);
+    const step = UFO.speed * DT;
+    if (dist <= Math.max(step, 0.5)) {
+      u.trips++;
+      const seed = birthdayCardSeed(
+        s.courseTrack?.custom?.name ?? s.courseTrack?.id ?? "",
+        h.id,
+      );
+      u.dest = wanderDestination(u.home.x, u.home.z, seed, u.trips, UFO.wanderRadius);
+    } else {
+      u.pos.x += (dx / dist) * step;
+      u.pos.z += (dz / dist) * step;
+      u.yaw = Math.atan2(dx, dz);
+    }
+    u.pos.y = cruiseY;
+    if (s.status !== "driving") return;
+    const range = Math.hypot(p.x - u.pos.x, p.y - u.pos.y, p.z - u.pos.z);
+    if (range <= UFO.laserRange && s.time >= u.nextZapAt) {
+      u.nextZapAt = s.time + UFO.laserPeriod;
+      u.beamUntil = s.time + UFO.laserDuration;
+      u.beamTo = { x: p.x, y: p.y + 1, z: p.z };
+      m.contacts++;
+      s.applyHazardDamage("ufo", UFO.laserFraction, UFO.laserParts);
+    }
+  }
   /** Cave bat: perched until the truck nears, then flees; harmless. */
   private updateBat(m: Mechanism, p: R.Vector) {
     const s = this.sim;
@@ -2051,6 +2258,22 @@ export class DungeonPhysics {
       }
       if (h.kind === "cave-bat") {
         this.updateBat(m, p);
+        continue;
+      }
+      if (h.kind === "asteroid") {
+        this.updateAsteroid(m, p);
+        continue;
+      }
+      if (h.kind === "meteor") {
+        this.updateMeteor(m, p);
+        continue;
+      }
+      if (h.kind === "alien") {
+        this.updateAlien(m, p);
+        continue;
+      }
+      if (h.kind === "ufo") {
+        this.updateUfo(m, p);
         continue;
       }
       if (h.kind === "birthday-candle") {

@@ -228,5 +228,45 @@
     "file": "/official/outdoor-adventures/Outdoor Adventures Dream.json",
     "thumbnail": "/tracks/outdoor-adventures-dream.png",
     "description": "Tour the canyon rim at sunset, thread the pine lanes, pass the mesa court and fly the gorge to the bridge finish."
+  },
+  {
+    "file": "/official/space/Airlock Approach.json",
+    "thumbnail": "/tracks/airlock-approach.png",
+    "description": "Blast out of the station airlock onto the rainbow deck, sweep past the satellite dish and confuse the aliens."
+  },
+  {
+    "file": "/official/space/Station Ring.json",
+    "thumbnail": "/tracks/station-ring.png",
+    "description": "Orbit the station ring past asteroid flybys, smash supply crates and dodge the patrolling alien."
+  },
+  {
+    "file": "/official/space/Solar Array.json",
+    "thumbnail": "/tracks/solar-array.png",
+    "description": "Slalom the glowing solar panels in half gravity past meteors and a laser UFO."
+  },
+  {
+    "file": "/official/space/Reactor Core.json",
+    "thumbnail": "/tracks/reactor-core.png",
+    "description": "Loop the reactor deck around the fusion column, through the laser gate and past patrolling UFOs."
+  },
+  {
+    "file": "/official/space/Docking Bay.json",
+    "thumbnail": "/tracks/docking-bay.png",
+    "description": "Thread the enclosed service tunnel onto the open docking pad, then sweep to the far bay."
+  },
+  {
+    "file": "/official/space/Crater Field.json",
+    "thumbnail": "/tracks/crater-field.png",
+    "description": "Sweep the moon craters through the meteor storm and thread the golden ring arch."
+  },
+  {
+    "file": "/official/space/Meteor Storm.json",
+    "thumbnail": "/tracks/meteor-storm.png",
+    "description": "Survive the meteor storm serpentine past craters, supply caches and confusion aliens."
+  },
+  {
+    "file": "/official/space/Space Dream.json",
+    "thumbnail": "/tracks/space-dream.png",
+    "description": "Tour the moon station, earn wings past the habitat dome and fly the crater gap to the tower finish."
   }
 ]

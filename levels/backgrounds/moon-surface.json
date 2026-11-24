@@ -1,0 +1,37 @@
+{
+  "name": "moon-surface",
+  "sky": { "top": 659504, "horizon": 3820122 },
+  "fog": { "color": 3820122, "near": 140, "far": 600 },
+  "sun": { "color": 16751178, "intensity": 1.8 },
+  "hemi": { "sky": 15069439, "ground": 5326643, "intensity": 1.2 },
+  "env": 0.4,
+  "shapes": [
+    {
+      "kind": "mesa",
+      "texture": "moon_regolith_01",
+      "count": 8,
+      "radius": 340,
+      "y": -6,
+      "size": [60, 110],
+      "seed": 95
+    },
+    {
+      "kind": "hill",
+      "texture": "moon_regolith_01",
+      "count": 6,
+      "radius": 260,
+      "y": -4,
+      "size": [30, 55],
+      "seed": 96
+    }
+  ],
+  "clouds": {
+    "count": 0,
+    "y": [100, 170],
+    "radius": [250, 470],
+    "color": 2765904,
+    "opacity": 0.0,
+    "drift": 0,
+    "seed": 97
+  }
+}

@@ -60,9 +60,16 @@ export async function main(argv) {
   const aspectRatio = flag("ar", "1:1");
   const model = flag("model", "gemini-2.5-flash-image");
   const keyFile = flag("keyfile", process.env.GEMINI_KEY_FILE ?? "");
+  const ref = flag("ref", "");
   if (!prompt || !out || !keyFile) {
-    console.error("Usage: node scripts/gemini-image.mjs --prompt P --out F --keyfile K [--ar 1:1]");
+    console.error("Usage: node scripts/gemini-image.mjs --prompt P --out F --keyfile K [--ar 1:1] [--ref image]");
     process.exit(2);
+  }
+  const refParts = [];
+  if (ref) {
+    const data = await readFile(ref);
+    const mime = ref.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+    refParts.push({ inlineData: { mimeType: mime, data: data.toString("base64") } });
   }
   const candidates = await resolveKeyCandidates(keyFile);
   if (candidates.length === 0) {
@@ -79,7 +86,7 @@ export async function main(argv) {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts: [...refParts, { text: prompt }] }],
           generationConfig: {
             responseModalities: ["TEXT", "IMAGE"],
             imageConfig: { aspectRatio },

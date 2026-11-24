@@ -290,6 +290,10 @@ const PHYSICS_EXEMPT = new Map<string, string>([
     "christmas-yeti-jaws",
     "NO_COLLIDERS: radial snap-strike zone; model carries yaw",
   ],
+  ["asteroid", "CODE: flyby lane axis computed in the yawed frame; lethal touch is radial"],
+  ["meteor", "NO_COLLIDERS: vertical fall with a radial touch zone; model carries yaw"],
+  ["alien", "NO_COLLIDERS: radial touch zone plus planar wander; model carries yaw"],
+  ["ufo", "NO_COLLIDERS: radial laser range plus planar cruise; model carries yaw"],
 ]);
 
 it("every prefab kind rotates its physics with yaw", () => {

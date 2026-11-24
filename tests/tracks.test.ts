@@ -76,6 +76,14 @@ it("steps to the next and previous level with wraparound", () => {
     "Stunt Parks Dream",
     "Industrial Mayhem Dream",
     "Outdoor Adventures Dream",
+    "Airlock Approach",
+    "Station Ring",
+    "Solar Array",
+    "Reactor Core",
+    "Docking Bay",
+    "Crater Field",
+    "Meteor Storm",
+    "Space Dream",
   ]);
   expect(stepTrackId("triple-loop", 1)).toBe("foundry-run");
   expect(stepTrackId("foundry-run", -1)).toBe("triple-loop");
@@ -199,14 +207,30 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:outdoor-adventures-dream", -1)).toBe(
     "custom:industrial-mayhem-dream",
   );
-  expect(stepTrackId("custom:outdoor-adventures-dream", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:outdoor-adventures-dream");
+  expect(stepTrackId("custom:outdoor-adventures-dream", 1)).toBe("custom:airlock-approach");
+  expect(stepTrackId("custom:airlock-approach", -1)).toBe("custom:outdoor-adventures-dream");
+  expect(stepTrackId("custom:airlock-approach", 1)).toBe("custom:station-ring");
+  expect(stepTrackId("custom:station-ring", -1)).toBe("custom:airlock-approach");
+  expect(stepTrackId("custom:station-ring", 1)).toBe("custom:solar-array");
+  expect(stepTrackId("custom:solar-array", -1)).toBe("custom:station-ring");
+  expect(stepTrackId("custom:solar-array", 1)).toBe("custom:reactor-core");
+  expect(stepTrackId("custom:reactor-core", -1)).toBe("custom:solar-array");
+  expect(stepTrackId("custom:reactor-core", 1)).toBe("custom:docking-bay");
+  expect(stepTrackId("custom:docking-bay", -1)).toBe("custom:reactor-core");
+  expect(stepTrackId("custom:docking-bay", 1)).toBe("custom:crater-field");
+  expect(stepTrackId("custom:crater-field", -1)).toBe("custom:docking-bay");
+  expect(stepTrackId("custom:crater-field", 1)).toBe("custom:meteor-storm");
+  expect(stepTrackId("custom:meteor-storm", -1)).toBe("custom:crater-field");
+  expect(stepTrackId("custom:meteor-storm", 1)).toBe("custom:space-dream");
+  expect(stepTrackId("custom:space-dream", -1)).toBe("custom:meteor-storm");
+  expect(stepTrackId("custom:space-dream", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:space-dream");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
   expect(stepTrackId("custom:my-level", -1)).toBe(
-    "custom:outdoor-adventures-dream",
+    "custom:space-dream",
   );
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:outdoor-adventures-dream");
+  expect(stepTrackId(undefined, -1)).toBe("custom:space-dream");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

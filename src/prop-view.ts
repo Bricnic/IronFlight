@@ -262,6 +262,30 @@ export function buildPropModel(definition: PropState["definition"]) {
     tilt.add(buildFruitMesh());
   } else if (definition.kind === "skull") {
     tilt.add(buildSkullMesh(1));
+  } else if (definition.kind === "supply-crate") {
+    mesh(
+      new T.BoxGeometry(1.5, 1.8, 1.5),
+      new T.MeshStandardMaterial({ color: 0x3a6ea5, roughness: 0.6, metalness: 0.3 }),
+    );
+    const stripe = new T.MeshStandardMaterial({ color: 0xf2c200, roughness: 0.5 });
+    for (const y of [-0.6, 0.6])
+      mesh(new T.BoxGeometry(1.54, 0.16, 1.54), stripe).position.y = y;
+    mesh(
+      new T.BoxGeometry(0.5, 0.5, 0.06),
+      new T.MeshStandardMaterial({
+        color: 0x4ff5e0, roughness: 0.3,
+        emissive: 0x2a9a8a, emissiveIntensity: 1.2,
+      }),
+    ).position.set(0, 0.2, 0.78);
+  } else if (definition.kind === "oxygen-tank") {
+    const tankMat = new T.MeshStandardMaterial({ color: 0x2a9a8a, roughness: 0.35, metalness: 0.7 });
+    mesh(new T.CylinderGeometry(0.55, 0.55, 1.6, 20), tankMat);
+    mesh(new T.SphereGeometry(0.55, 20, 12), tankMat).position.y = 0.8;
+    const valveMat = new T.MeshStandardMaterial({ color: 0xd8dce5, roughness: 0.3, metalness: 0.8 });
+    mesh(new T.CylinderGeometry(0.12, 0.12, 0.5, 10), valveMat).position.y = 1.4;
+    const wheel = mesh(new T.TorusGeometry(0.22, 0.05, 8, 16), valveMat);
+    wheel.rotation.x = Math.PI / 2;
+    wheel.position.y = 1.65;
   } else {
     const h = definition.kind === "trash" ? 1.3 : 1.4,
       r = definition.kind === "trash" ? 0.48 : 0.5;
