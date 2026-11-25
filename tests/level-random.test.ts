@@ -201,6 +201,16 @@ it("builds magnetile tile roads for toys and asphalt for everyone else", () => {
   const palette = new Set([0xff3b5c, 0x2b7de2, 0x2fd35f, 0xf2c200, 0xff8a1e, 0x9a5fe0]);
   for (const t of tiles) expect(palette, t.id).toContain(t.color);
   expect(new Set(tiles.map((t) => t.color)).size, "color variety").toBeGreaterThan(2);
+  // Elevated floating deck: tiles at height, lips, supports, deck spawn/gates.
+  for (const t of tiles) expect(t.y, `${t.id} height`).toBeGreaterThanOrEqual(8);
+  expect(tiles[0].w, "wide deck").toBe(48);
+  expect(toys.solids.filter((s) => s.kind === "barrier").length, "edge lips").toBe(6);
+  expect(
+    toys.solids.filter((s) => s.kind === "support").length,
+    "support pillars",
+  ).toBeGreaterThanOrEqual(3);
+  expect(toys.spawn.y, "deck spawn").toBeGreaterThan(9);
+  for (const c of toys.checkpoints) expect(c.y, "deck gate").toBe(8);
   const dungeon = generateRandomLevel({ ...defaults(), theme: "dungeon", name: "Road dungeon" }, 11);
   expect(dungeon.solids.some((s) => s.kind === "tile"), "no tiles").toBe(false);
   expect(dungeon.solids.filter((s) => s.kind === "road")).toHaveLength(3);

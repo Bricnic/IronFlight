@@ -411,7 +411,13 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
       throw new Error(`Could not place blocking trap ${i + 1}; enlarge the map`);
     placed.push(p);
     const kind = blockingPool[i % blockingPool.length];
-    const prefab: CustomPrefab = { id: `lethal-${i}`, kind, x: p.x, z: p.z };
+    const prefab: CustomPrefab = {
+      id: `lethal-${i}`,
+      kind,
+      x: p.x,
+      z: p.z,
+      ...(themeKey === "toys" ? { y: TOYS_TRAP_Y } : {}),
+    };
     if (PRESS.has(kind) || kind === "dragon")
       prefab.yaw = Math.atan2(-(b.z - a.z), b.x - a.x);
     else if (isDungeonKind(kind)) prefab.yaw = rand() * Math.PI * 2;
@@ -516,11 +522,12 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
   return validateCustomLevel({
     name: params.name,
     mode: "race",
-    spawn: { x: spawn.x, y: 2.1, z: spawn.z, yaw: yaw0 },
+    spawn: { x: spawn.x, y: themeKey === "toys" ? TOYS_DECK_TOP + 2.1 : 2.1, z: spawn.z, yaw: yaw0 },
     checkpoints: path.slice(1).map((p, i) => ({
       name: i === path.length - 2 ? "Finish" : `Gate ${i + 1}`,
       x: p.x,
       z: p.z,
+      ...(themeKey === "toys" ? { y: TOYS_DECK_Y } : {}),
     })),
     solids: [
       {
@@ -591,10 +598,16 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
 
 /** Bright translucent-look plastic chunks, like toybox magnetile track. */
 const MAGNETILE = [0xff3b5c, 0x2b7de2, 0x2fd35f, 0xf2c200, 0xff8a1e, 0x9a5fe0];
+/** Toys road deck: tile center height, top surface, and half-width. */
+const TOYS_DECK_Y = 8;
+const TOYS_DECK_TOP = TOYS_DECK_Y + 0.03;
+const TOYS_ROAD_W = 48;
+/** Blocking traps sit on the deck for toys, on the grass otherwise. */
+const TOYS_TRAP_Y = 8.1;
 
 type RoadSolid = {
   id: string;
-  kind: "road" | "tile";
+  kind: "road" | "tile" | "barrier" | "support";
   x: number;
   y: number;
   z: number;
@@ -626,9 +639,10 @@ function buildRoads(path: Point[], themeKey: string): RoadSolid[] {
       };
     });
   }
-  // Toybox magnetile road: butt-jointed colored tiles instead of asphalt.
-  // Ground-level like every generated road so the waypoint driver and fresh
-  // spawns stay on the deck; the toybox look comes from the tile colors.
+  // Toybox magnetile road: an elevated tile deck on support pillars, like
+  // the floating track in toybox levels. Wide enough (±24) that the weave
+  // driver (max ±20 lateral) never leaves the deck; edge lips contain
+  // shoves. Spawn, gates, and blocking traps all ride at deck height.
   const out: RoadSolid[] = [];
   let seq = 0;
   path.slice(1).forEach((p, i) => {
@@ -638,19 +652,56 @@ function buildRoads(path: Point[], themeKey: string): RoadSolid[] {
     const yaw = Math.atan2(p.x - a.x, p.z - a.z);
     for (let k = 0; k < n; k++) {
       const t0 = k / n, t1 = (k + 1) / n;
+      // ±20 runoffs past each joint catch corner overshoot (falls strand).
+      const lead = k === 0 ? 20 : 0, trail = k === n - 1 ? 20 : 0;
+      const mid = (t0 + t1) / 2 + (trail - lead) / 2 / lengthSeg;
       out.push({
         id: `road-${i + 1}-${k}`,
         kind: "tile" as const,
-        x: a.x + (p.x - a.x) * ((t0 + t1) / 2),
-        y: 0.03 + seq * 0.004,
-        z: a.z + (p.z - a.z) * ((t0 + t1) / 2),
-        w: 20,
+        x: a.x + (p.x - a.x) * mid,
+        y: TOYS_DECK_Y + seq * 0.001,
+        z: a.z + (p.z - a.z) * mid,
+        w: TOYS_ROAD_W,
         h: 0.06,
-        d: ((t1 - t0) * lengthSeg + (k === n - 1 ? 12 : 0)) - 0.04,
+        d: ((t1 - t0) * lengthSeg + lead + trail) - 0.04,
         yaw,
         color: MAGNETILE[seq % MAGNETILE.length],
       });
       seq++;
+    }
+    // Edge lips plus support pillars down to the grass.
+    const len = lengthSeg || 1;
+    const nx = -(p.z - a.z) / len, nz = (p.x - a.x) / len;
+    const mx = (a.x + p.x) / 2, mz = (a.z + p.z) / 2;
+    for (const side of [-1, 1]) {
+      out.push({
+        id: `lip-${i + 1}-${side < 0 ? "l" : "r"}`,
+        kind: "barrier" as const,
+        x: mx + nx * side * (TOYS_ROAD_W / 2 + 0.5),
+        y: TOYS_DECK_TOP + 0.6,
+        z: mz + nz * side * (TOYS_ROAD_W / 2 + 0.5),
+        w: 1.5,
+        h: 2,
+        d: lengthSeg + 40,
+        yaw,
+        color: 0xe8ecf0,
+      });
+    }
+    const supports = Math.max(1, Math.round(lengthSeg / 20));
+    for (let k = 0; k < supports; k++) {
+      const t = (k + 0.5) / supports;
+      out.push({
+        id: `support-${i + 1}-${k}`,
+        kind: "support" as const,
+        x: a.x + (p.x - a.x) * t,
+        y: TOYS_DECK_Y / 2,
+        z: a.z + (p.z - a.z) * t,
+        w: 2,
+        h: TOYS_DECK_Y,
+        d: 2,
+        yaw: 0,
+        color: 0x767c76,
+      });
     }
   });
   return out;
