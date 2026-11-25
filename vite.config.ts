@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
-import basicSsl from "@vitejs/plugin-basic-ssl";
+// NOTE: @vitejs/plugin-basic-ssl is imported lazily below (HTTPS mode
+// only) so a stale install missing that package still boots plain HTTP dev.
 import {
   readFile,
   writeFile,
@@ -272,8 +273,17 @@ function customLevels(): Plugin {
 // XRCERT=1 (npm run dev:https) serves HTTPS with a self-signed cert so a
 // Quest headset on the LAN can open an immersive-vr session, which needs a
 // secure context. Plain `npm run dev` stays HTTP for local e2e.
-const httpsPlugins: Plugin[] =
-  process.env.XRCERT === "1" ? [basicSsl() as unknown as Plugin] : [];
+const httpsPlugins: Plugin[] = [];
+if (process.env.XRCERT === "1") {
+  try {
+    const { default: basicSsl } = await import("@vitejs/plugin-basic-ssl");
+    httpsPlugins.push(basicSsl() as unknown as Plugin);
+  } catch {
+    throw new Error(
+      "XRCERT=1 needs @vitejs/plugin-basic-ssl: run `npm ci` and try again.",
+    );
+  }
+}
 
 export default defineConfig({
   plugins: [tuningDefaults(), customLevels(), gameCopy(), ...httpsPlugins, {
