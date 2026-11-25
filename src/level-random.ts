@@ -13,7 +13,7 @@ export interface RandomLevelParams {
   decor: number;
   /** Percent of lethals placed on the road to weave around (0-100). */
   blockingPercent: number;
-  theme: "toys" | "christmas" | "ice" | "carnival" | "dungeon" | "random";
+  theme: "toys" | "christmas" | "ice" | "carnival" | "dungeon" | "caves" | "space" | "random";
   width: number;
   length: number;
   name: string;
@@ -77,10 +77,26 @@ const THEMES: Record<string, ThemeDef> = {
       { kind: "computer", clearance: 12 },
       { kind: "flippers", clearance: 12 },
       { kind: "donut", clearance: 12 },
+      { kind: "raptor", clearance: 12 },
+      { kind: "pterosaur", clearance: 12 },
+      { kind: "spinosaurus", clearance: 12 },
+      { kind: "ember-wyvern", clearance: 12 },
     ],
-    blocking: ["book", "teeth", "computer", "donut"],
-    decorSolid: [{ kind: "lamp", clearance: 12 }],
-    decorProp: ["sign", "trash", "barrel", "skull", "pumpkin"],
+    blocking: [
+      "book",
+      "teeth",
+      "computer",
+      "donut",
+      "raptor",
+      "pterosaur",
+      "spinosaurus",
+      "ember-wyvern",
+    ],
+    decorSolid: [
+      { kind: "lamp", clearance: 12 },
+      { kind: "speed-tube", clearance: 32 },
+    ],
+    decorProp: ["sign", "trash", "barrel", "skull", "pumpkin", "snowball"],
   },
   christmas: {
     background: "christmas-village",
@@ -179,9 +195,46 @@ const THEMES: Record<string, ThemeDef> = {
     ],
     decorProp: ["gravestone", "skull"],
   },
+  caves: {
+    background: "mystic-cave",
+    texture: "glow_moss_01",
+    color: 1712176,
+    lethal: [
+      { kind: "cave-caterpillar", clearance: 12 },
+      { kind: "cave-moth", clearance: 12 },
+    ],
+    // Venom is survivable (25% + one part), so the crawler can sit on the
+    // road; the moth's falling dust stays flanking-only.
+    blocking: ["cave-caterpillar"],
+    decorSolid: [{ kind: "glow-mushroom", clearance: 12 }],
+    decorProp: ["cave-bat", "cave-fairy", "firefly"],
+  },
+  space: {
+    background: "moon-surface",
+    texture: "moon_regolith_01",
+    color: 16777215,
+    lethal: [
+      { kind: "meteor", clearance: 12 },
+      { kind: "alien", clearance: 12 },
+      { kind: "asteroid", clearance: 12 },
+    ],
+    // Confusion deals no damage, so aliens can block the road; meteors
+    // fall at fixed flanked points and asteroids cruise at safe altitude.
+    // UFOs stay out: wander plus 42-range lasers would outgun the driver.
+    blocking: ["alien"],
+    decorSolid: [
+      { kind: "station-pillar", clearance: 12 },
+      { kind: "solar-panel", clearance: 12 },
+      { kind: "satellite-dish", clearance: 12 },
+      { kind: "moon-rock", clearance: 12 },
+      { kind: "station-tower", clearance: 18 },
+      { kind: "habitat-dome", clearance: 20 },
+    ],
+    decorProp: ["supply-crate", "oxygen-tank"],
+  },
 };
 
-const THEME_KEYS = ["toys", "christmas", "ice", "carnival", "dungeon"] as const;
+const THEME_KEYS = ["toys", "christmas", "ice", "carnival", "dungeon", "caves", "space"] as const;
 /** Lethal kinds allowed to block the road, per theme. */
 export const BLOCKING_ELIGIBLE: Record<string, string[]> = Object.fromEntries(
   Object.entries(THEMES).map(([name, t]) => [name, [...t.blocking]]),
@@ -482,23 +535,7 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
         color: theme.color,
         texture: theme.texture,
       },
-      ...path.slice(1).map((p, i) => {
-        const a = path[i];
-        const lengthSeg = Math.hypot(p.x - a.x, p.z - a.z);
-        return {
-          id: `road-${i + 1}`,
-          kind: "road" as const,
-          x: (a.x + p.x) / 2,
-          y: 0.015 + i * 0.008,
-          z: (a.z + p.z) / 2,
-          w: 20,
-          h: 0.03,
-          d: lengthSeg + 12,
-          yaw: Math.atan2(p.x - a.x, p.z - a.z),
-          color: 3161673,
-          texture: "asphalt_02",
-        };
-      }),
+      ...buildRoads(path, themeKey),
       {
         id: "lava-n",
         kind: "lava" as const,
@@ -548,7 +585,75 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
     medals: { gold, silver, bronze },
     limit: bronze + 60,
     backgroundTemplate: theme.background,
+    ...(themeKey === "space" ? { gravityScale: 0.5 } : {}),
   });
+}
+
+/** Bright translucent-look plastic chunks, like toybox magnetile track. */
+const MAGNETILE = [0xff3b5c, 0x2b7de2, 0x2fd35f, 0xf2c200, 0xff8a1e, 0x9a5fe0];
+
+type RoadSolid = {
+  id: string;
+  kind: "road" | "tile";
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+  h: number;
+  d: number;
+  yaw: number;
+  color: number;
+  texture?: string;
+};
+
+function buildRoads(path: Point[], themeKey: string): RoadSolid[] {
+  if (themeKey !== "toys") {
+    return path.slice(1).map((p, i) => {
+      const a = path[i];
+      const lengthSeg = Math.hypot(p.x - a.x, p.z - a.z);
+      return {
+        id: `road-${i + 1}`,
+        kind: "road" as const,
+        x: (a.x + p.x) / 2,
+        y: 0.015 + i * 0.008,
+        z: (a.z + p.z) / 2,
+        w: 20,
+        h: 0.03,
+        d: lengthSeg + 12,
+        yaw: Math.atan2(p.x - a.x, p.z - a.z),
+        color: 3161673,
+        texture: "asphalt_02",
+      };
+    });
+  }
+  // Toybox magnetile road: butt-jointed colored tiles instead of asphalt.
+  // Ground-level like every generated road so the waypoint driver and fresh
+  // spawns stay on the deck; the toybox look comes from the tile colors.
+  const out: RoadSolid[] = [];
+  let seq = 0;
+  path.slice(1).forEach((p, i) => {
+    const a = path[i];
+    const lengthSeg = Math.hypot(p.x - a.x, p.z - a.z);
+    const n = Math.max(1, Math.round(lengthSeg / 14));
+    const yaw = Math.atan2(p.x - a.x, p.z - a.z);
+    for (let k = 0; k < n; k++) {
+      const t0 = k / n, t1 = (k + 1) / n;
+      out.push({
+        id: `road-${i + 1}-${k}`,
+        kind: "tile" as const,
+        x: a.x + (p.x - a.x) * ((t0 + t1) / 2),
+        y: 0.03 + seq * 0.004,
+        z: a.z + (p.z - a.z) * ((t0 + t1) / 2),
+        w: 20,
+        h: 0.06,
+        d: ((t1 - t0) * lengthSeg + (k === n - 1 ? 12 : 0)) - 0.04,
+        yaw,
+        color: MAGNETILE[seq % MAGNETILE.length],
+      });
+      seq++;
+    }
+  });
+  return out;
 }
 
 function isDungeonKind(kind: string) {

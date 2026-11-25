@@ -72,8 +72,18 @@ it("uses each theme's own background and prefab pools", () => {
   > = {
     toys: {
       bg: "pastoral-hills",
-      lethal: ["book", "teeth", "computer", "flippers", "donut"],
-      decor: ["lamp", "sign", "trash", "barrel", "skull", "pumpkin"],
+      lethal: [
+        "book",
+        "teeth",
+        "computer",
+        "flippers",
+        "donut",
+        "raptor",
+        "pterosaur",
+        "spinosaurus",
+        "ember-wyvern",
+      ],
+      decor: ["lamp", "speed-tube", "sign", "trash", "barrel", "skull", "pumpkin", "snowball"],
     },
     christmas: {
       bg: "christmas-village",
@@ -133,6 +143,25 @@ it("uses each theme's own background and prefab pools", () => {
       lethal: ["hands", "scissors", "clippers", "cup", "clip", "robot", "lime-chomper"],
       decor: ["cage", "candle", "jail-cell", "flagpole", "gravestone", "skull"],
     },
+    caves: {
+      bg: "mystic-cave",
+      lethal: ["cave-caterpillar", "cave-moth"],
+      decor: ["glow-mushroom", "cave-bat", "cave-fairy", "firefly"],
+    },
+    space: {
+      bg: "moon-surface",
+      lethal: ["meteor", "alien", "asteroid"],
+      decor: [
+        "station-pillar",
+        "solar-panel",
+        "satellite-dish",
+        "moon-rock",
+        "station-tower",
+        "habitat-dome",
+        "supply-crate",
+        "oxygen-tank",
+      ],
+    },
   };
   for (const [theme, want] of Object.entries(expectations)) {
     const level = generateRandomLevel(
@@ -159,11 +188,33 @@ it("uses each theme's own background and prefab pools", () => {
     "alpine-peaks",
     "fairground-park",
     "cavern-dark",
+    "mystic-cave",
+    "moon-surface",
   ]).toContain(random.backgroundTemplate);
 });
 
+it("builds magnetile tile roads for toys and asphalt for everyone else", () => {
+  const toys = generateRandomLevel({ ...defaults(), theme: "toys", name: "Road toys" }, 11);
+  const tiles = toys.solids.filter((s) => s.kind === "tile");
+  expect(tiles.length, "segmented magnetile chunks").toBeGreaterThan(3);
+  expect(toys.solids.some((s) => s.kind === "road"), "no asphalt").toBe(false);
+  const palette = new Set([0xff3b5c, 0x2b7de2, 0x2fd35f, 0xf2c200, 0xff8a1e, 0x9a5fe0]);
+  for (const t of tiles) expect(palette, t.id).toContain(t.color);
+  expect(new Set(tiles.map((t) => t.color)).size, "color variety").toBeGreaterThan(2);
+  const dungeon = generateRandomLevel({ ...defaults(), theme: "dungeon", name: "Road dungeon" }, 11);
+  expect(dungeon.solids.some((s) => s.kind === "tile"), "no tiles").toBe(false);
+  expect(dungeon.solids.filter((s) => s.kind === "road")).toHaveLength(3);
+});
+
+it("runs space levels at half gravity like the collection", () => {
+  const level = generateRandomLevel({ ...defaults(), theme: "space", name: "Gravity space" }, 4);
+  expect(level.gravityScale).toBe(0.5);
+  const caves = generateRandomLevel({ ...defaults(), theme: "caves", name: "Gravity caves" }, 4);
+  expect(caves.gravityScale).toBeUndefined();
+});
+
 it("keeps every flanked prefab at its clearance from the path", () => {
-  for (const theme of ["toys", "christmas", "ice", "carnival", "dungeon"] as const) {
+  for (const theme of ["toys", "christmas", "ice", "carnival", "dungeon", "caves", "space"] as const) {
     const level = generateRandomLevel(
       { ...defaults(), theme, lethals: 12, decor: 12, name: `Clear ${theme}` },
       3,
@@ -251,7 +302,7 @@ it("needs at least 30 seconds on the ideal line like the import gate", () => {
 });
 
 it("beats generated levels back to back across every theme", () => {
-  const themes = ["toys", "christmas", "ice", "carnival", "dungeon", "random"] as const;
+  const themes = ["toys", "christmas", "ice", "carnival", "dungeon", "caves", "space", "random"] as const;
   themes.forEach((theme, i) => {
     const level = generateRandomLevel(
       { ...defaults(), theme, name: `Streak ${theme}` },

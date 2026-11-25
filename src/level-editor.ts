@@ -246,6 +246,8 @@ export function createLevelEditor(
     ["ice", "Ice"],
     ["carnival", "Carnival"],
     ["dungeon", "Dungeon"],
+    ["caves", "Caves"],
+    ["space", "Space"],
   ])
     randomTheme.append(el("option", { value }, label));
   randomTheme.value = RANDOM_DEFAULTS.theme;
@@ -1092,7 +1094,7 @@ export function createLevelEditor(
     (async () => {
       try {
         const theme = randomTheme.value as RandomLevelParams["theme"];
-        if (!["toys", "christmas", "ice", "carnival", "dungeon", "random"].includes(theme))
+        if (!["toys", "christmas", "ice", "carnival", "dungeon", "caves", "space", "random"].includes(theme))
           throw new Error("Unknown theme");
         const params = {
           checkpoints: readInt(randomCheckpoints, "Checkpoints", 1, 20),
