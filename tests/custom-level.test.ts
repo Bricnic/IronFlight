@@ -14,6 +14,7 @@ import { ghostDefs } from "../src/ghosts";
 import {
   TEXTURE_IDS,
   PREFAB_KINDS,
+  prefabSection,
   validateCustomLevel,
   toTrack,
   registerCustomTrack,
@@ -413,4 +414,32 @@ it("headless ghost chases and drains a parked car", () => {
   expect(ghosts.ghosts[0].contacts).toBeGreaterThan(0);
   expect(s.snapshot().integrity).toBeLessThan(1);
   s.dispose();
+});
+
+it("classifies every prefab kind into exactly one picker section", () => {
+  const seen = new Map<string, string[]>();
+  for (const kind of PREFAB_KINDS) {
+    const section = prefabSection(kind);
+    expect(
+      ["colliders", "destructibles", "dangerous", "lethal"],
+      `${kind} section`,
+    ).toContain(section);
+    const bucket = seen.get(section) ?? [];
+    bucket.push(kind);
+    seen.set(section, bucket);
+  }
+  // Every section is populated.
+  expect(seen.get("colliders")!.length).toBeGreaterThan(0);
+  expect(seen.get("destructibles")!.length).toBeGreaterThan(0);
+  expect(seen.get("dangerous")!.length).toBeGreaterThan(0);
+  expect(seen.get("lethal")!.length).toBeGreaterThan(0);
+  // Spot checks against physics behavior.
+  for (const kind of ["lamp", "station-pillar", "cage", "speed-tube", "carousel"])
+    expect(prefabSection(kind), kind).toBe("colliders");
+  for (const kind of ["barrel", "supply-crate", "glass-pane", "fragile-ice"])
+    expect(prefabSection(kind), kind).toBe("destructibles");
+  for (const kind of ["raptor", "cave-caterpillar", "ufo", "dragon", "crusher-claw", "shark-pool", "bumper-arena"])
+    expect(prefabSection(kind), kind).toBe("dangerous");
+  for (const kind of ["hands", "book", "lime-chomper", "boulder", "volcano", "pelican", "asteroid", "spider"])
+    expect(prefabSection(kind), kind).toBe("lethal");
 });

@@ -11,6 +11,7 @@ import {
   TEXTURE_IDS,
   PREFAB_KINDS,
   PROP_PREFAB_KINDS,
+  prefabSection,
   COLLECTIBLE_KINDS,
   SOLID_KINDS,
   customTrackIds,
@@ -109,9 +110,9 @@ export function createLevelEditor(
   ) as HTMLButtonElement;
   const newButton = el("button", { id: "editor-new" }, "New");
   const saveButton = el("button", { id: "editor-save" }, "Save");
-  const playtestButton = el("button", { id: "editor-playtest" }, "Playtest");
+  const playtestButton = el("button", { id: "editor-playtest", title: "Playtest this level (P)" }, "Playtest");
   const randomButton = el("button", { id: "editor-randomize" }, "Randomize");
-  const undoButton = el("button", { id: "editor-undo" }, "Undo");
+  const undoButton = el("button", { id: "editor-undo", title: "Undo (Ctrl+Z)" }, "Undo");
   const redoButton = el("button", { id: "editor-redo" }, "Redo");
   undoButton.addEventListener("click", () => store.undo());
   redoButton.addEventListener("click", () => store.redo());
@@ -170,8 +171,17 @@ export function createLevelEditor(
     id: "editor-prefab-kind",
     "aria-label": "Prefab kind",
   }) as HTMLSelectElement;
-  for (const kind of [...PREFAB_KINDS].sort())
-    prefabKind.append(el("option", { value: kind }, kind));
+  for (const [section, label] of [
+    ["colliders", "Colliders — rigid decor"],
+    ["destructibles", "Destructibles — knocked over or destroyed"],
+    ["dangerous", "Dangerous — significant damage"],
+    ["lethal", "Lethal — insta-kill on contact"],
+  ] as const) {
+    const group = el("optgroup", { label });
+    for (const kind of [...PREFAB_KINDS].filter((k) => prefabSection(k) === section).sort())
+      group.append(el("option", { value: kind }, kind));
+    prefabKind.append(group);
+  }
   const addPrefab = el("button", { id: "editor-add-prefab" }, "Add prefab");
   const addCheckpoint = el("button", { id: "editor-add-checkpoint" }, "Add checkpoint");
   const addTarget = el("button", { id: "editor-add-target" }, "Add collectible");
@@ -237,6 +247,22 @@ export function createLevelEditor(
   const randomLethals = randomField("Lethal prefabs", "editor-random-lethals", "number", String(RANDOM_DEFAULTS.lethals), { min: "0", max: "100" });
   const randomBlocking = randomField("Blocking path %", "editor-random-blocking", "number", String(RANDOM_DEFAULTS.blockingPercent), { min: "0", max: "100" });
   const randomDecor = randomField("Decor prefabs", "editor-random-decor", "number", String(RANDOM_DEFAULTS.decor), { min: "0", max: "100" });
+  const diversityRow = el("label", { class: "prop-row" }, "Prefab diversity ");
+  const randomDiversity = el("input", {
+    id: "editor-random-diversity",
+    type: "range",
+    min: "1",
+    max: "10",
+    step: "1",
+    value: String(RANDOM_DEFAULTS.diversity),
+    title: "1 draws theme pools only; 5 mixes half off-theme prefabs; 10 draws the full prefab list",
+  }) as HTMLInputElement;
+  const diversityValue = el("span", { id: "editor-random-diversity-value" }, String(RANDOM_DEFAULTS.diversity));
+  randomDiversity.addEventListener("input", () => {
+    diversityValue.textContent = randomDiversity.value;
+  });
+  diversityRow.append(randomDiversity, diversityValue);
+  randomBox.append(diversityRow);
   const themeRow = el("label", { class: "prop-row" }, "Theme ");
   const randomTheme = el("select", { id: "editor-random-theme" }) as HTMLSelectElement;
   for (const [value, label] of [
@@ -1130,12 +1156,17 @@ export function createLevelEditor(
   randomButton.addEventListener("click", () => {
     randomError.textContent = "";
     randomModal.hidden = false;
+    // Only autofill a pristine field: a slow catalogue fetch must never
+    // clobber a name the user already typed.
+    const before = randomName.value;
     takenNamesAndIds()
       .then(({ names, ids }) => {
-        randomName.value = nextAvailableName(RANDOM_DEFAULTS.name, names, ids);
+        if (randomName.value === before)
+          randomName.value = nextAvailableName(RANDOM_DEFAULTS.name, names, ids);
       })
       .catch(() => {
-        randomName.value = RANDOM_DEFAULTS.name;
+        if (randomName.value === before)
+          randomName.value = RANDOM_DEFAULTS.name;
       });
   });
   randomCancel.addEventListener("click", () => {
@@ -1158,6 +1189,7 @@ export function createLevelEditor(
           lethals: readInt(randomLethals, "Lethal prefabs", 0, 100),
           blockingPercent: readInt(randomBlocking, "Blocking path %", 0, 100),
           decor: readInt(randomDecor, "Decor prefabs", 0, 100),
+          diversity: readInt(randomDiversity, "Prefab diversity", 1, 10),
           theme,
           width: readInt(randomWidth, "Width", 150, 1000),
           length: readInt(randomLength, "Length", 150, 1000),
@@ -1266,6 +1298,15 @@ export function createLevelEditor(
         }
         return;
       }
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault(); e.stopPropagation();
+        if (!e.repeat) store.undo();
+        return;
+      }
+    }
+    if (!screen.hidden && !store.clip && (e.key === "p" || e.key === "P") && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement) && !(e.target instanceof HTMLSelectElement) && !(e.target instanceof HTMLElement && e.target.isContentEditable)) {
+      e.preventDefault(); e.stopPropagation();
+      playtestButton.click();
     }
     if (!screen.hidden && e.key === "Escape" && store.clip) {
       e.preventDefault(); store.cancelClip();

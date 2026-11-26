@@ -18,6 +18,8 @@ test("randomize modal opens with documented defaults", async ({ page }) => {
   await expect(page.locator("#editor-random-lethals")).toHaveValue("10");
   await expect(page.locator("#editor-random-blocking")).toHaveValue("40");
   await expect(page.locator("#editor-random-decor")).toHaveValue("10");
+  await expect(page.locator("#editor-random-diversity")).toHaveValue("1");
+  await expect(page.locator("#editor-random-diversity-value")).toHaveText("1");
   await expect(page.locator("#editor-random-theme")).toHaveValue("random");
   await expect(page.locator("#editor-random-width")).toHaveValue("400");
   await expect(page.locator("#editor-random-length")).toHaveValue("400");
@@ -90,4 +92,27 @@ test("randomize increments the default name when taken", async ({ page }) => {
     (name) => window.__game!.customLevels.remove(name).catch(() => {}),
     "New-Level-001",
   );
+});
+test("diversity 10 pulls prefabs outside the theme pool", async ({ page }) => {
+  await openEditor(page);
+  await page.evaluate(() =>
+    window.__game!.customLevels.remove("e2e-random-diverse").catch(() => {}),
+  );
+  await page.locator("#editor-randomize").click();
+  await page.locator("#editor-random-theme").selectOption("toys");
+  await page.locator("#editor-random-diversity").evaluate((el, v) => {
+    (el as HTMLInputElement).value = v;
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }, "10");
+  await expect(page.locator("#editor-random-diversity-value")).toHaveText("10");
+  await page.locator("#editor-random-name").fill("e2e-random-diverse");
+  await page.locator("#editor-random-generate").click();
+  await expect(page.locator("#editor-random-modal")).toBeHidden();
+  await page.locator("#editor-save").click();
+  await expect(page.locator("#editor-status")).toContainText("Saved e2e-random-diverse");
+  const wild = await page.evaluate((n) => window.__game!.customLevels.load(n), "e2e-random-diverse");
+  const themed = new Set(["book", "teeth", "computer", "flippers", "donut", "raptor", "pterosaur", "spinosaurus", "ember-wyvern", "lamp", "speed-tube", "sign", "trash", "barrel", "skull", "pumpkin", "snowball"]);
+  expect(wild.prefabs.some((p) => !themed.has(p.kind))).toBe(true);
+  expect(wild.prefabs.some((p) => p.kind === "checkpoint")).toBe(false);
+  await page.evaluate((n) => window.__game!.customLevels.remove(n).catch(() => {}), "e2e-random-diverse");
 });

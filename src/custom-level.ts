@@ -358,6 +358,86 @@ export const PREFAB_KINDS = [
   "checkpoint",
 ] as const;
 export type PrefabKind = (typeof PREFAB_KINDS)[number];
+
+/**
+ * Editor picker sections, grouped by contact behavior (damage figures from
+ * dungeon/gauntlet/comic physics):
+ * - lethal: insta-kill on contact/strike (snap traps, jaw chompers,
+ *   lime-chomper, boulder, volcano, spikes, pelican, spider, mailbox,
+ *   birthday-card, asteroid, meteor).
+ * - dangerous: significant non-instant harm (dinos, poison/confusion,
+ *   UFO lasers, fire/water/sharks, gauntlet machines, bumper rams...).
+ * - destructibles: knocked over or destroyed (props, loose blocks, ice).
+ * - colliders: rigid harmless scenery. This bucket also holds the few
+ *   harmless kinds without colliders (bats, fairies, fireflies) and the
+ *   course items (checkpoint, wings, gold-star), which are harmless to
+ *   touch but have no collision mask of their own.
+ */
+export type PrefabSection = "colliders" | "destructibles" | "dangerous" | "lethal";
+
+const LETHAL_PREFAB_KINDS = new Set<string>([
+  "hands",
+  "scissors",
+  "clippers",
+  "cup",
+  "clip",
+  ...CANDY_LETHAL_PREFAB_KINDS,
+  ...CHRISTMAS_LETHAL_PREFAB_KINDS,
+  ...JAW_PREFAB_KINDS,
+  "lime-chomper",
+  "boulder",
+  "volcano",
+  "spike-gates",
+  "pelican",
+  "spider",
+  "mailbox",
+  "birthday-card",
+  "asteroid",
+  "meteor",
+]);
+
+const DANGEROUS_PREFAB_KINDS = new Set<string>([
+  "robot",
+  ...DINOSAUR_PREFAB_KINDS,
+  "screw-field",
+  "drill-tank",
+  "window-gate",
+  "crusher-claw",
+  "cave-caterpillar",
+  "cave-moth",
+  "alien",
+  "ufo",
+  "ghost",
+  "dragon",
+  "bouncy-castle",
+  "helium-balloon",
+  "birthday-candle",
+  "burning-coals",
+  "hydrant",
+  "burner",
+  "water",
+  "ocean",
+  "shark-pool",
+  "potion",
+  "hammer",
+  "axe",
+  "bumper-arena",
+  "bumper-arena-xl",
+  "anchor",
+]);
+
+const DESTRUCTIBLE_PREFAB_KINDS = new Set<string>([
+  ...PROP_PREFAB_KINDS,
+  ...LOOSE_BLOCK_PREFAB_KINDS,
+  ...FRAGILE_ICE_PREFAB_KINDS,
+]);
+
+export function prefabSection(kind: string): PrefabSection {
+  if (LETHAL_PREFAB_KINDS.has(kind)) return "lethal";
+  if (DANGEROUS_PREFAB_KINDS.has(kind)) return "dangerous";
+  if (DESTRUCTIBLE_PREFAB_KINDS.has(kind)) return "destructibles";
+  return "colliders";
+}
 export const SOLID_KINDS = [
   "ground",
   "road",

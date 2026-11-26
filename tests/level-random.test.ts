@@ -3,10 +3,12 @@ import { initPhysics } from "../src/simulation";
 import { validateCustomLevel } from "../src/custom-level";
 import {
   BLOCKING_ELIGIBLE,
+  DIVERSITY_POOL,
   FLANK_MIN,
   GENERATOR_CLEARANCE,
   RANDOM_DEFAULTS,
   RANDOM_IDEAL_MIN,
+  diversityUnrelatedProb,
   generateRandomLevel,
   nextAvailableName,
   type RandomLevelParams,
@@ -20,6 +22,7 @@ const defaults = (): RandomLevelParams => ({
   lethals: RANDOM_DEFAULTS.lethals,
   decor: RANDOM_DEFAULTS.decor,
   blockingPercent: RANDOM_DEFAULTS.blockingPercent,
+  diversity: RANDOM_DEFAULTS.diversity,
   theme: RANDOM_DEFAULTS.theme,
   width: RANDOM_DEFAULTS.width,
   length: RANDOM_DEFAULTS.length,
@@ -335,3 +338,39 @@ it("beats the 0% and 100% blocking extremes", () => {
   );
   expect(driveGeneratedLevelToCompletion(gauntlet)).toBeLessThan(gauntlet.limit!);
 }, 120000);
+
+it("maps diversity 1/5/10 to 0%/50%/100% off-theme draws", () => {
+  expect(diversityUnrelatedProb(1)).toBe(0);
+  expect(diversityUnrelatedProb(5)).toBe(0.5);
+  expect(diversityUnrelatedProb(10)).toBe(1);
+  expect(DIVERSITY_POOL.length).toBeGreaterThan(50);
+  expect(DIVERSITY_POOL).not.toContain("checkpoint");
+  expect(RANDOM_DEFAULTS.diversity).toBe(1);
+});
+
+it("draws theme pools at diversity 1 and the full list at 10", () => {
+  const dungeonPool = new Set([
+    "hands", "scissors", "clippers", "cup", "clip", "robot", "lime-chomper",
+    "cage", "candle", "jail-cell", "flagpole", "gravestone", "skull",
+  ]);
+  const themed = generateRandomLevel(
+    { ...defaults(), theme: "dungeon", diversity: 1, name: "Diverse one" },
+    7,
+  );
+  for (const p of themed.prefabs)
+    expect(dungeonPool.has(p.kind), p.kind).toBe(true);
+  const wild = generateRandomLevel(
+    { ...defaults(), theme: "dungeon", diversity: 10, name: "Diverse ten" },
+    7,
+  );
+  expect(wild.prefabs.some((p) => !dungeonPool.has(p.kind))).toBe(true);
+  expect(wild.prefabs.some((p) => p.kind === "checkpoint")).toBe(false);
+});
+
+it("rejects out-of-range diversity", () => {
+  for (const diversity of [0, 11, 2.5]) {
+    expect(() =>
+      generateRandomLevel({ ...defaults(), diversity, name: "Bad div" }, 1),
+    ).toThrow(/Diversity must be an integer from 1 to 10/);
+  }
+});

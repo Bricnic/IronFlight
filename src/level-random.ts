@@ -1,6 +1,7 @@
 import {
   customSlug,
   DUNGEON_PREFAB_KINDS,
+  PREFAB_KINDS,
   validateCustomLevel,
   type CustomLevel,
   type CustomPrefab,
@@ -13,6 +14,8 @@ export interface RandomLevelParams {
   decor: number;
   /** Percent of lethals placed on the road to weave around (0-100). */
   blockingPercent: number;
+  /** Prefab diversity 1-10: 1 draws theme pools only, 10 draws everything. */
+  diversity: number;
   theme: "toys" | "christmas" | "ice" | "carnival" | "dungeon" | "caves" | "space" | "random";
   width: number;
   length: number;
@@ -24,6 +27,7 @@ export const RANDOM_DEFAULTS = {
   lethals: 10,
   decor: 10,
   blockingPercent: 40,
+  diversity: 1,
   theme: "random",
   width: 400,
   length: 400,
@@ -36,6 +40,21 @@ const IDEAL_PACE = 12.7;
 export const RANDOM_IDEAL_MIN = 30;
 /** Flanked threats stay at least this far off the path (beyond weave reach). */
 export const FLANK_MIN = 32;
+/**
+ * Chance a prefab pick ignores the theme pool: 0 at diversity 1, 50% at 5,
+ * 100% at 10 (piecewise linear through those anchors).
+ */
+export function diversityUnrelatedProb(diversity: number): number {
+  if (diversity <= 1) return 0;
+  if (diversity >= 10) return 1;
+  return diversity <= 5 ? (diversity - 1) / 8 : 0.5 + (diversity - 5) / 10;
+}
+/**
+ * Off-theme pool: every placeable prefab kind. Checkpoint prefabs register
+ * as real race gates, so they stay out — a random gate could strand the
+ * run off the road network.
+ */
+export const DIVERSITY_POOL = [...PREFAB_KINDS].filter((k) => k !== "checkpoint");
 
 function mulberry32(seed: number) {
   let a = seed >>> 0;
@@ -292,6 +311,7 @@ function isInt(n: unknown) {
 /** Procedurally built race: S-road, flanked lethals, scattered decor. Validated. */
 export function generateRandomLevel(params: RandomLevelParams, seed: number): CustomLevel {
   const { checkpoints, lethals, decor, width, length } = params;
+  const diversity = params.diversity ?? 1;
   if (!isInt(checkpoints) || checkpoints < 1 || checkpoints > 20)
     throw new Error("Checkpoints must be an integer from 1 to 20");
   if (!isInt(lethals) || lethals < 0 || lethals > 100)
@@ -308,7 +328,16 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
     throw new Error("Width must be an integer from 150 to 1000");
   if (!isInt(length) || length < 150 || length > 1000)
     throw new Error("Length must be an integer from 150 to 1000");
+  if (!isInt(diversity) || diversity < 1 || diversity > 10)
+    throw new Error("Diversity must be an integer from 1 to 10");
   const rand = mulberry32(seed);
+  // Off-theme draw, or null to keep the themed pick. Draws no randomness
+  // at diversity 1, so default output is byte-identical to themed-only.
+  const unrelatedP = diversityUnrelatedProb(diversity);
+  const offTheme = (): string | null => {
+    if (unrelatedP <= 0 || rand() >= unrelatedP) return null;
+    return DIVERSITY_POOL[Math.floor(rand() * DIVERSITY_POOL.length)];
+  };
   const themeKey =
     params.theme === "random"
       ? THEME_KEYS[Math.floor(rand() * THEME_KEYS.length)]
@@ -410,7 +439,7 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
     if (distToPath(p, path) > 6.5)
       throw new Error(`Could not place blocking trap ${i + 1}; enlarge the map`);
     placed.push(p);
-    const kind = blockingPool[i % blockingPool.length];
+    const kind = offTheme() ?? blockingPool[i % blockingPool.length];
     const prefab: CustomPrefab = {
       id: `lethal-${i}`,
       kind,
@@ -434,28 +463,31 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
         pick = lethalPool.find((p) => p.kind !== "ghost") ?? pick;
       else ghosts++;
     }
+    const wild = offTheme();
+    const flankKind = wild ?? pick.kind;
+    const flankClearance = wild ? 12 : pick.clearance;
     let done = false;
     for (let attempt = 0; attempt < 20 && !done; attempt++) {
       const side = rand() < 0.5 ? -1 : 1;
       // Flanked threats stay beyond weave reach so dodges never cross them.
-      const offset = Math.max(pick.clearance, FLANK_MIN) + rand() * 6;
+      const offset = Math.max(flankClearance, FLANK_MIN) + rand() * 6;
       const leg = Math.floor(rand() * legs);
       const t = 0.25 + rand() * 0.5;
       const a = path[leg], b = path[leg + 1];
       const p = clampBounds(offsetPoint(leg, t, side * offset));
-      if (distToPath(p, path) < Math.max(pick.clearance, FLANK_MIN) || !apart(p, 6)) continue;
+      if (distToPath(p, path) < Math.max(flankClearance, FLANK_MIN) || !apart(p, 6)) continue;
       placed.push(p);
-      const prefab: CustomPrefab = { id: `lethal-${i}`, kind: pick.kind, x: p.x, z: p.z };
-      if (pick.kind === "lime-chomper" || pick.kind === "dragon") {
+      const prefab: CustomPrefab = { id: `lethal-${i}`, kind: flankKind, x: p.x, z: p.z };
+      if (flankKind === "lime-chomper" || flankKind === "dragon") {
         // Long zones/jets face away from the road, never across it.
         const bx = a.x + (b.x - a.x) * t, bz = a.z + (b.z - a.z) * t;
         const ax = p.x - bx, az = p.z - bz;
         const len = Math.hypot(ax, az) || 1;
         prefab.yaw =
-          pick.kind === "dragon"
+          flankKind === "dragon"
             ? Math.atan2(az / len, -(ax / len))
             : Math.atan2(ax / len, az / len);
-      } else if (isDungeonKind(pick.kind)) prefab.yaw = rand() * Math.PI * 2;
+      } else if (isDungeonKind(flankKind)) prefab.yaw = rand() * Math.PI * 2;
       prefabs.push(prefab);
       done = true;
     }
@@ -475,7 +507,9 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
       (theme.decorProp.length === 0 || rand() < 0.5);
     if (useSolid) {
       const pick = theme.decorSolid[Math.floor(rand() * theme.decorSolid.length)];
-      const floor = Math.max(pick.clearance, FLANK_MIN);
+      const wild = offTheme();
+      const decorKind = wild ?? pick.kind;
+      const floor = Math.max(wild ? 12 : pick.clearance, FLANK_MIN);
       let done = false;
       for (let attempt = 0; attempt < 200 && !done; attempt++) {
         const p = {
@@ -484,9 +518,9 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
         };
         if (distToPath(p, path) < floor || !apart(p, 6)) continue;
         placed.push(p);
-        const prefab: CustomPrefab = { id: `decor-${i}`, kind: pick.kind, x: p.x, z: p.z };
-        if (pick.y !== undefined) prefab.y = pick.y;
-        if (isDungeonKind(pick.kind)) prefab.yaw = rand() * Math.PI * 2;
+        const prefab: CustomPrefab = { id: `decor-${i}`, kind: decorKind, x: p.x, z: p.z };
+        if (!wild && pick.y !== undefined) prefab.y = pick.y;
+        if (isDungeonKind(decorKind)) prefab.yaw = rand() * Math.PI * 2;
         prefabs.push(prefab);
         done = true;
       }
@@ -495,7 +529,7 @@ export function generateRandomLevel(params: RandomLevelParams, seed: number): Cu
           `Could not place ${decor} decor with clearance; enlarge the map`,
         );
     } else {
-      const kind = theme.decorProp[Math.floor(rand() * theme.decorProp.length)];
+      const kind = offTheme() ?? theme.decorProp[Math.floor(rand() * theme.decorProp.length)];
       let p = { x: 0, z: 0 };
       for (let attempt = 0; attempt < 200; attempt++) {
         p = {
