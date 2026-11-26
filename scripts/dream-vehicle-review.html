@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>Dream vehicle model review</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #d9e2e8;
+      font: 16px system-ui;
+      color: #172936;
+    }
+    canvas {
+      display: block;
+    }
+    #caption {
+      position: absolute;
+      left: 28px;
+      top: 20px;
+      pointer-events: none;
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 26px;
+    }
+    p {
+      margin: 0;
+      color: #42576a;
+    }
+  </style>
+  <div id="caption">
+    <h1></h1>
+    <p></p>
+  </div>
+  <script type="module">
+    import * as T from "three";
+    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+    import { DREAM_VEHICLES, dreamAnimate } from "/src/dream-vehicles.ts";
+
+    const renderer = new T.WebGLRenderer({
+      antialias: true,
+      preserveDrawingBuffer: true,
+    });
+    renderer.setSize(1000, 740);
+    renderer.setPixelRatio(1);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = T.PCFSoftShadowMap;
+    renderer.toneMapping = T.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    document.body.append(renderer.domElement);
+    const scene = new T.Scene();
+    scene.background = new T.Color(0xd9e2e8);
+    const pmrem = new T.PMREMGenerator(renderer);
+    const room = new RoomEnvironment();
+    scene.environment = pmrem.fromScene(room, 0.04).texture;
+    room.dispose();
+    scene.add(new T.HemisphereLight(0xeaf3ff, 0x68757c, 2.1));
+    const key = new T.DirectionalLight(0xfff5e3, 3.4);
+    key.position.set(5, 9, 7);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    Object.assign(key.shadow.camera, {
+      left: -6,
+      right: 6,
+      top: 6,
+      bottom: -6,
+      near: 0.1,
+      far: 30,
+    });
+    key.shadow.bias = -0.0003;
+    key.shadow.normalBias = 0.025;
+    scene.add(key);
+    const fill = new T.DirectionalLight(0xc4dcff, 1.8);
+    fill.position.set(-6, 4, -5);
+    scene.add(fill);
+    const ground = new T.Mesh(
+      new T.PlaneGeometry(200, 200),
+      new T.MeshStandardMaterial({ color: 0xb5c1ca, roughness: 0.88 }),
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -1.93;
+    ground.receiveShadow = true;
+    scene.add(ground);
+    const camera = new T.PerspectiveCamera(38, 1000 / 740, 0.1, 100);
+    let root;
+    window.review = {
+      ids: DREAM_VEHICLES.map((v) => v.id),
+      render(id, angle, time = 0) {
+        if (root) {
+          scene.remove(root);
+          const geometries = new Set(),
+            materials = new Set();
+          root.traverse((o) => {
+            if (o.isMesh) {
+              geometries.add(o.geometry);
+              for (const m of [o.material].flat()) materials.add(m);
+            }
+          });
+          geometries.forEach((g) => g.dispose());
+          materials.forEach((m) => m.dispose());
+        }
+        const vehicle = DREAM_VEHICLES.find((v) => v.id === id);
+        root = vehicle.build();
+        scene.add(root);
+        dreamAnimate(root, time);
+        const views = {
+          "front-right": [7.6, 4.5, 9],
+          "rear-left": [-7.6, 4.5, -9],
+          "left-side": [-12, 1.25, 0],
+          "rear-low": [6.8, 0.3, -10.5],
+          top: [6, 10, 4],
+        };
+        camera.position.fromArray(views[angle]);
+        camera.lookAt(0, 0.4, 0);
+        document.querySelector("h1").textContent = vehicle.name;
+        document.querySelector("p").textContent =
+          `${angle.replaceAll("-", " ")} · animation ${time.toFixed(2)}s · actual game model`;
+        renderer.render(scene, camera);
+        return {
+          meshes: (() => {
+            let n = 0;
+            root.traverse((o) => {
+              if (o.isMesh) n++;
+            });
+            return n;
+          })(),
+          bounds: new T.Box3()
+            .setFromObject(root)
+            .getSize(new T.Vector3())
+            .toArray(),
+        };
+      },
+    };
+    window.review.render("gingerbread-glider", "front-right");
+  </script>
+</html>

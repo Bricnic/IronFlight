@@ -6,6 +6,7 @@ import {
   type Tuning,
 } from "./tuning";
 import type { Simulation } from "./simulation";
+import { allowLockedContent, setAllowLockedContent } from "./debug-access";
 import {
   PROGRESS_FONT_DEFAULT,
   applyProgressFont,
@@ -66,6 +67,16 @@ export async function createDebugMenu(sim: Simulation) {
     .sort((a, b) => labels[a].localeCompare(labels[b]));
   menu.innerHTML = `<div class="eyebrow">PLAYTEST TUNING <span>\u0060 TO CLOSE</span></div><h2>Make it your own.</h2><p>Live adjustments · saved on this browser</p><p class="debug-level">Level path: <span id="debug-level-path"></span></p><label class="debug-toggle" for="debug-ghosts"><span>Enable graveyard ghosts</span><input id="debug-ghosts" type="checkbox"></label><label for="objective-font-size">Objective font size<output id="objective-font-size-value"></output></label><input id="objective-font-size" type="range" min="1" max="10" step="0.1" value="1.3"><div id="truck-colors" class="truck-colors"></div>${sliderKeys.map((key) => `<label for="tune-${key}">${labels[key]}<output id="value-${key}"></output></label><input id="tune-${key}" type="range" min="${tuningRange(key).min}" max="${tuningRange(key).max}" step="${tuningRange(key).step}" value="${sim.tuning[key]}">`).join("")}<button id="store-defaults">Store as Defaults</button><button id="reset-tuning">Reset tuning</button><p id="tuning-status" role="status" aria-live="polite"></p>`;
   document.getElementById("app")!.append(menu);
+  const accessLabel = document.createElement("label");
+  accessLabel.className = "debug-toggle";
+  accessLabel.htmlFor = "debug-allow-locked-content";
+  accessLabel.innerHTML = `<span>Allow locked cars and tracks</span><input id="debug-allow-locked-content" type="checkbox">`;
+  menu.querySelector(".debug-toggle")!.before(accessLabel);
+  const accessToggle = accessLabel.querySelector("input")!;
+  accessToggle.checked = allowLockedContent();
+  accessToggle.addEventListener("change", () =>
+    setAllowLockedContent(accessToggle.checked),
+  );
   const ghostToggle = menu.querySelector<HTMLInputElement>("#debug-ghosts")!;
   const setGhostsEnabled = (enabled: boolean) => {
     sim.ghostsEnabled = enabled;

@@ -1,4 +1,5 @@
-import { VEHICLES } from "./vehicles";
+import { VEHICLES, getVehicle } from "./vehicles";
+import { allowLockedContent, DEBUG_ACCESS_CHANGED } from "./debug-access";
 import { UnlockSeen } from "./level-unlocks";
 import {
   dreamCarRequirement,
@@ -18,6 +19,12 @@ export function createVehicleSelect(
   starBank?: GoldStars,
   unlockSeen?: UnlockSeen,
 ) {
+  const pickedVehicle = () => {
+    const stored = localStorage.getItem("vehicle") ?? "monster-truck";
+    return VEHICLES.some(v => v.id === stored) || stored === "saturn-saucer"
+      ? getVehicle(stored).id
+      : "monster-truck";
+  };
   const seen =
     unlockSeen ??
     new UnlockSeen({
@@ -41,7 +48,7 @@ export function createVehicleSelect(
     }, 2400);
   };
   const isLocked = (id: string) =>
-    isDreamCar(id) && !isDreamCarUnlocked(id, scores!, starBank);
+    !allowLockedContent() && isDreamCar(id) && !isDreamCarUnlocked(id, scores!, starBank);
   const buildCards = () => {
     grid.innerHTML = "";
     cards.clear();
@@ -72,9 +79,9 @@ export function createVehicleSelect(
   };
   /** Newly earned dream cars burst open on first sight, like tracks. */
   const playUnlockAnimations = () => {
-    if (!scores) return;
+    if (!scores || allowLockedContent()) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const picked = localStorage.getItem("vehicle") ?? "monster-truck";
+    const picked = pickedVehicle();
     for (const vehicle of VEHICLES) {
       if (!isDreamCar(vehicle.id) || isLocked(vehicle.id)) continue;
       if (vehicle.id === picked || seen.has(vehicle.id)) continue;
@@ -107,6 +114,13 @@ export function createVehicleSelect(
     }
   };
   host.append(screen);
+  window.addEventListener(DEBUG_ACCESS_CHANGED, () => {
+    if (screen.hidden) return;
+    buildCards();
+    const picked = pickedVehicle();
+    for (const [id, card] of cards)
+      card.classList.toggle("selected", id === picked);
+  });
   screen.querySelector<HTMLButtonElement>("#vehicle-back")!.onclick = onBack;
   const buttons = () =>
     Array.from(grid.querySelectorAll<HTMLButtonElement>(".vehicle-pick"));
@@ -131,7 +145,7 @@ export function createVehicleSelect(
   return {
     show() {
       buildCards();
-      const picked = localStorage.getItem("vehicle") ?? "monster-truck";
+      const picked = pickedVehicle();
       for (const [id, card] of cards)
         card.classList.toggle("selected", id === picked);
       screen.hidden = false;

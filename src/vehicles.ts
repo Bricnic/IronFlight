@@ -238,6 +238,8 @@ export function lightBarState(speedMs: number, time: number) {
     : { a: 0.15, b: 3 };
 }
 export function getVehicle(id: string): VehicleDef {
+  // Preserve saved selections of the retired space dream vehicle.
+  if (id === "saturn-saucer") id = "meteor-prospector";
   const vehicle = VEHICLES.find((v) => v.id === id);
   if (!vehicle) throw new RangeError(`Unknown vehicle: ${id}`);
   return vehicle;

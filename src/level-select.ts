@@ -1,5 +1,6 @@
 import { getTrack, type TrackId, type CustomTrackId } from "./tracks";
 import { officialTracks } from "./official-levels";
+import { allowLockedContent, DEBUG_ACCESS_CHANGED } from "./debug-access";
 import {
   LEVEL_COLLECTIONS,
   collectionForTrack,
@@ -92,7 +93,7 @@ export function createLevelSelect(
     const unlocked = new Set(unlockedIds(collection, scores, starBank));
     for (const [i, id] of collection.trackIds.entries()) {
       const track = getTrack(id);
-      const locked = !unlocked.has(id);
+      const locked = !allowLockedContent() && !unlocked.has(id);
       const card = document.createElement("article");
       card.className = `track-card${locked ? " locked" : ""}`;
       card.dataset.track = track.id;
@@ -138,6 +139,7 @@ export function createLevelSelect(
 
   /** Earned unlocks (beyond the base two) that are unseen and unplayed burst open. */
   const playUnlockAnimations = (collection: LevelCollection) => {
+    if (allowLockedContent()) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     for (const [i, id] of collection.trackIds.entries()) {
       if (i < UNLOCK_BASE) continue;
@@ -262,7 +264,7 @@ export function createLevelSelect(
             .sort((a, b) => a.b!.time - b.b!.time)[0]
         : { v: "default", b: scores.best(track.id) };
       const card = cards.get(track.id)!;
-      const locked = !unlocked.has(id);
+      const locked = !allowLockedContent() && !unlocked.has(id);
       card.classList.toggle("locked", locked);
       const button = card.querySelector("button")!;
       if (locked) button.setAttribute("aria-disabled", "true");
@@ -301,6 +303,9 @@ export function createLevelSelect(
     if (activeCollection && !tracksSection.hidden)
       refreshTrackCards(activeCollection);
   };
+  window.addEventListener(DEBUG_ACCESS_CHANGED, () => {
+    if (!screen.hidden && activeCollection) buildTrackCards(activeCollection);
+  });
   return {
     show(hintTrackId?: string) {
       refresh();

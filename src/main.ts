@@ -61,6 +61,7 @@ import { formatDelta, hudBestCopy, objectiveCopy, progressCopy, progressFraction
 import { isStarRelocated } from "./gold-star-migrations";
 
 import { createDebugMenu } from "./debug-menu";
+import { allowLockedContent } from "./debug-access";
 import { createLevelHUD } from "./level-hud";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON<span>FLIGHT</span><i>STUNT MOTORSPORT</i></a><div class="series">MONSTER TRUCK STUNT SERIES <b>VOL. 01</b></div><span class="online">● SINGLE PLAYER</span></header>
@@ -151,7 +152,9 @@ async function boot() {
   });
   const unlockedSet = () =>
     new Set(
-      LEVEL_COLLECTIONS.flatMap((c) => unlockedIds(c, scores, starBank)),
+      LEVEL_COLLECTIONS.flatMap((c) =>
+        allowLockedContent() ? c.trackIds : unlockedIds(c, scores, starBank),
+      ),
     );
   header.insertAdjacentHTML(
     "beforeend",
