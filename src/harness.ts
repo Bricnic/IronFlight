@@ -101,7 +101,7 @@ export interface GameHarness {
   dropPartInLava(id: string): void;
   environmentProbe(): { x: number; y: number };
   burnoutOverview(focus?: "all" | "start" | "end"): void;
-  vehiclePreview(): void;
+  vehiclePreview(azimuth?: number): void;
   overhead(x: number, z: number, height?: number): void;
   frameSpot(x: number, y: number, z: number, dist?: number, azimuth?: number, elevation?: number): void;
   camera(): ReturnType<GameView["inspectCamera"]>;

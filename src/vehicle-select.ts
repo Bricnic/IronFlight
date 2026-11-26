@@ -8,6 +8,7 @@ import {
 } from "./dream-cars";
 import type { BestTimes } from "./best-times";
 import type { GoldStars } from "./gold-stars";
+import { createVehiclePreview } from "./vehicle-preview";
 
 const LOCK_SVG = `<svg viewBox="0 0 24 24" width="72" height="72" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`;
 
@@ -36,6 +37,7 @@ export function createVehicleSelect(
   screen.hidden = true;
   screen.innerHTML = `<div class="track-select-intro"><div><div class="eyebrow">IRON FLIGHT / GARAGE</div><h1>Choose your vehicle.</h1><p>${VEHICLES.length} ways to wreck. Pick your vehicle.</p></div><div class="menu-actions"><button id="vehicle-back">Level select</button></div></div><div class="track-grid"></div><p class="selection-footnote">Choose with arrow keys, D-pad or left stick · A confirms · B goes back · Space to select · L for level select · C for vehicle select</p><div id="vehicle-lock-toast" role="status" hidden></div>`;
   const grid = screen.querySelector<HTMLElement>(".track-grid")!;
+  const previews = createVehiclePreview(grid);
   const cards = new Map<string, HTMLElement>();
   const toast = screen.querySelector<HTMLElement>("#vehicle-lock-toast")!;
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -50,6 +52,7 @@ export function createVehicleSelect(
   const isLocked = (id: string) =>
     !allowLockedContent() && isDreamCar(id) && !isDreamCarUnlocked(id, scores!, starBank);
   const buildCards = () => {
+    previews.stop();
     grid.innerHTML = "";
     cards.clear();
     for (const vehicle of VEHICLES) {
@@ -76,6 +79,7 @@ export function createVehicleSelect(
       grid.append(card);
       cards.set(vehicle.id, card);
     }
+    if (!screen.hidden) previews.show();
   };
   /** Newly earned dream cars burst open on first sight, like tracks. */
   const playUnlockAnimations = () => {
@@ -149,6 +153,7 @@ export function createVehicleSelect(
       for (const [id, card] of cards)
         card.classList.toggle("selected", id === picked);
       screen.hidden = false;
+      previews.show();
       host.classList.add("at-level-select");
       (
         grid.querySelector<HTMLElement>(`[data-vehicle="${picked}"] button`) ??
@@ -157,6 +162,7 @@ export function createVehicleSelect(
       playUnlockAnimations();
     },
     hide() {
+      previews.stop();
       screen.hidden = true;
       host.classList.remove("at-level-select");
     },
