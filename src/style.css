@@ -112,6 +112,9 @@ select:focus-visible {
   pointer-events: none;
 }
 #hud-minimap { width: 100%; height: auto; cursor: default; }
+#hud-guide { position: fixed; left: 50%; bottom: 170px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: #101e25ee; border: 1px solid #ffdb53; color: #ffdb53; font-size: 14px; font-weight: 700; pointer-events: none; z-index: 5; }
+#hud-guide[hidden] { display: none; }
+#hud-guide-arrow { display: inline-block; }
 #level-hud .map-key { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; color: #b4c6ca; }
 #level-hud .map-key span:first-child { color: #80edaa; }
 #level-hud .map-key span:nth-child(2) { color: #e8f3f5; }

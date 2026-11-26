@@ -51,6 +51,8 @@ export class TrackRun {
   /** Elapsed time at each checkpoint crossing, one entry per checkpoint. */
   splits: number[] = [];
   collected = new Set<string>();
+  /** Elapsed time of the most recent ring/chest collection; drives idle guidance. */
+  collectElapsed = 0;
   /** Gold-star ids banked this run; stars never gate completion. */
   stars = new Set<string>();
   /** Wings equipped this run; wingsAt stamps the collect time. */
@@ -123,7 +125,10 @@ export class TrackRun {
         const t = (r.z - previous.z) / (current.z - previous.z);
         const x = previous.x + (current.x - previous.x) * t;
         const y = previous.y + (current.y - previous.y) * t;
-        if (Math.hypot(x - r.x, y - r.y) <= r.radius) this.ringsDone.add(i);
+        if (Math.hypot(x - r.x, y - r.y) <= r.radius) {
+          this.ringsDone.add(i);
+          this.collectElapsed = this.elapsed;
+        }
       }
     });
     if (this.track.mode === "arena") {
@@ -131,8 +136,10 @@ export class TrackRun {
         if (
           !this.collected.has(p.id) &&
           segmentDistance(previous, current, p) <= p.radius
-        )
+        ) {
           this.collected.add(p.id);
+          this.collectElapsed = this.elapsed;
+        }
       if (this.collected.size === this.track.collectibles.length)
         this.status = "completed";
     } else if (this.track.mode === "demolition") {
@@ -144,8 +151,10 @@ export class TrackRun {
         if (
           !this.collected.has(p.id) &&
           segmentDistance(previous, current, p) <= p.radius
-        )
+        ) {
           this.collected.add(p.id);
+          this.collectElapsed = this.elapsed;
+        }
       while (this.checkpoint < this.track.checkpoints.length) {
         if (
           this.track.legacy &&
@@ -194,6 +203,7 @@ export class TrackRun {
       splits: [...this.splits],
       collected: [...this.collected],
       collectibleCount: this.track.collectibles.length,
+      collectElapsed: this.collectElapsed,
       stars: [...this.stars],
       starCount: (this.track.goldStars ?? []).length,
       wings: this.wings,

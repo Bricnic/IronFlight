@@ -142,6 +142,56 @@ export function projectMinimap(
   };
 }
 
+/** Idle seconds without a ring/chest collection before arena guidance appears. */
+export const GUIDE_IDLE_SECONDS = 15;
+
+export interface GuideRun {
+  status: string;
+  elapsed: number;
+  collectElapsed: number;
+  collected: string[];
+  ringsDone: number[];
+}
+/**
+ * Bearing arrow toward the nearest uncollected arena ring or chest, once the
+ * run has gone idle. Angle is a clockwise CSS rotation (0 points ahead).
+ */
+export function guideTarget(
+  track: Pick<Track, "mode" | "collectibles" | "rings">,
+  run: GuideRun,
+  position: Point,
+  forward: readonly [number, number, number] | readonly number[],
+): { angle: number; distance: number; label: string } | null {
+  if (track.mode !== "arena" || run.status !== "running") return null;
+  if (run.elapsed - run.collectElapsed <= GUIDE_IDLE_SECONDS) return null;
+  const collected = new Set(run.collected);
+  const ringsDone = new Set(run.ringsDone);
+  const candidates: { x: number; z: number; label: string }[] = [
+    ...(track.collectibles ?? [])
+      .filter((p) => !collected.has(p.id))
+      .map((p) => ({ x: p.x, z: p.z, label: p.kind === "chest" ? "CHEST" : "RING" })),
+    ...(track.rings ?? [])
+      .filter((_, i) => !ringsDone.has(i))
+      .map((r) => ({ x: r.x, z: r.z, label: "RING" })),
+  ];
+  if (!candidates.length) return null;
+  let best = candidates[0];
+  let bestDist = Math.hypot(best.x - position.x, best.z - position.z);
+  for (const c of candidates.slice(1)) {
+    const d = Math.hypot(c.x - position.x, c.z - position.z);
+    if (d < bestDist) {
+      best = c;
+      bestDist = d;
+    }
+  }
+  const yaw = Math.atan2(forward[0], forward[2]);
+  const bearing = Math.atan2(best.x - position.x, best.z - position.z);
+  let angle = (-(bearing - yaw) * 180) / Math.PI;
+  while (angle > 180) angle -= 360;
+  while (angle <= -180) angle += 360;
+  return { angle, distance: bestDist, label: best.label };
+}
+
 export function levelRecords(
   track: Track,
   variant: string,
@@ -180,6 +230,14 @@ export function createLevelHUD(
   panel.setAttribute("aria-label", "Level map and records");
   panel.innerHTML = `<canvas id="hud-minimap" width="480" height="480" role="img" aria-label="Rotating level minimap"></canvas><div class="map-key"><span>● Spawn</span><span>○ Gates</span><span>◇ Pickups</span><span>⚑ Finish</span></div><dl><div><dt>Best time</dt><dd id="hud-best-time"></dd></div><div><dt>Best medal</dt><dd id="hud-best-medal"></dd></div><div><dt>★ Gold star</dt><dd id="hud-gold-star"></dd></div></dl>`;
   host.append(panel);
+  const guide = document.createElement("div");
+  guide.id = "hud-guide";
+  guide.hidden = true;
+  guide.setAttribute("role", "status");
+  guide.innerHTML = `<span id="hud-guide-arrow">▲</span><span id="hud-guide-label"></span>`;
+  host.append(guide);
+  const guideArrow = guide.querySelector<HTMLElement>("#hud-guide-arrow")!,
+    guideLabel = guide.querySelector<HTMLElement>("#hud-guide-label")!;
   const canvas = panel.querySelector("canvas")!,
     ctx = canvas.getContext("2d")!;
   const time = panel.querySelector<HTMLElement>("#hud-best-time")!,
@@ -193,7 +251,10 @@ export function createLevelHUD(
       visible: boolean,
     ) {
       panel.hidden = !visible || !track || !state.run;
-      if (panel.hidden || !track || !state.run) return;
+      if (panel.hidden || !track || !state.run) {
+        guide.hidden = true;
+        return;
+      }
       if (source !== track) {
         source = track;
         map = buildMinimap(track, state.run.variant);
@@ -258,6 +319,13 @@ export function createLevelHUD(
                     ? state.run.destroyed.includes(marker.id!)
                     : marker.index !== undefined &&
                       marker.index < state.run.checkpoint;
+        // Arena chests and rings vanish once collected instead of dimming.
+        if (
+          track.mode === "arena" &&
+          collected &&
+          (marker.kind === "collectible" || marker.ringIndex !== undefined)
+        )
+          continue;
         ctx.globalAlpha = collected ? 0.28 : 1;
         ctx.fillStyle =
           marker.kind === "spawn"
@@ -328,6 +396,12 @@ export function createLevelHUD(
       ctx.lineWidth = 1.5;
       ctx.fill();
       ctx.stroke();
+      const target = guideTarget(track, state.run, state.position, state.forward);
+      guide.hidden = !target;
+      if (target) {
+        guideArrow.style.transform = `rotate(${target.angle}deg)`;
+        guideLabel.textContent = `${target.label} ${Math.round(target.distance)}m`;
+      }
     },
   };
 }

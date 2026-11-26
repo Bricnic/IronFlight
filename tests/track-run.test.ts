@@ -93,6 +93,27 @@ it("the preserved stunt race requires actual jump and loop flags", () => {
   });
   expect(run.status).toBe("completed");
 });
+it("stamps the elapsed time of each ring and chest collection", () => {
+  const track: Track = {
+    ...race,
+    mode: "arena",
+    collectibles: [
+      { id: "a", x: 0, z: 10, y: 2, radius: 2 },
+      { id: "b", x: 0, z: 30, y: 2, radius: 2 },
+    ],
+    rings: [{ x: 0, z: 20, y: 2, radius: 4, goal: false }],
+  };
+  const run = new TrackRun(track);
+  expect(run.snapshot().collectElapsed).toBe(0);
+  run.step(4, p(0), p(12), 1);
+  expect(run.snapshot()).toMatchObject({ collected: ["a"], collectElapsed: 4 });
+  run.step(3, p(12), p(22), 1);
+  expect(run.snapshot()).toMatchObject({ ringsDone: [0], collectElapsed: 7 });
+  run.step(5, p(22), p(23), 1);
+  expect(run.snapshot().collectElapsed).toBe(7);
+  run.step(5, p(23), p(32), 1);
+  expect(run.snapshot()).toMatchObject({ collected: ["a", "b"], collectElapsed: 17 });
+});
 it("triggers custom rings without a bounce and gates race goal rings", () => {
   const track: Track = {
     ...race,

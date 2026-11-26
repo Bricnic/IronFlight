@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { buildMinimap, projectMinimap, levelRecords } from "../src/level-hud";
+import { buildMinimap, projectMinimap, levelRecords, guideTarget, GUIDE_IDLE_SECONDS } from "../src/level-hud";
 import { blankLevel, registerCustomTrack, toTrack } from "../src/custom-level";
 import { BestTimes } from "../src/best-times";
 import { GoldStars } from "../src/gold-stars";
@@ -81,6 +81,51 @@ it("maps road footprints and the spawn, gates, collectibles and finish", () => {
   expect(model.radius).toBeLessThan(100);
 });
 
+it("guides idle arena runs to the nearest ring or chest and stays quiet otherwise", () => {
+  const track = {
+    mode: "arena" as const,
+    collectibles: [
+      { id: "far", x: 0, z: 100, y: 1.7, radius: 3.5, kind: "chest" as const },
+      { id: "near", x: 30, z: 0, y: 1.7, radius: 3.5, kind: "ring" as const },
+    ],
+    rings: [{ x: -50, z: 0, y: 2, radius: 4, goal: false }],
+  };
+  const running = (elapsed: number, collectElapsed: number, collected: string[] = [], ringsDone: number[] = []) => ({
+    status: "running", elapsed, collectElapsed, collected, ringsDone,
+  });
+  const pos = { x: 0, z: 0 };
+  const facingZ = [0, 0, 1] as const;
+  expect(GUIDE_IDLE_SECONDS).toBe(15);
+  expect(guideTarget({ ...track, mode: "race" }, running(99, 0), pos, facingZ)).toBeNull();
+  expect(guideTarget(track, running(15, 0), pos, facingZ)).toBeNull();
+  expect(guideTarget(track, running(16, 0), pos, facingZ)).toMatchObject({ label: "RING", distance: 30 });
+  expect(guideTarget(track, running(99, 90), pos, facingZ)).toBeNull();
+  expect(guideTarget(track, { ...running(99, 0), status: "completed" }, pos, facingZ)).toBeNull();
+  // Nearest uncollected chest wins once the ring and stunt ring are done.
+  expect(guideTarget(track, running(99, 0, ["near"], [0]), pos, facingZ)).toMatchObject({ label: "CHEST", distance: 100 });
+  expect(guideTarget(track, running(99, 0, ["far", "near"], [0]), pos, facingZ)).toBeNull();
+  // An unfinished stunt ring counts as a ring target.
+  expect(guideTarget({ ...track, collectibles: [] }, running(99, 0), pos, facingZ)).toMatchObject({ label: "RING", distance: 50 });
+});
+it("points the arrow along the minimap's rotated screen bearing", () => {
+  const track = {
+    mode: "arena" as const,
+    collectibles: [{ id: "a", x: 10, z: 0, y: 1.7, radius: 3.5, kind: "ring" as const }],
+    rings: [],
+  };
+  const run = { status: "running", elapsed: 99, collectElapsed: 0, collected: [] as string[], ringsDone: [] as number[] };
+  const pos = { x: 0, z: 0 };
+  // Facing +z: +x renders left of center, so the arrow turns counterclockwise.
+  expect(guideTarget(track, run, pos, [0, 0, 1])!.angle).toBeCloseTo(-90, 5);
+  expect(guideTarget(track, run, pos, [0, 0, -1])!.angle).toBeCloseTo(90, 5);
+  const map = { center: { x: 0, z: 0 }, radius: 100 };
+  for (const forward of [[0, 0, 1], [1, 0, 0], [0, 0, -1], [-1, 0, 0], [1, 0, 1]] as const) {
+    const yaw = Math.atan2(forward[0], forward[2]);
+    const screen = projectMinimap(map, { x: 10, z: 0 }, yaw);
+    const expected = (Math.atan2(screen.x - 120, -(screen.y - 120)) * 180) / Math.PI;
+    expect(guideTarget(track, run, pos, forward)!.angle).toBeCloseTo(expected, 5);
+  }
+});
 it("rotates the map with the player's forward orientation without changing zoom", () => {
   const map = buildMinimap(fixture()),
     at = map.center;
