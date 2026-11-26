@@ -1254,7 +1254,7 @@ export class GameView {
     this.render();
   }
   /** Frame the actual in-game vehicle and course for reproducible garage screenshots. */
-  vehiclePreview() {
+    vehiclePreview(azimuth = Math.PI / 4) {
     this.render(true);
     const bounds = bodyBounds(this.truck, this.headlightRig);
     const center = bounds.getCenter(new T.Vector3());
@@ -1263,7 +1263,7 @@ export class GameView {
       (radius / Math.sin(T.MathUtils.degToRad(this.camera.fov / 2))) * 1.03;
     this.camera.position
       .copy(center)
-      .add(new T.Vector3(1, 0.5, 1).normalize().multiplyScalar(distance));
+        .add(new T.Vector3(Math.cos(azimuth), 0.5 / Math.sqrt(2), Math.sin(azimuth)).normalize().multiplyScalar(distance));
     this.camera.lookAt(center);
     this.camera.updateMatrixWorld();
     this.renderer.render(this.scene, this.camera);

@@ -1111,7 +1111,7 @@ async function boot() {
         if (draw) view.render(false, clock.alpha);
         hud();
       },
-      vehiclePreview: () => view.vehiclePreview(),
+      vehiclePreview: (azimuth?: number) => view.vehiclePreview(azimuth),
       overhead: (x: number, z: number, height = 150) => view.overhead(x, z, height),
       frameSpot: (x: number, y: number, z: number, dist = 60, azimuth = 0.6, elevation = 0.5) =>
         view.frameSpot(x, y, z, dist, azimuth, elevation),

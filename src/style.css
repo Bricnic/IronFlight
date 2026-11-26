@@ -1609,7 +1609,8 @@ kbd {
   background: #15242b;
   border-bottom: 1px solid #ffffff20;
 }
-.vehicle-card.locked .vehicle-preview img {
+.vehicle-card.locked .vehicle-preview img,
+.vehicle-card.locked .vehicle-preview video {
   filter: brightness(0.55) saturate(0.7);
 }
 .vehicle-card.locked:hover {
@@ -1662,6 +1663,22 @@ kbd {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.vehicle-preview .vehicle-turntable {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.vehicle-card.preview-playing .vehicle-turntable {
+  opacity: 1;
+}
+.vehicle-preview .track-lock {
+  z-index: 1;
 }
 
 .editor-group-header { display: flex; align-items: center; gap: 4px; width: 100%; }
