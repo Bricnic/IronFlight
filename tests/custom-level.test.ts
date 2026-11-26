@@ -14,6 +14,7 @@ import { ghostDefs } from "../src/ghosts";
 import {
   TEXTURE_IDS,
   PREFAB_KINDS,
+  groundHeightAt,
   prefabSection,
   validateCustomLevel,
   toTrack,
@@ -416,6 +417,17 @@ it("headless ghost chases and drains a parked car", () => {
   s.dispose();
 });
 
+it("resolves placement height to the highest solid top under the point", () => {
+  const level = blankLevel("Snap");
+  expect(groundHeightAt(level, 0, 0)).toBeCloseTo(0.03, 5);
+  expect(groundHeightAt(level, 50, 50)).toBe(0);
+  expect(groundHeightAt(level, 500, 500)).toBe(0);
+  level.solids.push({ id: "deck", kind: "tile", x: 50, y: 9, z: 50, w: 10, h: 2, d: 10, color: 1 });
+  expect(groundHeightAt(level, 50, 50)).toBe(10);
+  level.solids.push({ id: "yawed", kind: "road", x: 0, y: 4, z: -60, w: 24, h: 1, d: 8, color: 1, yaw: Math.PI / 2 });
+  expect(groundHeightAt(level, 0, -60)).toBeCloseTo(4.5, 5);
+  expect(groundHeightAt(level, 10, -60)).toBe(0);
+});
 it("classifies every prefab kind into exactly one picker section", () => {
   const seen = new Map<string, string[]>();
   for (const kind of PREFAB_KINDS) {

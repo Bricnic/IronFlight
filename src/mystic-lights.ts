@@ -8,8 +8,18 @@ export const MYSTIC_SOURCE_COLORS: Record<string, number> = {
   "cave-moth": 0x80ec27, "cave-caterpillar": 0x80ec27,
 };
 
+/** Light height above each source root: cap halo, body glow, dust gland, back spots. */
+export const MYSTIC_LIGHT_HEIGHTS: Record<string, number> = {
+  "glow-mushroom": 2.6,
+  "cave-fairy": 0.2,
+  firefly: 0,
+  "cave-moth": -0.6,
+  "cave-caterpillar": 2.5,
+};
+
 export interface MysticSource {
   id: string;
+  kind: string;
   x: number;
   z: number;
   y?: number;
@@ -53,7 +63,7 @@ export function assignMysticLights(
     }
     light.visible = true;
     light.color.setHex(source.color);
-    light.position.set(source.x, (source.y ?? 0) + 2, source.z);
+    light.position.set(source.x, (source.y ?? 0) + (MYSTIC_LIGHT_HEIGHTS[source.kind] ?? 2), source.z);
     light.intensity =
       MYSTIC_LIGHT_BASE *
       (1 +

@@ -23,7 +23,7 @@ test("editor owns C, copy/paste and group/ungroup shortcuts", async ({ page }) =
   await page.getByRole("button", { name: "Level editor", exact: true }).click();
   await page.locator("#editor-name").fill("e2e-groups");
   await page.locator("#editor-new").click();
-  await page.locator("#editor-prefab-kind").selectOption("fragile-ice");
+  await page.locator("#editor-prefab-search").fill("fragile-ice"); await page.locator('#editor-prefab-picker button[data-kind="fragile-ice"]').click();
   await page.locator("#editor-add-prefab").click();
   await page.locator("#editor-add-prefab").click();
   const rows = page.locator('#editor-objects li[data-key^="prefab:"]');

@@ -16,7 +16,7 @@ test("settings start collapsed and prefab light defaults, bulk edits and saves r
     for (const id of ["editor-level-settings", "editor-world-settings"]) await expect(page.locator(`#${id}`)).not.toHaveAttribute("open", "");
     const kinds = [["barrel", 0], ["cave-fairy", 150], ["firefly", 150], ["glow-mushroom", 500], ["birthday-candle", 250]] as const;
     for (const [kind, lumens] of kinds) {
-      await page.locator("#editor-prefab-kind").selectOption(kind); await page.locator("#editor-add-prefab").click();
+      await page.locator("#editor-prefab-search").fill(kind); await page.locator(`#editor-prefab-picker button[data-kind="${kind}"]`).click(); await page.locator("#editor-add-prefab").click();
       await expect(page.locator('[data-prop="lightLumens"]')).toHaveValue(String(lumens));
       if (kind === "birthday-candle") await expect(page.locator('[data-prop="lightColor"]')).toHaveValue("#ffe6a3");
     }

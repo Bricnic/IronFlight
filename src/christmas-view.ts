@@ -229,6 +229,10 @@ function buildLantern(root: T.Group) {
     glassY,
     0,
   );
+  const origin = new T.Object3D();
+  origin.name = "prefab-light-origin";
+  origin.position.set(0, glassY, 0);
+  root.add(origin);
   for (const [cx, cz] of [[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6]] as const)
     mesh(root, new T.BoxGeometry(0.12, 1.5, 0.12), iron, cx, glassY, cz);
   mesh(root, new T.ConeGeometry(1.0, 0.9, 4), iron, 0, glassY + 1.15, 0).rotation.y = Math.PI / 4;

@@ -502,9 +502,37 @@ export interface CustomPrefab {
   /** Ship departure: checkpoint count that launches it down the channel. */
   trigger?: number;
 }
+/** Hover height above the placement surface for kinds that float by default. */
+export const PREFAB_HOVER_HEIGHT: Record<string, number> = {
+  "gold-star": 2,
+  checkpoint: 2,
+  hammer: 3.5,
+  ghost: 3,
+  "cave-fairy": 3,
+  firefly: 2,
+  "cave-bat": 4,
+  "hot-air-balloon": 42,
+};
 /** Some game systems interpret an omitted height as a hovering pivot. */
 export function prefabY(p: CustomPrefab) {
-  return p.y ?? (p.kind === "gold-star" || p.kind === "checkpoint" ? 2 : p.kind === "hammer" ? 3.5 : p.kind === "ghost" ? 3 : p.kind === "cave-fairy" ? 3 : p.kind === "firefly" ? 2 : p.kind === "cave-bat" ? 4 : p.kind === "hot-air-balloon" ? 42 : 0);
+  return p.y ?? PREFAB_HOVER_HEIGHT[p.kind] ?? 0;
+}
+/**
+ * Height of the highest solid top surface covering (x, z), for snapping
+ * newly placed prefabs onto the ground or road below the view center.
+ * Yaw is honored; pitched/rolled solids resolve to their unpitched top.
+ */
+export function groundHeightAt(level: Pick<CustomLevel, "solids">, x: number, z: number): number {
+  let top = 0;
+  for (const s of level.solids) {
+    const yaw = s.yaw ?? 0;
+    const dx = x - s.x, dz = z - s.z;
+    const lx = Math.cos(yaw) * dx - Math.sin(yaw) * dz;
+    const lz = Math.sin(yaw) * dx + Math.cos(yaw) * dz;
+    if (Math.abs(lx) > s.w / 2 || Math.abs(lz) > s.d / 2) continue;
+    top = Math.max(top, s.y + s.h / 2);
+  }
+  return top;
 }
 export const COLLECTIBLE_KINDS = ["ring", "chest"] as const;
 export type CollectibleKind = (typeof COLLECTIBLE_KINDS)[number];

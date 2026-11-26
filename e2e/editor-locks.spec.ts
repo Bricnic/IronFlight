@@ -72,7 +72,7 @@ test("object locks prevent list and viewport selection and persist through disk 
   try {
     await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
     await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
-    await page.locator("#editor-prefab-kind").selectOption("axe");
+    await page.locator("#editor-prefab-search").fill("axe"); await page.locator('#editor-prefab-picker button[data-kind="axe"]').click();
     await page.locator("#editor-add-prefab").click();
     await page.locator("#editor-add-target").click();
     await page.locator("#editor-add-ring").click();

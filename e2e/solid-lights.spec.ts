@@ -14,7 +14,7 @@ test("solid light controls, gold-star defaults and mixed bulk edits reach previe
     await expect(page.locator('[data-prop="lightLumens"]')).toHaveValue("0");
     await page.locator('[data-prop="lightLumens"]').fill("50"); await page.locator('[data-prop="lightLumens"]').dispatchEvent("change");
     await page.locator('[data-prop="lightColor"]').evaluate((node: HTMLInputElement) => { node.value = "#4ff5e0"; node.dispatchEvent(new Event("change")); });
-    await page.locator("#editor-prefab-kind").selectOption("gold-star"); await page.locator("#editor-add-prefab").click();
+    await page.locator("#editor-prefab-search").fill("gold-star"); await page.locator('#editor-prefab-picker button[data-kind="gold-star"]').click(); await page.locator("#editor-add-prefab").click();
     await expect(page.locator('[data-prop="lightLumens"]')).toHaveValue("300");
     await expect(page.locator('[data-prop="lightColor"]')).toHaveValue("#ffe6a3");
     await page.locator("#editor-preview").click();

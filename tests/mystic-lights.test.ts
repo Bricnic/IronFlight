@@ -6,8 +6,9 @@ import {
   buildMysticLightPool,
 } from "../src/mystic-lights";
 
-const source = (id: string, x: number, z: number, color = 0x4ff5e0, y = 0, phase = 0) => ({
+const source = (id: string, x: number, z: number, color = 0x4ff5e0, y = 0, phase = 0, kind = "glow-mushroom") => ({
   id,
+  kind,
   x,
   z,
   y,
@@ -43,6 +44,21 @@ it("lights the nearest sources in their own colors at night, dark by day", () =>
   expect(new Set(lit.map((l) => l.color.getHex()))).toEqual(new Set([0x4ff5e0, 0xff6fe0, 0xffd23b]));
   for (const light of lit) expect(light.intensity).toBeGreaterThan(0);
   expect(pool.filter((l) => !l.visible)).toHaveLength(MYSTIC_LIGHT_COUNT - 3);
+});
+
+it("places each light at its emitter: cap halo, body glow, dust gland, back spots", () => {
+  const pool = buildMysticLightPool();
+  const heights: Record<string, number> = {
+    "glow-mushroom": 2.6,
+    "cave-fairy": 0.2,
+    firefly: 0,
+    "cave-moth": -0.6,
+    "cave-caterpillar": 2.5,
+  };
+  for (const [kind, height] of Object.entries(heights)) {
+    assignMysticLights(pool, [source(kind, 0, 0, 0xffffff, 10, 0, kind)], focus(0, 0), true, 1);
+    expect(pool[0].position.y).toBeCloseTo(10 + height, 5);
+  }
 });
 
 it("caps the pool at the nearest sources and shimmers with time", () => {

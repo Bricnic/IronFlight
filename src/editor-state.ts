@@ -1,6 +1,8 @@
 import {
   blankLevel,
+  groundHeightAt,
   orderCheckpoints,
+  PREFAB_HOVER_HEIGHT,
   prefabY,
   solidDefaults,
   type CustomCheckpoint,
@@ -495,12 +497,16 @@ export class EditorStore {
   addPrefab(kind: string, placement: number | { x: number; y: number; z: number } = 0, z = 0): CustomPrefab {
     this.pushHistory();
     const taken = new Set(this.level.prefabs.map((p) => p.id));
+    // Explicit view-center placements land on the ground or road below them
+    // instead of floating at the orbit height; hovering kinds keep their offset.
+    const snappedY = typeof placement === "number" ? undefined
+      : groundHeightAt(this.level, placement.x, placement.z) + (PREFAB_HOVER_HEIGHT[kind] ?? 0);
     const prefab: CustomPrefab = {
       id: this.nextId(kind, taken),
       kind,
       x: typeof placement === "number" ? placement : placement.x,
       z: typeof placement === "number" ? z : placement.z,
-      ...(typeof placement === "number" ? {} : { y: placement.y }),
+      ...(snappedY === undefined ? {} : { y: snappedY }),
       ...(kind === "birthday-candle" ? { resizeScale: 3 } : {}),
     };
     this.level.prefabs.push(prefab);

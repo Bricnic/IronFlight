@@ -980,6 +980,10 @@ function buildCandleModel(h: DungeonHazard, root: T.Group): T.Group[] {
     root.add(flame);
     flames.push(flame);
   }
+  const origin = new T.Object3D();
+  origin.name = "prefab-light-origin";
+  origin.position.set(0, 2.1, 0);
+  root.add(origin);
   for (const [dx, dz, s] of [
     [0.72, -0.45, 1],
     [-0.7, 0.5, 0.75],
@@ -1605,6 +1609,7 @@ export class DungeonView extends T.Group {
       .filter((m) => m.h.kind in colors)
       .map((m) => ({
         id: m.h.id,
+        kind: m.h.kind,
         x: m.root.position.x,
         z: m.root.position.z,
         y: m.root.position.y,

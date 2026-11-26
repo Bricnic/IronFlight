@@ -74,6 +74,10 @@ function buildJack(root: T.Group): T.Group[] {
   glow.userData.base = 2.2;
   gourd.add(glow);
   root.add(gourd);
+  const origin = new T.Object3D();
+  origin.name = "prefab-light-origin";
+  origin.position.set(0, 4.9, 0.7);
+  root.add(origin);
   const mound = mesh(root, new T.SphereGeometry(1.6, 20, 12), mat(0x3a2e22, 0.95), 0, -0.4, 0);
   mound.scale.y = 0.35;
   for (const x of [-1.9, 1.9]) {

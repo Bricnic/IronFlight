@@ -21,12 +21,22 @@ test("new solids and prefabs appear at the view center after framing, panning an
   const target = await page.evaluate(() => window.__game!.inspectPreview().camera.target);
   expect(Math.abs(target[0])).toBeGreaterThan(100); expect(Math.abs(target[1])).toBeGreaterThan(10); expect(Math.abs(target[2])).toBeGreaterThan(100);
   for (const kind of ["solid", "prefab", "solid"] as const) {
-    if (kind === "prefab") await page.locator("#editor-prefab-kind").selectOption("barrel");
+    if (kind === "prefab") { await page.locator("#editor-prefab-search").fill("barrel"); await page.locator('#editor-prefab-picker button[data-kind="barrel"]').click(); }
     await page.locator(`#editor-add-${kind}`).click();
     const item = await page.evaluate(() => window.__game!.editor().selectedObject!);
-    for (const [index, axis] of ["x", "y", "z"].entries()) expect(item[axis]).toBeCloseTo(target[index]);
-    const point = await page.evaluate(p => window.__game!.editorProject(p), { x: Number(item.x), y: Number(item.y), z: Number(item.z) });
-    expect(point.x).toBeCloseTo(box.x + box.width / 2, 1); expect(point.y).toBeCloseTo(box.y + box.height / 2, 1);
+    if (kind === "solid") {
+      for (const [index, axis] of ["x", "y", "z"].entries()) expect(item[axis]).toBeCloseTo(target[index]);
+      const point = await page.evaluate(p => window.__game!.editorProject(p), { x: Number(item.x), y: Number(item.y), z: Number(item.z) });
+      expect(point.x).toBeCloseTo(box.x + box.width / 2, 1); expect(point.y).toBeCloseTo(box.y + box.height / 2, 1);
+    } else {
+      // Prefabs keep the view-center x/z but snap onto the surface below:
+      // the solid placed earlier in this loop (top target.y + 0.8), or the
+      // taller setup barrier when the target still overlaps it.
+      expect(item.x).toBeCloseTo(target[0]); expect(item.z).toBeCloseTo(target[2]);
+      const [tx, , tz] = target;
+      const overBarrier = Math.abs(tx - 240) <= 3 && Math.abs(tz + 160) <= 2.5;
+      expect(item.y).toBeCloseTo(overBarrier ? Math.max(35.8, target[1] + 0.8) : target[1] + 0.8);
+    }
     await page.locator("#editor-undo").click(); await page.locator("#editor-redo").click();
     expect(await page.evaluate(() => window.__game!.editor().selectedObject)).toEqual(item);
   }

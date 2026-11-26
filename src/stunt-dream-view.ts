@@ -223,6 +223,10 @@ function buildStar(root: T.Group): T.Group[] {
     g.userData.base = 2;
     root.add(g);
   }
+  const origin = new T.Object3D();
+  origin.name = "prefab-light-origin";
+  origin.position.set(0, 11.5, 0.6);
+  root.add(origin);
   return groups;
 }
 
