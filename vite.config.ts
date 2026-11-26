@@ -8,6 +8,7 @@ import {
   readdir,
   mkdir,
   unlink,
+  stat,
 } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve, sep } from "node:path";
@@ -102,6 +103,14 @@ function levelFile(name: string) {
   if (!file.startsWith(levelsDir.endsWith(sep) ? levelsDir : levelsDir + sep))
     throw new Error("Invalid level name");
   return file;
+}
+async function sameFile(a: string, b: string) {
+  try {
+    const [sa, sb] = await Promise.all([stat(a), stat(b)]);
+    return sa.ino === sb.ino && sa.dev === sb.dev;
+  } catch {
+    return false;
+  }
 }
 function localRequest(req: IncomingMessage) {
   return (
@@ -225,11 +234,16 @@ function customLevels(): Plugin {
             body += chunk;
             if (body.length > 4 * 1024 * 1024) throw new Error("Level is too large");
           }
-          const { name, level } = JSON.parse(body) as {
+          const { name, level, previousName } = JSON.parse(body) as {
             name: string;
             level: unknown;
+            previousName?: string;
           };
           levelFile(name ?? "");
+          const oldFile =
+            previousName && previousName !== name
+              ? levelFile(previousName)
+              : null;
           const valid = validateCustomLevel(level);
           // Storage identity is independent of the editable display name.
           delete valid.sourcePath;
@@ -243,6 +257,17 @@ function customLevels(): Plugin {
               "utf8",
             );
             await rename(file + ".tmp", file);
+            // A renamed save moves the file: the old path goes away once the
+            // new one lands. A case-only rename on a case-insensitive
+            // filesystem must not delete what was just written.
+            if (oldFile && !(await sameFile(oldFile, file))) {
+              try {
+                await unlink(oldFile);
+              } catch (error) {
+                if ((error as { code?: string })?.code !== "ENOENT")
+                  throw error;
+              }
+            }
           } catch (error) {
             // Storage failures (locks, transient fs errors) are retryable.
             res.statusCode = 500;

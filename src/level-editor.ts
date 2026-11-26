@@ -335,15 +335,26 @@ export function createLevelEditor(
     status.textContent = message;
     if (message) showError("");
   };
+  let refreshGeneration = 0;
+  let pickerNamesKey = "";
   function refreshLevels() {
+    // Overlapping refreshes (a save per keystroke or rapid renames) must not
+    // let a stale listing overwrite a newer one: only the latest wins.
+    const generation = ++refreshGeneration;
     return listLevels()
       .then((names) => {
+        if (generation !== refreshGeneration) return;
         // Picker order is its own concern: the store union is disk-first,
         // the dropdown reads a-z like the object list, grouped by folder
         // at any depth (generalized recursive subdirectories).
         const sorted = [...names].sort((a, b) =>
           a.localeCompare(b, undefined, { sensitivity: "base", numeric: true }),
         );
+        // Rebuilding the dropdown on every save shifts the toolbar layout
+        // under the user's cursor; skip no-op rebuilds entirely.
+        const key = sorted.join("\n");
+        if (key === pickerNamesKey) return;
+        pickerNamesKey = key;
         const selected = levelPicker.value;
         levelPicker.innerHTML = "";
         levelPicker.append(el("option", { value: "" }, "Open level…"));
@@ -1142,40 +1153,54 @@ export function createLevelEditor(
     viewport.frameSpawn(store.level);
     showStatus("New level");
   });
+  /** The file follows the level name: renaming or moving folders resolves a
+   * new path while the server removes the old file. Null on invalid folder. */
+  function resolveSavePath(valid: CustomLevel): { path: string; previousName?: string } | null {
+    const folder = folderInput.value.trim().replace(/^\/+|\/+$/g, "");
+    const SEGMENT = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,63}$/;
+    if (folder && !folder.split("/").every((p) => SEGMENT.test(p))) {
+      showError(
+        "Folder must be slash-separated names of letters, numbers, spaces, - or _",
+      );
+      return null;
+    }
+    const path = folder ? `${folder}/${valid.name}` : valid.name;
+    const previousName =
+      valid.sourcePath && valid.sourcePath !== path ? valid.sourcePath : undefined;
+    valid.sourcePath = path;
+    return { path, previousName };
+  }
+  /** A rename must not silently overwrite another level's file. Re-saving
+   * over the level's own file (renamed or not) is always allowed. */
+  async function renameCollides(path: string, previousName?: string) {
+    const { names } = await takenNamesAndIds().catch(() => ({ names: [] as string[] }));
+    const own = previousName ?? path;
+    return names.some((n) => n !== own && n.toLowerCase() === path.toLowerCase());
+  }
   function doSave(after: () => void) {
     try {
       const valid = validateCustomLevel(store.level);
-      const folder = folderInput.value.trim().replace(/^\/+|\/+$/g, "");
-      const SEGMENT = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,63}$/;
-      if (folder && !folder.split("/").every((p) => SEGMENT.test(p))) {
-        showError(
-          "Folder must be slash-separated names of letters, numbers, spaces, - or _",
-        );
-        return;
-      }
-      if (valid.sourcePath) {
-        // Renames keep their file: only an edited folder moves the save,
-        // preserving the filename while the display name stays slash-free.
-        const currentFolder = folderForPath(valid.sourcePath);
-        if (folder !== currentFolder) {
-          const file = valid.sourcePath.slice(currentFolder ? currentFolder.length + 1 : 0);
-          valid.sourcePath = folder ? `${folder}/${file}` : file;
-        }
-      } else {
-        valid.sourcePath = folder ? `${folder}/${valid.name}` : valid.name;
-      }
-      saveLevel(undefined, valid)
-        .then((saved) => {
-          store.level.sourcePath = saved.sourcePath;
-          folderInput.value = folderForPath(saved.sourcePath);
-          store.markSaved();
-          const where = saved.sourcePath ?? valid.name;
-          showStatus(
-            where === valid.name ? `Saved ${valid.name}` : `Saved ${valid.name} (${where})`,
-          );
-          return refreshLevels();
+      const resolved = resolveSavePath(valid);
+      if (!resolved) return;
+      void renameCollides(resolved.path, resolved.previousName)
+        .then((collides) => {
+          if (collides) {
+            showError(`A level named "${resolved.path}" already exists`);
+            return;
+          }
+          return saveLevel(undefined, valid, resolved.previousName)
+            .then((saved) => {
+              store.level.sourcePath = saved.sourcePath;
+              folderInput.value = folderForPath(saved.sourcePath);
+              store.markSaved();
+              const where = saved.sourcePath ?? valid.name;
+              showStatus(
+                where === valid.name ? `Saved ${valid.name}` : `Saved ${valid.name} (${where})`,
+              );
+              return refreshLevels();
+            })
+            .then(after);
         })
-        .then(after)
         .catch((e: Error) => showError(e.message));
     } catch (e) {
       showError(e instanceof Error ? e.message : "Invalid level");
@@ -1255,26 +1280,25 @@ export function createLevelEditor(
       showError(e instanceof Error ? e.message : "Invalid level");
       return;
     }
-    const folder = folderInput.value.trim().replace(/^\/+|\/+$/g, "");
-    if (valid.sourcePath) {
-      const currentFolder = folderForPath(valid.sourcePath);
-      if (folder !== currentFolder) {
-        const file = valid.sourcePath.slice(currentFolder ? currentFolder.length + 1 : 0);
-        valid.sourcePath = folder ? `${folder}/${file}` : file;
-      }
-    } else {
-      valid.sourcePath = folder ? `${folder}/${valid.name}` : valid.name;
-    }
-    saveLevel(undefined, valid)
-      .then((saved) => {
-        store.level.sourcePath = saved.sourcePath;
-        folderInput.value = folderForPath(saved.sourcePath);
-        store.markSaved();
-        const where = saved.sourcePath ?? saved.name;
-        showStatus(
-          where === saved.name ? `Saved ${saved.name}` : `Saved ${saved.name} (${where})`,
-        );
-        onPlaytest(toTrack(saved).id as `custom:${string}`);
+    const resolved = resolveSavePath(valid);
+    if (!resolved) return;
+    void renameCollides(resolved.path, resolved.previousName)
+      .then((collides) => {
+        if (collides) {
+          showError(`A level named "${resolved.path}" already exists`);
+          return;
+        }
+        return saveLevel(undefined, valid, resolved.previousName)
+          .then((saved) => {
+            store.level.sourcePath = saved.sourcePath;
+            folderInput.value = folderForPath(saved.sourcePath);
+            store.markSaved();
+            const where = saved.sourcePath ?? saved.name;
+            showStatus(
+              where === saved.name ? `Saved ${saved.name}` : `Saved ${saved.name} (${where})`,
+            );
+            onPlaytest(toTrack(saved).id as `custom:${string}`);
+          });
       })
       .catch((e: Error) => showError(e.message));
   });

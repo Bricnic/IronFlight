@@ -1066,7 +1066,7 @@ async function boot() {
       track: (id) => getTrack(id),
       customLevels: {
         list: () => listLevels(),
-        save: (level: CustomLevel) => saveLevel(undefined, level),
+        save: (level: CustomLevel, previousName?: string) => saveLevel(undefined, level, previousName),
         load: (name: string) => loadLevel(undefined, name),
         remove: (name: string) => removeLevel(undefined, name),
       },

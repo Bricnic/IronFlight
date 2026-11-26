@@ -75,7 +75,7 @@ export interface GameHarness {
   project(point: { x: number; y: number; z: number }): { x: number; y: number };
   customLevels: {
     list(): Promise<string[]>;
-    save(level: CustomLevel): Promise<CustomLevel>;
+    save(level: CustomLevel, previousName?: string): Promise<CustomLevel>;
     load(name: string): Promise<CustomLevel>;
     remove(name: string): Promise<void>;
   };

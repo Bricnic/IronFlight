@@ -63,8 +63,11 @@ function serverBackend(down = false) {
       const body = JSON.parse(init.body as string) as {
         name: string;
         level: unknown;
+        previousName?: string;
       };
       files.set(body.name, body.level);
+      if (body.previousName && body.previousName !== body.name)
+        files.delete(body.previousName);
       return { ok: true, status: 200, json: async () => body.level };
     }
     if (init.method === "DELETE") {
@@ -143,30 +146,40 @@ it("rejects invalid levels before any write", async () => {
   expect(d.backend.fetchFn).not.toHaveBeenCalled();
   expect(await listLevels(d)).toEqual([]);
 });
-it("keeps each loaded file's path through edits, renaming and offline saves", async () => {
+it("keeps each loaded file's path through edits and offline saves", async () => {
   const d = deps();
   d.backend.files.set("official/File Name", level("Shared Name"));
   d.backend.files.set("backgrounds/nested/File Name", level("Shared Name"));
   const loaded = await loadLevel(d, "backgrounds/nested/File Name");
-  loaded.name = "Renamed Level";
+  loaded.solids[0].x += 3;
   await saveLevel(d, loaded);
-  expect(d.backend.files.get("backgrounds/nested/File Name")).toMatchObject({ name: "Renamed Level" });
+  expect(d.backend.files.get("backgrounds/nested/File Name")).toMatchObject({ name: "Shared Name" });
   expect(d.backend.files.get("official/File Name")).toMatchObject({ name: "Shared Name" });
-  expect(d.backend.files.has("Renamed Level")).toBe(false);
   const offline = { ...d, fetchFn: (async () => { throw new TypeError("offline"); }) as typeof fetch };
   const cached = await loadLevel(offline, "backgrounds/nested/File Name");
   expect(cached.sourcePath).toBe("backgrounds/nested/File Name");
   expect(JSON.parse(exportLevel(cached))).not.toHaveProperty("sourcePath");
-  const newLevel = level("New Root Level");
-  await saveLevel(d, newLevel);
-  expect(d.backend.files.has("New Root Level")).toBe(true);
-  newLevel.name = "New Display Name";
-  await saveLevel(d, newLevel);
-  expect(d.backend.files.get("New Root Level")).toMatchObject({ name: "New Display Name" });
-  expect(d.backend.files.has("New Display Name")).toBe(false);
   await removeLevel(d, "backgrounds/nested/File Name");
   expect(d.backend.files.has("backgrounds/nested/File Name")).toBe(false);
   expect(d.backend.files.has("official/File Name")).toBe(true);
+});
+it("moves the file when a save renames the level, locally and on disk", async () => {
+  const d = deps();
+  d.backend.files.set("backgrounds/nested/File Name", level("Shared Name"));
+  const loaded = await loadLevel(d, "backgrounds/nested/File Name");
+  loaded.name = "Renamed Level";
+  loaded.sourcePath = "backgrounds/nested/Renamed Level";
+  await saveLevel(d, loaded, "backgrounds/nested/File Name");
+  expect(d.backend.files.get("backgrounds/nested/Renamed Level")).toMatchObject({ name: "Renamed Level" });
+  expect(d.backend.files.has("backgrounds/nested/File Name")).toBe(false);
+  expect(await listLevels(d)).toContain("backgrounds/nested/Renamed Level");
+  expect(await listLevels(d)).not.toContain("backgrounds/nested/File Name");
+  expect(d.storage.getItem("iron-flight-custom-level-v1:backgrounds/nested/File Name")).toBeNull();
+  // Offline renames still move the local mirror.
+  const offline = { ...d, fetchFn: (async () => { throw new TypeError("offline"); }) as typeof fetch };
+  await saveLevel(offline, { ...level("Offline Name"), sourcePath: "Offline Name" }, "backgrounds/nested/Renamed Level");
+  expect(await listLevels(offline)).toContain("Offline Name");
+  expect(await listLevels(offline)).not.toContain("backgrounds/nested/Renamed Level");
 });
 it("falls back to the local mirror when the server is down", async () => {
   const d = deps(true);

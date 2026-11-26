@@ -63,6 +63,7 @@ function playableLevel(level: CustomLevel) {
 export async function saveLevel(
   deps: Partial<LevelStoreDeps> | undefined,
   level: CustomLevel,
+  previousName?: string,
 ) {
   const { fetchFn, storage } = depsOrDefaults(deps);
   const valid = validateCustomLevel(level);
@@ -73,9 +74,17 @@ export async function saveLevel(
   storage.setItem(levelKey(path), JSON.stringify(valid));
   const names = readIndex(storage);
   if (!names.includes(path)) writeIndex(storage, [...names, path]);
+  // A renamed save drops the stale local mirror; the server moves the file.
+  if (previousName && previousName !== path) {
+    storage.removeItem(levelKey(previousName));
+    writeIndex(
+      storage,
+      readIndex(storage).filter((n) => n !== previousName),
+    );
+  }
   // Transient disk hiccups (file locks, slow AV scans) retry; deterministic
   // rejections (400) and total outages still fall back to the local mirror.
-  const body = JSON.stringify({ name: path, level: valid });
+  const body = JSON.stringify({ name: path, level: valid, previousName });
   for (let attempt = 1; ; attempt++) {
     try {
       const res = await fetchFn("/__levels", {
