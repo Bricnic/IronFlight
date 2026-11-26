@@ -1,6 +1,5 @@
 {
   "name": "Sleigh Bell Sprint",
-  "backgroundTemplate": "christmas-village",
   "mode": "race",
   "spawn": {
     "x": -340,
@@ -32821,5 +32820,6 @@
     "silver": 218,
     "bronze": 319
   },
-  "limit": 340
+  "limit": 340,
+  "backgroundTemplate": "christmas-village"
 }
