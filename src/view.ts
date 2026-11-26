@@ -1056,6 +1056,11 @@ export class GameView {
         if (mat) mat.emissiveIntensity = levels[i];
       });
     }
+    const animate = getVehicle(s.vehicleId).animate;
+    if (animate && this.truck) {
+      const v = s.body.linvel();
+      animate(this.truck, s.time, Math.hypot(v.x, v.z));
+    }
     const renderTime = Math.max(0, (s.ticks - 1 + alpha) * DT),
       elapsed = Math.max(0, renderTime - this.lastCameraTime);
     this.lastCameraTime = renderTime;

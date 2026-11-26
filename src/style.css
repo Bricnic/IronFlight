@@ -1049,7 +1049,8 @@ kbd {
   color: #ffd700;
   text-shadow: 0 0 14px #ffd70055;
 }
-#lock-toast {
+#lock-toast,
+#vehicle-lock-toast {
   position: fixed;
   left: 50%;
   bottom: 28px;
@@ -1086,6 +1087,9 @@ kbd {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .vehicle-card.shake {
+    animation: none;
+  }
   .track-card.shake {
     animation: none;
   }
@@ -1599,10 +1603,24 @@ kbd {
   accent-color: #ffa762;
 }
 .vehicle-preview {
+  position: relative;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #15242b;
   border-bottom: 1px solid #ffffff20;
+}
+.vehicle-card.locked .vehicle-preview img {
+  filter: brightness(0.55) saturate(0.7);
+}
+.vehicle-card.locked:hover {
+  border-color: #ffffff20;
+  transform: none;
+}
+.vehicle-card.locked .vehicle-pick {
+  cursor: not-allowed;
+}
+.vehicle-card.shake {
+  animation: card-shake 0.4s ease;
 }
 /* Objective progress counter: the bottom-of-screen "n / m" readout defaults
    to 16.9px (1.3x the original 13px). The debug-menu slider ("Objective

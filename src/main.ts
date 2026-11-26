@@ -20,6 +20,7 @@ import {
 import { stepUnlockedTrackId } from "./official-levels";
 import { LEVEL_COLLECTIONS, collectionForTrack } from "./level-collections";
 import { UnlockSeen, isDreamUnlocked, unlockedIds } from "./level-unlocks";
+import { dreamCarForCollection, isDreamCarUnlocked } from "./dream-cars";
 import {
   isXRSupported,
   mergePadStates,
@@ -130,6 +131,7 @@ async function boot() {
   let starRun: Simulation["trackRun"];
   let starSeen = 0;
   let dreamLockedThisRun = false;
+  let dreamCarLockedThisRun: string | null = null;
   let xrSupported = false;
   let xrPauseWas = false;
   let xrExitAt: number | null = null;
@@ -402,6 +404,8 @@ async function boot() {
       showLevelSelect();
     },
     showLevelSelect,
+    scores,
+    starBank,
   );
   $("vehicle-select-button").onclick = showVehicleSelect;
   editorScreens = createLevelEditor(app, showLevelSelect, (id) =>
@@ -522,6 +526,23 @@ async function boot() {
     }
     confettiLast = sim.time;
     drawConfetti();
+  }
+  function showDreamCarBanner(carName: string) {
+    const banner = $("checkpoint-banner");
+    const delta = $("checkpoint-delta");
+    banner.querySelector("strong")!.textContent = "DREAM CAR UNLOCKED!";
+    banner.classList.add("gold");
+    banner.hidden = false;
+    bannerFiredAt = sim.time;
+    bannerUntil = sim.time + 2.5;
+    banner.style.transform = "";
+    banner.style.opacity = "";
+    delta.hidden = false;
+    delta.textContent = carName;
+    delta.className = "dream";
+    fireConfetti({ colors: GOLD_CONFETTI, count: CONFETTI_COUNT * 6 });
+    if (view.renderer.xr.isPresenting)
+      view.xrHud.flash("DREAM CAR UNLOCKED!", carName, sim.time + 2.5);
   }
   function showStarBanner(dreamName?: string) {
     const banner = $("checkpoint-banner");
@@ -757,10 +778,22 @@ async function boot() {
           for (const id of unlockedSet())
             if (!before.has(id)) unlockedNames.push(getTrack(id).name);
         }
+        let unlockedCarName: string | undefined;
+        if (
+          s.run.status === "completed" &&
+          dreamCarLockedThisRun &&
+          isDreamCarUnlocked(dreamCarLockedThisRun, scores, starBank)
+        ) {
+          unlockedCarName = getVehicle(dreamCarLockedThisRun).name;
+          dreamCarLockedThisRun = null;
+          // Gold was the final condition: announce in-level like a star
+          // unlock (banner + confetti) ahead of the result screen below.
+          showDreamCarBanner(unlockedCarName);
+        }
         surface = "result";
         resultStartedAt = sim.time;
         keys.clear();
-        screens.showResult(s.run, pb, unlockedNames);
+        screens.showResult(s.run, pb, unlockedNames, unlockedCarName);
         if (unlockedNames.length)
           fireConfetti({ colors: GOLD_CONFETTI, count: CONFETTI_COUNT * 3 });
         if (s.run.status === "failed") screens.reveal(0);
@@ -796,6 +829,15 @@ async function boot() {
           dreamLockedThisRun =
             !!collection?.dream &&
             !isDreamUnlocked(collection, scores, starBank);
+          dreamCarLockedThisRun =
+            collection?.dream === s.run.trackId &&
+            !isDreamCarUnlocked(
+              dreamCarForCollection(collection.id),
+              scores,
+              starBank,
+            )
+              ? dreamCarForCollection(collection.id)
+              : null;
         } else if (s.run.stars.length > starSeen) {
           starSeen = s.run.stars.length;
           const collection = collectionForTrack(s.run.trackId);
@@ -809,6 +851,13 @@ async function boot() {
           showStarBanner(
             justUnlocked && dreamId ? getTrack(dreamId).name : undefined,
           );
+          if (
+            dreamCarLockedThisRun &&
+            isDreamCarUnlocked(dreamCarLockedThisRun, scores, starBank)
+          ) {
+            showDreamCarBanner(getVehicle(dreamCarLockedThisRun).name);
+            dreamCarLockedThisRun = null;
+          }
         }
         // Pop and fade on sim time so pausing freezes the celebration
         // mid-show (and headless captures catch it at full opacity).

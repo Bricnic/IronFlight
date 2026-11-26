@@ -337,6 +337,7 @@ export function createLevelSelect(
       run: ReturnType<TrackRun["snapshot"]>,
       personalBest: boolean,
       unlockedNames: string[] = [],
+      unlockedCarName?: string,
     ) {
       screen.hidden = true;
       result.hidden = false;
@@ -372,12 +373,16 @@ export function createLevelSelect(
           ? "Best time retained on this browser"
           : "No medal awarded";
       const unlock = result.querySelector<HTMLElement>("#result-unlock")!;
-      if (unlockedNames.length) {
+      const lines: string[] = [];
+      if (unlockedNames.length === 1)
+        lines.push(`New track unlocked: ${unlockedNames[0]}!`);
+      else if (unlockedNames.length > 1)
+        lines.push(`New tracks unlocked: ${unlockedNames.join(", ")}!`);
+      if (unlockedCarName)
+        lines.push(`New dream car unlocked: ${unlockedCarName}!`);
+      if (lines.length) {
         unlock.hidden = false;
-        unlock.textContent =
-          unlockedNames.length === 1
-            ? `New track unlocked: ${unlockedNames[0]}!`
-            : `New tracks unlocked: ${unlockedNames.join(", ")}!`;
+        unlock.textContent = lines.join(" ");
       } else {
         unlock.hidden = true;
         unlock.textContent = "";

@@ -11,6 +11,7 @@ import { createTruck, truckStats } from "../src/truck";
 import { CONCEPT_VEHICLES } from "../src/concept-vehicles";
 import { THEMED_VEHICLES } from "../src/themed-vehicles";
 import { GENERATED_VEHICLES } from "../src/generated-vehicles";
+import { DREAM_VEHICLES } from "../src/dream-vehicles";
 import briefs from "../visual-plan/refs/gemini/themed/briefs.json";
 import generatedBriefs from "../visual-plan/refs/gemini/generated/briefs.json";
 
@@ -22,8 +23,9 @@ const NEW_CARS = [
   ...CONCEPT_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
   ...THEMED_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
   ...GENERATED_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
+  ...DREAM_VEHICLES.map(({ id, build }) => ({ id, build, stats: truckStats })),
 ] as const;
-const KIT_CARS = [...CONCEPT_VEHICLES, ...THEMED_VEHICLES, ...GENERATED_VEHICLES];
+const KIT_CARS = [...CONCEPT_VEHICLES, ...THEMED_VEHICLES, ...GENERATED_VEHICLES, ...DREAM_VEHICLES];
 const TRUCK_BASELINE = truckStats(createTruck());
 
 for (const car of NEW_CARS) {

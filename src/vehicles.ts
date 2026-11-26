@@ -61,6 +61,7 @@ import { createWatermelonCar } from "./watermelon-car";
 import { CONCEPT_VEHICLES } from "./concept-vehicles";
 import { THEMED_VEHICLES } from "./themed-vehicles";
 import { GENERATED_VEHICLES } from "./generated-vehicles";
+import { DREAM_VEHICLES, dreamAnimate } from "./dream-vehicles";
 export type VehicleId =
   | "monster-truck"
   | "sports-car"
@@ -74,7 +75,8 @@ export type VehicleId =
   | "watermelon-car"
   | (typeof CONCEPT_VEHICLES)[number]["id"]
   | (typeof THEMED_VEHICLES)[number]["id"]
-  | (typeof GENERATED_VEHICLES)[number]["id"];
+  | (typeof GENERATED_VEHICLES)[number]["id"]
+  | (typeof DREAM_VEHICLES)[number]["id"];
 export interface VehiclePart {
   id: string;
   pos: readonly [number, number, number];
@@ -97,6 +99,8 @@ export interface VehicleDef {
   build: (options?: TruckMaterials) => T.Group;
   lights?: "police" | "ems";
   seriesDecal?: false;
+  /** Per-frame cosmetic animation (root group, sim time, speed m/s). */
+  animate?: (root: T.Group, time: number, speedMs: number) => void;
 }
 const standardChassis = {
   parts: PARTS,
@@ -215,6 +219,12 @@ export const VEHICLES: VehicleDef[] = [
     ...vehicle,
     ...standardChassis,
     seriesDecal: false as const,
+  })),
+  ...DREAM_VEHICLES.map((vehicle) => ({
+    ...vehicle,
+    ...standardChassis,
+    seriesDecal: false as const,
+    animate: (root: T.Group, time: number) => dreamAnimate(root, time),
   })),
 ];
 /** Game mph everywhere: the HUD and comic hazards use m/s x 3.6. */
