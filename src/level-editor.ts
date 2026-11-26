@@ -855,24 +855,40 @@ export function createLevelEditor(
   }
   const expandedGroups = new Set<string>();
   const expandedKinds = new Set<string>();
+  type RowDesc = {
+    label: string;
+    selected: boolean;
+    selection: EditorSelection;
+    key: string;
+    name: string;
+    kindKey?: string;
+    count: number;
+    locked: boolean;
+    li?: HTMLLIElement;
+  };
   function refreshList() {
     objects.innerHTML = "";
     const level = store.level;
-    const rows: { li: HTMLLIElement; name: string; key: string; kindKey?: string; count: number }[] = [];
+    const rows: RowDesc[] = [];
     const selectedKeys = new Set(store.selectedEntries().map(selectionKey));
-    const groups = new Map<string, { selection: NonNullable<EditorSelection>; rows: typeof rows; count: number; locked: boolean; selected: boolean; groupName: string; kindKey: string }>();
+    const groups = new Map<string, { selection: NonNullable<EditorSelection>; rows: RowDesc[]; count: number; locked: boolean; selected: boolean; groupName: string; kindKey: string }>();
+    // Describe-first: collect row data with zero DOM and zero store lookups
+    // (callers already hold the item); li elements are built lazily below,
+    // only for rows that actually render.
     const row = (
       label: string,
       selected: boolean,
       selection: EditorSelection,
       key: string,
+      item: { locked?: boolean; name?: string; group?: string; kind?: string },
     ) => {
-      const item = store.selectedItem(selection)?.item;
-      const locked = !!item?.locked;
-      label = item?.name ?? label;
+      const locked = !!item.locked;
+      label = item.name ?? label;
+      const kindKey = selection
+        ? objectKindKey({ kind: selection.kind, item } as Parameters<typeof objectKindKey>[0])
+        : undefined;
       let bucket: ReturnType<typeof groups.get>;
-      if (item?.group && selection && !store.clip) {
-        const kindKey = objectKindKey(store.selectedItem(selection)!);
+      if (item.group && selection && !store.clip && kindKey) {
         const bucketKey = `${item.group}:${kindKey}`;
         bucket = groups.get(bucketKey);
         if (!bucket) {
@@ -884,27 +900,30 @@ export function createLevelEditor(
         if (!expandedGroups.has(item.group)) return;
       }
       if (!store.clip) selected = !!selection && selectedKeys.has(selectionKey(selection));
+      (bucket?.rows ?? rows).push({ label, selected, selection, key, name: label, kindKey, count: 1, locked });
+    };
+    const buildLi = (d: RowDesc) => {
       const onPick = (event: MouseEvent | KeyboardEvent) => {
         if (store.clip) {
-          if (selection?.kind === "solid") store.setClipTarget(selection.id, !store.clip.targets.includes(selection.id));
-        } else store.select(selection, event.shiftKey || event.ctrlKey || event.metaKey);
+          if (d.selection?.kind === "solid") store.setClipTarget(d.selection.id, !store.clip.targets.includes(d.selection.id));
+        } else store.select(d.selection, event.shiftKey || event.ctrlKey || event.metaKey);
       };
       const li = el(
         "li",
-        { "data-key": key, "data-locked": String(locked), class: selected ? "selected" : "" },
+        { "data-key": d.key, "data-locked": String(d.locked), class: d.selected ? "selected" : "" },
       );
-      li.append(el("span", {}, label));
+      li.append(el("span", {}, d.label));
       const lock = el("button", {
         class: "editor-lock",
-        "aria-label": `${locked ? "Unlock" : "Lock"} ${label}`,
-      }, locked ? "Unlock" : "Lock");
+        "aria-label": `${d.locked ? "Unlock" : "Lock"} ${d.label}`,
+      }, d.locked ? "Unlock" : "Lock");
       lock.addEventListener("click", (event) => {
         event.stopPropagation();
-        store.setLocked(selection, !locked);
+        store.setLocked(d.selection, !d.locked);
       });
       lock.disabled = !!store.clip;
       li.append(lock);
-      li.tabIndex = locked ? -1 : 0;
+      li.tabIndex = d.locked ? -1 : 0;
       li.addEventListener("click", onPick);
       li.addEventListener("keydown", (e) => {
         if (e.target !== li) return;
@@ -913,7 +932,7 @@ export function createLevelEditor(
           onPick(e);
         }
       });
-      (bucket?.rows ?? rows).push({ li, name: label, key, kindKey: selection ? objectKindKey(store.selectedItem(selection)!) : undefined, count: 1 });
+      return li;
     };
     for (const s of level.solids)
       row(
@@ -921,6 +940,7 @@ export function createLevelEditor(
         store.clip ? store.clip.targets.includes(s.id) : store.solidSelection.includes(s.id) || (store.selection?.kind === "solid" && store.selection.id === s.id),
         { kind: "solid", id: s.id },
         `solid:${s.id}`,
+        s,
       );
     for (const p of level.prefabs)
       row(
@@ -929,6 +949,7 @@ export function createLevelEditor(
           (store.selection as { id: string }).id === p.id,
         { kind: "prefab", id: p.id },
         `prefab:${p.id}`,
+        p,
       );
     level.checkpoints.forEach((c, i) =>
       row(
@@ -937,6 +958,7 @@ export function createLevelEditor(
           (store.selection as { index: number }).index === i,
         { kind: "checkpoint", index: i },
         `checkpoint:${i}`,
+        c,
       ),
     );
     store.targetList().forEach((t, i) =>
@@ -946,6 +968,7 @@ export function createLevelEditor(
           (store.selection as { index: number }).index === i,
         { kind: "target", index: i },
         `target:${i}`,
+        t,
       ),
     );
     (level.rings ?? []).forEach((r, i) =>
@@ -955,6 +978,7 @@ export function createLevelEditor(
           (store.selection as { index: number }).index === i,
         { kind: "ring", index: i },
         `ring:${i}`,
+        r,
       ),
     );
     row(
@@ -962,6 +986,7 @@ export function createLevelEditor(
       store.selection?.kind === "spawn",
       { kind: "spawn" },
       "spawn",
+      level.spawn,
     );
     for (const bucket of groups.values()) {
       const name = bucket.groupName;
@@ -980,19 +1005,22 @@ export function createLevelEditor(
       header.append(toggle, label, lock); li.append(header);
       if (expandedGroups.has(name)) {
         const children = el("ul", { class: "editor-group-children" });
-        children.append(...bucket.rows.map(r => r.li)); li.append(children);
+        children.append(...bucket.rows.map(buildLi)); li.append(children);
       }
-      rows.push({ li, name, key: `group:${name}`, kindKey: bucket.kindKey, count: bucket.count });
+      rows.push({ li, label: name, selected: bucket.selected, selection: bucket.selection, key: `group:${name}`, name, kindKey: bucket.kindKey, count: bucket.count, locked: bucket.locked });
     }
+    const renderRow = (r: RowDesc) => r.li ?? buildLi(r);
     rows.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true }) || a.key.localeCompare(b.key));
     for (const section of partitionListKinds(rows)) {
-      if (!section.kindKey) { objects.append(...section.rows.map(row => row.li)); continue; }
+      if (!section.kindKey) { objects.append(...section.rows.map(renderRow)); continue; }
       const key = section.kindKey, label = objectKindLabel(key), expanded = expandedKinds.has(key);
       const holder = el("li", { class: "editor-kind-section", "data-kind": key });
       const toggle = el("button", { class: "editor-kind-toggle", "aria-label": `${expanded ? "Collapse" : "Expand"} ${label}`, "aria-expanded": String(expanded) }, `${expanded ? "▾" : "▸"} ${label} (${section.count})`);
       toggle.addEventListener("click", () => { if (expandedKinds.has(key)) expandedKinds.delete(key); else expandedKinds.add(key); refreshList(); });
       const children = el("ul", { class: "editor-kind-children" }); children.hidden = !expanded;
-      children.append(...section.rows.map(row => row.li)); holder.append(toggle, children); objects.append(holder);
+      // Collapsed children stay in the DOM (hidden) so counts, find-in-page,
+      // and tests observe them; only the per-row store lookups were cut.
+      children.append(...section.rows.map(renderRow)); holder.append(toggle, children); objects.append(holder);
     }
   }
   function refresh() {

@@ -101,6 +101,7 @@ export function buildEditorIceBatch(prefabs: CustomPrefab[], preview: boolean) {
     if (!(o instanceof T.Mesh)) return;
     const mesh = new T.InstancedMesh(o.geometry, o.material, prefabs.length);
     mesh.userData.instancePicks = picks;
+    mesh.userData.baseMatrix = o.matrixWorld.clone();
     const matrix = new T.Matrix4(), rotation = new T.Quaternion(), position = new T.Vector3(), size = new T.Vector3();
     prefabs.forEach((p, i) => {
       position.set(p.x, prefabY(p), p.z);

@@ -27,10 +27,11 @@ test("checkpoint auto-numbering, explicit numbers, and finish flag", async ({ pa
     await expect(row(0)).toContainText("Checkpoint 1");
     await expect(row(1)).toContainText("Finish");
     await page.locator("#editor-add-checkpoint").click();
+    // Three same-kind rows collapse into a section: expand it like a user.
+    await expandCheckpoints();
     await expect(row(0)).toContainText("Checkpoint 1");
     await expect(row(1)).toContainText("Checkpoint 2");
     await expect(row(2)).toContainText("Finish");
-    await expandCheckpoints();
     // Explicit number pins the last gate (z=40) into slot 1.
     await row(2).click();
     await expect(orderField).toHaveValue("");
@@ -58,7 +59,7 @@ test("checkpoint auto-numbering, explicit numbers, and finish flag", async ({ pa
     await expect(page.locator("#editor-status")).toContainText(`Saved ${name}`);
     const level = await page.evaluate((n) => window.__game!.customLevels.load(n), name);
     expect(level.checkpoints.filter((c: { finish?: boolean }) => c.finish)).toHaveLength(1);
-    expect(level.checkpoints.at(-1).finish).toBe(true);
+    expect(level.checkpoints.at(-1)!.finish).toBe(true);
   } finally {
     await page.evaluate((n) => window.__game!.customLevels.remove(n).catch(() => {}), name);
   }

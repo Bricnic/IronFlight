@@ -4,6 +4,7 @@ import { chooseResizeHandle, resizeBox, type ResizeHandle, type ResizeBox } from
 import {
   PROP_PREFAB_KINDS,
   CHECKPOINT_WIDTHS,
+  prefabY,
   type CustomLevel,
   type CustomSolid,
 } from "./custom-level";
@@ -321,6 +322,32 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     renderer.render(scene, camera);
   };
   let group: T.Group | null = null;
+  // Incremental sync caches: pick key -> live node + build signature.
+  let modelCache = new Map<string, T.Object3D>();
+  let modelSig = new Map<string, string>();
+  let lastPreview = false;
+  let lastClipKey = "";
+  let iceSig = "";
+  let icePos = new Map<string, number[]>();
+  const iceTransform = (p: { x: number; z: number; y?: number; yaw?: number; angle?: number; roll?: number; resizeScale?: number }) =>
+    [p.x, prefabY(p as Parameters<typeof prefabY>[0]), p.z, p.yaw ?? 0, p.angle ?? 0, p.roll ?? 0, p.resizeScale ?? 1];
+  const disposeSubtree = (root: T.Object3D) => {
+    root.traverse((o) => {
+      if (o instanceof T.Light) o.dispose();
+      if (o instanceof T.Mesh) {
+        o.geometry.dispose();
+        for (const material of Array.isArray(o.material) ? o.material : [o.material]) material.dispose();
+      }
+    });
+  };
+  const dropKey = (key: string) => {
+    const node = modelCache.get(key);
+    if (!node) return;
+    group?.remove(node);
+    disposeSubtree(node);
+    modelCache.delete(key);
+    modelSig.delete(key);
+  };
   const raycaster = new T.Raycaster();
   const ndcAt = (clientX: number, clientY: number) => {
     const rect = renderer.domElement.getBoundingClientRect();
@@ -342,6 +369,33 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     };
   };
   let drag: { planeY: number; offX: number; offZ: number; x: number; z: number; grabY: number; vertical: boolean; start: T.Vector3; verticalPlane: T.Plane; origins: ReturnType<EditorStore["selectionPositions"]> } | null = null;
+  // Drag coalescing: pointermove can fire several times per frame, but each
+  // move runs a full refresh, so apply at most one per animation frame.
+  // Moves are absolute (origins + delta), so dropping intermediate ones is
+  // lossless. The pending move always flushes on pointerup.
+  let dragFrame: number | null = null;
+  let dragPending: { origins: ReturnType<EditorStore["selectionPositions"]>; delta: { x: number; y?: number; z: number }; snap: boolean; axes: ("x" | "y" | "z")[] } | null = null;
+  const flushObjectMove = () => {
+    dragFrame = null;
+    if (!dragPending) return;
+    const p = dragPending;
+    dragPending = null;
+    store.moveSelectedFrom(p.origins, p.delta, p.snap, p.axes);
+  };
+  const scheduleObjectMove = (
+    origins: ReturnType<EditorStore["selectionPositions"]>,
+    delta: { x: number; y?: number; z: number },
+    snap: boolean,
+    axes: ("x" | "y" | "z")[] = ["x", "y", "z"],
+  ) => {
+    dragPending = { origins, delta, snap, axes };
+    if (dragFrame === null) dragFrame = requestAnimationFrame(flushObjectMove);
+  };
+  const discardObjectMove = () => {
+    if (dragFrame !== null) cancelAnimationFrame(dragFrame);
+    dragFrame = null;
+    dragPending = null;
+  };
   let shiftClick: { selection: NonNullable<EditorSelection>; point: T.Vector3 } | null = null;
   const startObjectDrag = (point: T.Vector3, vertical: boolean) => {
     const item = store.selectedItem()!.item;
@@ -369,6 +423,7 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
   const canStart = (e: PointerEvent) => {
     shiftClick = null;
     pendingClick = null;
+    discardObjectMove();
     if (e.button === 1 || (e.buttons & 4)) {
       if (!middleOrbit) store.endGesture();
       drag = null; rotateAxis = null; pan = false; resizing = null; prefabResize = null; clipDrag = null;
@@ -632,12 +687,13 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       const y = primary.y + drag.grabY;
       const plane = e.shiftKey ? new T.Plane().setFromNormalAndCoplanarPoint(drag.verticalPlane.normal, new T.Vector3(primary.x, y, primary.z)) : new T.Plane(new T.Vector3(0, 1, 0), -y);
       const point = raycaster.ray.intersectPlane(plane, new T.Vector3());
+      discardObjectMove();
       if (point) startObjectDrag(point, e.shiftKey);
       return;
     }
     if (drag.vertical) {
       const hit = raycaster.ray.intersectPlane(drag.verticalPlane, new T.Vector3());
-      if (hit) store.moveSelectedFrom(drag.origins, { x: 0, y: hit.y - drag.start.y, z: 0 }, store.grid.snap && !e.ctrlKey, ["y"]);
+      if (hit) scheduleObjectMove(drag.origins, { x: 0, y: hit.y - drag.start.y, z: 0 }, store.grid.snap && !e.ctrlKey, ["y"]);
       return;
     }
     const hit = planeHit(
@@ -646,9 +702,10 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
       drag.planeY,
     );
     if (hit)
-      store.moveSelectedFrom(drag.origins, { x: hit.x - drag.offX - drag.x, z: hit.z - drag.offZ - drag.z }, store.grid.snap && !e.ctrlKey);
+      scheduleObjectMove(drag.origins, { x: hit.x - drag.offX - drag.x, z: hit.z - drag.offZ - drag.z }, store.grid.snap && !e.ctrlKey);
   });
   const endGesture = (e: PointerEvent) => {
+    flushObjectMove();
     if (middleOrbit) { middleOrbit = false; return; }
     if (shiftClick) {
       if (e.type === "pointerup" && e.button === 0) store.select(shiftClick.selection, true);
@@ -731,6 +788,49 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     );
     parent.add(fill, wire);
   };
+  type TintSave = { mat: T.Material; color?: number; emissive?: number };
+  const syncPrefabArrow = (model: T.Group, id: string, selected: boolean) => {
+    const has = model.children.find((c) => c.userData.arrowOf === id);
+    if (selected && !has) {
+      const arrow = new T.Group(); arrow.userData.arrowOf = id;
+      const arrowMat = new T.MeshBasicMaterial({ color: 0xffe08a });
+      const shaft = new T.Mesh(new T.BoxGeometry(0.14, 0.14, 3), arrowMat); shaft.position.z = 2.7;
+      const head = new T.Mesh(new T.ConeGeometry(0.42, 1, 10), arrowMat); head.rotation.x = Math.PI / 2; head.position.z = 4.7;
+      arrow.add(shaft, head); arrow.layers.set(1); arrow.traverse(o => o.layers.set(1)); model.add(arrow);
+    } else if (!selected && has) {
+      model.remove(has);
+      disposeSubtree(has);
+    }
+  };
+  const syncPrefabTint = (model: T.Group, id: string, selected: boolean, preview: boolean) => {
+    if (!selected && !model.userData.tinted) return;
+    if (model.userData.tinted === selected) {
+      syncPrefabArrow(model, id, selected);
+      return;
+    }
+    model.userData.tinted = selected;
+    const saved = (model.userData.tintSaved ??= []) as TintSave[];
+    model.traverse((o) => {
+      if (!(o instanceof T.Mesh)) return;
+      for (const mat of Array.isArray(o.material) ? o.material : [o.material]) {
+        let s = saved.find((s) => s.mat === mat);
+        if (selected) {
+          if (!s) {
+            s = { mat };
+            if ("color" in mat) s.color = (mat as T.MeshBasicMaterial).color.getHex();
+            if ("emissive" in mat) s.emissive = (mat as T.MeshStandardMaterial).emissive.getHex();
+            saved.push(s);
+          }
+          if (!preview && mat instanceof T.MeshBasicMaterial) mat.color.set(0xffe08a);
+          else if (mat instanceof T.MeshStandardMaterial) mat.emissive.add(new T.Color(0x342900));
+        } else if (s) {
+          if (s.color !== undefined && "color" in mat) (mat as T.MeshBasicMaterial).color.setHex(s.color);
+          if (s.emissive !== undefined && "emissive" in mat) (mat as T.MeshStandardMaterial).emissive.setHex(s.emissive);
+        }
+      }
+    });
+    syncPrefabArrow(model, id, selected);
+  };
   let previewOn = false;
   let generation = 0;
   let settleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -753,164 +853,270 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
         clearTimeout(settleTimer);
         settleTimer = null;
       }
-      if (group) {
-        group.traverse((o) => {
-          if (o instanceof T.Light) o.dispose();
-          if (o instanceof T.Mesh) {
-            o.geometry.dispose();
-            for (const material of Array.isArray(o.material) ? o.material : [o.material]) material.dispose();
-          }
-        });
-        scene.remove(group);
+      // Incremental sync: full rebuild only when the scene root, preview
+      // mode, or clip state changes; otherwise add/remove/update in place.
+      const clipKey = store.clip ? JSON.stringify([store.clip.targets, store.clip.cutters, store.clip.cutterId ?? ""]) : "";
+      if (!group || preview !== lastPreview || clipKey !== lastClipKey) {
+        if (group) {
+          disposeSubtree(group);
+          scene.remove(group);
+        }
+        group = new T.Group();
+        modelCache = new Map();
+        modelSig = new Map();
+        iceSig = "";
       }
-      group = new T.Group();
+      lastPreview = preview;
+      lastClipKey = clipKey;
+      const want = new Set<string>();
+      const selKeys = new Set<string>();
+      for (const s of store.selectedEntries()) selKeys.add(pickKey(s));
+      for (const id of store.solidSelection) selKeys.add(`solid:${id}`);
       for (const s of level.solids) {
-        const holder = new T.Group();
-        holder.userData.pick = { kind: "solid", id: s.id };
-        holder.userData.locked = !!s.locked;
+        const key = `solid:${s.id}`;
+        want.add(key);
+        const sig = [s.kind, s.w, s.h, s.d, s.angle ?? 0, s.yaw ?? 0, s.roll ?? 0, s.color, s.texture ?? "", preview ? 1 : 0, s.footprint ? JSON.stringify(s.footprint) : ""].join("|");
+        let holder = modelCache.get(key) as T.Group | undefined;
+        if (!holder || modelSig.get(key) !== sig) {
+          if (holder) dropKey(key);
+          holder = new T.Group();
+          holder.userData.pick = { kind: "solid", id: s.id };
+          if (preview) previewSolid(holder, s, false);
+          else wireBox(holder, s, false);
+          holder.userData.tintMesh = preview ? holder.children[0] : holder.children[1];
+          modelCache.set(key, holder);
+          modelSig.set(key, sig);
+          group.add(holder);
+        }
         holder.position.set(s.x, s.y, s.z);
-        holder.rotation.set(
-          s.angle ?? 0,
-          s.yaw ?? 0,
-          s.roll ?? 0,
-          "YXZ",
-        );
-        const selected = store.solidSelection.includes(s.id) ||
+        holder.rotation.set(s.angle ?? 0, s.yaw ?? 0, s.roll ?? 0, "YXZ");
+        holder.userData.locked = !!s.locked;
+        const selected = selKeys.has(key) ||
           (selection != null && "id" in selection && selection.id === s.id);
-        if (preview) previewSolid(holder, s, selected);
-        else wireBox(holder, s, selected);
-        group.add(holder);
+        const tintMesh = holder.userData.tintMesh as T.Mesh;
+        if (preview) (tintMesh.material as T.MeshStandardMaterial).emissive.setHex(selected ? 0x4a3a00 : 0x000000);
+        else (tintMesh.material as T.MeshBasicMaterial).color.setHex(selected ? 0xffe08a : 0x9adfe8);
       }
-      for (const s of clip?.removed ?? []) {
+      for (const key of [...modelCache.keys()]) if (key.startsWith("clipremoved:")) dropKey(key);
+      for (const [ri, s] of (clip?.removed ?? []).entries()) {
         const removed = new T.Mesh(editorSolidGeometry(s), new T.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 0.4, depthWrite: false }));
         removed.position.set(s.x, s.y, s.z);
         removed.rotation.set(s.angle ?? 0, s.yaw ?? 0, s.roll ?? 0, "YXZ");
         // Preview volumes are not selectable and are disposed with the scene.
+        const rkey = `clipremoved:${ri}`;
+        modelCache.set(rkey, removed);
+        want.add(rkey);
         group.add(removed);
       }
-      for (const [i, cp] of level.checkpoints.entries()) {
+      level.checkpoints.forEach((cp, i) => {
+        const key = `checkpoint:${i}`, fkey = `checkpointframe:${i}`;
+        want.add(key);
         const previous = level.checkpoints[i - 1] ?? level.spawn;
         const yaw = cp.yaw ?? Math.atan2(cp.x - previous.x, cp.z - previous.z);
-        if (preview) {
-          const frame = cp.appearance ? buildToyCheckpoint(cp.appearance) : buildCheckpointFrame();
-          frame.position.set(cp.x, Math.max(0, (cp.y ?? 2) - 2.6), cp.z);
-          frame.rotation.y = yaw;
-          frame.userData.pick = { kind: "checkpoint", index: i };
-          frame.userData.locked = !!cp.locked;
-          group.add(frame);
+        const sig = [cp.appearance ?? "", preview ? 1 : 0].join("|");
+        if (!modelCache.get(key) || modelSig.get(key) !== sig) {
+          dropKey(key);
+          dropKey(fkey);
+          if (preview) {
+            const frame = cp.appearance ? buildToyCheckpoint(cp.appearance) : buildCheckpointFrame();
+            frame.userData.pick = { kind: "checkpoint", index: i };
+            modelCache.set(fkey, frame);
+            group!.add(frame);
+          }
+          const gate = new T.Mesh(
+            new T.PlaneGeometry(cp.appearance ? CHECKPOINT_WIDTHS[cp.appearance] : 24, 8),
+            new T.MeshBasicMaterial({ color: 0x6ae08a, wireframe: true, side: T.DoubleSide }),
+          );
+          gate.userData.pick = { kind: "checkpoint", index: i };
+          if (preview) gate.layers.set(1); // gizmos hide in preview
+          modelCache.set(key, gate);
+          modelSig.set(key, sig);
+          group!.add(gate);
         }
-        const gate = new T.Mesh(
-          new T.PlaneGeometry(cp.appearance ? CHECKPOINT_WIDTHS[cp.appearance] : 24, 8),
-          new T.MeshBasicMaterial({
-            color:
-              selection != null &&
-              "index" in selection &&
-              selection.kind === "checkpoint" &&
-              selection.index === i
-                ? 0xffe08a
-                : 0x6ae08a,
-            wireframe: true,
-            side: T.DoubleSide,
-          }),
-        );
+        if (preview) want.add(fkey);
+        const gate = modelCache.get(key) as T.Mesh;
         gate.position.set(cp.x, cp.y ?? 2, cp.z);
         gate.rotation.y = yaw;
-        gate.userData.pick = { kind: "checkpoint", index: i };
-        if (preview) gate.layers.set(1); // gizmos hide in preview
         gate.userData.locked = !!cp.locked;
-        group.add(gate);
-      }
-      const iceBatch = level.prefabs.filter(p => p.kind === "fragile-ice" && !store.isSelected({ kind: "prefab", id: p.id }));
-      if (iceBatch.length > 1) group.add(buildEditorIceBatch(iceBatch, preview));
-      const batchedIds = new Set(iceBatch.length > 1 ? iceBatch.map(p => p.id) : []);
-      for (const p of level.prefabs) {
-        if (batchedIds.has(p.id)) continue;
-        const model = buildEditorPrefab(p, preview);
-        const selected = store.isSelected({ kind: "prefab", id: p.id });
-        if (selected) {
-          model.traverse(o => {
-            if (o instanceof T.Mesh) for (const mat of Array.isArray(o.material) ? o.material : [o.material]) {
-              if (!preview && mat instanceof T.MeshBasicMaterial) mat.color.set(0xffe08a);
-              else if (mat instanceof T.MeshStandardMaterial) mat.emissive.add(new T.Color(0x342900));
+        const frame = modelCache.get(fkey);
+        if (frame) {
+          frame.position.set(cp.x, Math.max(0, (cp.y ?? 2) - 2.6), cp.z);
+          frame.rotation.y = yaw;
+          frame.userData.locked = !!cp.locked;
+        }
+        const selected = selection != null && "index" in selection && selection.kind === "checkpoint" && selection.index === i;
+        (gate.material as T.MeshBasicMaterial).color.setHex(selected ? 0xffe08a : 0x6ae08a);
+      });
+      const iceList = level.prefabs.filter(p => p.kind === "fragile-ice" && !selKeys.has(`prefab:${p.id}`));
+      const batchedIds = new Set(iceList.length > 1 ? iceList.map(p => p.id) : []);
+      if (iceList.length > 1) {
+        want.add("__ice");
+        const ids = iceList.map(p => p.id).join(",");
+        const batch = modelCache.get("__ice");
+        const wantSig = `${preview ? "p" : "w"}|${ids}`;
+        if (!batch || iceSig !== wantSig) {
+          dropKey("__ice");
+          const built = buildEditorIceBatch(iceList, preview);
+          modelCache.set("__ice", built);
+          group!.add(built);
+          iceSig = wantSig;
+          icePos = new Map(iceList.map(p => [p.id, iceTransform(p)]));
+        } else {
+          // Membership matches: update moved instances (and lock flags) in place.
+          const moves: { p: (typeof iceList)[number]; i: number }[] = [];
+          iceList.forEach((p, i) => {
+            const t = iceTransform(p);
+            const prev = icePos.get(p.id);
+            if (!prev || prev.some((v, k) => v !== t[k])) {
+              icePos.set(p.id, t);
+              moves.push({ p, i });
             }
           });
-          const arrow = new T.Group(); arrow.userData.arrowOf = p.id;
-          const arrowMat = new T.MeshBasicMaterial({ color: 0xffe08a });
-          const shaft = new T.Mesh(new T.BoxGeometry(0.14, 0.14, 3), arrowMat); shaft.position.z = 2.7;
-          const head = new T.Mesh(new T.ConeGeometry(0.42, 1, 10), arrowMat); head.rotation.x = Math.PI / 2; head.position.z = 4.7;
-          arrow.add(shaft, head); arrow.layers.set(1); arrow.traverse(o => o.layers.set(1)); model.add(arrow);
+          const firstMesh = batch.children.find((o): o is T.InstancedMesh => o instanceof T.InstancedMesh);
+          const picks = firstMesh?.userData.instancePicks as { locked: boolean }[] | undefined;
+          if (picks) iceList.forEach((p, i) => {
+            if (picks[i]) picks[i].locked = !!p.locked;
+          });
+          if (moves.length) {
+            const matrix = new T.Matrix4(), rotation = new T.Quaternion(), position = new T.Vector3(), size = new T.Vector3();
+            batch.traverse(o => {
+              if (!(o instanceof T.InstancedMesh)) return;
+              const base = o.userData.baseMatrix as T.Matrix4;
+              for (const { p, i } of moves) {
+                position.set(p.x, prefabY(p), p.z);
+                rotation.setFromEuler(new T.Euler(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ"));
+                size.setScalar(p.resizeScale ?? 1);
+                matrix.compose(position, rotation, size).multiply(base);
+                o.setMatrixAt(i, matrix);
+              }
+              o.instanceMatrix.needsUpdate = true;
+              o.computeBoundingBox();
+              o.computeBoundingSphere();
+            });
+          }
         }
-        group.add(model);
+      } else if (modelCache.has("__ice")) {
+        dropKey("__ice");
+        iceSig = "";
+        icePos = new Map();
+      }
+      for (const p of level.prefabs) {
+        const key = `prefab:${p.id}`;
+        if (batchedIds.has(p.id)) {
+          dropKey(key);
+          continue;
+        }
+        want.add(key);
+        const sig = [p.kind, p.scale ?? 1, preview ? 1 : 0].join("|");
+        let model = modelCache.get(key) as T.Group | undefined;
+        if (!model || modelSig.get(key) !== sig) {
+          if (model) dropKey(key);
+          model = buildEditorPrefab(p, preview);
+          modelCache.set(key, model);
+          modelSig.set(key, sig);
+          group!.add(model);
+        }
+        model.position.set(p.x, prefabY(p), p.z);
+        model.rotation.set(p.angle ?? 0, p.yaw ?? 0, p.roll ?? 0, "YXZ");
+        model.scale.setScalar(p.resizeScale ?? 1);
+        model.userData.locked = !!p.locked;
+        syncPrefabTint(model, p.id, selKeys.has(key), preview);
       }
       for (const [i, t] of [
         ...(level.collectibles ?? []),
         ...(level.demolish ?? []),
       ].entries()) {
+        const key = `target:${i}`;
+        want.add(key);
         const collectible = level.mode !== "demolition";
-        const marker = new T.Mesh(
-          !collectible
-            ? new T.OctahedronGeometry(1.6)
-            : t.kind === "chest"
-              ? new T.BoxGeometry(2.2, 1.6, 1.4)
-              : new T.TorusGeometry(0.85, 0.17, 12, 32),
-          new T.MeshBasicMaterial({ color: 0xffd24a, wireframe: true }),
-        );
+        const sig = [level.mode, t.kind ?? ""].join("|");
+        if (!modelCache.get(key) || modelSig.get(key) !== sig) {
+          dropKey(key);
+          const marker = new T.Mesh(
+            !collectible
+              ? new T.OctahedronGeometry(1.6)
+              : t.kind === "chest"
+                ? new T.BoxGeometry(2.2, 1.6, 1.4)
+                : new T.TorusGeometry(0.85, 0.17, 12, 32),
+            new T.MeshBasicMaterial({ color: 0xffd24a, wireframe: true }),
+          );
+          marker.userData.pick = { kind: "target", index: i };
+          if (preview) marker.layers.set(1); // gizmos hide in preview
+          modelCache.set(key, marker);
+          modelSig.set(key, sig);
+          group!.add(marker);
+        }
+        const marker = modelCache.get(key) as T.Mesh;
         marker.position.set(t.x, t.y ?? (collectible ? 1.7 : 1.5), t.z);
-        marker.userData.pick = { kind: "target", index: i };
-        if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!t.locked;
-        if (
-          selection != null &&
-          "index" in selection &&
-          selection.kind === "target" &&
-          selection.index === i
-        )
-          marker.scale.setScalar(1.6);
-        group.add(marker);
+        marker.scale.setScalar(
+          selection != null && "index" in selection && selection.kind === "target" && selection.index === i ? 1.6 : 1,
+        );
       }
       for (const [i, r] of (level.rings ?? []).entries()) {
-        const marker = new T.Mesh(
-          new T.TorusGeometry(r.radius, 0.4, 8, 32),
-          new T.MeshBasicMaterial({
-            color: r.goal ? 0xffd34d : 0x4fb8ff,
-            wireframe: true,
-          }),
-        );
+        const key = `ring:${i}`;
+        want.add(key);
+        const sig = [r.radius, r.goal ? 1 : 0].join("|");
+        if (!modelCache.get(key) || modelSig.get(key) !== sig) {
+          dropKey(key);
+          const marker = new T.Mesh(
+            new T.TorusGeometry(r.radius, 0.4, 8, 32),
+            new T.MeshBasicMaterial({
+              color: r.goal ? 0xffd34d : 0x4fb8ff,
+              wireframe: true,
+            }),
+          );
+          marker.userData.pick = { kind: "ring", index: i };
+          if (preview) marker.layers.set(1); // gizmos hide in preview
+          modelCache.set(key, marker);
+          modelSig.set(key, sig);
+          group!.add(marker);
+        }
+        const marker = modelCache.get(key) as T.Mesh;
         marker.position.set(r.x, r.y, r.z);
-        marker.userData.pick = { kind: "ring", index: i };
-        if (preview) marker.layers.set(1); // gizmos hide in preview
         marker.userData.locked = !!r.locked;
-        if (
-          selection != null &&
-          "index" in selection &&
-          selection.kind === "ring" &&
-          selection.index === i
-        )
-          marker.scale.setScalar(1.6);
-        group.add(marker);
+        marker.scale.setScalar(
+          selection != null && "index" in selection && selection.kind === "ring" && selection.index === i ? 1.6 : 1,
+        );
       }
-      const spawn = preview ? createTruck() : new T.Mesh(
-        new T.ConeGeometry(1, 2.5, 4),
-        new T.MeshBasicMaterial({ color: 0xffa762, wireframe: true }),
-      );
-      spawn.position.set(level.spawn.x, level.spawn.y + (preview ? 0 : 1.5), level.spawn.z);
-      spawn.rotation.y = level.spawn.yaw;
-      spawn.userData.pick = { kind: "spawn" };
-      spawn.userData.locked = !!level.spawn.locked;
+      want.add("spawn");
+      const gameLight = preview && !!level.previewGameLighting;
+      const spawnSig = [preview ? 1 : 0, gameLight ? 1 : 0, lighting?.night ? 1 : 0].join("|");
+      if (!modelCache.get("spawn") || modelSig.get("spawn") !== spawnSig) {
+        dropKey("spawn");
+        const spawn = preview ? createTruck() : new T.Mesh(
+          new T.ConeGeometry(1, 2.5, 4),
+          new T.MeshBasicMaterial({ color: 0xffa762, wireframe: true }),
+        );
+        spawn.userData.pick = { kind: "spawn" };
+        if (preview && level.previewGameLighting) {
+          const headlights = buildHeadlightRig();
+          headlights.userData.ignoreBounds = true;
+          setHeadlightRig(headlights, lighting!.night);
+          setHeadlightDim(headlights, DEFAULT_TUNING.headlightDim * (isPermanentNight(level.backgroundTemplate, level.forceNight) ? MYSTIC_HEADLIGHT_DIM : 1));
+          spawn.getObjectByName("hood")?.add(headlights);
+        }
+        modelCache.set("spawn", spawn);
+        modelSig.set("spawn", spawnSig);
+        group!.add(spawn);
+      }
+      const spawnNode = modelCache.get("spawn")!;
+      spawnNode.position.set(level.spawn.x, level.spawn.y + (preview ? 0 : 1.5), level.spawn.z);
+      spawnNode.rotation.y = level.spawn.yaw;
+      spawnNode.userData.locked = !!level.spawn.locked;
+      for (const key of [...modelCache.keys()]) if (!want.has(key)) dropKey(key);
       if (preview && level.previewGameLighting) {
-        const headlights = buildHeadlightRig();
-        headlights.userData.ignoreBounds = true;
-        setHeadlightRig(headlights, lighting!.night);
-        setHeadlightDim(headlights, DEFAULT_TUNING.headlightDim * (isPermanentNight(level.backgroundTemplate, level.forceNight) ? MYSTIC_HEADLIGHT_DIM : 1));
-        spawn.getObjectByName("hood")?.add(headlights);
+        configureShadowSurfaces(group!);
+        applyNightGlow(group!, lighting!.night);
       }
-      group.add(spawn);
-      if (preview && level.previewGameLighting) {
-        configureShadowSurfaces(group);
-        applyNightGlow(group, lighting!.night);
-      }
-      if (preview) group.add(buildEditorLocalLights(level, target, group));
-      scene.add(group);
+      if (preview) {
+        dropKey("__lights");
+        const node = buildEditorLocalLights(level, target, group!);
+        modelCache.set("__lights", node);
+        want.add("__lights");
+        group!.add(node);
+      } else dropKey("__lights");
+      scene.add(group!);
       draw();
       // Textures pop in asynchronously; redraw until they arrive.
       if (preview) {

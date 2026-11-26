@@ -1164,7 +1164,10 @@ async function boot() {
       clock.advance(dt, rate, () =>
         sim.step(surface === "result" ? {} : input()),
       );
-    view.render(false, clock.alpha);
+    // The opaque editor covers the game canvas (plus it has its own
+    // renderer), so skip the game render while it is visible. Playtests
+    // hide the editor, which resumes rendering.
+    if (!editorScreens?.isVisible()) view.render(false, clock.alpha);
     if (captureCamera && cameraTrace.length < 2000)
       cameraTrace.push(cameraSample());
     hud(dt);
