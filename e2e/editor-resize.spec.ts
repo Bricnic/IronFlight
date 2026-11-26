@@ -31,7 +31,7 @@ test("resize drags face corners in object space, undoes once, and resizes gamepl
     object = await page.evaluate(() => window.__game!.editor().selectedObject!);
     expect(object.w).toBeCloseTo(12, 1); expect(object.d).toBeCloseTo(14, 1);
     await page.locator("#editor-undo").click();
-    await page.locator("#editor-prefab-kind").selectOption("fragile-ice"); await page.locator("#editor-add-prefab").click();
+    await page.locator("#editor-prefab-search").fill("fragile-ice"); await page.locator('#editor-prefab-picker button[data-kind="fragile-ice"]').click(); await page.locator("#editor-add-prefab").click();
     await number("y", 6);
     await page.locator("#editor-add-prefab").click(); await number("x", 8); await number("y", 6);
     await page.locator('li[data-key="prefab:fragile-ice-2"] span').click();

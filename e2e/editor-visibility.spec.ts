@@ -94,8 +94,12 @@ for (const kind of [...PREFAB_KINDS, "collectible", "wall"] as const) {
         );
         await editNumber(page, "y", 2.5);
       } else {
-        await page.locator("#editor-prefab-kind").selectOption(kind);
+        // Placement now snaps to the ground; restore the historical orbit
+        // height so this visibility spec keeps its original framing.
+        const targetY = await page.evaluate(() => window.__game!.editor().cameraTarget.y);
+        await page.locator("#editor-prefab-search").fill(kind); await page.locator(`#editor-prefab-picker button[data-kind="${kind}"]`).click();
         await page.locator("#editor-add-prefab").click();
+        await editNumber(page, "y", targetY);
         // Keep an overhead attraction in the close-range test camera's view.
         if (kind === "hot-air-balloon") await editNumber(page, "y", 18);
       }

@@ -7,6 +7,12 @@ const DEFAULTS: Record<string, { lumens: number; color: number; height: number }
   "glow-mushroom": { lumens: 500, color: 0x4ff5e0, height: 2.6 },
   "birthday-candle": { lumens: 250, color: 0xffe6a3, height: 1.56 },
   "gold-star": { lumens: 300, color: 0xffe6a3, height: 0 },
+  lamp: { lumens: 250, color: 0xfff5cd, height: 25.5 },
+  "christmas-lantern": { lumens: 200, color: 0xffc95a, height: 7.1 },
+  "gumball-lamp": { lumens: 200, color: 0xffc95a, height: 8.3 },
+  "jack-o-lantern": { lumens: 150, color: 0xff8a00, height: 4.9 },
+  candle: { lumens: 150, color: 0xffa64a, height: 2.1 },
+  "marquee-star": { lumens: 400, color: 0xffe27a, height: 11.5 },
 };
 export function prefabLightSettings(p: Pick<CustomPrefab, "kind" | "lightLumens" | "lightColor">) {
   const defaults = DEFAULTS[p.kind];

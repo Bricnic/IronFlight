@@ -30,7 +30,7 @@ test("middle mouse always orbits without selecting or editing objects, in every 
   }
   await page.locator("#editor-tool-select").click(); await orbit("select", true);
   await page.locator("#editor-selection-lock").click(); await orbit("select"); await page.locator("#editor-selection-lock").click();
-  await page.locator("#editor-prefab-kind").selectOption("barrel"); await page.locator("#editor-add-prefab").click();
+  await page.locator("#editor-prefab-search").fill("barrel"); await page.locator('#editor-prefab-picker button[data-kind="barrel"]').click(); await page.locator("#editor-add-prefab").click();
   const y = page.locator('#editor-props [data-prop="y"]'); await y.fill("5"); await y.dispatchEvent("change");
   // Exercise prefab selection as well as solid selection.
   await orbit("select");

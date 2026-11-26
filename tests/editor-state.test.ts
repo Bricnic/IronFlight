@@ -108,10 +108,14 @@ it("creates solids and prefabs at an explicit 3D location in one undoable operat
   store.undo(); expect(store.level.solids.some(s => s.id === solid.id)).toBe(true);
   store.undo(); expect(store.level.solids.some(s => s.id === solid.id)).toBe(false);
   store.redo(); expect(store.level.solids.find(s => s.id === solid.id)).toMatchObject(position);
-  const prefab = store.addPrefab("birthday-candle", position);
-  expect(prefab).toMatchObject({ ...position, resizeScale: 3 });
+  const overRoad = { x: 10, y: 27, z: -8 };
+  const prefab = store.addPrefab("birthday-candle", overRoad);
+  expect(prefab).toMatchObject({ x: 10, z: -8, y: 0.03, resizeScale: 3 });
   store.undo(); expect(store.level.prefabs.some(p => p.id === prefab.id)).toBe(false);
-  store.redo(); expect(store.level.prefabs.find(p => p.id === prefab.id)).toMatchObject(position);
+  store.redo(); expect(store.level.prefabs.find(p => p.id === prefab.id)).toMatchObject({ x: 10, z: -8, y: 0.03 });
+  const fairy = store.addPrefab("cave-fairy", overRoad);
+  expect(fairy.y).toBeCloseTo(3.03, 5);
+  expect(store.addPrefab("barrel", position).y).toBeCloseTo(27.8, 5);
 });
 it("updates and deletes the selection", () => {
   const store = new EditorStore("Edit");

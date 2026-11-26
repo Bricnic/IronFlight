@@ -1696,6 +1696,10 @@ kbd {
 .editor-kind-toggle { width: 100%; text-align: left; white-space: normal; }
 .editor-kind-children { list-style: none; padding: 4px 0 0 8px; }
 .editor-kind-children[hidden] { display: none; }
+#editor-prefab-picker { display: flex; flex-direction: column; gap: 4px; }
+.editor-prefab-section summary { cursor: pointer; padding: 6px 8px; background: #1d3038; border: 1px solid #ffffff28; }
+.editor-prefab-section .editor-prefab-kind { display: block; width: 100%; text-align: left; margin-top: 2px; padding: 6px 8px; }
+.editor-prefab-section .editor-prefab-kind[aria-pressed="true"] { background: #3a5a3a; border-color: #7fd67f; }
 
 .track-card .best-medal { font-size: 10px; font-weight: 700; }
 .track-card-action { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; justify-self: end; }

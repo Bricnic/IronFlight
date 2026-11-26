@@ -16,7 +16,8 @@ test("each prefab has a complete static model in wireframe and preview", async (
   const canvas = page.locator("#level-editor canvas");
   const results: object[] = [];
   for (const kind of PREFAB_KINDS) {
-    await page.locator("#editor-prefab-kind").selectOption(kind);
+    await page.locator("#editor-prefab-search").fill(kind);
+    await page.locator(`#editor-prefab-picker button[data-kind="${kind}"]`).click();
     await page.locator("#editor-add-prefab").click();
     await page.locator("#editor-frame-selection").click();
     await canvas.screenshot({ path: `artifacts/prefab-gallery/${kind}-wire.png` });

@@ -23,13 +23,13 @@ test("every prefab kind has an editable yaw", async ({ page }) => {
   // Sweep the live kind list: a newly introduced prefab inherits the field.
   const kinds = await page.evaluate(() =>
     Array.from(
-      document.querySelectorAll<HTMLOptionElement>("#editor-prefab-kind option"),
-    ).map((o) => o.value),
+      document.querySelectorAll<HTMLButtonElement>("#editor-prefab-picker button[data-kind]"),
+    ).map((o) => o.dataset.kind!),
   );
   expect(kinds.length).toBeGreaterThan(0);
   const yaw = page.locator('#editor-props input[data-prop="yaw"]');
   for (const kind of kinds) {
-    await page.locator("#editor-prefab-kind").selectOption(kind);
+    await page.evaluate((kind) => document.querySelector<HTMLButtonElement>(`#editor-prefab-picker button[data-kind="${kind}"]`)!.click(), kind);
     // Forced: click mechanics are covered by sibling tests; the assertion
     // target here is the yaw field, and actionability checks are too slow
     // to repeat per kind.
@@ -46,7 +46,8 @@ test("yaw on a newly supported kind saves to disk", async ({ page }) => {
   );
   await page.locator("#editor-name").fill("e2e-yaw-save");
   await page.locator("#editor-new").click();
-  await page.locator("#editor-prefab-kind").selectOption("loop");
+  await page.locator("#editor-prefab-search").fill("loop");
+  await page.locator('#editor-prefab-picker button[data-kind="loop"]').click();
   await page.locator("#editor-add-prefab").click();
   await page.locator('#editor-props input[data-prop="yaw"]').fill("45");
   await page.locator("#editor-save").click();
@@ -65,7 +66,8 @@ test("selected prefab shows an orientation arrow", async ({ page }) => {
   await openEditor(page);
   await page.locator("#editor-name").fill("e2e-arrow");
   await page.locator("#editor-new").click();
-  await page.locator("#editor-prefab-kind").selectOption("barrel");
+  await page.locator("#editor-prefab-search").fill("barrel");
+  await page.locator('#editor-prefab-picker button[data-kind="barrel"]').click();
   await page.locator("#editor-add-prefab").click();
   const arrows = () =>
     page.evaluate(() => window.__game!.inspectPreview().prefabArrows);
@@ -100,7 +102,8 @@ test("look points the prefab at the cursor until clicked", async ({
   const tool = () => page.evaluate(() => window.__game!.editor().tool);
   // Nothing selected: the button stays disabled.
   await expect(look).toBeDisabled();
-  await page.locator("#editor-prefab-kind").selectOption("barrel");
+  await page.locator("#editor-prefab-search").fill("barrel");
+  await page.locator('#editor-prefab-picker button[data-kind="barrel"]').click();
   await page.locator("#editor-add-prefab").click();
   await expect(look).toBeEnabled();
   await look.click();

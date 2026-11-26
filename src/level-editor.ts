@@ -167,22 +167,55 @@ export function createLevelEditor(
   }) as HTMLSelectElement;
   for (const kind of SOLID_KINDS) solidKind.append(el("option", { value: kind }, kind));
   const addSolid = el("button", { id: "editor-add-solid" }, "Add solid");
-  const prefabKind = el("select", {
-    id: "editor-prefab-kind",
-    "aria-label": "Prefab kind",
-  }) as HTMLSelectElement;
+  const prefabSearch = el("input", {
+    id: "editor-prefab-search",
+    type: "search",
+    placeholder: "Search prefabs",
+    "aria-label": "Search prefabs",
+  }) as HTMLInputElement;
+  const addPrefab = el("button", { id: "editor-add-prefab" }, "Add prefab");
+  const prefabPicker = el("div", { id: "editor-prefab-picker" });
+  // Sections stay collapsed until opened or matched by a search.
+  let selectedPrefabKind: string = [...PREFAB_KINDS].filter((k) => prefabSection(k) === "colliders").sort()[0];
+  const sectionEls: { details: HTMLDetailsElement; buttons: HTMLButtonElement[] }[] = [];
+  const selectPrefabKind = (kind: string) => {
+    selectedPrefabKind = kind;
+    for (const { buttons } of sectionEls)
+      for (const b of buttons) b.setAttribute("aria-pressed", String(b.dataset.kind === kind));
+    addPrefab.textContent = `Add prefab: ${kind}`;
+  };
   for (const [section, label] of [
     ["colliders", "Colliders — rigid decor"],
     ["destructibles", "Destructibles — knocked over or destroyed"],
     ["dangerous", "Dangerous — significant damage"],
     ["lethal", "Lethal — insta-kill on contact"],
   ] as const) {
-    const group = el("optgroup", { label });
-    for (const kind of [...PREFAB_KINDS].filter((k) => prefabSection(k) === section).sort())
-      group.append(el("option", { value: kind }, kind));
-    prefabKind.append(group);
+    const kinds = [...PREFAB_KINDS].filter((k) => prefabSection(k) === section).sort();
+    const details = el("details", { class: "editor-prefab-section", "data-section": section }) as HTMLDetailsElement;
+    details.append(el("summary", {}, `${label} (${kinds.length})`));
+    const buttons = kinds.map((kind) => {
+      const b = el("button", { type: "button", class: "editor-prefab-kind", "data-kind": kind, "aria-pressed": String(kind === selectedPrefabKind) }, kind) as HTMLButtonElement;
+      b.addEventListener("click", () => selectPrefabKind(kind));
+      details.append(b);
+      return b;
+    });
+    prefabPicker.append(details);
+    sectionEls.push({ details, buttons });
   }
-  const addPrefab = el("button", { id: "editor-add-prefab" }, "Add prefab");
+  selectPrefabKind(selectedPrefabKind);
+  prefabSearch.addEventListener("input", () => {
+    const q = prefabSearch.value.trim().toLowerCase();
+    for (const { details, buttons } of sectionEls) {
+      let visible = 0;
+      for (const b of buttons) {
+        const show = !q || b.dataset.kind!.includes(q);
+        b.hidden = !show;
+        if (show) visible++;
+      }
+      details.hidden = !!q && visible === 0;
+      details.open = !!q && visible > 0;
+    }
+  });
   const addCheckpoint = el("button", { id: "editor-add-checkpoint" }, "Add checkpoint");
   const addTarget = el("button", { id: "editor-add-target" }, "Add collectible");
   const addRing = el("button", { id: "editor-add-ring" }, "Add stunt ring");
@@ -202,7 +235,8 @@ export function createLevelEditor(
   listPane.append(
     solidKind,
     addSolid,
-    prefabKind,
+    prefabSearch,
+    prefabPicker,
     addPrefab,
     addCheckpoint,
     addTarget,
@@ -1272,7 +1306,7 @@ export function createLevelEditor(
     store.addSolid(solidKind.value as SolidKind, viewport.cameraTarget()),
   );
   addPrefab.addEventListener("click", () =>
-    store.addPrefab(prefabKind.value, viewport.cameraTarget()),
+    store.addPrefab(selectedPrefabKind, viewport.cameraTarget()),
   );
   addCheckpoint.addEventListener("click", () => store.addCheckpoint());
   addTarget.addEventListener("click", () => {

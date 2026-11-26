@@ -317,6 +317,10 @@ function buildLamp(root: T.Group) {
     globeY,
     0,
   );
+  const origin = new T.Object3D();
+  origin.name = "prefab-light-origin";
+  origin.position.set(0, globeY, 0);
+  root.add(origin);
   const flavors = [
     0xe23b3b, 0xff8c2e, 0xffd23b, 0x5fd35f,
     0x3fa7ff, 0x9a5fe0, 0xff6fa5, 0x35cbd2,

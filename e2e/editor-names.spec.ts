@@ -10,7 +10,7 @@ test("object names sort automatically and survive save/reload for every object k
   await page.locator("#editor-name").fill(name);
   await page.locator("#editor-new").click();
   try {
-    await page.locator("#editor-prefab-kind").selectOption("sign");
+    await page.locator("#editor-prefab-search").fill("sign"); await page.locator('#editor-prefab-picker button[data-kind="sign"]').click();
     await page.locator("#editor-add-prefab").click();
     await page.locator("#editor-add-target").click();
     await page.locator("#editor-add-ring").click();

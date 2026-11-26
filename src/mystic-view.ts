@@ -364,6 +364,10 @@ export function buildMushroom(root: T.Group) {
     spot.userData.animate = true;
   }
   halo(g, 0x4ff5e0, 5, [0, 2.6, 0], 0.6);
+  const origin = new T.Object3D();
+  origin.name = "prefab-light-origin";
+  origin.position.set(0, 2.6, 0);
+  g.add(origin);
   return { top: 3.4 };
 }
 
@@ -410,6 +414,10 @@ export function buildFairy(root: T.Group) {
     wings.push(wing);
   }
   const glow = halo(bodyG, 0xff6fe0, 3.0, [0, 0.2, 0], 0.75);
+  const origin = new T.Object3D();
+  origin.name = "prefab-light-origin";
+  origin.position.set(0, 0.2, 0);
+  bodyG.add(origin);
   return { bodyG, wings, glow };
 }
 

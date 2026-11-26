@@ -13,7 +13,7 @@ async function newLevel(page: Page, name: string) {
   await page.locator("#editor-new").click();
 }
 async function addPrefab(page: Page, kind: string, x: number, z: number) {
-  await page.locator("#editor-prefab-kind").selectOption(kind);
+  await page.locator("#editor-prefab-search").fill(kind); await page.locator(`#editor-prefab-picker button[data-kind="${kind}"]`).click();
   await page.locator("#editor-add-prefab").click();
   await page.locator('#editor-props input[data-prop="x"]').fill(String(x));
   await page.locator('#editor-props input[data-prop="z"]').fill(String(z));

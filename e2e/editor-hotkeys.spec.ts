@@ -10,29 +10,54 @@ async function openEditor(page: Page) {
   await expect(page.locator("#level-editor canvas")).toHaveCount(1);
 }
 
-test("prefab picker groups kinds into four sorted sections", async ({ page }) => {
+test("prefab picker groups kinds into four collapsed, searchable sections", async ({ page }) => {
   await openEditor(page);
-  const groups = page.locator("#editor-prefab-kind optgroup");
-  await expect(groups).toHaveCount(4);
-  await expect(groups.nth(0)).toHaveAttribute("label", "Colliders — rigid decor");
-  await expect(groups.nth(1)).toHaveAttribute("label", "Destructibles — knocked over or destroyed");
-  await expect(groups.nth(2)).toHaveAttribute("label", "Dangerous — significant damage");
-  await expect(groups.nth(3)).toHaveAttribute("label", "Lethal — insta-kill on contact");
+  const sections = page.locator("#editor-prefab-picker details");
+  await expect(sections).toHaveCount(4);
+  // Collapsed by default.
+  for (let g = 0; g < 4; g++) await expect(sections.nth(g)).toHaveJSProperty("open", false);
+  await expect(sections.nth(0).locator("summary")).toContainText("Colliders");
+  await expect(sections.nth(1).locator("summary")).toContainText("Destructibles");
+  await expect(sections.nth(2).locator("summary")).toContainText("Dangerous");
+  await expect(sections.nth(3).locator("summary")).toContainText("Lethal");
   for (let g = 0; g < 4; g++) {
-    const values = await groups.nth(g).locator("option").evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
+    const values = await sections.nth(g).locator("button[data-kind]").evaluateAll((els) => els.map((e) => (e as HTMLButtonElement).dataset.kind!));
     expect(values.length, `section ${g} populated`).toBeGreaterThan(0);
     expect([...values].sort(), `section ${g} sorted`).toEqual(values);
   }
   // Spot checks land in their section.
-  const valueOf = (kind: string) =>
-    page.locator(`#editor-prefab-kind optgroup option[value="${kind}"]`).evaluate((el) => [
-      el.parentElement!.getAttribute("label"),
-      (el as HTMLOptionElement).value,
-    ]);
-  expect((await valueOf("lamp"))[0]).toContain("Colliders");
-  expect((await valueOf("barrel"))[0]).toContain("Destructibles");
-  expect((await valueOf("raptor"))[0]).toContain("Dangerous");
-  expect((await valueOf("hands"))[0]).toContain("Lethal");
+  await expect(page.locator('details[data-section="colliders"] button[data-kind="lamp"]')).toHaveCount(1);
+  await expect(page.locator('details[data-section="destructibles"] button[data-kind="barrel"]')).toHaveCount(1);
+  await expect(page.locator('details[data-section="dangerous"] button[data-kind="raptor"]')).toHaveCount(1);
+  await expect(page.locator('details[data-section="lethal"] button[data-kind="hands"]')).toHaveCount(1);
+  // Search filters across sections and expands matches.
+  await page.locator("#editor-prefab-search").fill("gumball-lamp");
+  await expect(page.locator("#editor-prefab-picker button[data-kind]:visible")).toHaveCount(1);
+  await expect(page.locator('details[data-section="colliders"]')).toHaveJSProperty("open", true);
+  await page.locator("#editor-prefab-picker button[data-kind]:visible").click();
+  await expect(page.locator("#editor-add-prefab")).toContainText("gumball-lamp");
+  await page.locator("#editor-prefab-search").fill("");
+  for (let g = 0; g < 4; g++) await expect(sections.nth(g)).toHaveJSProperty("open", false);
+});
+
+test("added prefabs land on the ground instead of floating at orbit height", async ({ page }) => {
+  await openEditor(page);
+  await page.evaluate(() => window.__game!.customLevels.remove("e2e-snap").catch(() => {}));
+  await page.locator("#editor-name").fill("e2e-snap");
+  await page.locator("#editor-new").click();
+  try {
+    const target = await page.evaluate(() => window.__game!.editor().cameraTarget);
+    expect(target.y, "orbit target above the road").toBeGreaterThan(1);
+    await page.locator("#editor-add-prefab").click();
+    await page.locator("#editor-save").click();
+    await expect(page.locator("#editor-status")).toContainText("Saved e2e-snap");
+    const placed = await page.evaluate(async () => (await window.__game!.customLevels.load("e2e-snap")).prefabs);
+    expect(placed).toHaveLength(1);
+    expect(placed[0].y, "snapped to road/ground top").toBeLessThanOrEqual(0.05);
+    expect(placed[0].y).toBeGreaterThanOrEqual(0);
+  } finally {
+    await page.evaluate(() => window.__game!.customLevels.remove("e2e-snap").catch(() => {}));
+  }
 });
 
 test("p playtests and ctrl+z undoes, but not while typing", async ({ page }) => {

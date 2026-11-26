@@ -35,7 +35,7 @@ test("world grid visibility, per-axis and multiple-object snapping, drag and Con
   expect(["x", "z"].some(axis => Math.abs(Number(free[axis]) / 5 - Math.round(Number(free[axis]) / 5)) > 0.01)).toBe(true);
   await page.keyboard.up("Control"); await page.mouse.move(at.x + 87, at.y + 31, { steps: 3 }); await page.mouse.up();
   for (const axis of ["x", "y", "z"]) { const value = Number((await state()).selectedObject![axis]) / 5; expect(value).toBeCloseTo(Math.round(value)); }
-  await page.locator("#editor-prefab-kind").selectOption("barrel"); await page.locator("#editor-add-prefab").click();
+  await page.locator("#editor-prefab-search").fill("barrel"); await page.locator('#editor-prefab-picker button[data-kind="barrel"]').click(); await page.locator("#editor-add-prefab").click();
   await set("x", 12.7); await set("y", 6.4); await set("z", -9.2);
   await page.locator('li[data-key="solid:barrier-3"] span').click({ modifiers: ["Shift"] });
   await page.locator("#editor-grid-spacing").fill("2"); await page.locator("#editor-grid-spacing").dispatchEvent("change");

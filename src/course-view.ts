@@ -1372,7 +1372,10 @@ export function buildLampPost() {
   glow.scale.set(9, 9, 1);
   glow.position.y = 13;
   glow.visible = false;
-  group.add(pole, bar, glow);
+  const origin = new T.Object3D();
+  origin.name = "prefab-light-origin";
+  origin.position.y = 13;
+  group.add(pole, bar, glow, origin);
   return group;
 }
 /** Treasure chest pickup: plank body, arched lid, iron bands, gold lock. */
