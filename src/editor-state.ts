@@ -1,5 +1,6 @@
 import {
   blankLevel,
+  orderCheckpoints,
   prefabY,
   solidDefaults,
   type CustomCheckpoint,
@@ -59,6 +60,7 @@ export class EditorStore {
     snapshot: Snapshot;
     dirty: boolean;
   } | null = null;
+  private checkpointMoved = false;
   constructor(name: string) {
     this.level = blankLevel(name);
   }
@@ -84,6 +86,8 @@ export class EditorStore {
       return { item: object.item, position: { ...position, y: snapping && snapAxes.includes("y") || p.hasY || delta.y !== undefined ? position.y : undefined } };
     }).filter(({ item, position }) => item.x !== position.x || item.y !== position.y || item.z !== position.z);
     if (!changes.length) return;
+    if (changes.some(({ item }) => this.level.checkpoints.includes(item as CustomCheckpoint)))
+      this.checkpointMoved = true;
     this.pushHistory(); for (const { item, position } of changes) Object.assign(item, position);
     this.emit();
   }
@@ -134,7 +138,25 @@ export class EditorStore {
   }
   /** Close the gesture (mouseup); gestures with no changes leave no history. */
   endGesture() {
+    // Renumber inside the closing gesture so drag + reorder undo together.
+    if (this.checkpointMoved && this.gesture) this.renumberCheckpoints();
+    this.checkpointMoved = false;
     this.gesture = null;
+  }
+  /** Reorder checkpoints by the auto-numbering chain, keeping selection. */
+  renumberCheckpoints() {
+    const before = this.level.checkpoints;
+    if (before.length < 2) return;
+    const ordered = orderCheckpoints(this.level);
+    if (ordered.every((c, i) => c === before[i])) return;
+    this.level.checkpoints = ordered;
+    const remap = (sel: EditorSelection): EditorSelection =>
+      sel?.kind === "checkpoint"
+        ? { kind: "checkpoint", index: Math.max(0, ordered.indexOf(before[sel.index])) }
+        : sel;
+    this.selection = remap(this.selection);
+    this.selections = this.selections.map(remap) as Selection[];
+    this.emit();
   }
   /** Restore the previous change; false when history is empty. */
   undo() {
@@ -266,6 +288,9 @@ export class EditorStore {
     const group = this.selectedGroup();
     if (!group || Object.values(delta).some(value => !Number.isFinite(value))) return;
     this.moveSelectedFrom(this.selectionPositions(group.members), { x: delta.x ?? 0, y: delta.y, z: delta.z ?? 0 }, false);
+    // Panel nudges run outside gestures: renumber now under the move's push.
+    if (this.checkpointMoved && !this.gesture) this.renumberCheckpoints();
+    this.checkpointMoved = false;
   }
   isSelected(selection: Selection) {
     return this.selectedEntries().some(s => selectionKey(s) === selectionKey(selection));
@@ -487,14 +512,26 @@ export class EditorStore {
     this.pushHistory();
     // New checkpoints start without a heading: yaw stays undefined
     // (automatic route direction) until the user sets it explicitly.
+    // Auto-numbering: the new checkpoint is #1; the rest shift down.
     const point: CustomCheckpoint = { x, z };
-    this.level.checkpoints.push(point);
-    this.selection = {
-      kind: "checkpoint",
-      index: this.level.checkpoints.length - 1,
-    };
+    this.level.checkpoints.unshift(point);
+    this.selection = { kind: "checkpoint", index: 0 };
     this.emit();
     return point;
+  }
+  /** Exclusive finish-line flag: setting one clears the previous designee. */
+  setCheckpointFinish(index: number, value: boolean) {
+    const target = this.level.checkpoints[index];
+    if (!target) return;
+    this.pushHistory();
+    for (const c of this.level.checkpoints) delete c.finish;
+    if (value) {
+      target.finish = true;
+      delete target.order;
+    }
+    this.renumberCheckpoints();
+    this.selection = { kind: "checkpoint", index: this.level.checkpoints.indexOf(target) };
+    this.emit();
   }
   /** Arena/race collectibles and demolition targets share one list UI. */
   targetList(): CustomPoint[] {
@@ -591,6 +628,11 @@ export class EditorStore {
       }
     }
     Object.assign(current.item, patch);
+    if (
+      (typeof patch.x === "number" || typeof patch.z === "number" || "order" in patch) &&
+      entries.some((s) => s.kind === "checkpoint")
+    )
+      this.renumberCheckpoints();
     this.emit();
   }
   /** Uniform group scaling keeps articulated prefabs and relative placement intact. */

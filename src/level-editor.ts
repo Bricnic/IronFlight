@@ -787,6 +787,35 @@ export function createLevelEditor(
     if (current.kind === "checkpoint") {
       const yaw = numberField(props, "Yaw", "yaw", item.yaw as number | undefined, commit("yaw"));
       yaw.placeholder = "Automatic (route direction)";
+      const index = (store.selection as { index: number }).index;
+      const orderRow = el("label", { class: "prop-row" }, "Number ");
+      const order = el("input", {
+        type: "number",
+        step: "1",
+        min: "1",
+        "data-prop": "order",
+        "aria-label": "Checkpoint number",
+      }) as HTMLInputElement;
+      order.placeholder = "Automatic";
+      if (item.order !== undefined) order.value = String(item.order);
+      order.disabled = item.finish === true;
+      order.addEventListener("change", () => {
+        const n = parseInt(order.value, 10);
+        store.updateSelected({ order: Number.isInteger(n) && n >= 1 ? n : undefined });
+      });
+      orderRow.append(order);
+      props.append(orderRow);
+      props.append(el("p", { class: "prop-hint" }, "An explicit number pins this checkpoint; the rest auto-number around it."));
+      const finishRow = el("label", { class: "prop-row" }, "Finish line ");
+      const finish = el("input", {
+        type: "checkbox",
+        "data-prop": "finish",
+        "aria-label": "Finish line",
+      }) as HTMLInputElement;
+      finish.checked = item.finish === true;
+      finish.addEventListener("change", () => store.setCheckpointFinish(index, finish.checked));
+      finishRow.append(finish);
+      props.append(finishRow);
     }
     if (current.kind === "target" && level.mode !== "demolition") {
       const typeRow = el("label", { class: "prop-row" }, "Type ");
@@ -903,7 +932,7 @@ export function createLevelEditor(
       );
     level.checkpoints.forEach((c, i) =>
       row(
-        `Checkpoint ${i + 1} (${c.x}, ${c.z})`,
+        `${i === level.checkpoints.length - 1 ? "Finish" : `Checkpoint ${i + 1}`} (${c.x}, ${c.z})`,
         store.selection?.kind === "checkpoint" &&
           (store.selection as { index: number }).index === i,
         { kind: "checkpoint", index: i },

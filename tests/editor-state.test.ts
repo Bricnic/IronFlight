@@ -145,13 +145,16 @@ it("manages prefabs and checkpoints", () => {
   const cp = store.addCheckpoint(9, 11);
   expect(cp).toMatchObject({ x: 9, z: 11 });
   expect(store.level.checkpoints.length).toBe(2);
+  // Auto-numbering: the new checkpoint is #1; the old one shifts to #2.
+  expect(store.level.checkpoints[0]).toBe(cp);
+  expect(store.selection).toEqual({ kind: "checkpoint", index: 0 });
   // New checkpoints leave yaw undefined (automatic) until set explicitly.
-  expect(store.level.checkpoints[1].yaw).toBeUndefined();
+  expect(store.level.checkpoints[0].yaw).toBeUndefined();
   const stacked = new EditorStore("Stacked");
   expect(stacked.addCheckpoint(0, 40).yaw).toBeUndefined();
-  store.select({ kind: "checkpoint", index: 1 });
+  store.select({ kind: "checkpoint", index: 0 });
   store.updateSelected({ z: 12 });
-  expect(store.level.checkpoints[1].z).toBe(12);
+  expect(store.level.checkpoints[0].z).toBe(12);
   store.deleteSelected();
   expect(store.level.checkpoints.length).toBe(1);
   store.select({ kind: "prefab", id: prefab.id });

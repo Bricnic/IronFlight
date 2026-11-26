@@ -443,6 +443,10 @@ export interface CustomCheckpoint extends CustomPoint {
   /** Fixed heading for a gate whose approach differs from the prior waypoint. */
   yaw?: number;
   appearance?: keyof typeof CHECKPOINT_WIDTHS;
+  /** Explicit 1-based race number; auto-numbering pins this checkpoint there. */
+  order?: number;
+  /** Explicit finish line: always ordered last; exclusive per level. */
+  finish?: boolean;
 }
 export interface CustomRing {
   group?: string;
@@ -566,6 +570,10 @@ export function validateCustomLevel(input: unknown): CustomLevel {
     check(errors, p?.yaw === undefined || finite(p.yaw), `checkpoint ${i} needs a finite yaw`);
     check(errors, p?.appearance === undefined || p.appearance === "yellow-jaws" || p.appearance === "blue-tile",
       `checkpoint ${i} has an unknown appearance`);
+    check(errors, p?.order === undefined || (Number.isInteger(p.order) && p.order >= 1),
+      `checkpoint ${i} needs a positive integer order`);
+    check(errors, p?.finish === undefined || typeof p.finish === "boolean",
+      `checkpoint ${i} finish must be a boolean`);
   });
   const prefabCheckpoints = Array.isArray((level as CustomLevel)?.prefabs)
     ? (level as CustomLevel).prefabs.filter((p) => p?.kind === "checkpoint")
@@ -1203,6 +1211,87 @@ export function moveCheckpointInLevel(
     ),
   };
 }
+/** Tolerance for treating a checkpoint as on a road solid. */
+const ROAD_TOLERANCE = 3;
+
+function solidContains(solid: CustomSolid, x: number, z: number): boolean {
+  if (solid.footprint?.length) {
+    let inside = false;
+    const pts = solid.footprint;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const xi = solid.x + pts[i].x, zi = solid.z + pts[i].z;
+      const xj = solid.x + pts[j].x, zj = solid.z + pts[j].z;
+      if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi)
+        inside = !inside;
+    }
+    return inside;
+  }
+  const yaw = solid.yaw ?? 0;
+  const dx = x - solid.x, dz = z - solid.z;
+  const lx = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+  const lz = dx * Math.sin(yaw) + dz * Math.cos(yaw);
+  return (
+    Math.abs(lx) <= solid.w / 2 + ROAD_TOLERANCE &&
+    Math.abs(lz) <= solid.d / 2 + ROAD_TOLERANCE
+  );
+}
+
+/** Two points share a road when one road/tile solid contains both. */
+function sharesRoad(solids: CustomSolid[], ax: number, az: number, bx: number, bz: number): boolean {
+  return solids.some(
+    (s) =>
+      (s.kind === "road" || s.kind === "tile") &&
+      solidContains(s, ax, az) &&
+      solidContains(s, bx, bz),
+  );
+}
+
+/**
+ * Auto-number checkpoints into race order (pure; same refs, new array).
+ * Greedy chain from the spawn: each step follows the road when the next
+ * checkpoint shares one with the current point, else takes the closest
+ * remaining checkpoint. Explicit `order` pins a checkpoint at its 1-based
+ * slot (collisions shift later ones down); an explicit `finish` always
+ * goes last. Multiple finish flags normalize to the first in array order.
+ */
+export function orderCheckpoints(level: CustomLevel): CustomCheckpoint[] {
+  const all = level.checkpoints;
+  if (all.length < 2) return [...all];
+  const flagged = all.filter((c) => c.finish);
+  const finish = flagged[0];
+  for (const c of flagged.slice(1)) delete c.finish;
+  const rest = all.filter((c) => c !== finish);
+  const explicit = rest
+    .map((c, index) => ({ c, index }))
+    .filter(({ c }) => c.order !== undefined)
+    .sort((a, b) => a.c.order! - b.c.order! || b.index - a.index);
+  const unvisited = new Set(rest.filter((c) => c.order === undefined));
+  const chained: CustomCheckpoint[] = [];
+  let cx = level.spawn.x, cz = level.spawn.z;
+  while (unvisited.size) {
+    let best: CustomCheckpoint | undefined;
+    let bestRoad = false;
+    let bestDist = Infinity;
+    for (const c of unvisited) {
+      const road = sharesRoad(level.solids, cx, cz, c.x, c.z);
+      const dist = Math.hypot(c.x - cx, c.z - cz);
+      if ((road && !bestRoad) || (road === bestRoad && dist < bestDist - 1e-9)) {
+        best = c;
+        bestRoad = road;
+        bestDist = dist;
+      }
+    }
+    chained.push(best!);
+    unvisited.delete(best!);
+    cx = best!.x;
+    cz = best!.z;
+  }
+  for (const { c } of explicit)
+    chained.splice(Math.max(0, Math.min(c.order! - 1, chained.length)), 0, c);
+  if (finish) chained.push(finish);
+  return chained;
+}
+
 /** Live editing: drop one checkpoint by index (pure, level JSON). */
 export function deleteCheckpointInLevel(
   level: CustomLevel,

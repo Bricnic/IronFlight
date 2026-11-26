@@ -26,23 +26,24 @@ test("checkpoints without saved rotation expose yaw in degrees and retain edits 
   await page.locator("#editor-add-checkpoint").click();
   await expect(yaw).toBeVisible(); await expect(yaw).toHaveValue("");
   await yaw.fill("-45"); await yaw.dispatchEvent("change");
-  await page.locator('li[data-key="checkpoint:0"] span').click();
+  // Auto-numbering prepends: the new gate is checkpoint:0, the 90° gate shifts to 1.
+  await page.locator('li[data-key="checkpoint:1"] span').click();
   try {
     await page.locator("#editor-save").click();
     await expect(page.locator("#editor-status")).toContainText(`Saved ${name}`);
     const saved = await page.evaluate(name => window.__game!.customLevels.load(name), name);
-    expect(saved.checkpoints[0].yaw).toBeCloseTo(Math.PI / 2);
-    expect(saved.checkpoints[1].yaw).toBeCloseTo(-Math.PI / 4);
+    expect(saved.checkpoints[0].yaw).toBeCloseTo(-Math.PI / 4);
+    expect(saved.checkpoints[1].yaw).toBeCloseTo(Math.PI / 2);
     await page.locator("#editor-levels").selectOption(name);
     await expect(page.locator("#editor-status")).toContainText(`Opened ${name}`);
-    await page.locator('li[data-key="checkpoint:0"] span').click();
+    await page.locator('li[data-key="checkpoint:1"] span').click();
     await expect(yaw).toHaveValue("90");
     await page.locator("#editor-playtest").click();
     await expect(page.locator("#level-editor")).toBeHidden();
     const gate = await page.evaluate(() => {
       const g = window.__game!; return g.track(g.snapshot().run!.trackId).checkpoints[0];
     });
-    expect(gate.yaw).toBeCloseTo(Math.PI / 2); expect(gate.nx).toBeCloseTo(1); expect(gate.nz).toBeCloseTo(0);
+    expect(gate.yaw).toBeCloseTo(-Math.PI / 4); expect(gate.nx).toBeCloseTo(-Math.SQRT1_2); expect(gate.nz).toBeCloseTo(Math.SQRT1_2);
   } finally {
     await page.evaluate(name => window.__game!.customLevels.remove(name).catch(() => {}), name);
   }
