@@ -235,7 +235,7 @@ export function createLevelEditor(
   pasteButton.title = "Paste copied items (Ctrl+V)";
   const groupActions = el("div", { class: "editor-group-actions" });
   groupActions.append(groupButton, ungroupButton, copyButton, pasteButton);
-  const removeButton = el("button", { id: "editor-remove" }, "Delete selected");
+  const removeButton = el("button", { id: "editor-remove", title: "Delete selected (Delete / Backspace)", "aria-keyshortcuts": "Delete Backspace" }, "Delete selected");
   const spawnButton = el("button", { id: "editor-select-spawn" }, "Edit spawn");
   listPane.append(
     solidKind,
@@ -1506,9 +1506,14 @@ export function createLevelEditor(
   pasteButton.addEventListener("click", () => store.paste());
   removeButton.addEventListener("click", () => store.deleteSelected());
   spawnButton.addEventListener("click", () => store.select({ kind: "spawn" }));
-  // Rebuilding the property panel can remove the focused button. Escape must
-  // still cancel when the browser has consequently moved focus to the body.
+  // Inspector refreshes can leave focus on the body; editor shortcuts must
+  // continue working there, while preserving normal text editing.
   document.addEventListener("keydown", (e) => {
+    if (!screen.hidden && !store.clip && (e.key === "Delete" || e.key === "Backspace") && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement) && !(e.target instanceof HTMLSelectElement) && !(e.target instanceof HTMLElement && e.target.isContentEditable)) {
+      e.preventDefault(); e.stopPropagation();
+      if (!e.repeat) store.deleteSelected();
+      return;
+    }
     if (!screen.hidden && !store.clip && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement) && !(e.target instanceof HTMLSelectElement) && !(e.target instanceof HTMLElement && e.target.isContentEditable) && (e.ctrlKey || e.metaKey) && !e.altKey) {
       const key = e.key.toLowerCase();
       if (key === "c" || key === "v") {
@@ -1537,16 +1542,6 @@ export function createLevelEditor(
   });
   screen.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && store.clip) { e.preventDefault(); store.cancelClip(); return; }
-    if (store.clip) return;
-    if (
-      (e.key === "Delete" || e.key === "Backspace") &&
-      !(e.target instanceof HTMLInputElement) &&
-      !(e.target instanceof HTMLSelectElement) &&
-      !(e.target instanceof HTMLTextAreaElement)
-    ) {
-      e.preventDefault();
-      store.deleteSelected();
-    }
   });
   refresh();
   return {

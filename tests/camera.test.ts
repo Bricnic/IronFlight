@@ -1,6 +1,103 @@
 import { it, expect } from "vitest";
 import { PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { ChaseCamera } from "../src/camera";
+
+it.each([-0.4, 0.4])(
+  "follows vehicle pitch %s with a matching camera offset and look-ahead",
+  (incline) => {
+    const anchor = new Vector3(4, 12, 7);
+    const yaw = 0.7;
+    const heading = new Quaternion().setFromAxisAngle(
+      new Vector3(0, 1, 0),
+      yaw,
+    );
+    const vehicleRotation = heading
+      .clone()
+      .multiply(
+        new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -incline),
+      );
+    const pitchRotation = new Quaternion().setFromAxisAngle(
+      new Vector3(Math.cos(yaw), 0, -Math.sin(yaw)),
+      -incline,
+    );
+    const flat = new PerspectiveCamera(),
+      pitched = new PerspectiveCamera();
+    const flatRig = new ChaseCamera(flat),
+      pitchedRig = new ChaseCamera(pitched);
+    flatRig.drag(40, 10);
+    pitchedRig.drag(40, 10);
+    flatRig.update(anchor, heading, 0, true);
+    pitchedRig.update(anchor, vehicleRotation, 0, true);
+    const expected = flat.position
+      .clone()
+      .sub(anchor)
+      .applyQuaternion(pitchRotation)
+      .add(anchor);
+    expect(pitched.position.distanceTo(expected)).toBeLessThan(1e-8);
+    expect(
+      pitched
+        .getWorldDirection(new Vector3())
+        .distanceTo(
+          flat.getWorldDirection(new Vector3()).applyQuaternion(pitchRotation),
+        ),
+    ).toBeLessThan(1e-8);
+    expect(pitchedRig.pitch).toBe(flatRig.pitch);
+  },
+);
+
+it("smooths pitch changes independently of frame rate and ignores vehicle roll", () => {
+  const anchor = new Vector3(0, 12, 0);
+  const tilt = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -0.5);
+  const follow = (fps: number, rotation = tilt) => {
+    const camera = new PerspectiveCamera(),
+      rig = new ChaseCamera(camera);
+    rig.update(anchor, new Quaternion(), 0, true);
+    const start = camera.position.clone();
+    rig.update(anchor, rotation, 1 / fps);
+    expect(camera.position.distanceTo(start)).toBeGreaterThan(0);
+    const snapped = new PerspectiveCamera();
+    new ChaseCamera(snapped).update(anchor, rotation, 0, true);
+    expect(camera.position.distanceTo(start)).toBeLessThan(
+      snapped.position.distanceTo(start),
+    );
+    for (let i = 1; i < fps; i++) rig.update(anchor, rotation, 1 / fps);
+    return camera;
+  };
+  const slow = follow(30),
+    fast = follow(120);
+  expect(slow.position.distanceTo(fast.position)).toBeLessThan(1e-8);
+  const rolled = follow(
+    30,
+    tilt
+      .clone()
+      .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), 0.8)),
+  );
+  expect(rolled.position.distanceTo(slow.position)).toBeLessThan(1e-8);
+  expect(
+    rolled
+      .getWorldDirection(new Vector3())
+      .distanceTo(slow.getWorldDirection(new Vector3())),
+  ).toBeLessThan(1e-8);
+});
+
+it("keeps vertical orientations finite and resets the pitch follow state", () => {
+  const camera = new PerspectiveCamera(),
+    rig = new ChaseCamera(camera);
+  const anchor = new Vector3(0, 20, 0);
+  rig.update(
+    anchor,
+    new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2),
+    0,
+    true,
+  );
+  expect(camera.position.toArray().every(Number.isFinite)).toBe(true);
+  expect(camera.quaternion.toArray().every(Number.isFinite)).toBe(true);
+  rig.reset();
+  rig.update(anchor, new Quaternion(), 0, true);
+  const reference = new PerspectiveCamera();
+  new ChaseCamera(reference).update(anchor, new Quaternion(), 0, true);
+  expect(camera.position.distanceTo(reference.position)).toBeLessThan(1e-8);
+});
 it("wheel zoom changes camera distance, preserves orbit, and clamps safely", () => {
   const c = new PerspectiveCamera(),
     rig = new ChaseCamera(c);
