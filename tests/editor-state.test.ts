@@ -99,6 +99,38 @@ it("adds solids with per-kind defaults and unique ids", () => {
   const ramp = store.addSolid("ramp");
   expect(ramp.angle).toBeCloseTo(-0.124, 3);
 });
+it("materializes painted roads snapped to the ground and clipped in one undo step", () => {
+  const store = new EditorStore("Paint");
+  const before = store.level.solids.length;
+  const { pieces, issues } = store.materializeRoads([
+    { x: 0, z: -20, yaw: 0, w: 10, d: 30 },
+    { x: 0, z: 0, yaw: 0, w: 10, d: 30 },
+  ]);
+  expect(issues).toBe(0);
+  expect(pieces).toBeGreaterThan(0);
+  expect(store.level.solids.length).toBeGreaterThan(before);
+  const fresh = store.level.solids.slice(before);
+  for (const s of fresh) {
+    expect(s.kind).toBe("road");
+    expect(s.w).toBeLessThanOrEqual(10);
+    expect(s.y).toBeCloseTo(0.045, 3);
+  }
+  // Footprints no longer overlap each other.
+  for (let i = 0; i < fresh.length; i++)
+    for (let j = i + 1; j < fresh.length; j++) {
+      const a = fresh[i], b = fresh[j];
+      const overlap =
+        Math.min(a.x + a.w / 2, b.x + b.w / 2) - Math.max(a.x - a.w / 2, b.x - b.w / 2);
+      if (overlap > 0.05) {
+        const zOverlap =
+          Math.min(a.z + a.d / 2, b.z + b.d / 2) - Math.max(a.z - a.d / 2, b.z - b.d / 2);
+        expect(zOverlap).toBeLessThanOrEqual(0.05);
+      }
+    }
+  store.undo();
+  expect(store.level.solids.length).toBe(before);
+  expect(store.materializeRoads([])).toEqual({ pieces: 0, issues: 0 });
+});
 it("creates solids and prefabs at an explicit 3D location in one undoable operation", () => {
   const store = new EditorStore("View placement");
   const position = { x: 123, y: 27, z: -81 };

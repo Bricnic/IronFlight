@@ -252,7 +252,36 @@ function attachOrbit(
       panPixels(dx, dy, plane);
       apply();
     },
+    snapshot(): OrbitSnapshot {
+      return {
+        radius: spherical.radius,
+        phi: spherical.phi,
+        theta: spherical.theta,
+        target: { x: target.x, y: target.y, z: target.z },
+      };
+    },
+    restore(snap: OrbitSnapshot) {
+      spherical.radius = snap.radius;
+      spherical.phi = snap.phi;
+      spherical.theta = snap.theta;
+      target.set(snap.target.x, snap.target.y, snap.target.z);
+      apply();
+    },
+    topDown(center: { x: number; y: number; z: number }, radius: number) {
+      target.set(center.x, center.y, center.z);
+      spherical.radius = radius;
+      spherical.phi = 0.12;
+      apply();
+    },
   };
+}
+
+/** Serializable orbit state for leaving paint mode where it found the camera. */
+export interface OrbitSnapshot {
+  radius: number;
+  phi: number;
+  theta: number;
+  target: { x: number; y: number; z: number };
 }
 /** Wireframe level preview. Rebuilds on demand; never touches the game view. */
 export function createEditorViewport(host: HTMLElement, store: EditorStore) {
@@ -1237,6 +1266,31 @@ export function createEditorViewport(host: HTMLElement, store: EditorStore) {
     },
     cameraTarget() {
       return { x: target.x, y: target.y, z: target.z };
+    },
+    saveCamera(): OrbitSnapshot {
+      return orbit.snapshot();
+    },
+    restoreCamera(snap: OrbitSnapshot) {
+      orbit.restore(snap);
+    },
+    /** Directly above the fitted bounds, looking straight down for painting. */
+    topDownView(bounds: T.Box3) {
+      const center = bounds.isEmpty() ? new T.Vector3() : bounds.getCenter(new T.Vector3());
+      const size = bounds.isEmpty() ? new T.Vector3(200, 0, 200) : bounds.getSize(new T.Vector3());
+      const halfFov = T.MathUtils.degToRad(camera.fov) / 2;
+      const fit = Math.max(size.x, size.z) / (2 * Math.tan(halfFov)) / Math.min(1, camera.aspect);
+      orbit.topDown({ x: center.x, y: center.y, z: center.z }, Math.max(60, fit * 1.1));
+    },
+    /** World x/z under a client point on the viewport canvas. */
+    unprojectAt(clientX: number, clientY: number) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      const ndc = new T.Vector2(
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -(((clientY - rect.top) / rect.height) * 2 - 1),
+      );
+      const ray = new T.Raycaster();
+      ray.setFromCamera(ndc, camera);
+      return planeHit(ray.ray.origin, ray.ray.direction, target.y);
     },
     groupCenter(name: string) {
       const keys = new Set(store.allEntries().filter(s => store.selectedItem(s)?.item.group === name).map(pickKey));

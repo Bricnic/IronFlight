@@ -494,6 +494,50 @@ export class EditorStore {
     this.emit();
     return solid;
   }
+  /**
+   * One undoable step: append painted road rectangles, snapped onto the
+   * surface below, then mutually autoclip them into a contiguous deck.
+   */
+  materializeRoads(roads: { x: number; z: number; yaw: number; w: number; d: number }[]): { pieces: number; issues: number } {
+    if (!roads.length) return { pieces: 0, issues: 0 };
+    this.pushHistory();
+    const taken = new Set(this.level.solids.map((s) => s.id));
+    const template = this.level.solids.find((s) => s.kind === "road");
+    const h = template?.h ?? solidDefaults("road").h;
+    const color = template?.color ?? solidDefaults("road").color;
+    const texture = template?.texture ?? "asphalt_02";
+    const ids: string[] = [];
+    // Snap every piece against the pre-existing solids only, so fresh pieces
+    // never stack on each other instead of clipping together.
+    const fresh: CustomSolid[] = roads.map((r) => {
+      const id = this.nextId("road", taken);
+      taken.add(id);
+      ids.push(id);
+      return {
+        id,
+        kind: "road" as const,
+        x: r.x,
+        y: groundHeightAt(this.level, r.x, r.z) + h / 2,
+        z: r.z,
+        w: r.w,
+        h,
+        d: r.d,
+        yaw: r.yaw,
+        color,
+        texture,
+      };
+    });
+    this.level.solids.push(...fresh);
+    const result = previewAutoClip(this.level.solids, ids);
+    this.level.solids = result.solids;
+    const kept = result.retained.length ? result.retained : ids.map((id) => this.level.solids.find((s) => s.id === id)!).filter(Boolean);
+    this.solidSelection = kept.map((s) => s.id);
+    this.selectionKindFilter = undefined;
+    this.selections = kept.map((s) => ({ kind: "solid" as const, id: s.id }));
+    this.selection = kept[0] ? { kind: "solid", id: kept[0].id } : null;
+    this.emit();
+    return { pieces: kept.length, issues: result.issues.length + result.slivers };
+  }
   addPrefab(kind: string, placement: number | { x: number; y: number; z: number } = 0, z = 0): CustomPrefab {
     this.pushHistory();
     const taken = new Set(this.level.prefabs.map((p) => p.id));

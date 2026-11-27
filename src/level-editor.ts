@@ -1,12 +1,14 @@
+import * as T from "three";
 import { partitionListKinds } from "./editor-list";
 import { isPermanentNight } from "./weather";
 import { prefabLightSettings } from "./prefab-lights";
 import { degreesToRadians, radiansToDegrees } from "./editor-angles";
 import { commonProperty, editableProperties, objectKindKey, objectKindLabel, type SelectedObject } from "./editor-properties";
 import { EditorStore, selectionKey, type EditorSelection } from "./editor-state";
-import { createEditorViewport } from "./editor-viewport";
+import { createEditorViewport, type OrbitSnapshot } from "./editor-viewport";
+import { strokesToRoads, type PaintPoint, type PaintStroke } from "./paint-roads";
 import { defaultTextureFor } from "./course-view";
-import { clipUnsupported, intersectRects, solidLabel, solidRect, validRect, type ClipRect } from "./editor-clip";
+import { clipUnsupported, intersectRects, solidFootprint, solidLabel, solidRect, validRect, type ClipRect } from "./editor-clip";
 import {
   TEXTURE_IDS,
   PREFAB_KINDS,
@@ -220,6 +222,8 @@ export function createLevelEditor(
   const addTarget = el("button", { id: "editor-add-target" }, "Add collectible");
   const addRing = el("button", { id: "editor-add-ring" }, "Add stunt ring");
   addRing.title = "Place a large ring to jump or drive through";
+  const paintButton = el("button", { id: "editor-paint-mode" }, "Draw from minimap");
+  paintButton.title = "View the level from above and paint a road path, then materialize it into road pieces";
   const objects = el("ul", { id: "editor-objects" });
   const duplicateButton = el("button", { id: "editor-duplicate" }, "Duplicate");
   const groupButton = el("button", { id: "editor-group" }, "Group");
@@ -241,6 +245,7 @@ export function createLevelEditor(
     addCheckpoint,
     addTarget,
     addRing,
+    paintButton,
     groupActions,
     duplicateButton,
     removeButton,
@@ -326,6 +331,159 @@ export function createLevelEditor(
   screen.append(top, body, unsaved, randomModal);
   host.append(screen);
   const viewport = createEditorViewport(viewportHost, store);
+  // Minimap paint mode: a transparent canvas over the top-down viewport
+  // collects world-space strokes, previewed live until materialized.
+  const paintLayer = el("div", { id: "editor-paint-layer" });
+  paintLayer.hidden = true;
+  const paintCanvas = document.createElement("canvas");
+  paintCanvas.id = "editor-paint-canvas";
+  const paintPanel = el("div", { id: "editor-paint-panel" });
+  const paintWidth = el("input", {
+    id: "editor-paint-width",
+    type: "range",
+    min: "4",
+    max: "32",
+    step: "1",
+    value: "12",
+    "aria-label": "Brush width in world units",
+  }) as HTMLInputElement;
+  const paintWidthLabel = el("span", { id: "editor-paint-width-label" }, "12u");
+  const paintMaterialize = el("button", { id: "editor-paint-materialize" }, "Materialize");
+  paintMaterialize.title = "Convert painted strokes into smooth autoclipped road pieces";
+  const paintCancel = el("button", { id: "editor-paint-cancel" }, "Cancel");
+  paintCancel.title = "Discard painted strokes without creating roads";
+  paintPanel.append(
+    el("span", {}, "Brush"),
+    paintWidth,
+    paintWidthLabel,
+    paintMaterialize,
+    paintCancel,
+  );
+  paintLayer.append(paintCanvas, paintPanel);
+  let paintStrokes: PaintStroke[] = [];
+  let paintCurrent: PaintPoint[] | null = null;
+  let paintBrush = 12;
+  let paintCamera: OrbitSnapshot | null = null;
+  // The layer stays unmounted while idle so the viewport keeps one canvas.
+  let paintOpen = false;
+  const paintMode = () => paintOpen;
+  function paintPixelsPerUnit() {
+    const t = viewport.cameraTarget();
+    const a = viewport.project({ x: 0, y: t.y, z: 0 });
+    const b = viewport.project({ x: 1, y: t.y, z: 0 });
+    return Math.max(0.5, Math.hypot(a.x - b.x, a.y - b.y));
+  }
+  function redrawPaint() {
+    const rect = paintCanvas.getBoundingClientRect();
+    const ctx = paintCanvas.getContext("2d")!;
+    ctx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
+    const scaleX = paintCanvas.width / Math.max(1, rect.width);
+    const scaleY = paintCanvas.height / Math.max(1, rect.height);
+    const toCanvas = (p: PaintPoint) => {
+      const s = viewport.project({ x: p.x, y: viewport.cameraTarget().y, z: p.z });
+      return { x: (s.x - rect.left) * scaleX, y: (s.y - rect.top) * scaleY };
+    };
+    const unit = paintPixelsPerUnit() * scaleX;
+    const draw = (points: PaintPoint[], width: number) => {
+      if (!points.length) return;
+      ctx.beginPath();
+      if (points.length === 1) {
+        const c = toCanvas(points[0]);
+        ctx.arc(c.x, c.y, (width * unit) / 2, 0, Math.PI * 2);
+      } else {
+        points.forEach((p, i) => {
+          const c = toCanvas(p);
+          if (i) ctx.lineTo(c.x, c.y);
+          else ctx.moveTo(c.x, c.y);
+        });
+      }
+      ctx.lineWidth = Math.max(2, width * unit);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#ff5a5aee";
+      ctx.fillStyle = "#ff5a5aee";
+      if (points.length === 1) ctx.fill();
+      else ctx.stroke();
+    };
+    for (const s of paintStrokes) draw(s.points, s.width);
+    if (paintCurrent?.length) draw(paintCurrent, paintBrush);
+    paintMaterialize.disabled = !paintStrokes.length && !paintCurrent?.length;
+  }
+  function fitPaintCanvas() {
+    const rect = viewportHost.getBoundingClientRect();
+    paintCanvas.width = Math.max(1, Math.round(rect.width));
+    paintCanvas.height = Math.max(1, Math.round(rect.height));
+    redrawPaint();
+  }
+  function enterPaint() {
+    if (paintMode()) return;
+    if (store.clip) store.cancelClip();
+    paintCamera = viewport.saveCamera();
+    const bounds = new T.Box3();
+    for (const s of store.level.solids)
+      for (const p of solidFootprint(s)) bounds.expandByPoint(new T.Vector3(p.x, s.y, p.z));
+    viewport.topDownView(bounds);
+    paintStrokes = [];
+    paintCurrent = null;
+    viewportHost.append(paintLayer);
+    paintLayer.hidden = false;
+    paintOpen = true;
+    fitPaintCanvas();
+    showStatus("Paint a road path, then Materialize (Esc cancels)");
+  }
+  function exitPaint(message: string) {
+    paintLayer.hidden = true;
+    paintLayer.remove();
+    paintOpen = false;
+    paintStrokes = [];
+    paintCurrent = null;
+    if (paintCamera) viewport.restoreCamera(paintCamera);
+    paintCamera = null;
+    showStatus(message);
+  }
+  paintButton.addEventListener("click", enterPaint);
+  paintWidth.addEventListener("input", () => {
+    paintBrush = Number(paintWidth.value);
+    paintWidthLabel.textContent = `${paintBrush}u`;
+  });
+  paintCanvas.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    const hit = viewport.unprojectAt(e.clientX, e.clientY);
+    if (!hit) return;
+    paintCurrent = [hit];
+    paintCanvas.setPointerCapture(e.pointerId);
+    redrawPaint();
+  });
+  paintCanvas.addEventListener("pointermove", (e) => {
+    if (!paintCurrent) return;
+    const hit = viewport.unprojectAt(e.clientX, e.clientY);
+    if (!hit) return;
+    const last = paintCurrent[paintCurrent.length - 1];
+    if (Math.hypot(hit.x - last.x, hit.z - last.z) < 0.75) return;
+    paintCurrent.push(hit);
+    redrawPaint();
+  });
+  const finishStroke = () => {
+    if (paintCurrent?.length) paintStrokes.push({ points: paintCurrent, width: paintBrush });
+    paintCurrent = null;
+    redrawPaint();
+  };
+  paintCanvas.addEventListener("pointerup", finishStroke);
+  paintCanvas.addEventListener("pointercancel", finishStroke);
+  paintMaterialize.addEventListener("click", () => {
+    const roads = strokesToRoads(paintStrokes);
+    if (!roads.length) {
+      showError("Paint a path first");
+      return;
+    }
+    const { pieces, issues } = store.materializeRoads(roads);
+    exitPaint(
+      issues
+        ? `Materialized ${pieces} road pieces (${issues} clip warnings)`
+        : `Materialized ${pieces} road pieces`,
+    );
+  });
+  paintCancel.addEventListener("click", () => exitPaint("Painting cancelled"));
   top.append(frameButton);
   frameButton.addEventListener("click", () => viewport.frameSelection());
   const showError = (message: string) => {
@@ -1099,7 +1257,7 @@ export function createLevelEditor(
     ungroupButton.disabled = !!store.clip || !store.selectedEntries().some(s => store.selectedItem(s)?.item.group);
     copyButton.disabled = !!store.clip || !store.selectedEntries().some(s => s.kind !== "spawn");
     pasteButton.disabled = !!store.clip || !store.canPaste;
-    for (const button of [saveButton, playtestButton, randomButton, addSolid, addPrefab, addCheckpoint, addTarget, addRing, duplicateButton, removeButton, spawnButton]) button.disabled = !!store.clip;
+    for (const button of [saveButton, playtestButton, randomButton, addSolid, addPrefab, addCheckpoint, addTarget, addRing, paintButton, duplicateButton, removeButton, spawnButton]) button.disabled = !!store.clip;
     nameInput.disabled = !!store.clip;
     folderInput.disabled = !!store.clip;
     if (document.activeElement !== nameInput) nameInput.value = store.level.name;
@@ -1368,6 +1526,9 @@ export function createLevelEditor(
     }
     if (!screen.hidden && e.key === "Escape" && store.clip) {
       e.preventDefault(); store.cancelClip();
+    }
+    if (!screen.hidden && e.key === "Escape" && paintMode()) {
+      e.preventDefault(); paintCancel.click();
     }
   });
   screen.addEventListener("keydown", (e) => {
