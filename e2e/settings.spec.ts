@@ -41,7 +41,7 @@ test("settings page toggles video quality live", async ({ page }) => {
   const stored = await page.evaluate(() =>
     localStorage.getItem("iron-flight-settings-v1"),
   );
-  expect(JSON.parse(stored!)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" });
+  expect(JSON.parse(stored!)).toEqual({ video: "high", night: false, rain: false, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard", lives: 1 });
   await page.locator("#settings-back").click();
   await expect(page.locator("#settings-screen")).toBeHidden();
 });
@@ -110,6 +110,25 @@ test("input device cards switch and persist the driving input", async ({ page })
   await page.waitForFunction(() => !!window.__game);
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator('[data-input="controller"]')).toHaveClass(/selected/);
+});
+
+test("lives cards switch and persist retries per run", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => !!window.__game);
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.locator("#settings-screen")).toBeVisible();
+  await expect(page.locator('[data-lives="1"]')).toHaveClass(/selected/);
+  await page.locator('[data-lives="3"] button').click();
+  await expect(page.locator('[data-lives="3"]')).toHaveClass(/selected/);
+  await expect(page.locator('[data-lives="1"]')).not.toHaveClass(/selected/);
+  const stored = await page.evaluate(() =>
+    localStorage.getItem("iron-flight-settings-v1"),
+  );
+  expect(JSON.parse(stored!)).toMatchObject({ lives: 3 });
+  await page.reload();
+  await page.waitForFunction(() => !!window.__game);
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.locator('[data-lives="3"]')).toHaveClass(/selected/);
 });
 
 test("randomize atmosphere grays out manual toggles and rerolls on retry", async ({ page }) => {

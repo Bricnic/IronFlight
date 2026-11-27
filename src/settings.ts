@@ -1,4 +1,5 @@
 import { DEFAULT_WEATHER, parseWeatherFlags, type WeatherFlags } from "./weather";
+import { clampLives } from "./track-run";
 export type VideoQuality = "low" | "medium" | "high";
 export interface QualitySpec {
   /** Pixel-ratio cap (also capped by devicePixelRatio at apply time). */
@@ -36,6 +37,8 @@ export interface GameSettings {
   /** Re-roll night/rain at the start of every level and retry. */
   randomizeAtmosphere: boolean;
   input: InputDevice;
+  /** Crash retries per run, 1..5. 1 is classic: the first wreck ends the run. */
+  lives: number;
 }
 const SETTINGS_KEY = "iron-flight-settings-v1";
 export interface SettingsStorage {
@@ -59,6 +62,7 @@ export function loadSettings(
       const video = (parsed as { video?: unknown } | null)?.video;
       if (isTier(video)) {
         const input = (parsed as { input?: unknown } | null)?.input;
+        const lives = (parsed as { lives?: unknown } | null)?.lives;
         return {
           video,
           showObjectHelp: (parsed as { showObjectHelp?: unknown } | null)?.showObjectHelp === true,
@@ -67,13 +71,14 @@ export function loadSettings(
             (parsed as { randomizeAtmosphere?: unknown } | null)
               ?.randomizeAtmosphere === true,
           input: isInput(input) ? input : "keyboard",
+          lives: clampLives(lives),
         };
       }
     }
   } catch {
     // Corrupt JSON falls through to the default.
   }
-  return { video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard" };
+  return { video: "high", ...DEFAULT_WEATHER, randomizeAtmosphere: false, showObjectHelp: false, input: "keyboard", lives: 1 };
 }
 export function saveSettings(
   video: VideoQuality,
@@ -82,8 +87,9 @@ export function saveSettings(
   storage: SettingsStorage = globalThis.localStorage,
   showObjectHelp = loadSettings(storage).showObjectHelp,
   input: InputDevice = loadSettings(storage).input,
+  lives: number = loadSettings(storage).lives,
 ): GameSettings {
-  const settings = { video, ...weather, randomizeAtmosphere, showObjectHelp, input };
+  const settings = { video, ...weather, randomizeAtmosphere, showObjectHelp, input, lives: clampLives(lives) };
   storage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   return settings;
 }
@@ -94,4 +100,8 @@ export function saveInput(input: InputDevice, storage: SettingsStorage = globalT
 export function saveObjectHelp(show: boolean, storage: SettingsStorage = globalThis.localStorage) {
   const settings = loadSettings(storage);
   return saveSettings(settings.video, { night: settings.night, rain: settings.rain }, settings.randomizeAtmosphere, storage, show);
+}
+export function saveLives(lives: number, storage: SettingsStorage = globalThis.localStorage) {
+  const settings = loadSettings(storage);
+  return saveSettings(settings.video, { night: settings.night, rain: settings.rain }, settings.randomizeAtmosphere, storage, settings.showObjectHelp, settings.input, lives);
 }

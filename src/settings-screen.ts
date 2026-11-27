@@ -1,6 +1,7 @@
 import {
   loadSettings,
   saveInput,
+  saveLives,
   saveSettings,
   saveObjectHelp,
   type InputDevice,
@@ -169,6 +170,31 @@ export function createSettings(
   window.addEventListener("gamepadconnected", paintInputStatus);
   window.addEventListener("gamepaddisconnected", paintInputStatus);
   screen.append(inputSection);
+  const livesSection = document.createElement("section");
+  livesSection.className = "settings-section";
+  livesSection.setAttribute("aria-label", "Lives");
+  livesSection.innerHTML = `<h2>Lives</h2><div class="settings-grid" role="radiogroup" aria-label="Lives per run"></div><p class="selection-footnote">Lost lives respawn you at full integrity on the last checkpoint. One life is classic: the first wreck ends the run.</p>`;
+  const livesGrid = livesSection.querySelector<HTMLElement>(".settings-grid")!;
+  const livesCards = new Map<number, HTMLElement>();
+  for (const count of [1, 2, 3, 4, 5]) {
+    const card = document.createElement("article");
+    card.className = "settings-card";
+    card.dataset.lives = String(count);
+    card.innerHTML = `<button class="vehicle-pick" role="radio" aria-label="${count} ${count === 1 ? "life" : "lives"} per run" aria-checked="false"><div class="track-card-body"><div class="track-card-heading"><h2>${count}</h2><span class="best-medal picked">PICKED</span></div><p>${count === 1 ? "Classic. The first wreck ends the run." : `Survive ${count - 1} wreck${count === 2 ? "" : "s"} per run.`}</p></div></button>`;
+    card.querySelector("button")!.onclick = () => {
+      saveLives(count);
+      paintLives(count);
+    };
+    livesGrid.append(card);
+    livesCards.set(count, card);
+  }
+  const paintLives = (picked: number) => {
+    for (const [count, card] of livesCards) {
+      card.classList.toggle("selected", count === picked);
+      card.querySelector("button")!.setAttribute("aria-checked", String(count === picked));
+    }
+  };
+  screen.append(livesSection);
   host.append(screen);
   const backButton = screen.querySelector<HTMLButtonElement>("#settings-back")!;
   backButton.onclick = onBack;
@@ -204,6 +230,7 @@ export function createSettings(
         stored.randomizeAtmosphere,
       );
       paintInput(stored.input);
+      paintLives(stored.lives);
       paintInputStatus();
       if (inputStatusTimer) clearInterval(inputStatusTimer);
       inputStatusTimer = setInterval(paintInputStatus, 250);

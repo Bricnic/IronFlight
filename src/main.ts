@@ -68,7 +68,7 @@ app.innerHTML = `<div id="viewport"></div><header><a class="brand" href="/">IRON
 <aside><div class="eyebrow">THE ARENA IS YOURS</div><h1>BIG TRUCK.<br>BAD IDEAS.</h1><p class="intro">Three ways across. One way to find out.</p><div id="routes">${ROUTES.map((r) => `<button class="route" data-stage="${r.id}" style="--route:#${r.color.toString(16)}"><small>${r.difficulty}</small><strong>${r.name}<span>↗</span></strong><em>${r.gapEnd - 12}m gap <span>·</span> ${r.hazards} hazard${r.hazards > 1 ? "s" : ""}</em></button>`).join("")}</div>
 <section id="lab" hidden><div class="eyebrow">SURGICAL DAMAGE TOOLS</div><label for="target">Target part</label><select id="target">${PARTS.map((p) => `<option value="${p.id}">${p.id}</option>`).join("")}</select><div class="tool-grid"><button id="dent">Dent panel</button><button id="destroy">Destroy part</button><button id="sever">Sever chassis</button><button id="restore">Restore truck</button></div><p>Each tool applies real damage. Detached pieces keep their momentum.</p></section></aside>
 <div id="status"><span id="state-label">READY TO SEND IT</span><strong id="state-copy">Build speed. Hold your line.</strong><div id="run-progress" hidden></div><span id="wings-badge" class="weather-badge" hidden>WINGS</span><div class="progress"><i id="progress"></i></div></div>
-<section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span><span id="hud-best-row" hidden>BEST <b id="hud-best-time">—</b></span><span id="hud-medal-row" hidden>MEDAL <b id="hud-best-medal">UNRANKED</b></span><span id="hud-star-row" hidden>STAR <span class="star-row" id="hud-stars"></span></span></div></section>
+<section id="telemetry"><div class="speed"><strong id="speed">000</strong><span>MPH</span></div><div class="stats"><span>INTEGRITY <b id="integrity">100%</b></span><span>RUN TIME <b id="time">0.00</b></span><span id="hud-best-row" hidden>BEST <b id="hud-best-time">—</b></span><span id="hud-medal-row" hidden>MEDAL <b id="hud-best-medal">UNRANKED</b></span><span id="hud-star-row" hidden>STAR <span class="star-row" id="hud-stars"></span></span><span id="hud-lives-row" hidden>LIVES <b id="hud-lives">1</b></span></div></section>
 <div id="checkpoint-banner" hidden><strong>CHECKPOINT!</strong><span id="checkpoint-delta" hidden></span></div><canvas id="confetti" hidden></canvas>
 <footer><div class="controls"><span><kbd>W / UP</kbd> GAS</span><span><kbd>S / DOWN</kbd> BRAKE / REV</span><span><kbd>A/D / LEFT/RIGHT</kbd> <span id="steer-label">STEER</span></span><span><kbd>R</kbd> RESTART</span><span><kbd>L</kbd> LEVEL SELECT</span><span><kbd>SPACE</kbd> <span id="handbrake-label">HANDBRAKE</span></span><span class="camera-hint">DRAG TO ORBIT CAMERA</span></div><label class="playback">SIMULATION <select id="rate" aria-label="Playback speed"><option value="1">1× REAL TIME</option><option value="4">4× FAST</option><option value="16">16× TEST SPEED</option></select></label></footer><div id="loading">Preparing the arena…</div>`;
 async function boot() {
@@ -127,6 +127,7 @@ async function boot() {
   let resultStartedAt = 0;
   let bannerRun: Simulation["trackRun"];
   let bannerCheckpoint = 0;
+  let bannerLives = 0;
   let bannerFiredAt = 0;
   let bannerUntil = 0;
   let starRun: Simulation["trackRun"];
@@ -607,6 +608,22 @@ async function boot() {
     }
     fireConfetti();
   }
+  function showLifeLostBanner(livesLeft: number) {
+    const banner = $("checkpoint-banner");
+    const delta = $("checkpoint-delta");
+    banner.querySelector("strong")!.textContent = "LIFE LOST!";
+    banner.classList.remove("gold");
+    banner.hidden = false;
+    bannerFiredAt = sim.time;
+    bannerUntil = sim.time + 2.5;
+    banner.style.transform = "";
+    banner.style.opacity = "";
+    delta.hidden = false;
+    delta.textContent = livesLeft === 1 ? "Last life!" : `${livesLeft} lives left`;
+    delta.className = "";
+    if (view.renderer.xr.isPresenting)
+      view.xrHud.flash("LIFE LOST!", delta.textContent, sim.time + 2.5);
+  }
   /** Start/look/menu sticks; runs every frame, even while paused. */
   function pollController(frameDelta?: number) {
     const pad = controllerForeground ? pollPad() : null;
@@ -751,6 +768,7 @@ async function boot() {
       $("hud-best-row").hidden = true;
       $("hud-medal-row").hidden = true;
       $("hud-star-row").hidden = true;
+      $("hud-lives-row").hidden = true;
     }
     if (s.run) {
       const track = getTrack(s.run.trackId);
@@ -816,11 +834,16 @@ async function boot() {
       if (sim.trackRun !== bannerRun) {
         bannerRun = sim.trackRun;
         bannerCheckpoint = s.run.checkpoint;
+        bannerLives = s.run.lives;
         banner.hidden = true;
       } else if (s.run.status === "running") {
         if (s.run.checkpoint > bannerCheckpoint) {
           bannerCheckpoint = s.run.checkpoint;
           showCheckpointBanner(s.run);
+        }
+        if (s.run.lives < bannerLives) {
+          bannerLives = s.run.lives;
+          showLifeLostBanner(s.run.lives);
         }
         // Bank each newly collected star and celebrate it like a checkpoint.
         if (sim.trackRun !== starRun) {
@@ -889,6 +912,10 @@ async function boot() {
       const hudBest = hudBestCopy(scores.best(run.trackId, run.variant));
       $("hud-best-row").hidden = false;
       $("hud-medal-row").hidden = false;
+      $("hud-lives-row").hidden = false;
+      const hudLives = $("hud-lives");
+      if (hudLives.textContent !== String(run.lives))
+        hudLives.textContent = String(run.lives);
       const hudTime = $("hud-best-time"), hudMedal = $("hud-best-medal");
       if (hudTime.textContent !== hudBest.time)
         hudTime.textContent = hudBest.time;
@@ -1103,6 +1130,7 @@ async function boot() {
       },
       snapshot: () => sim.snapshot(),
       setTuning: (values) => sim.setTuning(values),
+      damage: (id, amount) => sim.damage(id, amount),
       driveFrames: (frames, r, driver, draw = true) => {
         for (let f = 0; f < frames; f++) {
           clock.advance(1 / 60, r, () => sim.step(driver(sim.snapshot(false))));

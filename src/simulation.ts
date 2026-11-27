@@ -20,7 +20,8 @@ import {
   type CourseSolid,
 } from "./course";
 import { getTrack, type CustomTrackId, type TrackId } from "./tracks";
-import { TrackRun } from "./track-run";
+import { TrackRun, clampLives, respawnPose } from "./track-run";
+import { loadSettings } from "./settings";
 import { Destructibles } from "./destructibles";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
@@ -222,11 +223,13 @@ export class Simulation {
   startTrack(
     id: TrackId | CustomTrackId,
     lane: "easy" | "medium" | "hard" = "easy",
+    lives: number = loadSettings().lives,
   ) {
     const track = getTrack(id);
     this.reset(track.legacy ? lane : (id as Stage));
+    const runLives = clampLives(lives);
     if (!track.legacy) {
-      this.trackRun = new TrackRun(track);
+      this.trackRun = new TrackRun(track, "default", runLives);
       return;
     }
     const x = ROUTES.find((r) => r.id === lane)!.x;
@@ -236,6 +239,7 @@ export class Simulation {
         checkpoints: track.checkpoints.map((g) => ({ ...g, x: g.x + x + 24 })),
       },
       lane,
+      runLives,
     );
   }
   private addSolidCollider(s: {
@@ -418,13 +422,7 @@ export class Simulation {
         ride.suspensionRest,
         ride.wheelRadius,
       );
-      this.vehicle.setWheelSuspensionStiffness(i, 35);
-      this.vehicle.setWheelSuspensionCompression(i, 12);
-      this.vehicle.setWheelSuspensionRelaxation(i, 14);
-      this.vehicle.setWheelMaxSuspensionForce(i, 80000);
-      this.vehicle.setWheelMaxSuspensionTravel(i, 0.45);
-      this.vehicle.setWheelFrictionSlip(i, 2.5);
-      this.vehicle.setWheelSideFrictionStiffness(i, 1.1);
+      this.tuneWheel(i);
     });
     this.props = new Destructibles(
       this.world,
@@ -1217,6 +1215,10 @@ export class Simulation {
         bounced: this.bounced,
       },
     );
+    if (this.trackRun?.respawnRequested) {
+      this.trackRun.respawnRequested = false;
+      this.respawnAtCheckpoint();
+    }
   }
   run(seconds: number, input: Input = {}) {
     for (let i = 0; i < Math.round(seconds / DT); i++) this.step(input);
@@ -1694,6 +1696,76 @@ export class Simulation {
     if (id === "chassis-rear")
       for (const p of this.partDefs)
         if ("parent" in p && p.parent === id) this.damage(p.id, 10000);
+  }
+  /** Stock wheel tune, shared by reset and post-respawn repair. */
+  private tuneWheel(i: number) {
+    this.vehicle.setWheelSuspensionStiffness(i, 35);
+    this.vehicle.setWheelSuspensionCompression(i, 12);
+    this.vehicle.setWheelSuspensionRelaxation(i, 14);
+    this.vehicle.setWheelMaxSuspensionForce(i, 80000);
+    this.vehicle.setWheelMaxSuspensionTravel(i, 0.45);
+    this.vehicle.setWheelFrictionSlip(i, 2.5);
+    this.vehicle.setWheelSideFrictionStiffness(i, 1.1);
+  }
+  /** Full repair: health, dents, debris cleanup, reattached colliders, wheels. */
+  private repairParts() {
+    for (const def of this.partDefs) {
+      const state = this.parts.get(def.id)!;
+      if (state.body) {
+        for (let i = state.body.numColliders() - 1; i >= 0; i--) {
+          const collider = state.body.collider(i);
+          if (collider) this.world.removeCollider(collider, true);
+        }
+        this.world.removeRigidBody(state.body);
+        state.body = undefined;
+      }
+      if (!def.id.startsWith("wheel") && !state.collider)
+        state.collider = this.world.createCollider(
+          RAPIER.ColliderDesc.cuboid(
+            def.size[0] / 2,
+            def.size[1] / 2,
+            def.size[2] / 2,
+          )
+            .setTranslation(def.pos[0], def.pos[1], def.pos[2])
+            .setMass(def.mass)
+            .setFriction(0.3),
+          this.body,
+        );
+      state.health = def.hp;
+      state.dents = [];
+      state.lava = undefined;
+    }
+    for (let i = 0; i < 4; i++) this.tuneWheel(i);
+  }
+  /** Spend a survived wreck: teleport to the last checkpoint at full integrity. */
+  private respawnAtCheckpoint() {
+    const run = this.trackRun;
+    if (!run) return;
+    const pose = respawnPose(run.track, run.checkpoint);
+    this.body.setTranslation({ x: pose.x, y: pose.y, z: pose.z }, true);
+    this.body.setRotation(
+      new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), pose.yaw),
+      true,
+    );
+    this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    this.body.setBodyType(RAPIER.RigidBodyType.Dynamic, true);
+    this.previousPosition.copy(this.body.translation());
+    this.previousRotation.copy(this.body.rotation());
+    this.status = "driving";
+    this.repairParts();
+    this.inFlames = false;
+    this.fireDamageTaken = 0;
+    this.smolderDamageTaken = 0;
+    this.smolderRemaining = 0;
+    this.smolderTriggered = false;
+    this.poisonUntil = 0;
+    this.poisonRemaining = 0;
+    this.poisonTaken = 0;
+    this.confusedUntil = 0;
+    this.airborneTicks = 0;
+    this.steeringAngle = 0;
+    this.damageEvents.push({ source: "life-lost", part: "chassis-front", time: this.time });
   }
   /** Piano keys struck this run, with their latest strike times. */
   pianoPresses(): { key: number; at: number }[] {

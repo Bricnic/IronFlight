@@ -43,6 +43,23 @@ export function segmentDistance(a: Position, b: Position, p: Position) {
 export const GOLD_STAR_RADIUS = 4;
 /** Swept collect radius for wings pickups. */
 export const WINGS_RADIUS = 5;
+/** Lives setting range 1..5; garbage repairs to the classic single life. */
+export function clampLives(lives: unknown): number {
+  if (typeof lives !== "number" || !Number.isInteger(lives)) return 1;
+  return Math.max(1, Math.min(5, lives));
+}
+/** Respawn transform: last crossed gate, or spawn with none crossed. */
+export function respawnPose(
+  track: Track,
+  checkpointsCrossed: number,
+): Position & { yaw: number } {
+  const gate = track.checkpoints[checkpointsCrossed - 1];
+  if (!gate) {
+    const s = track.spawn;
+    return { x: s.x, y: s.y, z: s.z, yaw: s.yaw };
+  }
+  return { x: gate.x, y: gate.y, z: gate.z, yaw: gate.yaw ?? Math.atan2(gate.nx, gate.nz) };
+}
 export class TrackRun {
   status: "running" | "completed" | "failed" = "running";
   reason: "timeout" | "wrecked" | null = null;
@@ -62,10 +79,19 @@ export class TrackRun {
   bounced = false;
   ringDone = false;
   ringsDone = new Set<number>();
+  /** Lives remaining (settings 1..5); a spent life respawns instead of failing. */
+  lives: number;
+  /** Lives spent so far this run. */
+  respawns = 0;
+  /** Set on a survived wreck/fall; the sim consumes it by respawning. */
+  respawnRequested = false;
   constructor(
     readonly track: Track,
     readonly variant = "default",
-  ) {}
+    lives = 1,
+  ) {
+    this.lives = clampLives(lives);
+  }
   step(
     dt: number,
     previous: Position,
@@ -82,6 +108,12 @@ export class TrackRun {
     if (!Number.isFinite(dt) || dt <= 0) return;
     this.elapsed += dt;
     if (integrity <= 0 || current.y < -15) {
+      if (this.lives > 1) {
+        this.lives--;
+        this.respawns++;
+        this.respawnRequested = true;
+        return;
+      }
       this.status = "failed";
       this.reason = "wrecked";
       return;
@@ -211,6 +243,8 @@ export class TrackRun {
       destroyed: [...this.destroyed],
       demolishCount: this.track.demolish?.length ?? 0,
       bounced: this.bounced,
+      lives: this.lives,
+      respawns: this.respawns,
       ringDone: this.ringDone,
       ringsDone: [...this.ringsDone],
       ringCount: (this.track.rings ?? []).length,

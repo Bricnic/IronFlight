@@ -90,6 +90,8 @@ export interface GameHarness {
   ): void;
   setTuning(values: Partial<Tuning>): void;
   snapshot(): ReturnType<Simulation["snapshot"]>;
+  /** Test seam: damage a vehicle part directly. */
+  damage(id: string, amount: number): void;
   place(position: { x: number; y: number; z: number }, yaw: number): void;
   lavaOverview(): void;
   lavaPitOverview(id: string, angle?: number): void;
