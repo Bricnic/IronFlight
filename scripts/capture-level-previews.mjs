@@ -156,21 +156,49 @@ export async function main(argv) {
         return false;
       }
     });
+    // The garage lives on its own screen now (header button).
+    await page.locator("#vehicle-select-button").click();
     await page.waitForFunction(
       () =>
-        document.querySelectorAll("#level-select [data-track]").length > 0,
+        document.querySelectorAll("#vehicle-select [data-vehicle]").length >
+        0,
     );
-    const lineup = await page
-      .locator("#level-select [data-track]")
-      .evaluateAll((cards) =>
-        cards.map((card) => ({
-          id: card.dataset.track,
-          img: card.querySelector("img")?.getAttribute("src") ?? null,
-        })),
-      );
     const vehicles = await page
       .locator("#vehicle-select [data-vehicle]")
       .evaluateAll((cards) => cards.map((card) => card.dataset.vehicle));
+    await page.locator("#vehicle-back").click();
+    // The lineup spans collection screens; gather every collection's tracks.
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("#level-select [data-collection]").length >
+        0,
+    );
+    const collections = await page
+      .locator("#level-select [data-collection]")
+      .evaluateAll((els) => els.map((e) => e.dataset.collection));
+    const lineup = [];
+    for (const cid of collections) {
+      await page.locator(`#level-select [data-collection="${cid}"]`).click();
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#level-select [data-track]").length > 0,
+      );
+      const cards = await page
+        .locator("#level-select [data-track]")
+        .evaluateAll((cards) =>
+          cards.map((card) => ({
+            id: card.dataset.track,
+            img: card.querySelector("img")?.getAttribute("src") ?? null,
+          })),
+        );
+      lineup.push(...cards);
+      await page.locator("#collection-back").click();
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#level-select [data-collection]")
+            .length > 0,
+      );
+    }
     if (!vehicles.length) throw new Error("No vehicles found in garage");
     const indexOf = (id) => {
       const at = lineup.findIndex((t) => t.id === id);

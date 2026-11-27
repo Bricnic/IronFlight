@@ -84,6 +84,14 @@ it("steps to the next and previous level with wraparound", () => {
     "Crater Field",
     "Meteor Storm",
     "Space Dream",
+    "Hot Heels",
+    "Peak Danger",
+    "Figure Eight Inferno",
+    "Double Serpent",
+    "Spiral Ascent",
+    "Caldera Rim",
+    "Ember Falls",
+    "Hot Cauldron Dream",
   ]);
   expect(stepTrackId("triple-loop", 1)).toBe("foundry-run");
   expect(stepTrackId("foundry-run", -1)).toBe("triple-loop");
@@ -223,14 +231,30 @@ it("steps to the next and previous level with wraparound", () => {
   expect(stepTrackId("custom:meteor-storm", -1)).toBe("custom:crater-field");
   expect(stepTrackId("custom:meteor-storm", 1)).toBe("custom:space-dream");
   expect(stepTrackId("custom:space-dream", -1)).toBe("custom:meteor-storm");
-  expect(stepTrackId("custom:space-dream", 1)).toBe("triple-loop");
-  expect(stepTrackId("triple-loop", -1)).toBe("custom:space-dream");
+  expect(stepTrackId("custom:space-dream", 1)).toBe("custom:hot-heels");
+  expect(stepTrackId("custom:hot-heels", -1)).toBe("custom:space-dream");
+  expect(stepTrackId("custom:hot-heels", 1)).toBe("custom:peak-danger");
+  expect(stepTrackId("custom:peak-danger", -1)).toBe("custom:hot-heels");
+  expect(stepTrackId("custom:peak-danger", 1)).toBe("custom:figure-eight-inferno");
+  expect(stepTrackId("custom:figure-eight-inferno", -1)).toBe("custom:peak-danger");
+  expect(stepTrackId("custom:figure-eight-inferno", 1)).toBe("custom:double-serpent");
+  expect(stepTrackId("custom:double-serpent", -1)).toBe("custom:figure-eight-inferno");
+  expect(stepTrackId("custom:double-serpent", 1)).toBe("custom:spiral-ascent");
+  expect(stepTrackId("custom:spiral-ascent", -1)).toBe("custom:double-serpent");
+  expect(stepTrackId("custom:spiral-ascent", 1)).toBe("custom:caldera-rim");
+  expect(stepTrackId("custom:caldera-rim", -1)).toBe("custom:spiral-ascent");
+  expect(stepTrackId("custom:caldera-rim", 1)).toBe("custom:ember-falls");
+  expect(stepTrackId("custom:ember-falls", -1)).toBe("custom:caldera-rim");
+  expect(stepTrackId("custom:ember-falls", 1)).toBe("custom:hot-cauldron-dream");
+  expect(stepTrackId("custom:hot-cauldron-dream", -1)).toBe("custom:ember-falls");
+  expect(stepTrackId("custom:hot-cauldron-dream", 1)).toBe("triple-loop");
+  expect(stepTrackId("triple-loop", -1)).toBe("custom:hot-cauldron-dream");
   expect(stepTrackId("custom:my-level", 1)).toBe("triple-loop");
   expect(stepTrackId("custom:my-level", -1)).toBe(
-    "custom:space-dream",
+    "custom:hot-cauldron-dream",
   );
   expect(stepTrackId(undefined, 1)).toBe("triple-loop");
-  expect(stepTrackId(undefined, -1)).toBe("custom:space-dream");
+  expect(stepTrackId(undefined, -1)).toBe("custom:hot-cauldron-dream");
 });
 it("rejects duplicate IDs, invalid medal thresholds and impossible arena budgets", () => {
   expect(validateTracks([...TRACKS, TRACKS[0]])).not.toEqual([]);

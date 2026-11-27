@@ -880,6 +880,107 @@ const meteorProspector = vehicle(
   },
 );
 
+const magmaHauler = vehicle(
+  "magma-hauler",
+  "Magma Hauler",
+  "An obsidian-armored hauler with a live crucible bed and twin stack flames. Erupts on arrival.",
+  [0x23262b, 0xff6a1a, 0x3a3f45, 1, 8],
+  (k) => {
+    coachwork(k, 1.4, -0.85);
+    const magma = new T.MeshStandardMaterial({
+      color: 0xff7a1a,
+      emissive: 0xff4400,
+      emissiveIntensity: 1.6,
+      roughness: 0.5,
+    });
+    // Hood: armored cowl sunk into the nose, with a glowing grille.
+    k.panel("hood", [2.0, 0.18, 1.4], [0, 0.68, 1.68], k.dark);
+    for (let i = 0; i < 5; i++)
+      k.mesh(
+        "hood",
+        new T.BoxGeometry(0.18, 0.3, 0.08),
+        [-0.6 + i * 0.3, 0.35, 2.6],
+        magma,
+      );
+    twinklesOf(k.root).push({ mat: magma, phase: 0.6, base: 1.6 });
+    // Roof: twin exhaust stacks with live flames, clamped to the cab.
+    for (const x of [-0.55, 0.55]) {
+      k.bar("roof", [x, 1.3, -0.5], [x, 2.15, -0.5], 0.12, k.dark);
+      for (const y of [1.55, 1.9])
+        k.bar("roof", [x * 0.35, y, -0.5], [x * 1.05, y, -0.5], 0.04, k.steel);
+      k.mesh(
+        "roof",
+        new T.CylinderGeometry(0.15, 0.15, 0.08, 24),
+        [x, 2.15, -0.5],
+        k.steel,
+      );
+      const mat = flameMaterial();
+      const flame = k.mesh(
+        "roof",
+        new T.ConeGeometry(0.11, 0.34, 16),
+        [x, 2.27, -0.5],
+        mat,
+      );
+      flamesOf(k.root).push({ mesh: flame, mat, phase: x * 4 });
+    }
+    mountedBeacon(k, [0, 1.51, -0.05], 0xff4400);
+    // Bed: crucible tank with bands, hazard bars and a molten surface.
+    const tank = finish(0x2c3138, 0.45, 0.6);
+    k.mesh(
+      "bed",
+      new T.CylinderGeometry(0.85, 0.95, 0.7, 32),
+      [0, 0.83, -1.85],
+      tank,
+    );
+    for (const y of [0.68, 1.0]) {
+      const band = k.mesh(
+        "bed",
+        new T.TorusGeometry(0.92, 0.05, 12, 40),
+        [0, y, -1.85],
+        k.dark,
+      );
+      band.rotation.x = Math.PI / 2;
+    }
+    const molten = new T.MeshStandardMaterial({
+      color: 0xe86a14,
+      emissive: 0xff4400,
+      emissiveIntensity: 1.4,
+      roughness: 0.5,
+    });
+    k.mesh(
+      "bed",
+      new T.CylinderGeometry(0.78, 0.78, 0.06, 32),
+      [0, 1.17, -1.85],
+      molten,
+    );
+    twinklesOf(k.root).push({ mat: molten, phase: 2.1, base: 1.4 });
+    for (const a of [Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4, (7 * Math.PI) / 4])
+      k.bar(
+        "bed",
+        [Math.cos(a) * 0.9, 0.6, -1.85 + Math.sin(a) * 0.9],
+        [Math.cos(a) * 0.9, 1.1, -1.85 + Math.sin(a) * 0.9],
+        0.04,
+        k.accent,
+      );
+    // Doors: magma pinstripes fused to the armor.
+    for (const side of sides)
+      k.panel(
+        door(side),
+        [0.05, 0.08, 2.0],
+        [side * 1.23, 0.35, -0.2],
+        magma,
+      );
+    // Bumpers: glowing tow hooks on the nose.
+    for (const x of [-0.6, 0.6])
+      k.mesh(
+        "bumper-front",
+        new T.TorusGeometry(0.09, 0.03, 10, 20),
+        [x, 0.12, 2.85],
+        k.accent,
+      );
+  },
+);
+
 export const DREAM_VEHICLES = [
   cakeCruiser,
   gingerbreadGlider,
@@ -889,6 +990,7 @@ export const DREAM_VEHICLES = [
   slagHauler,
   canyonCamper,
   meteorProspector,
+  magmaHauler,
 ];
 
 export function dreamAnimate(root: T.Group, time: number): void {

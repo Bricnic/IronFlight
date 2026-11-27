@@ -19,6 +19,7 @@ export const DREAM_CARS: { collection: CollectionId; car: string }[] = [
   { collection: "industrial-mayhem", car: "slag-hauler" },
   { collection: "outdoor-adventures", car: "canyon-camper" },
   { collection: "space", car: "meteor-prospector" },
+  { collection: "hot-cauldron", car: "magma-hauler" },
 ];
 
 export function dreamCarForCollection(collection: CollectionId): string {

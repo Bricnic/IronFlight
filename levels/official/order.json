@@ -268,5 +268,45 @@
     "file": "/official/space/Space Dream.json",
     "thumbnail": "/tracks/space-dream.png",
     "description": "Tour the moon station, earn wings past the habitat dome and fly the crater gap to the tower finish."
+  },
+  {
+    "file": "/official/hot-cauldron/Hot Heels.json",
+    "thumbnail": "/tracks/hot-heels.png",
+    "description": "Thread the burning S-curves past hammer traps and magma burners."
+  },
+  {
+    "file": "/official/hot-cauldron/Peak Danger.json",
+    "thumbnail": "/tracks/peak-danger.png",
+    "description": "Climb the obsidian peak by mushroom light, boost over the ridge and mind the volcano."
+  },
+  {
+    "file": "/official/hot-cauldron/Figure Eight Inferno.json",
+    "thumbnail": "/tracks/figure-eight-inferno.png",
+    "description": "Race the flaming figure eight and jump the lava pit at the crossing — twice."
+  },
+  {
+    "file": "/official/hot-cauldron/Double Serpent.json",
+    "thumbnail": "/tracks/double-serpent.png",
+    "description": "Slither the twin S-curves beneath oversized volcanoes, spike gates and lava pools."
+  },
+  {
+    "file": "/official/hot-cauldron/Spiral Ascent.json",
+    "thumbnail": "/tracks/spiral-ascent.png",
+    "description": "Climb the corkscrew to the peak, then slide into the lavafall cave."
+  },
+  {
+    "file": "/official/hot-cauldron/Caldera Rim.json",
+    "thumbnail": "/tracks/caldera-rim.png",
+    "description": "Orbit the volcano island on the caldera rim with boost pads over a lava lake."
+  },
+  {
+    "file": "/official/hot-cauldron/Ember Falls.json",
+    "thumbnail": "/tracks/ember-falls.png",
+    "description": "Run the lava river out and back, threading burner gates past the falls."
+  },
+  {
+    "file": "/official/hot-cauldron/Hot Cauldron Dream.json",
+    "thumbnail": "/tracks/hot-cauldron-dream.png",
+    "description": "Nightmare ride: earn wings and fly the lava canyon between erupting giants."
   }
 ]

@@ -140,8 +140,9 @@ export function previewClipPolygons(
     return result;
   }
   const taken = new Set(solids.map((s) => s.id));
+  const targetSet = new Set(targets);
   for (const s of solids) {
-    if (!targets.includes(s.id)) {
+    if (!targetSet.has(s.id)) {
       result.solids.push(s);
       continue;
     }
@@ -301,6 +302,12 @@ export function previewAutoClip(
     order: ordered.map((s) => s.id),
   };
   const lineage = new Map<string, string[]>(ordered.map((s) => [s.id, [s.id]]));
+  // Conservative per-original bboxes from the initial footprints. Clipping
+  // only ever shrinks pieces, so originals whose initial bboxes are disjoint
+  // can never interact: skipping them is a pure speedup with identical output.
+  const initBox = new Map<string, ClipRect>(ordered.map((s) => [s.id, solidRect(s)]));
+  const boxesHit = (a: ClipRect, b: ClipRect) =>
+    a.minX <= b.maxX && a.maxX >= b.minX && a.minZ <= b.maxZ && a.maxZ >= b.minZ;
   const live = (pieceIds: string[]) =>
     pieceIds.filter((id) => result.solids.some((s) => s.id === id));
   for (const cutter of ordered) {
@@ -314,8 +321,10 @@ export function previewAutoClip(
       .map(cleanPolygon)
       .filter((p) => p.length >= 3 && Math.abs(polygonArea(p)) > CLIP_EPSILON);
     if (!cutters.length) continue;
+    const cutterBox = initBox.get(cutter.id)!;
     for (const [orig, pieceIds] of lineage) {
       if (orig === cutter.id) continue;
+      if (!boxesHit(cutterBox, initBox.get(orig)!)) continue;
       const targets = live(pieceIds).filter((id) =>
         cutterPieces.some((c) => heightsOverlap(c, byId.get(id)!)),
       );
@@ -359,8 +368,9 @@ export function previewClip(
     slivers: 0,
   };
   const taken = new Set(solids.map((s) => s.id));
+  const targetSet = new Set(targets);
   for (const s of solids) {
-    if (!targets.includes(s.id)) {
+    if (!targetSet.has(s.id)) {
       result.solids.push(s);
       continue;
     }

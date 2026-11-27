@@ -9,7 +9,8 @@ export type CollectionId =
   | "stunt-parks"
   | "industrial-mayhem"
   | "outdoor-adventures"
-  | "space";
+  | "space"
+  | "hot-cauldron";
 
 export interface LevelCollection {
   id: CollectionId;
@@ -163,6 +164,24 @@ export const LEVEL_COLLECTIONS: LevelCollection[] = [
       "custom:space-dream",
     ],
     dream: "custom:space-dream",
+  },
+  {
+    id: "hot-cauldron",
+    name: "Hot Cauldron",
+    theme:
+      "Night volcano races over lava lakes and cracked red earth, with magma jumps, burner gates and erupting giants.",
+    art: "/collections/hot-cauldron.jpg",
+    trackIds: [
+      "custom:hot-heels",
+      "custom:peak-danger",
+      "custom:figure-eight-inferno",
+      "custom:double-serpent",
+      "custom:spiral-ascent",
+      "custom:caldera-rim",
+      "custom:ember-falls",
+      "custom:hot-cauldron-dream",
+    ],
+    dream: "custom:hot-cauldron-dream",
   },
 ];
 

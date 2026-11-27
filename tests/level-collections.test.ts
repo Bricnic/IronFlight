@@ -50,8 +50,8 @@ function goldRun(trackId: string) {
   };
 }
 
-it("covers all 62 official levels in 8 collections with no duplicates", () => {
-  expect(LEVEL_COLLECTIONS).toHaveLength(8);
+it("covers all 70 official levels in 9 collections with no duplicates", () => {
+  expect(LEVEL_COLLECTIONS).toHaveLength(9);
   expect(LEVEL_COLLECTIONS.map((c) => c.name)).toEqual([
     "Sweet Celebrations",
     "Winter Wonderland",
@@ -61,10 +61,11 @@ it("covers all 62 official levels in 8 collections with no duplicates", () => {
     "Industrial Mayhem",
     "Outdoor Adventures",
     "Space",
+    "Hot Cauldron",
   ]);
   const ids = collectionOrderIds();
-  expect(ids).toHaveLength(62);
-  expect(new Set(ids).size).toBe(62);
+  expect(ids).toHaveLength(70);
+  expect(new Set(ids).size).toBe(70);
   expect(new Set(ids)).toEqual(new Set(officialTracks.map((t) => t.id)));
   for (const track of officialTracks)
     expect(collectionForTrack(track.id)?.trackIds).toContain(track.id);
@@ -78,7 +79,7 @@ it("ships one artwork file per collection", () => {
 });
 
 it("stores every official file level in a collection subfolder", () => {
-  expect(officialFileTracks).toHaveLength(54);
+  expect(officialFileTracks).toHaveLength(62);
   for (const track of officialFileTracks) {
     expect(track.sourceFile?.startsWith("levels/official/")).toBe(true);
     const rel = track.sourceFile!.slice("levels/official/".length);
@@ -205,8 +206,8 @@ it("steps through unlocked levels only, with wraparound", () => {
   const unlocked = new Set(
     LEVEL_COLLECTIONS.flatMap((c) => unlockedIds(c, scores)),
   );
-  // Fresh save: 2 per collection x 8 = 16 unlocked.
-  expect(unlocked.size).toBe(16);
+  // Fresh save: 2 per collection x 9 = 18 unlocked.
+  expect(unlocked.size).toBe(18);
   // Locked tracks are skipped: dungeon (spooky #1, unlocked) next-unlocked
   // is haunted-hollow (spooky #2), not pumpkin-pass (spooky #3, locked).
   expect(stepUnlockedTrackId("custom:dungeon", 1, unlocked)).toBe(
@@ -224,9 +225,13 @@ it("steps through unlocked levels only, with wraparound", () => {
   expect(stepUnlockedTrackId("sky-slide", 1, unlocked)).toBe(
     "custom:airlock-approach",
   );
-  // Wraparound stays inside the unlocked set: last unlocked (station-ring,
-  // Space #2) wraps to the first (birthday-cake-circuit, Sweet #1).
+  // Collection order: exhausting Space crosses into Hot Cauldron.
   expect(stepUnlockedTrackId("custom:station-ring", 1, unlocked)).toBe(
+    "custom:hot-heels",
+  );
+  // Wraparound stays inside the unlocked set: last unlocked (peak-danger,
+  // Hot Cauldron #2) wraps to the first (birthday-cake-circuit, Sweet #1).
+  expect(stepUnlockedTrackId("custom:peak-danger", 1, unlocked)).toBe(
     "custom:birthday-cake-circuit",
   );
   let at: string | undefined;
