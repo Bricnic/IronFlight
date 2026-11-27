@@ -45,6 +45,7 @@ import { getVehicle, type VehicleId } from "./vehicles";
 import {
   HAZARDS,
   hammerAngle,
+  hammerRotation,
   hazardActive,
   flameIntensity,
   type Hazard,
@@ -1014,15 +1015,15 @@ export class Simulation {
       );
     this.hammerPhase += hammerAngle(DT) * this.tuning.hammerSpeed;
     for (const [id, b] of this.hazardBodies) {
-      const yaw =
-        this.activeHazards.find((h) => h.id === id)?.yaw ?? 0;
+      const hazard = this.activeHazards.find((h) => h.id === id);
+      const yaw = hazard?.yaw ?? 0;
       b.setNextKinematicRotation(
         new Quaternion()
           .setFromAxisAngle(new Vector3(0, 1, 0), yaw)
           .multiply(
             new Quaternion().setFromAxisAngle(
               new Vector3(0, 0, 1),
-              this.hammerPhase,
+              hammerRotation(hazard ?? {}, this.hammerPhase),
             ),
           ),
       );

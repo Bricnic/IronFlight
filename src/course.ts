@@ -1089,6 +1089,7 @@ export function courseHazards(track: Track): Hazard[] {
         x: p.x,
         y: p.y ?? 3.5,
         z: p.z,
+        ...(p.spinSpeed === undefined ? {} : { spinSpeed: p.spinSpeed }),
         ...(p.yaw === undefined ? {} : { yaw: p.yaw }),
       }));
   if (track.id === "inferno-vault")

@@ -15,9 +15,9 @@ if errorlevel 1 (
 )
 
 echo Latest changes from remote main pulled successfully.
-pause
+if /i not "%~1"=="--no-pause" pause
 exit /b 0
 
 :error
-pause
+if /i not "%~1"=="--no-pause" pause
 exit /b 1

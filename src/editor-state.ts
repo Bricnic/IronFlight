@@ -321,6 +321,7 @@ export class EditorStore {
   }
   /** Inspector edits assign the value to each object; viewport gestures retain relative transforms. */
   updateSelectionProperties(patch: Record<string, unknown>) {
+    if ("spinSpeed" in patch && (typeof patch.spinSpeed !== "number" || !Number.isFinite(patch.spinSpeed) || patch.spinSpeed < 0)) return;
     if (!validPrefabLightPatch(patch)) return;
     const entries = this.selectedEntries();
     if (!entries.length || entries.some(s => this.isLocked(s))) return;
@@ -647,6 +648,7 @@ export class EditorStore {
     return { kind: "spawn", item: this.level.spawn };
   }
   updateSelected(patch: Record<string, unknown>) {
+    if ("spinSpeed" in patch && (typeof patch.spinSpeed !== "number" || !Number.isFinite(patch.spinSpeed) || patch.spinSpeed < 0)) return;
     if (!validPrefabLightPatch(patch)) return;
     const current = this.selectedItem();
     if (!current || (this.selection && this.isLocked(this.selection))) return;

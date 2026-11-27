@@ -501,6 +501,8 @@ export interface CustomPrefab {
   seed?: number;
   /** Ship departure: checkpoint count that launches it down the channel. */
   trigger?: number;
+  /** Hammer rotation multiplier: 1 preserves normal speed; 0 stops the rotor. */
+  spinSpeed?: number;
 }
 /** Hover height above the placement surface for kinds that float by default. */
 export const PREFAB_HOVER_HEIGHT: Record<string, number> = {
@@ -809,6 +811,7 @@ export function validateCustomLevel(input: unknown): CustomLevel {
       p?.yaw === undefined || finite(p.yaw),
       `prefab ${p?.id ?? i} needs a finite yaw`,
     );
+    check(errors, p?.spinSpeed === undefined || (p.kind === "hammer" && finite(p.spinSpeed) && p.spinSpeed >= 0), `prefab ${p?.id ?? i} spin speed must be a nonnegative finite number on a hammer`);
     check(
       errors,
       p?.angle === undefined || finite(p.angle),

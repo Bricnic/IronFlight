@@ -61,11 +61,12 @@ function numberField(
     step: "any",
     "data-prop": prop,
   }) as HTMLInputElement;
+  if (prop === "spinSpeed") input.min = "0";
   if (mixed) input.placeholder = "(various)";
   else if (value !== undefined) input.value = String(display(value));
   input.addEventListener("change", () => {
     const n = parseFloat(input.value);
-    if (Number.isFinite(n)) onCommit(angular ? degreesToRadians(n) : n);
+    if (Number.isFinite(n) && (prop !== "spinSpeed" || n >= 0)) onCommit(angular ? degreesToRadians(n) : n);
     else input.value = value === undefined ? "" : String(display(value));
   });
   row.append(input);
@@ -976,6 +977,9 @@ export function createLevelEditor(
     }
     if (current.kind === "prefab") {
       numberField(props, "Size", "resizeScale", (item.resizeScale as number | undefined) ?? 1, commit("resizeScale"));
+      if (current.item.kind === "hammer") {
+        numberField(props, "Spin speed (x)", "spinSpeed", (item.spinSpeed as number | undefined) ?? 1, commit("spinSpeed"));
+      }
       props.append(el("p", { class: "prop-hint" }, "Prefab resizing preserves proportions and updates gameplay size."));
       props.append(
         el("p", { class: "prop-hint" }, `Kind: ${current.item.kind}`),

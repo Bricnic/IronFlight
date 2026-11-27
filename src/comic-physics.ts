@@ -140,7 +140,7 @@ export class ComicPhysics {
         const rampAt = at(r.x, r.z);
         const ramp = world.createCollider(
           R.ColliderDesc.cuboid(r.w / 2, r.h / 2, r.d / 2)
-            .setTranslation(rampAt.x, r.y, rampAt.z)
+            .setTranslation(rampAt.x, (h.y ?? 0) + r.y, rampAt.z)
             .setRotation(pitchQ(r.angle)),
         );
         m.colliders.push(ramp);
@@ -157,7 +157,7 @@ export class ComicPhysics {
                 BURNER_DRUM.height / 2,
                 BURNER_DRUM.radius,
               )
-                .setTranslation(drumAt.x, BURNER_DRUM.y, drumAt.z)
+                .setTranslation(drumAt.x, (h.y ?? 0) + BURNER_DRUM.y, drumAt.z)
                 .setRotation(yawQ.clone()),
             ),
           );

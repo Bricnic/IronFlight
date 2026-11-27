@@ -9,6 +9,7 @@ export type Hazard = {
   y: number;
   z: number;
   yaw?: number;
+  spinSpeed?: number;
 };
 export const HAZARDS: Hazard[] = ROUTES.flatMap((r) => {
   const all: Hazard[] = [
@@ -42,6 +43,10 @@ export const HAZARDS: Hazard[] = ROUTES.flatMap((r) => {
 });
 export function hammerAngle(time: number) {
   return time * HAMMER_SPEED;
+}
+/** Shared by the physical rotor and both visual paths. */
+export function hammerRotation(h: Pick<Hazard, "spinSpeed">, phase: number) {
+  return phase * (h.spinSpeed ?? 1);
 }
 export const HAMMER_SPEED = 1.7 * 1.5;
 

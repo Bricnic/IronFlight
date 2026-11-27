@@ -18,6 +18,7 @@ function properties(object: SelectedObject): EditorProperty[] {
   if (object.kind === "solid" || (object.kind === "prefab" && (PROP_PREFAB_KINDS as readonly string[]).includes(object.item.kind))) result.push({ key: "angle", label: "Pitch" }, { key: "roll", label: "Roll" });
   if (object.kind === "solid") result.push({ key: "color", label: "Color", type: "color" }, { key: "texture", label: "Texture", type: "choice", options: TEXTURE_IDS });
   if (object.kind === "prefab") result.push({ key: "resizeScale", label: "Size" });
+  if (object.kind === "prefab" && object.item.kind === "hammer") result.push({ key: "spinSpeed", label: "Spin speed (x)" });
   if (object.kind === "solid" || object.kind === "prefab") result.push({ key: "lightLumens", label: "Light (lumens)" }, { key: "lightColor", label: "Light color", type: "color" });
   if (object.kind === "target") result.push({ key: "kind", label: "Type", type: "choice", options: COLLECTIBLE_KINDS });
   if (object.kind === "ring") result.push({ key: "radius", label: "Radius" }, { key: "goal", label: "Goal", type: "boolean" });
@@ -37,6 +38,7 @@ export function propertyValue(object: SelectedObject, key: string, level: Custom
   if ((object.kind === "prefab" || object.kind === "solid") && key === "lightColor") return prefabLightSettings(object.item).color;
   if (["yaw", "angle", "roll"].includes(key)) return 0;
   if (key === "resizeScale") return 1;
+  if (key === "spinSpeed") return 1;
   if (key === "goal") return false;
   if (key === "kind" && object.kind === "target") return "ring";
   if (key === "y") return object.kind === "prefab" ? prefabY(object.item) : object.kind === "checkpoint" ? 2 : object.kind === "target" ? level.mode === "demolition" ? 1.5 : 1.7 : 0;

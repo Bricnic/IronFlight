@@ -1,6 +1,6 @@
 import * as T from "three";
 import { courseHazards } from "./course";
-import { flameIntensity, type Hazard } from "./hazards";
+import { flameIntensity, hammerRotation, type Hazard } from "./hazards";
 import {
   pbr,
   lavaMaterial,
@@ -842,7 +842,7 @@ export class CourseView extends T.Group {
       material.userData.time.value = sim.time;
     this.updateRocks(sim);
     for (const model of this.hazards) {
-      if (model.rotor) model.rotor.rotation.z = sim.hammerPhase;
+      if (model.rotor) model.rotor.rotation.z = hammerRotation(model.h, sim.hammerPhase);
       if (model.flames) {
         const intensity = flameIntensity(model.h, sim.time);
         model.flames.visible = intensity > 1e-6;

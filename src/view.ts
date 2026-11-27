@@ -17,7 +17,7 @@ import { deformGeometry } from "./damage";
 import { ROUTES, routeSolids } from "./routes";
 import { Simulation } from "./simulation";
 import { getVehicle, lightBarState } from "./vehicles";
-import { HAZARDS, hammerAngle } from "./hazards";
+import { HAZARDS, hammerAngle, hammerRotation } from "./hazards";
 import { truckStats } from "./truck";
 import { pbr, flameMaterial, lavaMaterial } from "./materials";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -988,7 +988,7 @@ export class GameView {
     }
     for (const g of this.hazards.children) {
       const h = g.userData.hazard;
-      if (h.kind === "hammer") g.children[0].rotation.z = s.hammerPhase;
+      if (h.kind === "hammer") g.children[0].rotation.z = hammerRotation(h, s.hammerPhase);
       if (h.kind === "fire")
         g.children.forEach((f, i) => {
           if (i < 18) {
