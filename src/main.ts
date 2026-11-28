@@ -2,6 +2,7 @@ import { confettiDelta } from "./confetti";
 import { resultOpacity } from "./result-reveal";
 import { createLevelSelect } from "./level-select";
 import { createVehicleSelect } from "./vehicle-select";
+import { createPaintShop } from "./paint-shop";
 import { createLevelEditor } from "./level-editor";
 import { shouldSyncFromSession } from "./editor-state";
 import { createSettings } from "./settings-screen";
@@ -96,6 +97,7 @@ async function boot() {
   let surface: "menu" | "play" | "result" = "menu";
   let screens: ReturnType<typeof createLevelSelect>;
   let vehicleScreens: ReturnType<typeof createVehicleSelect>;
+  let paintScreens: ReturnType<typeof createPaintShop>;
   let editorScreens: ReturnType<typeof createLevelEditor>;
   let settingsScreens: ReturnType<typeof createSettings>;
   let pauseScreens: ReturnType<typeof createPauseMenu>;
@@ -238,6 +240,7 @@ async function boot() {
     closePause();
     screens?.hide();
     vehicleScreens?.hide();
+    paintScreens?.hide();
     editorScreens?.hide();
     settingsScreens?.hide();
     recordedRun = undefined;
@@ -283,6 +286,7 @@ async function boot() {
     if (unpause) paused = false;
     screens?.hide();
     vehicleScreens?.hide();
+    paintScreens?.hide();
     editorScreens?.hide();
     settingsScreens?.hide();
     $("lab").hidden = true;
@@ -310,6 +314,7 @@ async function boot() {
     keys.clear();
     clock.reset();
     vehicleScreens?.hide();
+    paintScreens?.hide();
     editorScreens?.hide();
     settingsScreens?.hide();
     screens.show(sim.trackRun?.track.id);
@@ -325,6 +330,7 @@ async function boot() {
     clock.reset();
     screens.hide();
     vehicleScreens?.hide();
+    paintScreens?.hide();
     settingsScreens?.hide();
     const live = sim.courseTrack?.custom;
     const probe = editorScreens.probe();
@@ -343,7 +349,21 @@ async function boot() {
     screens.hide();
     editorScreens?.hide();
     settingsScreens?.hide();
+    paintScreens?.hide();
     vehicleScreens.show();
+    panel.hidden = true;
+  }
+  function showPaintShop(vehicleId: string) {
+    surface = "menu";
+    closePause();
+    clearConfetti();
+    keys.clear();
+    clock.reset();
+    screens.hide();
+    editorScreens?.hide();
+    settingsScreens?.hide();
+    vehicleScreens?.hide();
+    paintScreens.show(vehicleId);
     panel.hidden = true;
   }
   function showSettings(backToPause = false) {
@@ -356,6 +376,7 @@ async function boot() {
     screens.hide();
     editorScreens?.hide();
     vehicleScreens?.hide();
+    paintScreens?.hide();
     settingsScreens.show(backToPause ? backToPauseMenu : undefined);
     panel.hidden = true;
   }
@@ -410,7 +431,10 @@ async function boot() {
     showLevelSelect,
     scores,
     starBank,
+    undefined,
+    (id) => showPaintShop(id),
   );
+  paintScreens = createPaintShop(app, showVehicleSelect);
   $("vehicle-select-button").onclick = showVehicleSelect;
   editorScreens = createLevelEditor(app, showLevelSelect, (id) =>
     startOfficial(id),
@@ -1131,6 +1155,7 @@ async function boot() {
       snapshot: () => sim.snapshot(),
       setTuning: (values) => sim.setTuning(values),
       damage: (id, amount) => sim.damage(id, amount),
+      truckPaint: () => ({ ...view.appliedPaint }),
       driveFrames: (frames, r, driver, draw = true) => {
         for (let f = 0; f < frames; f++) {
           clock.advance(1 / 60, r, () => sim.step(driver(sim.snapshot(false))));

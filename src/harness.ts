@@ -92,6 +92,8 @@ export interface GameHarness {
   snapshot(): ReturnType<Simulation["snapshot"]>;
   /** Test seam: damage a vehicle part directly. */
   damage(id: string, amount: number): void;
+  /** Paint counts applied to the current truck. */
+  truckPaint(): { fills: number; dabs: number };
   place(position: { x: number; y: number; z: number }, yaw: number): void;
   lavaOverview(): void;
   lavaPitOverview(id: string, angle?: number): void;

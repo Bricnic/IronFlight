@@ -1,4 +1,5 @@
 import { setObjectHelpVisibility, objectHelpStats } from "./object-help";
+import { activeCustomization, applyCustomization } from "./customizations";
 import { ComicView } from "./comic-view";
 import { ResizedPrefabView } from "./resized-prefab-view";
 import { basePrefabSimulation } from "./prefab-space";
@@ -100,6 +101,8 @@ export class GameView {
   private lightbar: [T.Mesh?, T.Mesh?] = [];
   private headlightRig: T.Group | null = null;
   private truck = new T.Group();
+  /** Paint counts from the last truck build (test introspection). */
+  appliedPaint = { fills: 0, dabs: 0 };
   private labFloor = new T.Group();
   private snapCamera = true;
   private hazards = new T.Group();
@@ -591,6 +594,10 @@ export class GameView {
     ];
     this.headlightRig = buildHeadlightRig();
     this.meshes.get("hood")?.add(this.headlightRig);
+    const finish = activeCustomization(this.simulation.vehicleId);
+    this.appliedPaint = finish
+      ? applyCustomization(this.truck, finish)
+      : { fills: 0, dabs: 0 };
   }
   /** Clear day keeps the studio room; night/rain bake a matching sky dome. */
   private applyEnvironment(mood: { sky: { top: number; horizon: number } }, baked: boolean) {

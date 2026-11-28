@@ -703,7 +703,8 @@ kbd {
   gap: 20px;
 }
 #vehicle-select,
-#settings-screen {
+#settings-screen,
+#paint-shop {
   position: fixed;
   inset: 84px 0 0;
   overflow: auto;
@@ -1714,3 +1715,30 @@ kbd {
 .track-card .best-medal { font-size: 10px; font-weight: 700; }
 .track-card-action { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; justify-self: end; }
 .best-variant { color: #9fb3b7; }
+
+/* Paint shop: 3D stage left, tool panel right. */
+.paint-layout { display: flex; gap: 14px; align-items: stretch; }
+#paint-stage { position: relative; flex: 1 1 auto; height: calc(100vh - 320px); min-height: 320px; border: 1px solid #ffffff28; background: #0c1418; }
+#paint-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.paint-panel { flex: 0 0 300px; display: flex; flex-direction: column; gap: 10px; padding: 12px; background: #101e25ee; border: 1px solid #ffffff28; color: #e8efec; }
+.paint-panel .settings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.paint-panel .vehicle-pick { padding: 8px; border: 1px solid #ffffff38; background: #253941; color: #e8efec; font: inherit; cursor: pointer; }
+.paint-panel .vehicle-pick.selected { border-color: #ffd34d; }
+.paint-panel .vehicle-pick h2 { font-size: 14px; margin: 0 0 4px; }
+.paint-panel .vehicle-pick p { font-size: 11px; margin: 0; color: #9fb3b7; }
+.paint-row { display: flex; gap: 8px; align-items: center; }
+#paint-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; flex: 1 1 auto; }
+#paint-swatches button { width: 100%; aspect-ratio: 1; border: 2px solid transparent; cursor: pointer; }
+#paint-swatches button.selected { border-color: #fff; }
+#paint-color { width: 40px; height: 32px; padding: 0; border: 1px solid #ffffff38; background: none; }
+.paint-slider { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+.paint-slider input[type="range"] { flex: 1 1 auto; accent-color: #ff5a5a; }
+#paint-name { flex: 1 1 auto; min-width: 0; padding: 6px 8px; font: inherit; }
+#paint-status { min-height: 18px; font-size: 12px; color: #ffd34d; }
+#paint-finishes { display: flex; flex-direction: column; gap: 6px; }
+.paint-finish-row { display: flex; gap: 6px; }
+.paint-finish-row .header-action:first-child { flex: 1 1 auto; }
+/* Garage finish picker row under each vehicle card button. */
+.finish-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; }
+.finish-row .header-action { padding: 4px 10px; font-size: 12px; }
+.finish-row .header-action.selected { border-color: #ffd34d; }

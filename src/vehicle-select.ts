@@ -9,6 +9,11 @@ import {
 import type { BestTimes } from "./best-times";
 import type { GoldStars } from "./gold-stars";
 import { createVehiclePreview } from "./vehicle-preview";
+import {
+  activeFinishId,
+  listCustomizations,
+  setActiveFinish,
+} from "./customizations";
 
 const LOCK_SVG = `<svg viewBox="0 0 24 24" width="72" height="72" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`;
 
@@ -19,6 +24,7 @@ export function createVehicleSelect(
   scores?: BestTimes,
   starBank?: GoldStars,
   unlockSeen?: UnlockSeen,
+  onPaintShop?: (id: string) => void,
 ) {
   const pickedVehicle = () => {
     const stored = localStorage.getItem("vehicle") ?? "monster-truck";
@@ -76,6 +82,39 @@ export function createVehicleSelect(
       card.addEventListener("animationend", (e) => {
         if (e.animationName === "card-shake") card.classList.remove("shake");
       });
+      if (!locked) {
+        const finishes = document.createElement("div");
+        finishes.className = "finish-row";
+        const paintFinishes = () => {
+          finishes.innerHTML = "";
+          const customs = listCustomizations(vehicle.id);
+          const active = activeFinishId(vehicle.id);
+          const add = (id: string, label: string) => {
+            const b = document.createElement("button");
+            b.className = "header-action" + (id === active ? " selected" : "");
+            b.textContent = label;
+            b.setAttribute("aria-label", `${label} finish for ${vehicle.name}`);
+            b.onclick = () => {
+              setActiveFinish(vehicle.id, id);
+              paintFinishes();
+            };
+            finishes.append(b);
+          };
+          add("default", "Default");
+          for (const c of customs) add(c.id, c.name);
+          if (onPaintShop) {
+            const paint = document.createElement("button");
+            paint.className = "header-action";
+            paint.textContent = "Paint shop";
+            paint.dataset.paintShop = vehicle.id;
+            paint.setAttribute("aria-label", `Open paint shop for ${vehicle.name}`);
+            paint.onclick = () => onPaintShop(vehicle.id);
+            finishes.append(paint);
+          }
+        };
+        paintFinishes();
+        card.append(finishes);
+      }
       grid.append(card);
       cards.set(vehicle.id, card);
     }
