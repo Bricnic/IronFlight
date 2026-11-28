@@ -369,7 +369,9 @@ async function boot() {
   function showSettings(backToPause = false) {
     surface = "menu";
     closePause();
-    restoreMenuWeather();
+    // Returning to a course keeps its weather (forced night, rolled storms);
+    // the toggles apply live on top when the player changes them.
+    if (!backToPause) restoreMenuWeather();
     clearConfetti();
     keys.clear();
     clock.reset();
@@ -453,7 +455,7 @@ async function boot() {
     (show) => view.setObjectHelpVisible(show),
   );
   paintWeatherBadges();
-  $("settings-button").onclick = () => showSettings();
+  $("settings-button").onclick = () => showSettings(surface === "play");
   syncControllerForeground();
   if (loadSettings().input === "controller") void proController.reconnect();
   pauseScreens = createPauseMenu(app, {
